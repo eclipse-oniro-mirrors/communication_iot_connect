@@ -1,0 +1,84 @@
+#
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import("../iotc.gni")
+
+iotc_adapter_inc = [
+  "$iotc_adapter_path/include",
+  "//third_party/cJSON",
+  "//third_party/bounds_checking_function/include",
+]
+
+iotc_adapter_src = [
+  "$iotc_adapter_path/crypto/mbedtls/adapter_aes.c",
+  "$iotc_adapter_path/crypto/mbedtls/adapter_base64.c",
+  "$iotc_adapter_path/crypto/mbedtls/adapter_drbg.c",
+  "$iotc_adapter_path/crypto/mbedtls/adapter_kdf.c",
+  "$iotc_adapter_path/crypto/mbedtls/adapter_md.c",
+  "$iotc_adapter_path/crypto/mbedtls/adapter_mpi.c",
+  "$iotc_adapter_path/crypto/mbedtls/adapter_rsa.c",
+  "$iotc_adapter_path/log/adapter_log_inner.c",
+  "$iotc_adapter_path/mem/stdlib/adapter_mem.c",
+]
+
+iotc_adapter_def = []
+iotc_adapter_dep = []
+
+if (defined(ohos_lite)) {
+  if (ohos_kernel_type == "liteos_m") {
+    iotc_adapter_inc += ["//kernel/liteos_m/kal/cmsis"]
+    iotc_adapter_src += ["$iotc_adapter_path/os/cmsis2/adapter_os.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/log/printf/adapter_log.c"]
+    if (board_name == "rtl8720") {
+      iotc_adapter_inc += [
+        "//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/network/ssl/mbedtls-2.16.4/include",
+        "//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/network/lwip/lwip_v2.0.2/src/include/posix",
+      ]
+    } else {
+      iotc_adapter_dep += [
+        "//third_party/cJSON:cjson_static",
+        "//third_party/mbedtls:mbedtls",
+      ]
+      iotc_adapter_inc += ["//third_party/mbedtls/include"]
+    }
+  } else {
+    iotc_adapter_src += ["$iotc_adapter_path/os/posix/adapter_os.c"]
+    iotc_adapter_dep += [
+      "//third_party/cJSON:cjson_shared",
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/mbedtls:mbedtls",
+    ]
+    iotc_adapter_inc += ["//third_party/mbedtls/include"]
+  }
+} else {
+  iotc_adapter_src += ["$iotc_adapter_path/os/posix/adapter_os.c"]
+  if (iotc_hilog_support) {
+    iotc_adapter_src += ["$iotc_adapter_path/log/hilog/adapter_log.c"]
+  } else {
+    iotc_adapter_src += ["$iotc_adapter_path/log/printf/adapter_log.c"]
+  }
+}
+
+if (iotc_mbedtls_v2_support) {
+  iotc_adapter_def += ["IOTC_CONF_ADAPTER_MBEDTLS_MAJOR_VERSION=2"]
+}
+
+if (!iotc_mbedtls_psk_support) {
+  iotc_adapter_def += ["IOTC_CONF_ADAPTER_MBEDTLS_TLS_PSK_SUPPORT=0"]
+}
+
+if (!iotc_mbedtls_ccm_support) {
+  iotc_adapter_def += ["IOTC_CONF_ADAPTER_MBEDTLS_CCM_SUPPORT=0"]
+}

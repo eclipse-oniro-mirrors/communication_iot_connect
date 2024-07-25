@@ -1,0 +1,83 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef IOTC_OH_SDK_H
+#define IOTC_OH_SDK_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include "iotc_def.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+    IOTC_OPTION_TYPE_SDK = 0,
+    IOTC_OPTION_TYPE_WIFI,
+    IOTC_OPTION_TYPE_BLE,
+    IOTC_OPTION_TYPE_DEVICE,
+} IotcOhOptionType;
+
+#define IOTC_OH_OPTION_BASE(type) ((type) << 8)
+
+typedef enum {
+    IOTC_OH_OPTION_SDK_LOG_LEVEL = IOTC_OH_OPTION_BASE(IOTC_OPTION_TYPE_SDK),
+    IOTC_OH_OPTION_SDK_MAIN_TASK_SIZE,
+    IOTC_OH_OPTION_SDK_MONITOR_TASK_SIZE,
+    IOTC_OH_OPTION_SDK_CONFIG_PATH,
+    IOTC_OH_OPTION_SDK_REG_EVENT_LISTENER,
+    IOTC_OH_OPTION_SDK_UNREG_EVENT_LISTENER,
+
+    IOTC_OH_OPTION_WIFI_SEND_BUFFER_SIZE = IOTC_OH_OPTION_BASE(IOTC_OPTION_TYPE_WIFI),
+    IOTC_OH_OPTION_WIFI_RECV_BUFFER_SIZE,
+    IOTC_OH_OPTION_WIFI_NETCFG_MODE,
+    IOTC_OH_OPTION_WIFI_NETCFG_TIMEOUT,
+    IOTC_OH_OPTION_WIFI_GET_CERT_CALLBACK,
+
+    IOTC_OH_OPTION_BLE_EXIT_AFTER_NETCFG = IOTC_OH_OPTION_BASE(IOTC_OPTION_TYPE_BLE),
+    IOTC_OH_OPTION_BLE_RECV_NETCFG_CALLBACK,
+    IOTC_OH_OPTION_BLE_RECV_CUSTOM_DATA_CALLBACK,
+    IOTC_OH_OPTION_BLE_START_UP_ADV_TIMEOUT,
+    IOTC_OH_OPTION_BLE_GATT_PROFILE_SVC_LIST,
+
+    IOTC_OH_OPTION_DEVICE_PUT_CHAR_STATE_CALLBACK = IOTC_OH_OPTION_BASE(IOTC_OPTION_TYPE_DEVICE),
+    IOTC_OH_OPTION_DEVICE_GET_CHAR_STATE_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_REPORT_ALL_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_GET_PINCODE_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_GET_AC_KEY_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_DATA_FREE_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_REBOOT_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_TRNG_CALLBACK,
+    IOTC_OH_OPTION_DEVICE_DEV_INFO,
+    IOTC_OH_OPTION_DEVICE_SVC_INFO,
+} IotcOhOption;
+
+typedef void (*IotcOhEventCallback)(int32_t event);
+
+IOTC_API_PUBLIC int32_t IotcOhMain(void);
+
+IOTC_API_PUBLIC int32_t IotcOhReset(void);
+
+IOTC_API_PUBLIC int32_t IotcOhStop(void);
+
+IOTC_API_PUBLIC int32_t IotcOhRestore(void);
+
+IOTC_API_PUBLIC int32_t IotcOhSetOption(int32_t option, ...);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* IOTC_OH_SDK_H */
