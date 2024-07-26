@@ -1,0 +1,91 @@
+#
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+import("iotc.gni")
+import("adapter/adapter.gni")
+
+iotc_inc = iotc_adapter_inc
+iotc_src = iotc_adapter_src
+iotc_def = iotc_adapter_def
+iotc_dep = iotc_adapter_dep
+
+iotc_inc += [
+  "$iotc_interface_path/kits/common",
+  "$iotc_interface_path/kits/oh_connect",
+]
+
+if (iotc_device_level == "mini") {
+  iotc_def += ["IOTC_CONF_DEVICE_LEVEL=0"]
+} else if (iotc_device_level == "small") {
+  iotc_def += ["IOTC_CONF_DEVICE_LEVEL=1"]
+} else {
+  iotc_def += ["IOTC_CONF_DEVICE_LEVEL=2"]
+  iotc_def += ["IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT=0"]
+}
+
+if (defined(ohos_lite)) {
+  import("//build/lite/config/component/lite_component.gni")
+
+  if (ohos_kernel_type == "liteos_m") {
+    static_library("iotc_static") {
+      sources = iotc_src
+      include_dirs = iotc_inc
+      defines = iotc_def
+      deps = iotc_dep
+      output_name = "iotc"
+    }
+  } else {
+    shared_library("iotc_stared") {
+      sources = iotc_src
+      include_dirs = iotc_inc
+      defines = iotc_def
+      deps = iotc_dep
+      output_name = "iotc"
+    }
+  }
+} else {
+  import("//build/ohos.gni")
+  config("iotc_config") {
+    include_dirs = iotc_inc + [
+      "$iotc_interface_path/kits/common",
+      "$iotc_interface_path/kits/oh_connect",
+    ]
+    cflags = [
+      "-Wall",
+      "-Werror",
+      "-fPIC",
+      "-std=c99",
+    ]
+    cflags_cc = cflags
+    defines = iotc_def
+  }
+
+  ohos_shared_library("iotc_shared") {
+    sources = iotc_src
+    public_configs = [":iotc_config"]
+    deps = iotc_dep
+    deps += [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/mbedtls:mbedtls_shared",
+      "//third_party/cJSON:cjson",
+    ]
+    external_deps = [
+      "wifi:wifi_sdk",
+      "bluetooth:btframework",
+      "hilog:libhilog",
+    ]
+    subsystem_name = "communication"
+    part_name = "iot_connect"
+  }
+}

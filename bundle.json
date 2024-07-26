@@ -1,0 +1,72 @@
+{
+  "name": "@ohos/iot_connect",
+  "version": "4.0.2",
+  "description": "iot_connect",
+  "publishAs": "code-segment",
+  "segment": {
+    "destPath": "foundation/communication/iot_connect"
+  },
+  "dirs": {},
+  "scripts": {},
+  "author": {},
+  "homePage": "https://gitee.com/openharmony",
+  "repository": "https://gitee.com/openharmony/communication_iot_connect",
+  "supplier":"Organization: OpenHarmony",
+  "license": "Apache License 2.0",
+  "component": {
+    "name": "iot_connect",
+    "subsystem": "communication",
+    "adapted_system_type": [
+      "mini",
+      "small",
+      "standard"
+    ],
+    "hisysevent_config": [],
+    "syscap":[],
+    "features": [],
+    "rom": "",
+    "ram": "",
+    "deps": {
+      "components": [
+        "wifi",
+        "hilog",
+        "bluetooth"
+      ],
+      "third_party": [
+        "bounds_checking_function",
+        "cJSON",
+        "mbedtls"
+      ]
+    },
+    "build": {
+      "group_type":{
+        "base_group":[
+          "//foundation/communication/iot_connect:iotc_shared"
+        ],
+        "fwk_group":[],
+        "service_group":[]
+      },
+      "inner_kits": [
+        {
+          "name": "//foundation/communication/iot_connect:iotc_shared",
+          "header": {
+            "header_files": [
+              "common/iotc_ble_def.h",
+              "common/iotc_conf.h",
+              "common/iotc_def.h",
+              "common/iotc_errcode.h",
+              "common/iotc_event.h",
+              "common/iotc_prof_def.h",
+              "oh_connect/iotc_oh_ble.h",
+              "oh_connect/iotc_oh_device.h",
+              "oh_connect/iotc_oh_sdk.h",
+              "oh_connect/iotc_oh_wifi.h"
+            ],
+            "header_base": "//foundation/communication/iot_connect/interfaces/kits"
+          }
+        }
+      ],
+      "test": []
+    }
+  }
+}
