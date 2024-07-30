@@ -36,6 +36,10 @@ iotc_adapter_src = [
 iotc_adapter_def = []
 iotc_adapter_dep = []
 
+if (iotc_wifi_support) {
+  iotc_adapter_src += ["$iotc_adapter_path/tls/mbedtls/adapter_tls.c"]
+}
+
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     iotc_adapter_inc += ["//kernel/liteos_m/kal/cmsis"]
