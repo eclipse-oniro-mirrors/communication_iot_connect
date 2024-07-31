@@ -1,0 +1,803 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <stdlib.h>
+#include <errno.h>
+#include "securec.h"
+#include "adapter_tls.h"
+#include "adapter_mem.h"
+#include "adapter_os.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/x509.h"
+#include "mbedtls/platform_time.h"
+#include "mbedtls/net_sockets.h"
+#include "iotc_errcode.h"
+#include "adapter_log.h"
+
+#ifndef MS_PER_SECOND
+#define MS_PER_SECOND 1000
+#endif
+#define TLS_HANDSHAKE_TIMEOUT 4000
+#define READ_TIMEOUT_MS (10 * 1000)
+
+typedef struct {
+    char *custom;
+    int32_t *supportedCiphersuites;
+    const char **certs;
+    uint32_t certsNum;
+    uint16_t port;
+    char *hostName;
+    bool delayVerifyCert;
+    bool hostVerify;
+    AdapterTlsCertVerify verifyResult;
+    uint32_t handshakeTimeoutMs;
+    AdapterGetRandom rngCb;
+    mbedtls_x509_time validFrom;
+    mbedtls_x509_time validTo;
+    mbedtls_net_context fd;
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    mbedtls_x509_crt caCert;
+} TlsClient;
+
+static AdapterGetTimeCallback g_getTimeCb = NULL;
+
+#if IOTC_CONF_ADAPTER_MBEDTLS_TLS_DEBUG
+static void MbedtlsTlsDebug(void *context, int32_t level, const char *file, int32_t line, const char *str)
+{
+    TlsClient *cli = (TlsClient *)(context);
+    ADAPTER_LOGD("[%s:%d]%s:%d %s", ctx->custom, level, file, line, str);
+}
+#endif /* HILINK_TLS_DEBUG */
+
+/* 该函数为注册到mbedtls中获取随机数的回调 */
+static int32_t MbedtlsSslRng(void *param, unsigned char *output, size_t len)
+{
+    TlsClient *cli = (TlsClient *)param;
+    if ((cli == NULL) || (cli->rngCb == NULL) || (output == NULL) || (len == 0)) {
+        ADAPTER_LOGW("param invalid");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    return cli->rngCb(output, len);
+}
+
+static mbedtls_time_t MbedtlsPlatformGetTime(mbedtls_time_t *timeNow)
+{
+    (void)timeNow; /* 此参数可能为空 */
+
+    mbedtls_time_t rawSeconds = 0;
+    uint64_t timeMs = 0;
+    if (g_getTimeCb == NULL) {
+        ADAPTER_LOGN("no cb");
+        return rawSeconds;
+    }
+    int32_t ret = g_getTimeCb(&timeMs);
+    if (ret == IOTC_OK) {
+        rawSeconds = (mbedtls_time_t)(timeMs / MS_PER_SECOND);
+    } else {
+        ADAPTER_LOGI("get local time failed, set rawSeconds=0");
+    }
+
+    return (mbedtls_time_t)rawSeconds;
+}
+
+static void InitTlsContextData(TlsClient *cli)
+{
+    mbedtls_ssl_init(&cli->ssl);
+    mbedtls_x509_crt_init(&cli->caCert);
+    mbedtls_net_init(&cli->fd);
+    mbedtls_ssl_config_init(&cli->conf);
+#if IOTC_CONF_ADAPTER_MBEDTLS_TLS_DEBUG
+    mbedtls_ssl_conf_dbg(&(cli->conf), MbedtlsTlsDebug, cli);
+#endif
+}
+
+static int32_t SetTlsConfigBase(TlsClient *cli)
+{
+    int32_t ret = mbedtls_ssl_config_defaults(&cli->conf, MBEDTLS_SSL_IS_CLIENT,
+        MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+    if (ret != 0) {
+        ADAPTER_LOGW("ssl conf error [-0x%04x]", -ret);
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+    mbedtls_ssl_conf_rng(&cli->conf, MbedtlsSslRng, cli);
+    mbedtls_ssl_conf_min_version(&cli->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_max_version(&cli->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_authmode(&cli->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    return IOTC_OK;
+}
+
+AdapterTlsClient *AdapterCreateTlsClient(const char *custom)
+{
+    if (custom == NULL) {
+        ADAPTER_LOGW("param invaild");
+        return NULL;
+    }
+    uint32_t customLen = strlen(custom);
+    if (customLen > ADAPTER_TLS_CUSTOM_MAX_STR_LEN) {
+        ADAPTER_LOGW("param invaild");
+        return NULL;
+    }
+    ADAPTER_LOGN("custom=[%s] start tls create", custom);
+    TlsClient *cli = (TlsClient *)AdapterMalloc(sizeof(TlsClient));
+    if (cli == NULL) {
+        ADAPTER_LOGW("malloc error");
+        return NULL;
+    }
+    (void)memset_s(cli, sizeof(TlsClient), 0, sizeof(TlsClient));
+
+    int32_t ret;
+    do {
+        cli->custom = (char *)AdapterMalloc(customLen + 1);
+        if (cli->custom == NULL) {
+            ADAPTER_LOGW("malloc error");
+            break;
+        }
+        cli->handshakeTimeoutMs = TLS_HANDSHAKE_TIMEOUT;
+        ret = strcpy_s(cli->custom, customLen + 1, custom);
+        if (ret != EOK) {
+            ADAPTER_LOGW("strcpy error %d", ret);
+            break;
+        }
+
+        InitTlsContextData(cli);
+
+        ret = SetTlsConfigBase(cli);
+        if (ret != IOTC_OK) {
+            break;
+        }
+
+        return cli;
+    } while (0);
+    (void)AdapterFreeTlsClient(cli);
+    return NULL;
+}
+
+void AdapterFreeTlsClient(AdapterTlsClient *cli)
+{
+    if (cli == NULL) {
+        ADAPTER_LOGN("param invaild");
+        return;
+    }
+    TlsClient *cliCtx = (TlsClient *)cli;
+
+    mbedtls_ssl_free(&cliCtx->ssl);
+    mbedtls_net_free(&cliCtx->fd);
+    mbedtls_ssl_config_free(&cliCtx->conf);
+    mbedtls_x509_crt_free(&cliCtx->caCert);
+    AdapterFree(cliCtx->supportedCiphersuites);
+    cliCtx->supportedCiphersuites = NULL;
+    if (cliCtx->custom != NULL) {
+        ADAPTER_LOGN("custom=[%s] free resource", cliCtx->custom);
+        AdapterFree(cliCtx->custom);
+        cliCtx->custom = NULL;
+    }
+    if (cliCtx->hostName != NULL) {
+        AdapterFree(cliCtx->hostName);
+        cliCtx->hostName = NULL;
+    }
+    AdapterFree(cliCtx);
+}
+
+static int32_t InitTlsSocket(TlsClient *cli)
+{
+    int32_t ret;
+    if (cli->fd.fd < 0) {
+        if (cli->hostName != NULL) {
+#define MAX_PORT_STR_LEN 20
+            char portStr[MAX_PORT_STR_LEN];
+            if (sprintf_s(portStr, sizeof(portStr), "%u", cli->port) <= 0) {
+                ADAPTER_LOGW("sprintf error");
+                return IOTC_ERR_SECUREC_SPRINTF;
+            }
+            ret = mbedtls_net_connect(&cli->fd, cli->hostName, portStr, MBEDTLS_NET_PROTO_TCP);
+            if (ret != 0) {
+                ADAPTER_LOGW("connect error [-0x%04x/%d]", -ret, AdapterGetErrno());
+                return IOTC_ADAPTER_TLS_ERR_CONNECT;
+            }
+        } else {
+            ADAPTER_LOGW("no hostname");
+            return IOTC_ERR_PARAM_INVALID;
+        }
+    }
+
+    mbedtls_ssl_conf_read_timeout(&cli->conf, READ_TIMEOUT_MS);
+    mbedtls_ssl_set_bio(&cli->ssl, &cli->fd, mbedtls_net_send, NULL, mbedtls_net_recv_timeout);
+    return IOTC_OK;
+}
+
+static uint64_t DeltaTime(uint64_t timeNew, uint64_t timeOld)
+{
+    uint64_t deltaTime;
+
+    if (timeNew >= timeOld) {
+        deltaTime = timeNew - timeOld;
+    } else {
+        deltaTime = (UINT32_MAX - timeOld) + timeNew + 1; /* 处理时间翻转 */
+    }
+
+    return deltaTime;
+}
+
+static int32_t TlsHandshake(TlsClient *cli)
+{
+    int32_t ret;
+    uint64_t curTime;
+    uint64_t startTime = AdapterGetSysTimeMs();
+
+    do {
+        ret = mbedtls_ssl_handshake(&cli->ssl);
+        curTime = AdapterGetSysTimeMs();
+    } while (((ret == MBEDTLS_ERR_SSL_WANT_READ) || (ret == MBEDTLS_ERR_SSL_WANT_WRITE) ||
+        (ret == MBEDTLS_ERR_SSL_TIMEOUT)) && (DeltaTime(curTime, startTime) < cli->handshakeTimeoutMs));
+    if (ret != 0) {
+        ADAPTER_LOGW("handshake error [-0x%04x/%d]", -ret, AdapterGetErrno());
+        return IOTC_ADAPTER_TLS_ERR_CONNECT;
+    }
+
+    return IOTC_OK;
+}
+
+int32_t AdapterTlsClientConnect(AdapterTlsClient *cli)
+{
+    if (cli == NULL) {
+        ADAPTER_LOGW("param invaild");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    TlsClient *cliCtx = (TlsClient *)cli;
+
+    int32_t ret = InitTlsSocket(cliCtx);
+    if (ret != IOTC_OK) {
+        ADAPTER_LOGW("init socket error");
+        return ret;
+    }
+
+    ret = mbedtls_ssl_setup(&cliCtx->ssl, &cliCtx->conf);
+    if (ret != 0) {
+        ADAPTER_LOGW("ssl setup error [-0x%04x]", -ret);
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+
+    ret = TlsHandshake(cliCtx);
+    if (ret != IOTC_OK) {
+        return IOTC_ADAPTER_TLS_ERR_CONNECT;
+    }
+
+    return IOTC_OK;
+}
+
+int32_t AdapterTlsClientGetFd(AdapterTlsClient *cli)
+{
+    if (cli == NULL) {
+        ADAPTER_LOGW("param invaild");
+        return -1;
+    }
+
+    return ((TlsClient *)cli)->fd.fd;
+}
+
+int32_t AdapterTlsClientRecv(AdapterTlsClient *cli, uint8_t *buf, uint32_t len)
+{
+    if ((cli == NULL) || (buf == NULL) || (len == 0)) {
+        ADAPTER_LOGW("param invaild");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    TlsClient *cliCtx = (TlsClient *)cli;
+
+    if (cliCtx->fd.fd < 0) {
+        ADAPTER_LOGW("context invaild");
+        return IOTC_ADAPTER_TLS_ERR_CLIENT_INVALID;
+    }
+
+    int32_t ret = mbedtls_ssl_read(&cliCtx->ssl, buf, len);
+    if (ret > 0) {
+        ADAPTER_LOGD("read exit [%s/%d]", cliCtx->custom, ret);
+        return ret;
+    } else if ((ret == MBEDTLS_ERR_SSL_TIMEOUT) || (ret == MBEDTLS_ERR_SSL_WANT_READ)) {
+        return IOTC_OK;
+    }
+
+    ADAPTER_LOGW("read error [%s/-0x%04x/%d]", cliCtx->custom, -ret, AdapterGetErrno());
+    return IOTC_ADAPTER_TLS_ERR_RECV;
+}
+
+int32_t AdapterTlsClientSend(AdapterTlsClient *cli, const uint8_t *buf, uint32_t len)
+{
+    if ((cli == NULL) || (buf == NULL) || (len == 0)) {
+        ADAPTER_LOGW("param invaild");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    TlsClient *cliCtx = (TlsClient *)cli;
+
+    if (cliCtx->fd.fd < 0) {
+        ADAPTER_LOGW("context invaild");
+        return IOTC_ADAPTER_TLS_ERR_CLIENT_INVALID;
+    }
+
+    int32_t ret = mbedtls_ssl_write(&cliCtx->ssl, buf, len);
+    if (ret > 0) {
+        ADAPTER_LOGD("send exit [%s/%d]", cliCtx->custom, ret);
+        return ret;
+    } else if ((ret == MBEDTLS_ERR_SSL_TIMEOUT) || (ret == MBEDTLS_ERR_SSL_WANT_WRITE)) {
+        return IOTC_OK;
+    }
+        
+    ADAPTER_LOGW("send error [%s/-0x%04x/%d]", cliCtx->custom, -ret, AdapterGetErrno());
+    return IOTC_ADAPTER_TLS_ERR_RECV;
+}
+
+static int32_t SetTlsClientOptionFd(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(int32_t) || (value == NULL))) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    int32_t fd = *(const int32_t *)value;
+    if (fd < 0) {
+        ADAPTER_LOGW("invalid fd %d", fd);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    cli->fd.fd = fd;
+
+    return IOTC_OK;
+}
+
+static int32_t SetTlsClientOptionHost(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(AdapterTlsHost) || (value == NULL))) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    const AdapterTlsHost *host = (const AdapterTlsHost *)value;
+    cli->port = host->port;
+    if (host->hostname == NULL) {
+        ADAPTER_LOGI("no host name for [%s]", cli->custom);
+        return IOTC_OK;
+    }
+
+    uint32_t hostNameLen = strlen(host->hostname);
+    if (hostNameLen > ADAPTER_TLS_HOSTNAME_MAX_STR_LEN) {
+        ADAPTER_LOGW("host name too long [%u]", hostNameLen);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    int32_t ret = mbedtls_ssl_set_hostname(&cli->ssl, host->hostname);
+    if (ret != 0) {
+        ADAPTER_LOGW("set host name error [-0x%04x]", -ret);
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+    if (cli->hostName != NULL) {
+        AdapterFree(cli->hostName);
+        cli->hostName = NULL;
+    }
+    cli->hostName = (char *)AdapterMalloc(hostNameLen + 1);
+    if (cli->hostName == NULL) {
+        ADAPTER_LOGW("malloc error");
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+    ret = strcpy_s(cli->hostName, hostNameLen + 1, host->hostname);
+    if (ret != EOK) {
+        ADAPTER_LOGW("strcpy error %d", ret);
+        AdapterFree(cli->hostName);
+        cli->hostName = NULL;
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+
+    return IOTC_OK;
+}
+
+static int32_t SetTlsClientOptiontTimeCallback(TlsClient *cli, const void *value, uint32_t len)
+{
+    (void)cli;
+    if ((len != sizeof(AdapterGetTimeCallback)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    g_getTimeCb = (AdapterGetTimeCallback)value;
+    (void)mbedtls_platform_set_time(MbedtlsPlatformGetTime);
+    return IOTC_OK;
+}
+
+static int32_t SetTlsClientOptiontCiphersuite(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(AdapterTlsCiphersuites)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    const AdapterTlsCiphersuites *suites = (const AdapterTlsCiphersuites *)value;
+    if ((suites->ciphersuites == NULL) || (suites->num == 0) || (suites->num > ADAPTER_TLS_CIPHERSUITE_MAX_NUM)) {
+        ADAPTER_LOGW("invalid suites %u", suites->num);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    /* 套件枚举与mbedtls套件id的映射 */
+    struct CiphersuiteMap {
+        AdapterTlsCiphersuite iotc;
+        int32_t mbedtls;
+    } mapList[] = {
+        {ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+            MBEDTLS_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256},
+        {ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384},
+        {ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+            MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
+        {ADAPTER_TLS_CIPHERSUITE_PSK_WITH_AES_128_GCM_SHA256,
+            MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256},
+        {ADAPTER_TLS_CIPHERSUITE_PSK_WITH_AES_256_GCM_SHA384,
+            MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384},
+    };
+
+    /* ciphersuites数组以0为结尾，需预留1 */
+    int32_t *suitesInt = (int32_t *)AdapterCalloc(suites->num + 1, sizeof(int32_t));
+    if (suitesInt == NULL) {
+        ADAPTER_LOGW("malloc error");
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+    int32_t *cur = suitesInt;
+    for (uint32_t i = 0; i < suites->num; ++i) {
+        for (uint32_t j = 0; j < sizeof(mapList) / sizeof(struct CiphersuiteMap); ++j) {
+            if (suites->ciphersuites[i] != mapList[j].iotc ||
+                mbedtls_ssl_ciphersuite_from_id(mapList[j].mbedtls) == NULL) {
+                continue;
+            }
+            ADAPTER_LOGD("use ciphersuite [0x%04x]", mapList[j].mbedtls);
+            *cur = mapList[j].mbedtls;
+            ++cur;
+            break;
+        }
+    }
+    cli->supportedCiphersuites = suitesInt;
+    mbedtls_ssl_conf_ciphersuites(&cli->conf, cli->supportedCiphersuites);
+    ADAPTER_LOGI("use cipher num %u", cur - suitesInt);
+    return IOTC_OK;
+}
+
+static bool X509CheckTime(const mbedtls_x509_time *before, const mbedtls_x509_time *after)
+{
+    if (before->year > after->year) {
+        return true;
+    } else if (before->year < after->year) {
+        return false;
+    }
+    if (before->mon > after->mon) {
+        return true;
+    } else if (before->mon < after->mon) {
+        return false;
+    }
+    if (before->day > after->day) {
+        return true;
+    } else if (before->day < after->day) {
+        return false;
+    }
+    if (before->hour > after->hour) {
+        return true;
+    } else if (before->hour < after->hour) {
+        return false;
+    }
+    if (before->min > after->min) {
+        return true;
+    } else if (before->min < after->min) {
+        return false;
+    }
+    if (before->sec > after->sec) {
+        return true;
+    } else if (before->sec < after->sec) {
+        return false;
+    }
+
+    return true;
+}
+
+static bool RecordValidCertTime(TlsClient *cli, mbedtls_x509_crt *crt)
+{
+    ADAPTER_LOGD("vaild cert validFrom=%04d/%02d/%02d %02d:%02d:%02d",
+        crt->valid_from.year, crt->valid_from.mon, crt->valid_from.day,
+        crt->valid_from.hour, crt->valid_from.min, crt->valid_from.sec);
+    ADAPTER_LOGD("vaild cert validTo=%04d/%02d/%02d %02d:%02d:%02d",
+        crt->valid_to.year, crt->valid_to.mon, crt->valid_to.day,
+        crt->valid_to.hour, crt->valid_to.min, crt->valid_to.sec);
+    /* 取证书验证通过里面最大的有效时间 */
+    if (!X509CheckTime(&cli->validTo, &crt->valid_to)) {
+        if ((memcpy_s(&cli->validFrom, sizeof(mbedtls_x509_time),
+            &crt->valid_from, sizeof(mbedtls_x509_time)) != EOK) ||
+            (memcpy_s(&cli->validTo, sizeof(mbedtls_x509_time),
+                &crt->valid_to, sizeof(mbedtls_x509_time)) != EOK)) {
+            return false;
+        }
+    }
+    ADAPTER_LOGD("record cert validFrom=%04d/%02d/%02d %02d:%02d:%02d",
+        cli->validFrom.year, cli->validFrom.mon, cli->validFrom.day,
+        cli->validFrom.hour, cli->validFrom.min, cli->validFrom.sec);
+    ADAPTER_LOGD("record cert validTo=%04d/%02d/%02d %02d:%02d:%02d",
+        cli->validTo.year, cli->validTo.mon, cli->validTo.day,
+        cli->validTo.hour, cli->validTo.min, cli->validTo.sec);
+
+    return true;
+}
+
+static int32_t VerifyOneCert(TlsClient *cli, uint32_t index, const char *rootCa,
+    mbedtls_x509_crt *crt, uint32_t *flags)
+{
+    mbedtls_x509_crt caCert;
+    mbedtls_x509_crt_init(&caCert);
+    int32_t ret = mbedtls_x509_crt_parse(&caCert, (const unsigned char *)rootCa, strlen(rootCa) + 1);
+    if (ret != 0) {
+        mbedtls_x509_crt_free(&caCert);
+        ADAPTER_LOGW("cert parse error [%u/-0x%04x]", index, -ret);
+        return ret;
+    }
+
+    ret = mbedtls_x509_crt_verify(crt, &caCert, NULL, NULL, flags, NULL, NULL);
+    mbedtls_x509_crt_free(&caCert);
+    ADAPTER_LOGD("i=%u,flags=%08x,ret=[-0x%04x]", index, *flags, -ret);
+    if (ret == 0 && (*flags) == 0) {
+        cli->verifyResult = ADAPTER_TLS_CERT_VERIFY_VALID;
+        ADAPTER_LOGD("verify cert okay");
+        return IOTC_OK;
+    }
+
+    if (ret != MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
+        ADAPTER_LOGW("verify cert error i=%u,flags=%08x,ret=[-0x%04x]", index, *flags, -ret);
+        return IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
+    }
+
+    if (cli->delayVerifyCert) {
+        /* 延迟证书时间校验 */
+        if ((((*flags) & MBEDTLS_X509_BADCERT_EXPIRED) != 0) ||
+            (((*flags) & MBEDTLS_X509_BADCERT_FUTURE) != 0)) {
+            if (!RecordValidCertTime(cli, crt)) {
+                return IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
+            }
+            ADAPTER_LOGN("delay verify cert time");
+            *flags &= ~(MBEDTLS_X509_BADCERT_EXPIRED | MBEDTLS_X509_BADCERT_FUTURE);
+        }
+    }
+    if (cli->hostVerify) {
+        if (((*flags) & MBEDTLS_X509_BADCERT_CN_MISMATCH) != 0) {
+            ADAPTER_LOGN("not verify cert cn");
+            *flags &= ~(MBEDTLS_X509_BADCERT_CN_MISMATCH);
+        }
+    }
+    return (*flags) == 0 ? IOTC_OK : IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
+}
+
+static int32_t VerifyCertProc(void *data, mbedtls_x509_crt *crt, uint32_t *flags)
+{
+    if (data == NULL) {
+        ADAPTER_LOGW("invaild context");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    int32_t ret;
+    TlsClient *cli = (TlsClient *)data;
+    for (uint32_t i = 0; i < cli->certsNum; i++) {
+        if (cli->certs[i] == NULL) {
+            ADAPTER_LOGW("invaild cert");
+            continue;
+        }
+
+        ret = VerifyOneCert(cli, i, cli->certs[i], crt, flags);
+        if (ret != IOTC_OK) {
+            continue;
+        }
+        return IOTC_OK;
+    }
+
+    return IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
+}
+
+static int32_t VerifyCertCb(void *data, mbedtls_x509_crt *crt, int32_t depth, uint32_t *flags)
+{
+    (void)depth;
+    if ((data == NULL) || (crt == NULL) || (flags == NULL)) {
+        ADAPTER_LOGW("param invaild");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+#if IOTC_CONF_ADAPTER_MBEDTLS_TLS_DEBUG
+    char buf[64] = {0}; /* 64为缓冲buf大小 */
+    ADAPTER_LOGD("Verify requested for (Depth %d):", depth);
+    mbedtls_x509_crt_info(buf, sizeof(buf) - 1, "", crt);
+    ADAPTER_LOGD("%s", buf);
+    if ((*flags) == 0) {
+        ADAPTER_LOGD("This certificate has no flags");
+    } else {
+        mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", *flags);
+        ADAPTER_LOGD("%s", buf);
+    }
+#endif /* HILINK_TLS_DEBUG */
+
+    if (VerifyCertProc(data, crt, flags) != IOTC_OK) {
+        ADAPTER_LOGE("verify cert");
+    }
+    return IOTC_OK;
+}
+
+
+static int32_t SetTlsClientOptiontCert(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(AdapterTlsCerts)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    const AdapterTlsCerts *certs = (const AdapterTlsCerts *)value;
+    if ((certs->certs == NULL) || (certs->num == 0)) {
+        ADAPTER_LOGW("invalid certs");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    /* 对于多个证书，这里只注入一个证书，其他证书在回调函数里验证 */
+    int32_t ret = IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
+    for (uint32_t i = 0; i < certs->num; ++i) {
+        if (certs->certs[i] == NULL) {
+            ADAPTER_LOGW("invalid certs %u", i);
+            return IOTC_ERR_PARAM_INVALID;
+        }
+        ret = mbedtls_x509_crt_parse(&cli->caCert, (const unsigned char *)certs->certs[i],
+            strlen(certs->certs[i]) + 1);
+        if (ret == 0) {
+            break;
+        }
+        mbedtls_x509_crt_free(&cli->caCert);
+        mbedtls_x509_crt_init(&cli->caCert);
+    }
+    if (ret != 0) {
+        ADAPTER_LOGW("cert parse error [-0x%04x]", -ret);
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+    mbedtls_ssl_conf_ca_chain(&cli->conf, &cli->caCert, NULL);
+    mbedtls_ssl_conf_verify(&cli->conf, VerifyCertCb, cli);
+
+    cli->certs = certs->certs;
+    cli->certsNum = certs->num;
+    cli->delayVerifyCert = certs->delayTimeVerify;
+    cli->hostVerify = certs->hostVerify;
+
+    return IOTC_OK;
+}
+
+static int32_t SetTlsClientOptiontPsk(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(AdapterTlsPsk)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    const AdapterTlsPsk *psk = (const AdapterTlsPsk *)value;
+    if ((psk->psk == NULL) || (psk->pskLen == 0) || (psk->pskIdentity == NULL) ||
+        (psk->pskIdentityLen == 0)) {
+        ADAPTER_LOGW("invalid psk");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+#if IOTC_CONF_ADAPTER_MBEDTLS_TLS_PSK_SUPPORT
+    int32_t ret = mbedtls_ssl_conf_psk(&cli->conf, psk->psk, psk->pskLen, psk->pskIdentity, psk->pskIdentityLen);
+    if (ret < 0) {
+        ADAPTER_LOGW("psk set error [-0x%04x]", -ret);
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+    return IOTC_OK;
+#else
+    return IOTC_ERR_NOT_SUPPORT;
+#endif
+}
+
+static int32_t SetTlsClientOptiontMaxFragLen(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(uint8_t)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    uint8_t fragLenType = *(const uint8_t *)value;
+    if (fragLenType == ADAPTER_TLS_MAX_FRAG_LEN_DEFAULT) {
+        return IOTC_OK;
+    }
+
+    int32_t ret = mbedtls_ssl_conf_max_frag_len(&cli->conf, fragLenType);
+    if (ret != 0) {
+        ADAPTER_LOGW("set max frag error [%u/-0x%04x]", fragLenType, -ret);
+        return IOTC_ADAPTER_TLS_ERR_SETUP;
+    }
+
+    return IOTC_OK;
+}
+
+static int32_t SetTlsClientOptiontRandomCallback(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(AdapterGetRandom)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    cli->rngCb = (AdapterGetRandom)value;
+
+    return IOTC_OK;
+}
+
+static int32_t SetTlsClientOptiontHandshakeTimeout(TlsClient *cli, const void *value, uint32_t len)
+{
+    if ((len != sizeof(uint32_t)) || (value == NULL)) {
+        ADAPTER_LOGW("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    cli->handshakeTimeoutMs = *(const uint32_t *)value;
+    return IOTC_OK;
+}
+
+int32_t AdapterSetTlsClientOption(AdapterTlsClient *cli, AdapterTlsOption option, const void *value, uint32_t len)
+{
+    if (cli == NULL) {
+        ADAPTER_LOGW("param invaild");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    struct OptionItem {
+        AdapterTlsOption op;
+        int32_t (*opFunc)(TlsClient *cli, const void *value, uint32_t len);
+    } optionList[] = {
+        {ADAPTER_TLS_OPTION_FD, SetTlsClientOptionFd},
+        {ADAPTER_TLS_OPTION_REG_TIME_CALLBACK, SetTlsClientOptiontTimeCallback},
+        {ADAPTER_TLS_OPTION_HOST, SetTlsClientOptionHost},
+        {ADAPTER_TLS_OPTION_CIPHERSUITE, SetTlsClientOptiontCiphersuite},
+        {ADAPTER_TLS_OPTION_CERT, SetTlsClientOptiontCert},
+        {ADAPTER_TLS_OPTION_PSK, SetTlsClientOptiontPsk},
+        {ADAPTER_TLS_OPTION_MAX_FRAG_LEN, SetTlsClientOptiontMaxFragLen},
+        {ADAPTER_TLS_OPTION_REG_RANDOM_CALLBACK, SetTlsClientOptiontRandomCallback},
+        {ADAPTER_TLS_OPTION_HANDSHAKE_TIMEOUT_MS, SetTlsClientOptiontHandshakeTimeout},
+    };
+    for (uint32_t i = 0; i < (sizeof(optionList) / sizeof(struct OptionItem)); ++i) {
+        if (option == optionList[i].op) {
+            return optionList[i].opFunc(cli, value, len);
+        }
+    }
+    ADAPTER_LOGW("unsupport option %d", option);
+    return IOTC_ERR_NOT_SUPPORT;
+}
+
+AdapterTlsCertVerify AdapterTlsClientVerifyCert(AdapterTlsClient *cli)
+{
+    if (cli == NULL) {
+        ADAPTER_LOGW("param invaild");
+        return ADAPTER_TLS_CERT_VERIFY_INVALID;
+    }
+    TlsClient *cliCtx = (TlsClient *)cli;
+    if (cliCtx->verifyResult == ADAPTER_TLS_CERT_VERIFY_VALID) {
+        return ADAPTER_TLS_CERT_VERIFY_VALID;
+    }
+
+    int32_t ret;
+    ret = mbedtls_x509_time_is_future(&cliCtx->validFrom);
+    if (ret != 0) {
+        ADAPTER_LOGW("ca time is future [-0x%04x %04d/%02d/%02d %02d:%02d:%02d]", -ret,
+            cliCtx->validFrom.year, cliCtx->validFrom.mon, cliCtx->validFrom.day,
+            cliCtx->validFrom.hour, cliCtx->validFrom.min, cliCtx->validFrom.sec);
+        return ADAPTER_TLS_CERT_VERIFY_INVALID;
+    }
+    ret = mbedtls_x509_time_is_past(&cliCtx->validTo);
+    if (ret != 0) {
+        ADAPTER_LOGW("ca time is past [-0x%04x %04d/%02d/%02d %02d:%02d:%02d]", -ret,
+            cliCtx->validFrom.year, cliCtx->validFrom.mon, cliCtx->validFrom.day,
+            cliCtx->validFrom.hour, cliCtx->validFrom.min, cliCtx->validFrom.sec);
+        return ADAPTER_TLS_CERT_VERIFY_INVALID;
+    }
+
+    ADAPTER_LOGI("ca time verify ok");
+    cliCtx->verifyResult = ADAPTER_TLS_CERT_VERIFY_VALID;
+    return ADAPTER_TLS_CERT_VERIFY_VALID;
+}
