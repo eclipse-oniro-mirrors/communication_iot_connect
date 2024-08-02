@@ -1,0 +1,188 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "wifi_sched_fd_watch.h"
+#include "sched_event_loop.h"
+#include "adapter_socket.h"
+#include "adapter_os.h"
+#include "utils_common.h"
+#include "comm_def.h"
+#include "event_loop.h"
+#include "utils_assert.h"
+#include "iotc_errcode.h"
+
+static EventSource *g_wifiFdEventSource = NULL;
+
+static int32_t FdSocketPollBySelect(EventSourceFdSet *read, EventSourceFdSet *write,
+    EventSourceFdSet *except, uint32_t timeout)
+{
+    AdapterFdSet fdSetRead = {0, NULL};
+    AdapterFdSet fdSetWrite = {0, NULL};
+    AdapterFdSet fdSetExcept = {0, NULL};
+    AdapterFdSet *pRead = NULL;
+    AdapterFdSet *pWrite = NULL;
+    AdapterFdSet *pExcept = NULL;
+
+    if (read != NULL && read->num != 0 && read->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) {
+        fdSetRead.fdSet = read->fd;
+        fdSetRead.num = read->num;
+        pRead = &fdSetRead;
+    }
+    if (write != NULL && write->num != 0 && write->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) {
+        fdSetWrite.fdSet = write->fd;
+        fdSetWrite.num = write->num;
+        pWrite = &fdSetWrite;
+    }
+    if (except != NULL && except->num != 0 && except->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) {
+        fdSetExcept.fdSet = except->fd;
+        fdSetExcept.num = except->num;
+        pExcept = &fdSetExcept;
+    }
+
+    int32_t ret = AdapterSelect(pRead, pWrite, pExcept, timeout);
+    if (ret > 0) {
+        return ret;
+    }
+    if (read != NULL) {
+        read->num = 0;
+    }
+    if (write != NULL) {
+        write->num = 0;
+    }
+    if (except != NULL) {
+        except->num = 0;
+    }
+    return ret;
+}
+
+static EventSource *GetWifiFdEventSource(void)
+{
+    return g_wifiFdEventSource;
+}
+
+int32_t WifiSchedFdWatchInit(void)
+{
+    if (GetSchedEventLoop() == NULL) {
+        return IOTC_ERR_NOT_INIT;
+    }
+
+    if (g_wifiFdEventSource != NULL) {
+        return IOTC_OK;
+    }
+
+    g_wifiFdEventSource = EventSourceFdNew(FdSocketPollBySelect);
+    if (g_wifiFdEventSource == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SOURCE_NEW;
+    }
+    int32_t ret = EventLoopAddSource(GetSchedEventLoop(), GetWifiFdEventSource());
+    if (ret != IOTC_OK) {
+        EventSourceFree(g_wifiFdEventSource);
+        g_wifiFdEventSource = NULL;
+        IOTC_LOGW("add source error %d", ret);
+        return ret;
+    }
+    return IOTC_OK;
+}
+
+void WifiSchedFdWatchDeinit(void)
+{
+    /* 资源由event loop异步释放 */
+    EventLoopDelSource(GetSchedEventLoop(), GetWifiFdEventSource());
+    g_wifiFdEventSource = NULL;
+}
+
+int32_t WifiSchedFdWatch(const FdWatchParam *watch)
+{
+    CHECK_RETURN_LOGW(watch != NULL && watch->fd >= 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+    if (GetWifiFdEventSource() == NULL) {
+        return IOTC_ERR_NOT_INIT;
+    }
+
+    if (!EventSourceFdWatch(GetWifiFdEventSource(), watch)) {
+        IOTC_LOGW("watch fd error");
+        return IOTC_CORE_COMM_FWK_ERR_SOURCE_FD_WATCH;
+    }
+    return IOTC_OK;
+}
+
+int32_t WifiSchedFdSuspend(int32_t fd)
+{
+    CHECK_RETURN_LOGW(fd >= 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+    if (GetWifiFdEventSource() == NULL) {
+        return IOTC_ERR_NOT_INIT;
+    }
+    if (!EventSourceFdSuspend(GetWifiFdEventSource(), fd)) {
+        IOTC_LOGW("suspend fd error");
+        return IOTC_CORE_COMM_FWK_ERR_SOURCE_FD_SUSPEND;
+    }
+    return IOTC_OK;
+}
+
+int32_t WifiSchedFdResume(int32_t fd)
+{
+    CHECK_RETURN_LOGW(fd >= 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+    if (GetWifiFdEventSource() == NULL) {
+        return IOTC_ERR_NOT_INIT;
+    }
+
+    if (!EventSourceFdResume(GetWifiFdEventSource(), fd)) {
+        IOTC_LOGW("resume fd error");
+        return IOTC_CORE_COMM_FWK_ERR_SOURCE_FD_RESUME;
+    }
+    return IOTC_OK;
+}
+
+void WifiSchedFdRemove(int32_t fd)
+{
+    CHECK_V_RETURN_LOGW(fd >= 0, "param invalid");
+    if (GetWifiFdEventSource() == NULL) {
+        return;
+    }
+
+    EventSourceFdRemove(GetWifiFdEventSource(), fd);
+}
+
+static bool LinkFdReadCallback(int32_t fd, void *userData)
+{
+    CHECK_RETURN_LOGW(fd >= 0 && userData != NULL, false, "invalid param");
+    TransLink *link = (TransLink *)userData;
+    TransLinkRecvReadEvent(link);
+    return true;
+}
+
+int32_t WifiSchedLinkRecvWatch(TransLink *link)
+{
+    CHECK_RETURN_LOGW(link != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    int32_t fd = TransLinkGetFd(link);
+    if (fd < 0) {
+        IOTC_LOGW("link get fd error %d", fd);
+        return fd;
+    }
+
+    FdWatchParam fdWatch = {
+        .fd = fd,
+        .prio = FD_EVENT_PRIORITY_MID,
+        .recvEvent = LinkFdReadCallback,
+        .sendEvent = NULL,
+        .exceEvent = NULL,
+        .userData = link,
+    };
+
+    int32_t ret = WifiSchedFdWatch(&fdWatch);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("fd watch error %d", ret);
+        return ret;
+    }
+    return IOTC_OK;
+}
