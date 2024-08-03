@@ -456,7 +456,7 @@ static AdapterBleGattReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
     AdapterBleGattReadFunc res = NULL;
     for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         res = FindReadFuncFromCharacterTbl(attrHandle,
-                GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
+            GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
         if (res != NULL) {
             return res;
         }
@@ -485,7 +485,7 @@ static AdapterBleGattWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
     AdapterBleGattWriteFunc res = NULL;
     for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         res = FindWriteFuncFromCharacterTbl(attrHandle,
-                GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
+            GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
         if (res != NULL) {
             return res;
         }

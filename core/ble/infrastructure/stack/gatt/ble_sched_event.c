@@ -208,7 +208,7 @@ static void BleEventReqReadHandler(int32_t event, void *param)
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
     int32_t ret = BleGattReqRead(eventParam->reqRead.connId,
-                    eventParam->reqRead.attrHandle, eventParam->reqRead.transId);
+        eventParam->reqRead.attrHandle, eventParam->reqRead.transId);
     IOTC_LOGN("req read ret=%d", ret);
 }
 
@@ -218,7 +218,7 @@ static void BleEventReqWriteHandler(int32_t event, void *param)
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
     int32_t ret = BleGattReqWrite(eventParam->reqWrite.connId, eventParam->reqWrite.attrHandle,
-                    eventParam->reqWrite.transId, eventParam->reqWrite.value, eventParam->reqWrite.valueLen);
+        eventParam->reqWrite.transId, eventParam->reqWrite.value, eventParam->reqWrite.valueLen);
     IOTC_LOGN("req write ret=%d", ret);
 }
 
