@@ -1,0 +1,67 @@
+#
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import("../../iotc.gni")
+
+iotc_core_ble_inc = [
+  "$iotc_core_path/ble/interfaces/include",
+  "$iotc_core_path/ble/infrastructure/linklayer/include",
+  "$iotc_core_path/ble/infrastructure/stack/adv/include",
+  "$iotc_core_path/ble/infrastructure/stack/gatt/include",
+  "$iotc_core_path/ble/infrastructure/utils/include",
+  "$iotc_core_path/ble/application/adv/include",
+  "$iotc_core_path/ble/application/base/include",
+  "$iotc_core_path/ble/application/gatt/include",
+  "$iotc_core_path/ble/application/profile/include",
+  "$iotc_core_path/ble/application/report/include",
+  "$iotc_core_path/ble/application/include",
+]
+
+iotc_core_ble_src = [
+  "$iotc_core_path/ble/interfaces/core_ble_init.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_encrypt.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_process.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_recv.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_send.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_service.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_encrypt_speke.c",
+  "$iotc_core_path/ble/infrastructure/linklayer/linklayer_encrypt_sesskey.c",
+  "$iotc_core_path/ble/infrastructure/stack/adv/ble_adv_ctrl.c",
+  "$iotc_core_path/ble/infrastructure/stack/gatt/ble_gatt_event.c",
+  "$iotc_core_path/ble/infrastructure/stack/gatt/ble_gatt_mgt.c",
+  "$iotc_core_path/ble/infrastructure/stack/gatt/ble_sched_event.c",
+  "$iotc_core_path/ble/infrastructure/utils/ble_common.c",
+  "$iotc_core_path/ble/application/adv/ble_adv_data.c",
+  "$iotc_core_path/ble/application/adv/ble_adv_param.c",
+  "$iotc_core_path/ble/application/adv/ble_adv.c",
+  "$iotc_core_path/ble/application/base/ble_session_mngr.c",
+  "$iotc_core_path/ble/application/base/ble_speke_session.c",
+  "$iotc_core_path/ble/application/gatt/ble_gatt_data_svc.c",
+  "$iotc_core_path/ble/application/profile/ble_profile.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_auth_setup.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_clear_dev_reg_info.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_create_session.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_custom_sec_data.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_device_info.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_net_cfg_ver.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_netcfg.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_speke.c",
+  "$iotc_core_path/ble/application/profile/ble_svc_ctx.c",
+  "$iotc_core_path/ble/application/report/ble_svc_netcfg_status.c",
+  "$iotc_core_path/ble/application/report/ble_svc_report.c",
+  "$iotc_core_path/ble/application/ble_svc.c",
+]
+
+iotc_core_ble_def = []
