@@ -24,6 +24,8 @@ extern "C" {
 
 int32_t LocalCtlReportToAllClient(const AdapterJson *json, LocalControlContext *ctx);
 
+int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContext *ctx, LocalControlClient *cli);
+
 #ifdef __cplusplus
 }
 #endif

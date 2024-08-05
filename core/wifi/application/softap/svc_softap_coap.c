@@ -35,6 +35,7 @@
 #include "iotc_svc_dev.h"
 #include "iotc_svc_conn.h"
 #include "iotc_errcode.h"
+#include "e2e_ctl_msg.h"
 
 #define E2E_CTRL_SEQ_WINDOWS 30
 #define RETRANS_WAIT_TIME_MS 500
@@ -480,90 +481,15 @@ static bool SoftCoapE2eCtrlSeqCheck(AdapterJson *payloadJsonObj, SoftapPeerSess 
     return true;
 }
 
-static void ReportExecutorCallback(void *userData)
+static void SoftapCtrlMsgReportAfterGetCmd(const AdapterJson *dataArray, const void *userData, uint32_t userDataLen)
 {
-    CHECK_V_RETURN_LOGE(userData != NULL, "param invalid");
-    AdapterJson *dataArray = (AdapterJson *)userData;
+    CHECK_V_RETURN_LOGW(dataArray != NULL && userData != NULL && userDataLen == sizeof(uint32_t), "param invalid");
 
-    AdapterJson *outArray = NULL;
-    int32_t ret = DevSvcProxyCtlGetCharStates(dataArray, &outArray);
-    AdapterJsonDelete(dataArray);
-    dataArray = NULL;
-    if (ret != IOTC_OK || outArray == NULL) {
-        IOTC_LOGE("get char error %d", ret);
-        return;
-    }
-
-    /* outArray由调用释放 */
-    ret = SoftapServiceReportToAllPeer(outArray);
+    int32_t ret = SoftapServiceReportToTargetPeer(dataArray, *(const uint32_t *)userData);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("softap report error %d", ret);
+        IOTC_LOGW("report to peer error %d", ret);
     }
-    AdapterJsonDelete(outArray);
-}
-
-static int32_t SoftapAsyncReportAfterE2eCtrl(const AdapterJson *dataArray)
-{
-    CHECK_RETURN_LOGE(dataArray != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    /* 查询指令和控制上报，均异步执行 */
-    AdapterJson *dataArrayCopy = AdapterDuplicateJson(dataArray, true);
-    if (dataArrayCopy == NULL) {
-        IOTC_LOGW("copy json error");
-        return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
-    }
-
-    /* 控制成功后异步执行查询并上报 */
-    int32_t ret = SchedAsyncExecutor(ReportExecutorCallback, dataArrayCopy);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add executor error %d", ret);
-        AdapterJsonDelete(dataArrayCopy);
-        return ret;
-    }
-    return IOTC_OK;
-}
-
-static int32_t SoftapCoapE2eCtrlMsgProcess(const CoapPacket *req, AdapterJson *payloadJsonObj, AdapterJson *respJsonObj)
-{
-    AdapterJson *dataJsonArray = AdapterJsonGetObj(payloadJsonObj, STR_JSON_DATA);
-    if (dataJsonArray == NULL) {
-        IOTC_LOGE("no data array");
-        return IOTC_CORE_WIFI_NETCFG_ERR_E2E_CTRL_NO_DATA;
-    }
-    uint32_t dataJsonArraySize = 0;
-    int32_t ret = AdapterJsonGetArraySize(dataJsonArray, &dataJsonArraySize);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get data size error %d", ret);
-        return ret;
-    }
-
-    /* 最外层data为空时全量异步上报 */
-    if (dataJsonArraySize == 0) {
-        IOTC_LOGI("report all async");
-        ret = DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
-        if (ret != IOTC_OK) {
-            IOTC_LOGE("async report all error %d", ret);
-        }
-        return ret;
-    }
-
-    /* 携带data字段为控制指令，否则为查询指令 */
-    bool isCtrl = AdapterJsonHasObj(AdapterJsonGetArrayItem(dataJsonArray, 0), STR_JSON_DATA);
-    if (isCtrl) {
-        ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
-        if (ret != IOTC_OK) {
-            IOTC_LOGE("ctrl error %d", ret);
-            return ret;
-        }
-    }
-
-    /* 控制成功后异步执行查询并上报 */
-    ret = SoftapAsyncReportAfterE2eCtrl(dataJsonArray);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add executor error %d", ret);
-        return ret;
-    }
-
-    return IOTC_OK;
+    return;
 }
 
 void SoftapCoapE2eCtrlHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
@@ -588,16 +514,14 @@ void SoftapCoapE2eCtrlHandler(CoapEndpoint *endpoint, const CoapPacket *req, con
         return;
     }
 
-    AdapterJson *respJsonObj = AdapterCreateJson();
+    int32_t ret = E2eCtrlMsgProcess(payloadJsonObj, SoftapCtrlMsgReportAfterGetCmd, &addr->addr, sizeof(addr->addr));
+    AdapterJsonDelete(payloadJsonObj);
+
+    AdapterJson *respJsonObj = UtilsJsonCreateErrcode(ret);
     if (respJsonObj == NULL) {
-        AdapterJsonDelete(payloadJsonObj);
-        IOTC_LOGW("create json error");
+        IOTC_LOGW("create resp json error %d", ret);
         return;
     }
-
-    int32_t ret = SoftapCoapE2eCtrlMsgProcess(req, payloadJsonObj, respJsonObj);
-    AdapterJsonDelete(payloadJsonObj);
-    (void)AdapterJsonAddNum2Obj(respJsonObj, STR_ERRCODE, ret);
 
     CoapServerRespParam respParam = {
         .req = req,

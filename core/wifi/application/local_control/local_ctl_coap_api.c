@@ -27,6 +27,7 @@
 #include "e2e_ctl_msg.h"
 #include "securec.h"
 #include "seq_num_utils.h"
+#include "local_ctl_report.h"
 
 #define LOCAL_CONTROL_SEQ_WINDOW 30
 
@@ -294,11 +295,31 @@ static int32_t SessCoapRecvSeqCheck(const AdapterJson *payloadJson, LocalCoapSes
     } else {
         IOTC_LOGI("recv seq update %u/%u", sessMsg->client->sessInfo.recvSeq, recvSeq);
         sessMsg->client->sessInfo.recvSeq = recvSeq;
-        /* seq map保存前30个seq的接收情况 */
+        /* seq map 仅保留当前seq前30个seq是否收到 */
         sessMsg->client->sessInfo.seqMap = (sessMsg->client->sessInfo.seqMap << delta) | UTILS_BIT(delta);
     }
 
     return IOTC_OK;
+}
+
+static void LocalCtrlMsgReportAfterGetCmd(const AdapterJson *dataArray,
+    const void *userData, uint32_t userDataLen)
+{
+    CHECK_V_RETURN_LOGW(dataArray != NULL && userData != NULL &&
+        userDataLen == LOCAL_CONTROL_SESS_ID_STR_LEN, "param invalid");
+    LocalControlContext *ctx = GetLocalCtlCtx();
+    LocalControlClient *client = NULL;
+    int32_t ret = GetLocalControlClient(ctx, CLIENT_SESS_ID, (const char *)userData, userDataLen, &client);
+    if (ret != IOTC_OK || client == NULL) {
+        IOTC_LOGW("report get cli error %d", ret);
+        return;
+    }
+
+    ret = LocalCtlReportToTargetClient(dataArray, ctx, client);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("report to cli error %d", ret);
+    }
+    return;
 }
 
 void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
@@ -319,7 +340,8 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
         return;
     }
 
-    ret = CoapE2eCtrlMsgProcess(payloadJsonObj);
+    ret = E2eCtrlMsgProcess(payloadJsonObj, LocalCtrlMsgReportAfterGetCmd, sessMsg->client->sessInfo.sessId,
+        LOCAL_CONTROL_SESS_ID_STR_LEN);
     AdapterJsonDelete(payloadJsonObj);
     payloadJsonObj = NULL;
     if (ret != IOTC_OK) {
@@ -343,7 +365,8 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
         .type = COAP_MSG_TYPE_ACK,
         .code = COAP_RESPONSE_CODE_CONTENT,
         .opNum = 0,
-        .options = NULL, .payload = NULL,
+        .options = NULL,
+        .payload = NULL,
         .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
         .payloadUserData = respJson,
         .preSize = 0,

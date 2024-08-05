@@ -24,45 +24,37 @@
 
 static EventSource *g_wifiFdEventSource = NULL;
 
+#define EVENT_SOURCE_FD_SET_TO_ADAPTER(eventSourceFdSet, adapterFdSet) \
+    AdapterFdSet buffer##adapterFdSet = {0, NULL}; \
+    AdapterFdSet *adapterFdSet = NULL; \
+    if ((eventSourceFdSet) != NULL && (eventSourceFdSet)->num != 0 && \
+        (eventSourceFdSet)->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) { \
+        (buffer##adapterFdSet).fdSet = read->fd; \
+        (buffer##adapterFdSet).num = read->num; \
+        (adapterFdSet) = &(buffer##adapterFdSet); \
+    }
+
+#define CLEAR_EVENT_SOURCE_FD_SET(eventSourceFdSet) \
+    do { \
+        if ((eventSourceFdSet) != NULL) { \
+            (eventSourceFdSet)->num = 0; \
+        } \
+    } while (0)
+
 static int32_t FdSocketPollBySelect(EventSourceFdSet *read, EventSourceFdSet *write,
     EventSourceFdSet *except, uint32_t timeout)
 {
-    AdapterFdSet fdSetRead = {0, NULL};
-    AdapterFdSet fdSetWrite = {0, NULL};
-    AdapterFdSet fdSetExcept = {0, NULL};
-    AdapterFdSet *pRead = NULL;
-    AdapterFdSet *pWrite = NULL;
-    AdapterFdSet *pExcept = NULL;
-
-    if (read != NULL && read->num != 0 && read->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) {
-        fdSetRead.fdSet = read->fd;
-        fdSetRead.num = read->num;
-        pRead = &fdSetRead;
-    }
-    if (write != NULL && write->num != 0 && write->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) {
-        fdSetWrite.fdSet = write->fd;
-        fdSetWrite.num = write->num;
-        pWrite = &fdSetWrite;
-    }
-    if (except != NULL && except->num != 0 && except->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) {
-        fdSetExcept.fdSet = except->fd;
-        fdSetExcept.num = except->num;
-        pExcept = &fdSetExcept;
-    }
+    EVENT_SOURCE_FD_SET_TO_ADAPTER(read, pRead);
+    EVENT_SOURCE_FD_SET_TO_ADAPTER(write, pWrite);
+    EVENT_SOURCE_FD_SET_TO_ADAPTER(except, pExcept);
 
     int32_t ret = AdapterSelect(pRead, pWrite, pExcept, timeout);
     if (ret > 0) {
         return ret;
     }
-    if (read != NULL) {
-        read->num = 0;
-    }
-    if (write != NULL) {
-        write->num = 0;
-    }
-    if (except != NULL) {
-        except->num = 0;
-    }
+    CLEAR_EVENT_SOURCE_FD_SET(read);
+    CLEAR_EVENT_SOURCE_FD_SET(write);
+    CLEAR_EVENT_SOURCE_FD_SET(except);
     return ret;
 }
 
@@ -77,7 +69,7 @@ int32_t WifiSchedFdWatchInit(void)
         return IOTC_ERR_NOT_INIT;
     }
 
-    if (g_wifiFdEventSource != NULL) {
+    if (GetWifiFdEventSource() != NULL) {
         return IOTC_OK;
     }
 

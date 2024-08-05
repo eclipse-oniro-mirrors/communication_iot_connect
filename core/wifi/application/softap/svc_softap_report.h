@@ -24,6 +24,8 @@ extern "C" {
 
 int32_t SoftapServiceReportToAllPeer(const AdapterJson *dataArray);
 
+int32_t SoftapServiceReportToTargetPeer(const AdapterJson *dataArray, uint32_t peerAddr);
+
 #ifdef __cplusplus
 }
 #endif

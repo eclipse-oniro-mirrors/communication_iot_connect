@@ -178,14 +178,18 @@ SessCode LocalCtlSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
     CHECK_RETURN_LOGW(LocalSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
 
     LocalCoapSessMsg *sessMsg = (LocalCoapSessMsg *)msg;
-    if (UTILS_IS_BIT_SET(sessMsg->bitMap, LOCAL_COAP_PLAIN) || sessMsg->packet.payload.data == NULL ||
-        sessMsg->packet.payload.len == 0) {
+    if (UTILS_IS_BIT_SET(sessMsg->bitMap, LOCAL_COAP_PLAIN)) {
         return SESS_CODE_CONTINUE;
     }
 
     if (sessMsg->client == NULL) {
         IOTC_LOGW("sess client invalid");
         return SESS_CODE_ERR;
+    }
+
+    /* 空包不涉及解密 */
+    if (sessMsg->packet.payload.data == NULL || sessMsg->packet.payload.len == 0) {
+        return SESS_CODE_CONTINUE;
     }
 
     if (sessMsg->packet.payload.len <= LOCAL_CTL_GCM_IV_LEN + LOCAL_CTL_GCM_TAG_LEN) {
