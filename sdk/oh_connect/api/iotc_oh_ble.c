@@ -285,7 +285,8 @@ int32_t IotcOhBleSendIndicateData(const char *svcUuid, const char *charUuid,
         IOTC_ERR_PARAM_INVALID, "invalid param");
     int32_t errcode = IOTC_OK;
     OhBleSendIndicateParam param = {svcUuid, charUuid, value, valueLen};
-    int32_t ret = SchedAsyncExecutorWait(SendIndicateExecutorCallback, &param, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
+    int32_t ret = SchedAsyncExecutorWait(SendIndicateExecutorCallback, &param, NULL,
+        &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
     if (ret != IOTC_OK) {
         IOTC_LOGF("executor send ind error %d", ret);
         return ret;

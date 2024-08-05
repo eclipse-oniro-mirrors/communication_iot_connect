@@ -48,7 +48,7 @@ int32_t AdapterBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outD
 
 int AdapterBase64Decode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen)
 {
-    if ((inData == NULL) || (inLen == 0)) {
+    if ((inData == NULL) || (inLen == 0) || (outLen == NULL)) {
         ADAPTER_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
