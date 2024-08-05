@@ -132,7 +132,7 @@ static int32_t MacAnonymizeStr(char *srcAndDst, uint32_t bufLen)
     while (ch != NULL) {
         CHECK_RETURN_LOGW(strcpy_s(macUnit[index++], MAC_UNIT_LEN, ch) == EOK,
             IOTC_ERR_SECUREC_STRCPY, "len=%d", MAC_UNIT_LEN);
-            ch = strtok_s(NULL, ":", &context);
+        ch = strtok_s(NULL, ":", &context);
     }
     CHECK_RETURN_LOGW(index == MAC_UNIT_NUM, IOTC_ERR_PARAM_INVALID, "index=%u", index);
     CHECK_RETURN_LOGW(sprintf_s(srcAndDst, bufLen, "%s:%s:%s:%s:**:**",

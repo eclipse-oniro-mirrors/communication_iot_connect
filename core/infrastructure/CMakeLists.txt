@@ -12,18 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(IOTC_SRC_LIST
-    ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/wifi_net_info.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/seq_num_utils.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/e2e_ctl_msg.c
-    PARENT_SCOPE
-)
+add_subdirectory(DFx)
+add_subdirectory(frameworks)
+add_subdirectory(init)
+add_subdirectory(schedule)
+add_subdirectory(security)
+add_subdirectory(service)
+add_subdirectory(utils)
+add_subdirectory(log)
+add_subdirectory(model)
+add_subdirectory(product)
 
+set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
 set(IOTC_INC_LIST
     ${IOTC_INC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/define
     PARENT_SCOPE
 )
-
 set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)

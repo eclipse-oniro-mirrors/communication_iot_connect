@@ -29,21 +29,56 @@ iotc_adapter_src = [
   "$iotc_adapter_path/crypto/mbedtls/adapter_md.c",
   "$iotc_adapter_path/crypto/mbedtls/adapter_mpi.c",
   "$iotc_adapter_path/crypto/mbedtls/adapter_rsa.c",
+  "$iotc_adapter_path/json/cjson/adapter_json.c",
   "$iotc_adapter_path/log/adapter_log_inner.c",
   "$iotc_adapter_path/mem/stdlib/adapter_mem.c",
+  "$iotc_adapter_path/tls/mbedtls/adapter_tls.c",
 ]
 
 iotc_adapter_def = []
 iotc_adapter_dep = []
 
+if (iotc_ble_support) {
+  if (defined(ohos_lite)) {
+    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/adapter_ble.c"]
+  } else {
+    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_standard/adapter_ble.c"]
+  }
+  iotc_adapter_def += ["IOTC_CONF_BLE_SUPPORT=1"]
+  if (board_name == "rtl8720") {
+    iotc_adapter_inc += ["$iotc_root_path/test/open_source/communication_bluetooth/interfaces/inner_api/include/c_header"]
+  } else {
+    iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
+    iotc_adapter_inc += ["//third_party/mbedtls/include"]
+  }
+}
+
 if (iotc_wifi_support) {
-  iotc_adapter_src += ["$iotc_adapter_path/tls/mbedtls/adapter_tls.c"]
+  iotc_adapter_src += ["$iotc_adapter_path/socket/adapter_socket.c"]
+  if (ohos_kernel_type == "liteos_m") {
+    iotc_adapter_src += [
+      "$iotc_adapter_path/wifi/oh_lite/adapter_network.c",
+      "$iotc_adapter_path/wifi/oh_lite/adapter_wifi.c",
+    ]
+  } else {
+    iotc_adapter_src += [
+      "$iotc_adapter_path/wifi/oh_standard/adapter_network.c",
+      "$iotc_adapter_path/wifi/oh_standard/adapter_wifi.c",
+    ]
+  }
+  iotc_adapter_def += ["IOTC_CONF_WIFI_SUPPORT=1"]
+  if (defined(ohos_lite)) {
+    iotc_adapter_inc += ["//foundation/communication/wifi_lite/interfaces/wifiservice"]
+  } else {
+    iotc_adapter_inc += ["//foundation/communication/wifi/wifi/interfaces/kits/c"]
+  }
 }
 
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     iotc_adapter_inc += ["//kernel/liteos_m/kal/cmsis"]
     iotc_adapter_src += ["$iotc_adapter_path/os/cmsis2/adapter_os.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/kv/oh_lite/adapter_kv.c"]
     iotc_adapter_src += ["$iotc_adapter_path/log/printf/adapter_log.c"]
     if (board_name == "rtl8720") {
       iotc_adapter_inc += [
@@ -59,6 +94,7 @@ if (defined(ohos_lite)) {
     }
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/os/posix/adapter_os.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/kv/posix/adapter_kv.c"]
     iotc_adapter_dep += [
       "//third_party/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
@@ -68,6 +104,7 @@ if (defined(ohos_lite)) {
   }
 } else {
   iotc_adapter_src += ["$iotc_adapter_path/os/posix/adapter_os.c"]
+  iotc_adapter_src += ["$iotc_adapter_path/kv/posix/adapter_kv.c"]
   if (iotc_hilog_support) {
     iotc_adapter_src += ["$iotc_adapter_path/log/hilog/adapter_log.c"]
   } else {

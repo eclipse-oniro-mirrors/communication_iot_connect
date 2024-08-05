@@ -26,6 +26,7 @@
 #include "adapter_log.h"
 
 #if !IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
+#include <sys/time.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>

@@ -14,16 +14,6 @@
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/wifi_net_info.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/seq_num_utils.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/e2e_ctl_msg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_ble.c
     PARENT_SCOPE
 )
-
-set(IOTC_INC_LIST
-    ${IOTC_INC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    PARENT_SCOPE
-)
-
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)

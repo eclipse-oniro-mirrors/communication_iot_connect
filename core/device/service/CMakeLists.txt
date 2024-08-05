@@ -14,9 +14,11 @@
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/wifi_net_info.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/seq_num_utils.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/e2e_ctl_msg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/dev_mngr_ctx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/dev_svc_auth_setup.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/device_control.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_dev_svc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/svc_cloud_setup.c
     PARENT_SCOPE
 )
 
@@ -26,4 +28,8 @@ set(IOTC_INC_LIST
     PARENT_SCOPE
 )
 
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+set(IOTC_TEST_INC_LIST
+    ${IOTC_TEST_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    PARENT_SCOPE
+)

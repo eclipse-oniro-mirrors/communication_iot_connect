@@ -18,7 +18,7 @@
 #include "utils_common.h"
 #include "iotc_errcode.h"
 
-struct tagUtilsExMutex {
+struct UtilsExMutex {
     AdapterMutexId *mutexId;
     const char *func;
     uint32_t time;

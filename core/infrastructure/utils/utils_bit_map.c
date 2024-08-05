@@ -18,7 +18,7 @@
 #include "iotc_log.h"
 #include "securec.h"
 
-struct tagBitMap {
+struct BitMap {
     uint32_t size;
     uint8_t map[];
 };

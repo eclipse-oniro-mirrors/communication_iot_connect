@@ -1,0 +1,90 @@
+#
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import("../../iotc.gni")
+
+iotc_core_infrastructure_inc = [
+  "$iotc_core_path/infrastructure/define",
+  "$iotc_core_path/infrastructure/service/include",
+  "$iotc_core_path/infrastructure/DFx/include",
+  "$iotc_core_path/infrastructure/frameworks/event_bus/include",
+  "$iotc_core_path/infrastructure/frameworks/event_loop/include",
+  "$iotc_core_path/infrastructure/frameworks/init/include",
+  "$iotc_core_path/infrastructure/frameworks/main/include",
+  "$iotc_core_path/infrastructure/frameworks/netcfg/include",
+  "$iotc_core_path/infrastructure/frameworks/service/include",
+  "$iotc_core_path/infrastructure/init/include",
+  "$iotc_core_path/infrastructure/security/include",
+  "$iotc_core_path/infrastructure/utils/include",
+  "$iotc_core_path/infrastructure/schedule/include",
+  "$iotc_core_path/infrastructure/log/include",
+  "$iotc_core_path/infrastructure/model/include",
+  "$iotc_core_path/infrastructure/product/include",
+]
+
+iotc_core_infrastructure_src = [
+  "$iotc_core_path/infrastructure/log/iotc_log.c",
+  "$iotc_core_path/infrastructure/DFx/dfx_anonymize.c",
+  "$iotc_core_path/infrastructure/DFx/dfx_watch_dog.c",
+  "$iotc_core_path/infrastructure/service/iotc_svc_dev.c",
+  "$iotc_core_path/infrastructure/service/iotc_svc_conn.c",
+  "$iotc_core_path/infrastructure/service/iotc_svc_ble.c",
+  "$iotc_core_path/infrastructure/frameworks/event_bus/event_bus.c",
+  "$iotc_core_path/infrastructure/frameworks/event_bus/event_bus_public.c",
+  "$iotc_core_path/infrastructure/frameworks/event_loop/event_loop.c",
+  "$iotc_core_path/infrastructure/frameworks/event_loop/event_source_fd.c",
+  "$iotc_core_path/infrastructure/frameworks/event_loop/event_source_msg_queue.c",
+  "$iotc_core_path/infrastructure/frameworks/event_loop/event_source_timer.c",
+  "$iotc_core_path/infrastructure/frameworks/event_loop/event_source.c",
+  "$iotc_core_path/infrastructure/frameworks/init/fwk_init.c",
+  "$iotc_core_path/infrastructure/frameworks/main/main_loop.c",
+  "$iotc_core_path/infrastructure/frameworks/main/fwk_main.c",
+  "$iotc_core_path/infrastructure/frameworks/netcfg/netcfg_service.c",
+  "$iotc_core_path/infrastructure/frameworks/service/service_manager.c",
+  "$iotc_core_path/infrastructure/init/core_infrastructure_init.c",
+  "$iotc_core_path/infrastructure/security/security_key.c",
+  "$iotc_core_path/infrastructure/security/security_random.c",
+  "$iotc_core_path/infrastructure/security/security_store.c",
+  "$iotc_core_path/infrastructure/security/security_sess_key.c",
+  "$iotc_core_path/infrastructure/security/speke/security_speke_client.c",
+  "$iotc_core_path/infrastructure/security/speke/security_speke_common.c",
+  "$iotc_core_path/infrastructure/security/speke/security_speke_nego_ctx.c",
+  "$iotc_core_path/infrastructure/security/speke/security_speke_server.c",
+  "$iotc_core_path/infrastructure/security/speke/security_speke_session.c",
+  "$iotc_core_path/infrastructure/utils/utils_bit_map.c",
+  "$iotc_core_path/infrastructure/utils/utils_buffer.c",
+  "$iotc_core_path/infrastructure/utils/utils_common.c",
+  "$iotc_core_path/infrastructure/utils/utils_combo.c",
+  "$iotc_core_path/infrastructure/utils/utils_fsm.c",
+  "$iotc_core_path/infrastructure/utils/utils_mutex_global.c",
+  "$iotc_core_path/infrastructure/utils/utils_hash_map.c",
+  "$iotc_core_path/infrastructure/utils/utils_json.c",
+  "$iotc_core_path/infrastructure/utils/utils_msg_queue.c",
+  "$iotc_core_path/infrastructure/utils/utils_mutex_ex.c",
+  "$iotc_core_path/infrastructure/utils/utils_queue.c",
+  "$iotc_core_path/infrastructure/utils/utils_time.c",
+  "$iotc_core_path/infrastructure/utils/local_mutex/mini/utils_mutex_local.c",
+  "$iotc_core_path/infrastructure/schedule/sched_event_loop.c",
+  "$iotc_core_path/infrastructure/schedule/sched_executor.c",
+  "$iotc_core_path/infrastructure/schedule/sched_main_loop.c",
+  "$iotc_core_path/infrastructure/schedule/sched_timer.c",
+  "$iotc_core_path/infrastructure/schedule/sched_msg_queue.c",
+  "$iotc_core_path/infrastructure/model/svc_info_mdl.c",
+  "$iotc_core_path/infrastructure/product/dev_info.c",
+  "$iotc_core_path/infrastructure/product/svc_info.c",
+  "$iotc_core_path/infrastructure/product/product_adapter.c",
+]
+
+iotc_core_infrastructure_def = []
