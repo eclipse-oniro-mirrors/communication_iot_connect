@@ -12,21 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LOCAL_CONTROL_REPORT_H
-#define LOCAL_CONTROL_REPORT_H
-#include <stdint.h>
-#include "adapter_json.h"
-#include "local_ctl_ctx.h"
+#ifndef COAP_ENDPOINT_EVENT_SOURCE_H
+#define COAP_ENDPOINT_EVENT_SOURCE_H
+
+#include "event_source.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t LocalCtlReportToAllClient(const AdapterJson *json, LocalControlContext *ctx);
-
-int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContext *ctx, LocalControlClient *cli);
+EventSource *CoapEndpointEventSourceNew(CoapEndpoint *endpoint);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* LOCAL_CONTROL_REPORT_H */
+
+#endif /* COAP_ENDPOINT_EVENT_SOURCE_H */

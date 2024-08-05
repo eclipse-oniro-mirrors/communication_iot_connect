@@ -94,6 +94,32 @@ static void ServiceReportToSession(AdapterJson *root, SoftapPeerSess *peer, Coap
     ++peer->sendSeq;
 }
 
+static int32_t CreateReportJson(const AdapterJson *dataArray, AdapterJson **root)
+{
+    AdapterJson *dataArrayClone = AdapterDuplicateJson(dataArray, true);
+    if (dataArrayClone == NULL) {
+        IOTC_LOGW("copy json error");
+        return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
+    }
+
+    *root = AdapterCreateJson();
+    if (*root == NULL) {
+        IOTC_LOGW("create root json error");
+        AdapterJsonDelete(dataArrayClone);
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+
+    int32_t ret = AdapterJsonAddItem2Obj(*root, STR_JSON_SERVICES, dataArrayClone);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add array to root error %d", ret);
+        AdapterJsonDelete(dataArrayClone);
+        AdapterJsonDelete(*root);
+        *root = NULL;
+        return ret;
+    }
+    return IOTC_OK;
+}
+
 int32_t SoftapServiceReportToAllPeer(const AdapterJson *dataArray)
 {
     CHECK_RETURN_LOGW(dataArray != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -103,24 +129,10 @@ int32_t SoftapServiceReportToAllPeer(const AdapterJson *dataArray)
         return IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_CTX;
     }
 
-    AdapterJson *dataArrayClone = AdapterDuplicateJson(dataArray, true);
-    if (dataArrayClone == NULL) {
-        IOTC_LOGW("copy json error");
-        return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
-    }
-
-    AdapterJson *root = AdapterCreateJson();
-    if (root == NULL) {
-        IOTC_LOGW("create root json error");
-        AdapterJsonDelete(dataArrayClone);
-        return IOTC_ADAPTER_JSON_ERR_CREATE;
-    }
-
-    int32_t ret = AdapterJsonAddItem2Obj(root, STR_JSON_SERVICES, dataArrayClone);
+    AdapterJson *root = NULL;
+    int32_t ret = CreateReportJson(dataArray, &root);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("add array to root error %d", ret);
-        AdapterJsonDelete(dataArrayClone);
-        AdapterJsonDelete(root);
+        IOTC_LOGW("create report json error %d", ret);
         return ret;
     }
 
@@ -130,6 +142,40 @@ int32_t SoftapServiceReportToAllPeer(const AdapterJson *dataArray)
         }
         ServiceReportToSession(root, &ctx->sess.peerSess[i], ctx->sess.endpoint);
     }
+    AdapterJsonDelete(root);
+    return IOTC_OK;
+}
+
+int32_t SoftapServiceReportToTargetPeer(const AdapterJson *dataArray, uint32_t peerAddr)
+{
+    CHECK_RETURN_LOGW(dataArray != NULL && peerAddr != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+    SoftapServiceContext *ctx = GetSoftapServiceContext();
+    if (ctx == NULL) {
+        IOTC_LOGW("invalid softap ctx");
+        return IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_CTX;
+    }
+
+    SoftapPeerSess *sess = NULL;
+    for (uint32_t i = 0; i < IOTC_CONF_SOFTAP_MAX_PEER_SESS_NUM; ++i) {
+        if (!UTILS_IS_BIT_SET(ctx->sess.peerSess[i].bitMap, SOFTAP_PEER_SESS_BIT_MAP_SPEKE_SESS_CREATED) ||
+            ctx->sess.peerSess[i].addrInfo.addr != peerAddr) {
+            continue;
+        }
+        sess = &ctx->sess.peerSess[i];
+    }
+    if (sess == NULL) {
+        IOTC_LOGW("invalid peer to report");
+        return IOTC_CORE_WIFI_NETCFG_ERR_E2E_CTRL_INVALID_PEER;
+    }
+
+    AdapterJson *root = NULL;
+    int32_t ret = CreateReportJson(dataArray, &root);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("create report json error %d", ret);
+        return ret;
+    }
+
+    ServiceReportToSession(root, sess, ctx->sess.endpoint);
     AdapterJsonDelete(root);
     return IOTC_OK;
 }

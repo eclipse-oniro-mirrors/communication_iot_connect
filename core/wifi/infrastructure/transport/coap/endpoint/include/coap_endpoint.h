@@ -12,23 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef E2E_CONTROL_MSG_H
-#define E2E_CONTROL_MSG_H
+#ifndef COAP_ENDPOINT_H
+#define COAP_ENDPOINT_H
 #include <stdbool.h>
-#include <stdint.h>
-#include "adapter_json.h"
+#include "coap_codec_def.h"
+#include "trans_sess.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef void (*E2eCtrlMsgReportAfterGetCmd)(const AdapterJson *dataArray, const void *userData, uint32_t userDataLen);
+typedef struct CoapEndpoint CoapEndpoint;
 
-int32_t E2eCtrlMsgProcess(const AdapterJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
-    const void *userData, uint32_t userDataLen);
+typedef int32_t (*CoapEndpointSendCallback)(CoapPacket *pkt, CoapBuffer *buf, const SocketAddr *addr, void *userData);
+
+typedef int32_t (*CoapEndpointPacketEncode)(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf);
+
+typedef int32_t (*CoapEndpointPacketDecode)(CoapPacket *pkt, const CoapData *raw);
+
+CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
+    CoapEndpointPacketEncode encoder, CoapEndpointPacketDecode decoder, void *userData);
+
+void CoapEndpointFree(CoapEndpoint *endpoint);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* WIFI_BASE_EVENT_H */
+#endif /* COAP_ENDPOINT_H */
