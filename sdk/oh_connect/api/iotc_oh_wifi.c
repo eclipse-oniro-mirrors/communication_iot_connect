@@ -43,7 +43,6 @@ static int32_t StartWifiSoftapSvc(void)
     bool isNoSoftapMode = (GetNetCfgMode() != IOTC_NET_CONFIG_MODE_SOFTAP);
     bool isConnect = ConnSvcProxyIsNetConnected();
     bool isWifiInfoExits = ConnSvcProxyIsWifiInfoExits();
-
     if (isBinded || isNoSoftapMode || isConnect || isWifiInfoExits) {
         IOTC_LOGI("skip softap service %d/%d/%d/%d", isBinded, isNoSoftapMode, isConnect, isWifiInfoExits);
         return IOTC_OK;

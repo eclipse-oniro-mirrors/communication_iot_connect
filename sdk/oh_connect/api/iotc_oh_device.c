@@ -43,7 +43,7 @@
             IOTC_LOGW(#member "set error %d", ret); \
             return ret; \
         } \
-    } while (0);
+    } while (0)
 
 static int32_t OptionSetDevPutCharCallback(va_list args)
 {
