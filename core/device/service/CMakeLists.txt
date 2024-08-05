@@ -12,11 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(ble)
-add_subdirectory(wifi)
-add_subdirectory(device)
-add_subdirectory(infrastructure)
+set(IOTC_SRC_LIST
+    ${IOTC_SRC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/dev_mngr_ctx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/dev_svc_auth_setup.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/device_control.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_dev_svc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/svc_cloud_setup.c
+    PARENT_SCOPE
+)
 
-set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
-set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+set(IOTC_INC_LIST
+    ${IOTC_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PARENT_SCOPE
+)
+
+set(IOTC_TEST_INC_LIST
+    ${IOTC_TEST_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    PARENT_SCOPE
+)

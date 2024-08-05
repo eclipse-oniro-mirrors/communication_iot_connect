@@ -12,11 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(ble)
-add_subdirectory(wifi)
-add_subdirectory(device)
-add_subdirectory(infrastructure)
+set(IOTC_SRC_LIST
+    ${IOTC_SRC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_aes.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_base64.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_drbg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_kdf.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_md.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_mpi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_rsa.c
+    PARENT_SCOPE
+)
 
-set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
-set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+set(IOTC_TEST_INC_LIST
+    ${IOTC_TEST_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    PARENT_SCOPE
+)

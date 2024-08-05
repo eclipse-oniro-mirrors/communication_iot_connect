@@ -12,11 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(ble)
-add_subdirectory(wifi)
-add_subdirectory(device)
-add_subdirectory(infrastructure)
-
-set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
-set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+set(IOTC_SRC_LIST
+    ${IOTC_SRC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_json.c
+    PARENT_SCOPE
+)

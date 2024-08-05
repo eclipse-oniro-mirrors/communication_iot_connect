@@ -21,7 +21,6 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/utils_fsm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/utils_json.c
     ${CMAKE_CURRENT_SOURCE_DIR}/utils_msg_queue.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils_mutex_cas.c
     ${CMAKE_CURRENT_SOURCE_DIR}/utils_mutex_ex.c
     ${CMAKE_CURRENT_SOURCE_DIR}/utils_mutex_global.c
     ${CMAKE_CURRENT_SOURCE_DIR}/utils_queue.c

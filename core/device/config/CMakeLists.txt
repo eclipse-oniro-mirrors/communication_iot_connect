@@ -12,21 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(ble)
-add_subdirectory(crypto)
-add_subdirectory(json)
-add_subdirectory(kv)
-add_subdirectory(log)
-add_subdirectory(mem)
-add_subdirectory(os)
-add_subdirectory(socket)
-add_subdirectory(tls)
-add_subdirectory(wifi)
-
-set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
-set(IOTC_INC_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${IOTC_INC_LIST}
+set(IOTC_SRC_LIST
+    ${IOTC_SRC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_authinfo.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_info.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_login_info.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_online_status.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_register_info.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_revoke_flag.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/config_revoke.c
     PARENT_SCOPE
 )
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+
+set(IOTC_INC_LIST
+    ${IOTC_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PARENT_SCOPE
+)
+
+set(IOTC_TEST_INC_LIST
+    ${IOTC_TEST_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    PARENT_SCOPE
+)

@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(ble)
-add_subdirectory(wifi)
-add_subdirectory(device)
-add_subdirectory(infrastructure)
+set(IOTC_SRC_LIST
+    ${IOTC_SRC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_ble_adv_data.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_option.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_softap_name.c
+    PARENT_SCOPE
+)
 
-set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
-set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+set(IOTC_INC_LIST
+    ${IOTC_INC_LIST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PARENT_SCOPE
+)
