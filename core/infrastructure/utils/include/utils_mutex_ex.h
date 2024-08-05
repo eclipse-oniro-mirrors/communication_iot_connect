@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 /** 扩展锁句柄 */
-typedef struct TagUtilsExMutex UtilsExMutex;
+typedef struct UtilsExMutex UtilsExMutex;
 
 /**
  * @brief 创建互斥锁

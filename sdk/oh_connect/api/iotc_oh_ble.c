@@ -318,7 +318,8 @@ int32_t IotcOhBleSendCustomSecData(const uint8_t *data, uint32_t len)
 
     int32_t errcode = IOTC_OK;
     OhBleCustomDataParam param = {data, len};
-    int32_t ret = SchedAsyncExecutorWait(ReportSvcExecutorCallback, &param, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
+    int32_t ret = SchedAsyncExecutorWait(ReportSvcExecutorCallback, &param, NULL,
+        &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
     if (ret != IOTC_OK) {
         IOTC_LOGF("executor send data error %d", ret);
         return ret;

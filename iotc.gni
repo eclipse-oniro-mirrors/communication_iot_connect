@@ -17,14 +17,11 @@ iotc_sdk_path = "${iotc_root_path}/sdk"
 iotc_core_path = "${iotc_root_path}/core"
 iotc_adapter_path = "${iotc_root_path}/adapter"
 iotc_interface_path = "${iotc_root_path}/interfaces"
-iotc_demo_path = "${iotc_root_path}/demo"
 
 declare_args() {
   iotc_ble_support = true
   iotc_wifi_support = true
   iotc_ailife_support = false
-  iotc_demo_support = false
-  iotc_demo_type = "combo"
   iotc_mbedtls_v2_support = false
   iotc_mbedtls_psk_support = false
   iotc_mbedtls_ccm_support = false

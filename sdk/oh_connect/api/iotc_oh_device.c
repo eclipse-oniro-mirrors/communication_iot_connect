@@ -289,7 +289,8 @@ int32_t IotcOhDevReportCharState(const IotcCharState state[], uint32_t num)
 
     int32_t errcode;
     ReportExecutorParam param = {state, num};
-    int32_t ret = SchedAsyncExecutorWait(ReportExecutorWaitCallback, &param, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
+    int32_t ret = SchedAsyncExecutorWait(ReportExecutorWaitCallback, &param, NULL,
+        &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
     if (ret != IOTC_OK) {
         IOTC_LOGE("async executor error %d", ret);
         return ret;

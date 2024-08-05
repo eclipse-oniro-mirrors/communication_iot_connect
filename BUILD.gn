@@ -14,10 +14,12 @@
 #
 import("iotc.gni")
 import("adapter/adapter.gni")
+import("core/core.gni")
+import("sdk/sdk.gni")
 
-iotc_inc = iotc_adapter_inc
-iotc_src = iotc_adapter_src
-iotc_def = iotc_adapter_def
+iotc_inc = iotc_adapter_inc + iotc_core_inc + iotc_sdk_inc
+iotc_src = iotc_adapter_src + iotc_core_src + iotc_sdk_src
+iotc_def = iotc_adapter_def + iotc_core_def + iotc_sdk_def
 iotc_dep = iotc_adapter_dep
 
 iotc_inc += [

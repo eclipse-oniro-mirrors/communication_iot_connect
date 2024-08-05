@@ -31,7 +31,7 @@ extern "C" {
 #define UTILS_BIT_RESET(data, n)  ((data) &= (~UTILS_BIT(n)))
 #define UTILS_IS_BIT_SET(data, n) (((data) & UTILS_BIT(n)) != 0)
 
-typedef struct TagBitMap BitMap;
+typedef struct BitMap BitMap;
 
 BitMap *UtilsCreateBitMap(uint32_t size);
 
