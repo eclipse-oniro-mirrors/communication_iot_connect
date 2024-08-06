@@ -50,7 +50,6 @@ bool WifiIsNetConnected(void)
 
 bool WifiIsNetInfoExit(void)
 {
-    int32_t AdapterGetWifiInfo(uint8_t *ssidBuf, uint32_t *ssidBufLen, uint8_t *pwdBuf, uint32_t *pwdBufLen);
     uint8_t ssid[ADAPTER_WIFI_SSID_MAX_LEN + 1] = {0};
     uint8_t pwd[ADAPTER_WIFI_PWD_MAX_LEN + 1] = {0};
     uint32_t ssidLen = ADAPTER_WIFI_SSID_MAX_LEN;

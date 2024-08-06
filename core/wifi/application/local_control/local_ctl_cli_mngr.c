@@ -35,9 +35,10 @@ static void LocalClientFree(LocalControlClient *cli)
         DFX_ANONYMIZE_ID_STR(anonyPuuid, cli->appInfo.puuid);
         IOTC_LOGD("client free %s", anonyPuuid);
         AdapterFree(cli->appInfo.puuid);
+        cli->appInfo.puuid = NULL;
     }
 
-    (void)memset_s(cli, sizeof(LocalControlClient), 0, sizeof(LocalControlClient));
+    (void)memset_s(&cli->sessInfo, sizeof(cli->sessInfo), 0, sizeof(cli->sessInfo));
     AdapterFree(cli);
 }
 

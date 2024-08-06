@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 #include "trans_socket_tls.h"
-#include "utils_assert.h"
-#include "utils_common.h"
 #include "comm_def.h"
 #include "securec.h"
 #include "security_random.h"
