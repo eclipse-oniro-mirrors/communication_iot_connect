@@ -149,7 +149,7 @@ static HashMapTravCode ClientMapTraversalFindPuuid(const void *value, va_list ar
     const char *puuid = va_arg(argp, const char *);
     uint32_t puuidLen = va_arg(argp, uint32_t);
     LocalControlClient **clientFind = va_arg(argp, LocalControlClient **);
-    if (puuid == NULL || puuidLen == 0 || client == NULL) {
+    if (puuid == NULL || puuidLen == 0 || clientFind == NULL) {
         IOTC_LOGW("invalid param");
         return HASH_MAP_TRAVE_BREAK;
     }
@@ -195,9 +195,8 @@ static bool LocalControlSessKeyCreate(LocalControlClient *client, const LocalCli
         return false;
     }
 
-    int32_t ret;
     do {
-        ret = SecuritySessKeyAddSn(sessCtx, param->sn1, SESS_KEY_SN1);
+        int32_t ret = SecuritySessKeyAddSn(sessCtx, param->sn1, SESS_KEY_SN1);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add sn1 error %d", ret);
             break;

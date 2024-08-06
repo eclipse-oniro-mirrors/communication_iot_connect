@@ -117,11 +117,10 @@ int32_t CoapCommParseOptions(CoapPacket *pkt, const CoapData *raw, uint32_t *pos
         IOTC_ERR_PARAM_INVALID);
     uint8_t opNum = 0;
     uint16_t delta = 0;
-    int32_t ret;
 
     /* 解析每一个option, 0xFF为payload标识符 */
     while ((*pos < raw->len) && (raw->data[*pos] != 0xFF) && (opNum < COAP_OPTION_MAX_NUM)) {
-        ret = CoapCommParseSingleOption(&((pkt->options)[opNum]), &delta, raw, pos);
+        int32_t ret = CoapCommParseSingleOption(&((pkt->options)[opNum]), &delta, raw, pos);
         if (ret != IOTC_OK) {
             return ret;
         }
@@ -328,9 +327,8 @@ int32_t CoapCommBuildOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapB
         option = build->options[i].option;
     }
 
-    int32_t ret;
     for (uint8_t i = 0; i < build->opNum; ++i) {
-        ret = CoapCommBuildSingleOption(build, pkt, buf, i);
+        int32_t ret = CoapCommBuildSingleOption(build, pkt, buf, i);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add option error %u", i);
             return ret;

@@ -218,3 +218,17 @@ int32_t CoapEndpointServerRecvReqPacket(CoapEndpoint *endpoint, const CoapPacket
     }
     return IOTC_OK;
 }
+
+int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, AdapterJson *respJson)
+{
+    CHECK_RETURN_LOGW(param != NULL && respJson != NULL && reqPkt != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    (void)memset_s(param, sizeof(CoapServerRespParam), 0, sizeof(CoapServerRespParam));
+    param->req = reqPkt;
+    param->type = COAP_MSG_TYPE_ACK;
+    param->code = COAP_RESPONSE_CODE_CONTENT;
+    param->payloadBuilder = CoapUtilsBuildJsonPayloadFunc;
+    param->payloadUserData = respJson;
+    
+    return IOTC_OK;
+}

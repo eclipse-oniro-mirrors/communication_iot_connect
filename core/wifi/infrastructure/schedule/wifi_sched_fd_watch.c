@@ -26,11 +26,11 @@ static EventSource *g_wifiFdEventSource = NULL;
 
 #define EVENT_SOURCE_FD_SET_TO_ADAPTER(eventSourceFdSet, adapterFdSet) \
     AdapterFdSet buffer##adapterFdSet = {0, NULL}; \
-    AdapterFdSet *adapterFdSet = NULL; \
+    AdapterFdSet *(adapterFdSet) = NULL; \
     if ((eventSourceFdSet) != NULL && (eventSourceFdSet)->num != 0 && \
         (eventSourceFdSet)->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) { \
-        (buffer##adapterFdSet).fdSet = read->fd; \
-        (buffer##adapterFdSet).num = read->num; \
+        (buffer##adapterFdSet).fdSet = (eventSourceFdSet)->fd; \
+        (buffer##adapterFdSet).num = (eventSourceFdSet)->num; \
         (adapterFdSet) = &(buffer##adapterFdSet); \
     }
 

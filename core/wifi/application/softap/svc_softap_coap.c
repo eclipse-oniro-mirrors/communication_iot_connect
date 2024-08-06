@@ -151,23 +151,20 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         UTILS_BIT_SET(ctx->bitMap, SOFTAP_CTX_BIT_MAP_NETCFG_RECVED);
     }
 
-    AdapterJson *jsonObj = UtilsJsonCreateErrcode(ret);
-    if (jsonObj == NULL) {
+    AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
+    if (respJson == NULL) {
         IOTC_LOGW("create resp json error");
         return;
     }
 
-    CoapServerRespParam respParam = {
-        .req = req,
-        .type = COAP_MSG_TYPE_NCON,
-        .code = COAP_RESPONSE_CODE_CONTENT,
-        .opNum = 0,
-        .options = NULL,
-        .payload = NULL,
-        .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = jsonObj,
-        .preSize = 0,
-    };
+    CoapServerRespParam respParam;
+    ret = CoapServerBuildDefaultRespParam(&respParam, req, respJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("build resp param error %d", ret);
+        AdapterJsonDelete(respJson);
+        return;
+    }
+
     /* 配网报文为softap链路的最后一条报文 */
     SoftapPeerSess *peer = SoftapGetPeerSess(addr, &ctx->sess);
     if (peer != NULL) {
@@ -175,7 +172,7 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     }
     CoapPacket packet;
     ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
-    AdapterJsonDelete(jsonObj);
+    AdapterJsonDelete(respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send coap resp msg error %d", ret);
     }
@@ -517,26 +514,23 @@ void SoftapCoapE2eCtrlHandler(CoapEndpoint *endpoint, const CoapPacket *req, con
     int32_t ret = E2eCtrlMsgProcess(payloadJsonObj, SoftapCtrlMsgReportAfterGetCmd, &addr->addr, sizeof(addr->addr));
     AdapterJsonDelete(payloadJsonObj);
 
-    AdapterJson *respJsonObj = UtilsJsonCreateErrcode(ret);
-    if (respJsonObj == NULL) {
+    AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
+    if (respJson == NULL) {
         IOTC_LOGW("create resp json error %d", ret);
         return;
     }
 
-    CoapServerRespParam respParam = {
-        .req = req,
-        .type = COAP_MSG_TYPE_NCON,
-        .code = COAP_RESPONSE_CODE_CONTENT,
-        .opNum = 0,
-        .options = NULL,
-        .payload = NULL,
-        .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = respJsonObj,
-        .preSize = 0,
-    };
+    CoapServerRespParam respParam;
+    ret = CoapServerBuildDefaultRespParam(&respParam, req, respJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("build resp param error %d", ret);
+        AdapterJsonDelete(respJson);
+        return;
+    }
+
     CoapPacket packet;
     ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
-    AdapterJsonDelete(respJsonObj);
+    AdapterJsonDelete(respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send e2e ctrl resp msg error %d", ret);
     }

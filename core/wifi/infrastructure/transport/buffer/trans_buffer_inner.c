@@ -36,52 +36,55 @@ struct TransBufferContext {
     IOTC_CONF_WIFI_DEFAULT_RECV_BUFFER_MAX_SIZE
 };
 
-#define GET_CTX() (&g_transBufCtx)
+static inline struct TransBufferContext *GetBufferCtx(void)
+{
+    return &g_transBufCtx;
+}
 
 void TransSetSendBufferSize(uint32_t res, uint32_t max)
 {
     CHECK_V_RETURN_LOGW(res != 0 && max != 0, "param invalid");
-    GET_CTX()->sendRes = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, res);
-    GET_CTX()->sendMax = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, UTILS_MAX(max, res));
-    IOTC_LOGI("set send buf %u/%u", GET_CTX()->sendRes, GET_CTX()->sendMax);
+    GetBufferCtx()->sendRes = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, res);
+    GetBufferCtx()->sendMax = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, UTILS_MAX(max, res));
+    IOTC_LOGI("set send buf %u/%u", GetBufferCtx()->sendRes, GetBufferCtx()->sendMax);
 }
 
 void TransSetRecvBufferSize(uint32_t res, uint32_t max)
 {
     CHECK_V_RETURN_LOGW(res != 0 && max != 0, "param invalid");
-    GET_CTX()->recvRes = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, res);
-    GET_CTX()->recvMax = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, UTILS_MAX(max, res));
-    IOTC_LOGI("set recv buf %u/%u", GET_CTX()->recvRes, GET_CTX()->recvMax);
+    GetBufferCtx()->recvRes = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, res);
+    GetBufferCtx()->recvMax = UTILS_MIN(IOTC_CONF_WIFI_BUFFER_MAX_SIZE, UTILS_MAX(max, res));
+    IOTC_LOGI("set recv buf %u/%u", GetBufferCtx()->recvRes, GetBufferCtx()->recvMax);
 }
 
 uint32_t TransGetSendBufferResSize(void)
 {
-    return GET_CTX()->sendRes;
+    return GetBufferCtx()->sendRes;
 }
 
 uint32_t TransGetSendBufferMaxSize(void)
 {
-    return GET_CTX()->sendMax;
+    return GetBufferCtx()->sendMax;
 }
 
 uint32_t TransGetRecvBufferResSize(void)
 {
-    return GET_CTX()->recvRes;
+    return GetBufferCtx()->recvRes;
 }
 
 uint32_t TransGetRecvBufferMaxSize(void)
 {
-    return GET_CTX()->recvMax;
+    return GetBufferCtx()->recvMax;
 }
 
 UtilsBufferCtx *TransCreateSendBuffer(void)
 {
-    return GET_CTX()->sendBuf;
+    return GetBufferCtx()->sendBuf;
 }
 
 UtilsBufferCtx *TransCreateRecvBuffer(void)
 {
-    return GET_CTX()->recvBuf;
+    return GetBufferCtx()->recvBuf;
 }
 
 /* 保留release接口用于屏蔽buffer内部实现 */
@@ -92,18 +95,18 @@ void TransReleaseBuffer(UtilsBufferCtx *ctx)
 
 int32_t TransBufferInit(void)
 {
-    if (GET_CTX()->sendBuf == NULL) {
-        GET_CTX()->sendBuf = UtilsBufferCtxNew(GET_CTX()->sendRes, GET_CTX()->sendMax);
-        if (GET_CTX()->sendBuf == NULL) {
-            IOTC_LOGW("create send buffer error %u/%u", GET_CTX()->sendRes, GET_CTX()->sendMax);
+    if (GetBufferCtx()->sendBuf == NULL) {
+        GetBufferCtx()->sendBuf = UtilsBufferCtxNew(GetBufferCtx()->sendRes, GetBufferCtx()->sendMax);
+        if (GetBufferCtx()->sendBuf == NULL) {
+            IOTC_LOGW("create send buffer error %u/%u", GetBufferCtx()->sendRes, GetBufferCtx()->sendMax);
             return IOTC_CORE_COMM_UTILS_ERR_BUFFER_CREATE;
         }
     }
 
-    if (GET_CTX()->recvBuf == NULL) {
-        GET_CTX()->recvBuf = UtilsBufferCtxNew(GET_CTX()->recvRes, GET_CTX()->recvMax);
-        if (GET_CTX()->sendBuf == NULL) {
-            IOTC_LOGW("create recv buffer error %u/%u", GET_CTX()->recvRes, GET_CTX()->recvMax);
+    if (GetBufferCtx()->recvBuf == NULL) {
+        GetBufferCtx()->recvBuf = UtilsBufferCtxNew(GetBufferCtx()->recvRes, GetBufferCtx()->recvMax);
+        if (GetBufferCtx()->sendBuf == NULL) {
+            IOTC_LOGW("create recv buffer error %u/%u", GetBufferCtx()->recvRes, GetBufferCtx()->recvMax);
             return IOTC_CORE_COMM_UTILS_ERR_BUFFER_CREATE;
         }
     }
@@ -113,12 +116,12 @@ int32_t TransBufferInit(void)
 
 void TransBufferDeinit(void)
 {
-    if (GET_CTX()->sendBuf != NULL) {
-        UtilsBufferCtxFree(GET_CTX()->sendBuf);
-        GET_CTX()->sendBuf = NULL;
+    if (GetBufferCtx()->sendBuf != NULL) {
+        UtilsBufferCtxFree(GetBufferCtx()->sendBuf);
+        GetBufferCtx()->sendBuf = NULL;
     }
-    if (GET_CTX()->recvBuf != NULL) {
-        UtilsBufferCtxFree(GET_CTX()->recvBuf);
-        GET_CTX()->recvBuf = NULL;
+    if (GetBufferCtx()->recvBuf != NULL) {
+        UtilsBufferCtxFree(GetBufferCtx()->recvBuf);
+        GetBufferCtx()->recvBuf = NULL;
     }
 }

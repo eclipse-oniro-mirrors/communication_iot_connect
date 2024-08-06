@@ -202,10 +202,9 @@ static int32_t TlsSocketSend(TransSocket *socket, uint32_t tmo, const CommData *
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
     uint32_t start = AdapterGetSysTimeMs();
-    int32_t ret;
     uint32_t sendLen = 0;
     do {
-        ret = AdapterTlsClientSend(tlsSocket->ctx, data->data + sendLen, data->len - sendLen);
+        int32_t ret = AdapterTlsClientSend(tlsSocket->ctx, data->data + sendLen, data->len - sendLen);
         if (ret > 0) {
             sendLen += ret;
         } else if (ret < 0) {
@@ -235,13 +234,12 @@ static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
     uint32_t startTime = AdapterGetSysTimeMs();
     uint8_t *pBuf = buf->buffer + buf->len;
     uint32_t bufSize = buf->size - buf->len;
-    int32_t ret;
     uint32_t remainLen;
     uint32_t recvLen = 0;
     do {
         uint32_t curBufSize = bufSize - recvLen;
 
-        ret = tlsSocket->initParam.onUpdateRemainLen(pBuf, recvLen, &remainLen);
+        int32_t ret = tlsSocket->initParam.onUpdateRemainLen(pBuf, recvLen, &remainLen);
         if (ret != IOTC_OK) {
             IOTC_LOGW("tls get remain len error %d/%u", ret, recvLen);
             return ret;

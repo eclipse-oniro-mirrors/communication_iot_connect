@@ -61,11 +61,10 @@ static CoapRetransNode *RetransNodeNew(const CoapPacket *pkt, const CoapBuffer *
     }
     (void)memset_s(newNode, sizeof(CoapRetransNode), 0, sizeof(CoapRetransNode));
 
-    int32_t ret;
     do {
         newNode->param.msgId = pkt->header.msgId;
         newNode->param.tkl = pkt->header.tkl;
-        ret = memcpy_s(&newNode->param.addr, sizeof(newNode->param.addr), addr, sizeof(SocketAddr));
+        int32_t ret = memcpy_s(&newNode->param.addr, sizeof(newNode->param.addr), addr, sizeof(SocketAddr));
         if (ret != EOK) {
             break;
         }
