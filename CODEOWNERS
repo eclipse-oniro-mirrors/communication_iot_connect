@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/                               zhangkun666@huawei.com
+
+[adapter]
+adapter/ble/                    chengjianxing2@huawei.com
+adapter/crypto/                 chengjianxing2@huawei.com
+adapter/tls/                    chengjianxing2@huawei.com
+adapter/json/                   chengjianxing2@huawei.com
+adapter/log/                    chengjianxing2@huawei.com
+adapter/kv/                     chenmingyang12@huawei.com
+adapter/mem/                    chenmingyang12@huawei.com
+adapter/os/                     chenmingyang12@huawei.com
+adapter/socket/                 chenmingyang12@huawei.com
+adapter/wifi/                   chenmingyang12@huawei.com
+
+[core_ble]
+core/ble/                       wuzhixuan1@huawei.com
+core/ble/application/gatt       chengjianxing2@huawei.com
+core/ble/infrastructure/stack   chengjianxing2@huawei.com
+
+[core_device]
+core/device/                    chengjianxing2@huawei.com
+
+[core_wifi]
+core/wifi/                      chenmingyang12@huawei.com
+core/wifi/infrastructure        zhangkun666@huawei.com
+
+[core_infrastructure]
+core/infrastructure/            zhangkun666@huawei.com
+
+[sdk]
+sdk/                            chengjianxing2@huawei.com
+
+[interfaces]
+interfaces/                     zhangkun666@huawei.com
