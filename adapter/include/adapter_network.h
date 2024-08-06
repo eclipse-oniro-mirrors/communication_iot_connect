@@ -29,6 +29,8 @@ typedef enum {
 
 int32_t AdapterGetLocalIp(char *buf, uint32_t len);
 
+int32_t AdapterGetSoftApIp(char *buf, uint32_t len);
+
 int32_t AdapterGetMacAddr(uint8_t *buf, uint32_t len);
 
 int32_t AdapterGetBroadcastAddr(char *buf, uint32_t len);

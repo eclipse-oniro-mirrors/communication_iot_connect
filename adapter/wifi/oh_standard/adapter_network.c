@@ -23,6 +23,33 @@
 #include "adapter_socket.h"
 #include "iotc_conf.h"
 #include "adapter_log.h"
+#include "wifi_hotspot_config.h"
+#include "wifi_hotspot.h"
+
+int32_t AdapterGetSoftApIp(char *buf, uint32_t len)
+{
+    if ((buf == NULL) || (len == 0)) {
+        ADAPTER_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    HotspotConfig result;
+    (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
+    int32_t ret = GetHotspotConfig(&result);
+    if (ret != WIFI_SUCCESS || result.ipAddress[0] == '\0') {
+        ADAPTER_LOGE("Get wifi info fail %d", ret);
+        return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
+    }
+
+    if (strcpy_s(buf, len, result.ipAddress) != EOK) {
+        ADAPTER_LOGE("strcpy fail");
+        return IOTC_ERR_SECUREC_STRCPY;
+    }
+    (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
+
+    ADAPTER_LOGD("Get Hotspot Config success");
+    return IOTC_OK;
+}
 
 int32_t AdapterGetLocalIp(char *buf, uint32_t len)
 {
