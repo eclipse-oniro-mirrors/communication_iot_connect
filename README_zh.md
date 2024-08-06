@@ -45,7 +45,7 @@ int32_t IotcOhDevDeinit(void);
 #### BLE设备DEMO
 详细参考`interfaces/demo/oh_connect/iotc_oh_demo_ble.c`
 ```
-int32_t IotcOhDemoEntry(void)
+static int32_t IotcOhDemoEntry(void)
 {
     IotcOhProfCallback profCbs = {
         .putChar = PutCharState,
