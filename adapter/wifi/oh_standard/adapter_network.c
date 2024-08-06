@@ -36,13 +36,20 @@ int32_t AdapterGetSoftApIp(char *buf, uint32_t len)
     HotspotConfig result;
     (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
     int32_t ret = GetHotspotConfig(&result);
-    if (ret != WIFI_SUCCESS || result.ipAddress[0] == '\0') {
+    if (ret != WIFI_SUCCESS) {
         ADAPTER_LOGE("Get wifi info fail %d", ret);
+        return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
+    }
+
+    if (result.ipAddress[0] == '\0') {
+        ADAPTER_LOGE("wifi ip empty");
+        (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
         return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
     }
 
     if (strcpy_s(buf, len, result.ipAddress) != EOK) {
         ADAPTER_LOGE("strcpy fail");
+        (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
         return IOTC_ERR_SECUREC_STRCPY;
     }
     (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
