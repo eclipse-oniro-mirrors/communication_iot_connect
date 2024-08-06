@@ -24,6 +24,11 @@
 #include "iotc_conf.h"
 #include "adapter_log.h"
 
+int32_t AdapterGetSoftApIp(char *buf, uint32_t len)
+{
+    return AdapterGetLocalIp(buf, len);
+}
+
 int32_t AdapterGetLocalIp(char *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
