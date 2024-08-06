@@ -61,10 +61,35 @@ static AdapterJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const
     return jsonObj;
 }
 
+static int32_t SendLocalCtlResp(CoapEndpoint *endpoint, const CoapPacket *reqPkt, const SocketAddr *addr,
+    LocalCoapSessMsg *respSessMsg, AdapterJson *respJson)
+{
+    CoapServerRespParam respParam;
+    int32_t ret = CoapServerBuildDefaultRespParam(&respParam, reqPkt, respJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("build resp param error %d", ret);
+        return ret;
+    }
+
+    ret = CoapServerSendResp(endpoint, &respParam, addr, &respSessMsg->packet);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("send coap resp msg error %d", ret);
+        return ret;
+    }
+    return IOTC_OK;
+}
+
+static inline void BuildLocalCoapSessMsg(LocalCoapSessMsg *respSessMsg, uint32_t bitMap, LocalControlClient *client)
+{
+    (void)memset_s(respSessMsg, sizeof(LocalCoapSessMsg), 0, sizeof(LocalCoapSessMsg));
+    respSessMsg->bitMap = bitMap;
+    respSessMsg->client = client;
+}
+
 void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
-    
+
     uint32_t seg = 0;
     const CoapOption *puuidOption = CoapUtilsFindOption(req, COAP_OPTION_TYPE_PUUID, &seg);
     if (puuidOption == NULL || seg != 1 || puuidOption->value.data == NULL || puuidOption->value.len == 0) {
@@ -88,32 +113,19 @@ void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         return;
     }
 
-    AdapterJson *respJsonObj = CreateLocalSearchRespJson(&authInfo, client);
+    AdapterJson *respJson = CreateLocalSearchRespJson(&authInfo, client);
     (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
-    if (respJsonObj == NULL) {
+    if (respJson == NULL) {
         return;
     }
 
-    CoapServerRespParam respParam = {
-        .req = req,
-        .type = COAP_MSG_TYPE_NCON,
-        .code = COAP_RESPONSE_CODE_CONTENT,
-        .opNum = 0,
-        .options = NULL,
-        .payload = NULL,
-        .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = respJsonObj,
-        .preSize = 0,
-    };
+    LocalCoapSessMsg respSessMsg;
+    BuildLocalCoapSessMsg(&respSessMsg, LOCAL_COAP_PLAIN, client);
 
-    LocalCoapSessMsg msgPacket = {0};
-    UTILS_BIT_SET(msgPacket.bitMap, LOCAL_COAP_PLAIN);
-    msgPacket.client = client;
-    ret = CoapServerSendResp(endpoint, &respParam, addr, &msgPacket.packet);
-    AdapterJsonDelete(respJsonObj);
+    ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
+    AdapterJsonDelete(respJson);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("send coap resp msg error %d", ret);
-        return;
+        IOTC_LOGE("send local ctl search resp error %d", ret);
     }
 }
 
@@ -125,9 +137,8 @@ static AdapterJson *CreateSessMngrRespJson(LocalControlClient *client, uint8_t s
         return NULL;
     }
 
-    int32_t ret;
     do {
-        ret = UtilsJsonAddHexify(respJson, STR_JSON_SN2, sn2, SESS_SN_LEN);
+        int32_t ret = UtilsJsonAddHexify(respJson, STR_JSON_SN2, sn2, SESS_SN_LEN);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add sn2 error %d", ret);
             break;
@@ -245,25 +256,13 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
         return;
     }
 
-    CoapServerRespParam respParam = {
-        .req = req,
-        .type = COAP_MSG_TYPE_ACK,
-        .code = COAP_RESPONSE_CODE_CONTENT,
-        .opNum = 0,
-        .options = NULL,
-        .payload = NULL,
-        .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = respJson,
-        .preSize = 0,
-    };
+    LocalCoapSessMsg respSessMsg;
+    BuildLocalCoapSessMsg(&respSessMsg, LOCAL_COAP_PLAIN, client);
 
-    LocalCoapSessMsg msgPacket = {0};
-    UTILS_BIT_SET(msgPacket.bitMap, LOCAL_COAP_PLAIN);
-    msgPacket.client = client;
-    int32_t ret = CoapServerSendResp(endpoint, &respParam, addr, &msgPacket.packet);
+    int32_t ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
     AdapterJsonDelete(respJson);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("send coap resp msg error %d", ret);
+        IOTC_LOGE("send local ctl sess mngr resp error %d", ret);
     }
 }
 
@@ -360,24 +359,12 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
         return;
     }
 
-    CoapServerRespParam respParam = {
-        .req = req,
-        .type = COAP_MSG_TYPE_ACK,
-        .code = COAP_RESPONSE_CODE_CONTENT,
-        .opNum = 0,
-        .options = NULL,
-        .payload = NULL,
-        .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = respJson,
-        .preSize = 0,
-    };
+    LocalCoapSessMsg respSessMsg;
+    BuildLocalCoapSessMsg(&respSessMsg, 0, sessMsg->client);
 
-    LocalCoapSessMsg msgPacket = {0};
-    msgPacket.client = sessMsg->client;
-    sessMsg->client->sessInfo.sendSeq++;
-    ret = CoapServerSendResp(endpoint, &respParam, addr, &msgPacket.packet);
+    ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
     AdapterJsonDelete(respJson);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("send coap resp msg error %d", ret);
+        IOTC_LOGE("send local ctl resp error %d", ret);
     }
 }

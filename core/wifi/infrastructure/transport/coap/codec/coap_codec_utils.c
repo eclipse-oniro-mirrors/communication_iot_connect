@@ -51,7 +51,6 @@ static int32_t CoapUtilsGetUriOption(const CoapPacket *pkt, char *buf, uint32_t 
         return IOTC_OK;
     }
 
-    int32_t ret;
     uint32_t len = 0;
     uint32_t size = *bufSize;
     for (uint32_t i = 0; i < uriSeg; ++i) {
@@ -63,7 +62,7 @@ static int32_t CoapUtilsGetUriOption(const CoapPacket *pkt, char *buf, uint32_t 
         if (size - len < curOption->value.len) {
             return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
         }
-        ret = memcpy_s(buf + len, size - len, curOption->value.data, curOption->value.len);
+        int32_t ret = memcpy_s(buf + len, size - len, curOption->value.data, curOption->value.len);
         if (ret != EOK) {
             return IOTC_ERR_SECUREC_MEMCPY;
         }

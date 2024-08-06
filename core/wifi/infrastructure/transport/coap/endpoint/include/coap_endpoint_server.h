@@ -17,6 +17,7 @@
 #include <stdbool.h>
 #include "coap_endpoint.h"
 #include "utils_bit_map.h"
+#include "adapter_json.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,6 +59,8 @@ void CoapServerRemoveResource(CoapEndpoint *endpoint, const CoapResource *res);
 /* packetBuf应为CoapPacket的派生类，会传递到sess层作为SessMsg */
 int32_t CoapServerSendResp(CoapEndpoint *endpoint, const CoapServerRespParam *param, const SocketAddr *addr,
     CoapPacket *packetBuf);
+
+int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, AdapterJson *respJson);
 
 #ifdef __cplusplus
 }

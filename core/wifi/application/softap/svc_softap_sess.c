@@ -227,9 +227,9 @@ SoftapPeerSess *SoftapGetPeerSessCreateIfNotExist(const SocketAddr *addrInfo, So
         IOTC_LOGW("no invalid sess");
         return NULL;
     }
-    int32_t ret;
+
     if (!UTILS_IS_BIT_SET(peerSess->bitMap, SOFTAP_PEER_SESS_BIT_MAP_LINK_ACTIVE)) {
-        ret = CreatePeerSession(peerSess, addrInfo);
+        int32_t ret = CreatePeerSession(peerSess, addrInfo);
         if (ret != IOTC_OK) {
             IOTC_LOGW("create peer sess error %d", ret);
             return NULL;

@@ -87,9 +87,8 @@ static void SoftapServiceExit(void)
     }
     DestroySoftapSess(&ctx->sess);
 
-    int32_t ret;
     if (UTILS_IS_BIT_SET(ctx->bitMap, SOFTAP_CTX_BIT_MAP_SOFTAP_STARTED)) {
-        ret = AdapterStopSoftAp();
+        int32_t ret = AdapterStopSoftAp();
         IOTC_LOGI("stop softap ret %d", ret);
         EventBusPublishAsync(IOTC_CORE_WIFI_EVENT_SOFTAP_STOP, NULL, 0, NULL);
     }

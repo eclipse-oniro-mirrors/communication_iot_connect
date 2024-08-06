@@ -21,14 +21,6 @@
 #define COAP_ENDPOINT_EVENT_SOURCE_NAME "ENDPOINT"
 
 typedef struct {
-    ListEntry node;
-    CoapRetransParam param;
-    CoapData raw;
-    uint32_t remainTime;
-    uint32_t lastTime;
-} RetransNode;
-
-typedef struct {
     EventSource base;
     CoapEndpoint *endpoint;
 } CoapEndpointEventSource;

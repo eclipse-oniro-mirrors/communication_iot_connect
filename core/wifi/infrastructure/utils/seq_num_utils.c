@@ -116,7 +116,7 @@ uint32_t CoapSeqToNum(const uint8_t *data, uint32_t len)
     } else if (len == sizeof(uint32_t)) {
         return AdapterNtohl(*(uint32_t *)data);
     } else {
-        /* 0字节左移16位得到高位，1字节左移8位得到中间位 */
+        /* 0字节左移16位得到高位，1字节左移8位得到中间位，2字节为低位 */
         return ((uint32_t)data[0] << 16) | ((uint32_t)data[1] << 8) | ((uint32_t)data[2]);
     }
 }

@@ -64,7 +64,6 @@ CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
     }
     (void)memset_s(endpoint, sizeof(CoapEndpoint), 0, sizeof(CoapEndpoint));
 
-    int32_t ret;
     do {
         endpoint->sess = sess;
         endpoint->userData = userData;
@@ -77,7 +76,7 @@ CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
             break;
         }
 
-        ret = CoapEndpointClientInit(&endpoint->client);
+        int32_t ret = CoapEndpointClientInit(&endpoint->client);
         if (ret != IOTC_OK) {
             IOTC_LOGW("client init error %d", ret);
             break;
