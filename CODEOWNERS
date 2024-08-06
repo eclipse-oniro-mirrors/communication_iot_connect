@@ -13,37 +13,48 @@
  * limitations under the License.
  */
 
-/                               zhangkun666@huawei.com
-
 [adapter]
-adapter/ble/                    chengjianxing2@huawei.com
-adapter/crypto/                 chengjianxing2@huawei.com
-adapter/tls/                    chengjianxing2@huawei.com
-adapter/json/                   chengjianxing2@huawei.com
-adapter/log/                    chengjianxing2@huawei.com
-adapter/kv/                     chenmingyang12@huawei.com
-adapter/mem/                    chenmingyang12@huawei.com
-adapter/os/                     chenmingyang12@huawei.com
-adapter/socket/                 chenmingyang12@huawei.com
-adapter/wifi/                   chenmingyang12@huawei.com
+adapter/ble/                        chengjianxing2@huawei.com
+adapter/crypto/                     chengjianxing2@huawei.com
+adapter/tls/                        chengjianxing2@huawei.com
+adapter/json/                       chengjianxing2@huawei.com
+adapter/log/                        chengjianxing2@huawei.com
+adapter/kv/                         chenmingyang12@huawei.com
+adapter/mem/                        chenmingyang12@huawei.com
+adapter/os/                         chenmingyang12@huawei.com
+adapter/socket/                     chenmingyang12@huawei.com
+adapter/wifi/                       chenmingyang12@huawei.com
 
 [core_ble]
-core/ble/                       wuzhixuan1@huawei.com
-core/ble/application/gatt       chengjianxing2@huawei.com
-core/ble/infrastructure/stack   chengjianxing2@huawei.com
+core/ble/                           wuzhixuan1@huawei.com
+core/ble/application/gatt           chengjianxing2@huawei.com
+core/ble/infrastructure/stack       chengjianxing2@huawei.com
+core/ble/application/adv            chengjianxing2@huawei.com
 
 [core_device]
-core/device/                    chengjianxing2@huawei.com
+core/device/                        chengjianxing2@huawei.com
 
 [core_wifi]
-core/wifi/                      chenmingyang12@huawei.com
-core/wifi/infrastructure        zhangkun666@huawei.com
+core/wifi/                          chenmingyang12@huawei.com
+core/wifi/infrastructure            zhangkun666@huawei.com
 
 [core_infrastructure]
-core/infrastructure/            zhangkun666@huawei.com
+core/infrastructure/                zhangkun666@huawei.com
+core/infrastructure/security/speke  wuzhixuan1@huawei.com
+core/infrastructure/DFx             chenmingyang12@huawei.com
+core/infrastructure/utils           chengjianxing2@huawei.com
 
 [sdk]
-sdk/                            chengjianxing2@huawei.com
+sdk/                                chengjianxing2@huawei.com
 
 [interfaces]
-interfaces/                     zhangkun666@huawei.com
+interfaces/                         zhangkun666@huawei.com
+
+[test]
+test/                               chengjianxing2@huawei.com
+
+[other]
+CODEOWNERS                          jirui.wang@huawei.com
+*.gn                                zhangkun666@huawei.com
+*.gni                               zhangkun666@huawei.com
+*.txt                               zhangkun666@huawei.com
