@@ -137,7 +137,9 @@ int32_t CoapRetransAddPacket(CoapEndpoint *endpoint, const CoapPacket *pkt,
         return ret;
     }
     if (newNode != NULL) {
-        UTILS_FREE_2_NULL(newNode->raw.data);
+        if (newNode->raw.data != NULL) {
+            AdapterFree((void *)newNode->raw.data);
+        }
         AdapterFree(newNode);
     }
     return ret;

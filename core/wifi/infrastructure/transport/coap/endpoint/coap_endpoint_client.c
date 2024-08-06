@@ -21,7 +21,7 @@
 #include "securec.h"
 #include "iotc_errcode.h"
 
-static uint32_t COAP_ENDPOINT_CLIENT_REQ_MAX_CNT = UINT8_MAX;
+static const uint8_t COAP_ENDPOINT_CLIENT_REQ_MAX_CNT = UINT8_MAX;
 
 int32_t CoapEndpointClientInit(CoapEndpointClient *cli)
 {

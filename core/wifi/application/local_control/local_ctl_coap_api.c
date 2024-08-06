@@ -173,7 +173,7 @@ static LocalControlClient *CreateLocalCtlClient(LocalControlContext *ctx, const 
 {
     uint8_t sn1[SESS_SN_LEN] = {0};
     const char *sn1Hex = AdapterJsonGetStr(AdapterJsonGetObj(reqJson, STR_JSON_SN1));
-    if (!UtilsUnhexify(sn1Hex, strlen(sn1Hex), sn1, SESS_SN_LEN)) {
+    if (sn1Hex == NULL || !UtilsUnhexify(sn1Hex, strlen(sn1Hex), sn1, SESS_SN_LEN)) {
         IOTC_LOGW("json sn1 invalid");
         return NULL;
     }

@@ -31,8 +31,8 @@ static void LanSearchPeerInfoFree(LanSearchPeer *peer)
 {
     if (peer->sessInfo.speke != NULL) {
         SpekeFreeSession(peer->sessInfo.speke);
+        peer->sessInfo.speke = NULL;
     }
-    (void)memset_s(peer, sizeof(LanSearchPeer), 0, sizeof(LanSearchPeer));
     AdapterFree(peer);
 }
 

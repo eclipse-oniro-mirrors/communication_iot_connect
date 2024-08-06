@@ -20,6 +20,9 @@
 int32_t ConnSvcCtxInit(void)
 {
     ConnectServiceContext *ctx = GetConnSvcCtx();
+    if (ctx == NULL) {
+        return IOTC_ERR_PARAM_INVALID;
+    }
     (void)memset_s(ctx, sizeof(ConnectServiceContext), 0, sizeof(ConnectServiceContext));
     ctx->netCheckTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
     ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
@@ -30,6 +33,9 @@ int32_t ConnSvcCtxInit(void)
 void ConnSvcCtxDeinit(void)
 {
     ConnectServiceContext *ctx = GetConnSvcCtx();
+    if (ctx == NULL) {
+        return;
+    }
     if (ctx->netCheckTimerFd >= 0) {
         SchedTimerRemove(ctx->netCheckTimerFd);
         ctx->netCheckTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;

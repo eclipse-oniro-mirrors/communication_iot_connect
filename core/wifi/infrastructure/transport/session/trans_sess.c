@@ -127,7 +127,7 @@ void TransSessFree(TransSess *sess)
     AdapterFree(sess);
 }
 
-static void AddRecvHandler(TransSess *sess, SessMsgProcess handler, const char *comment, void *corData, CorType type)
+static void AddCorListHandler(TransSess *sess, SessMsgProcess handler, const char *comment, void *corData, CorType type)
 {
     MsgCor *cor = MsgCorNew(handler, comment, corData);
     if (cor == NULL) {
@@ -156,7 +156,7 @@ void TransSessAddTailRecvHandler(TransSess *sess, SessMsgProcess next, const cha
     if (sess == NULL || next == NULL) {
         return;
     }
-    AddRecvHandler(sess, next, comment, corData, COR_TYPE_RECV_TAIL);
+    AddCorListHandler(sess, next, comment, corData, COR_TYPE_RECV_TAIL);
 }
 
 void TransSessAddTailSendHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *corData)
@@ -164,7 +164,7 @@ void TransSessAddTailSendHandler(TransSess *sess, SessMsgProcess next, const cha
     if (sess == NULL || next == NULL) {
         return;
     }
-    AddRecvHandler(sess, next, comment, corData, COR_TYPE_SEND_TAIL);
+    AddCorListHandler(sess, next, comment, corData, COR_TYPE_SEND_TAIL);
 }
 
 void TransSessAddHeadRecvHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *corData)
@@ -172,7 +172,7 @@ void TransSessAddHeadRecvHandler(TransSess *sess, SessMsgProcess before, const c
     if (sess == NULL || before == NULL) {
         return;
     }
-    AddRecvHandler(sess, before, comment, corData, COR_TYPE_RECV_HEAD);
+    AddCorListHandler(sess, before, comment, corData, COR_TYPE_RECV_HEAD);
 }
 
 void TransSessAddHeadSendHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *corData)
@@ -180,7 +180,7 @@ void TransSessAddHeadSendHandler(TransSess *sess, SessMsgProcess before, const c
     if (sess == NULL || before == NULL) {
         return;
     }
-    AddRecvHandler(sess, before, comment, corData, COR_TYPE_SEND_HEAD);
+    AddCorListHandler(sess, before, comment, corData, COR_TYPE_SEND_HEAD);
 }
 
 void TransSessRemoveHandler(TransSess *sess, SessMsgProcess handler)

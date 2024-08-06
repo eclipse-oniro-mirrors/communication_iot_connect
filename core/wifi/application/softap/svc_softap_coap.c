@@ -173,6 +173,7 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     CoapPacket packet;
     ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
     AdapterJsonDelete(respJson);
+    respJson = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGW("send coap resp msg error %d", ret);
     }

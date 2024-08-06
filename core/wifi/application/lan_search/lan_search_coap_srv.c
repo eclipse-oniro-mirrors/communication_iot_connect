@@ -40,7 +40,7 @@ static int32_t CreateLanSearchLink(LanSearchContext *ctx)
     char local[ADAPTER_IP_STR_MAX_LEN + 1] = {0};
     int32_t ret = AdapterGetLocalIp(local, ADAPTER_IP_STR_MAX_LEN);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("get local ip error %d");
+        IOTC_LOGW("get local ip error %d", ret);
         return ret;
     }
 

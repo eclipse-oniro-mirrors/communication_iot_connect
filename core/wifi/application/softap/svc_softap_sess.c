@@ -150,10 +150,11 @@ static int32_t CreatePeerSession(SoftapPeerSess *peerSess, const SocketAddr *add
     DestroyPeerSession(peerSess);
     AdapterStationList *staList = NULL;
     int32_t ret = AdapterGetSoftapStationInfo(&staList);
-    if (ret != IOTC_OK) {
+    if (ret != IOTC_OK || staList == NULL || staList->num == 0) {
         IOTC_LOGW("get station list error %d", ret);
-        return ret;
+        return IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_STATION;
     }
+
     ret = IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_STATION;
     for (uint32_t i = 0; i < staList->num; ++i) {
         AdapterStationInfo *staInfo = &staList->stationList[i];

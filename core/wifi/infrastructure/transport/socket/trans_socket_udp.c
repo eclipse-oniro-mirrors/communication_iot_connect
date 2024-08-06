@@ -14,7 +14,6 @@
  */
 #include "trans_socket_udp.h"
 #include "utils_assert.h"
-#include "utils_common.h"
 #include "comm_def.h"
 #include "securec.h"
 #include "adapter_os.h"
