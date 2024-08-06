@@ -349,7 +349,7 @@ static int32_t NoticeReboot(IotcRebootReason res)
     return 0;
 }
 
-int32_t IotcOhDemoEntry(void)
+static int32_t IotcOhDemoEntry(void)
 {
     static const IotcOhProfCallback PROF_CALLBACK = {
         .onPutCharState = PutCharState,
@@ -404,7 +404,7 @@ int32_t IotcOhDemoEntry(void)
     return ret;
 }
 
-void IotcOhDemoExit(void)
+static void IotcOhDemoExit(void)
 {
     int32_t ret = IotcOhStop();
     if (ret != 0) {
@@ -427,7 +427,7 @@ void IotcOhDemoExit(void)
     }
 }
 
-void PressButton1(void)
+static void PressButton1(void)
 {
     DEMO_LOG("button 1 press");
     IotcOhRestore();

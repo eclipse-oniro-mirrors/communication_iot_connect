@@ -129,9 +129,10 @@ static const IotcBleGattProfileSvcList g_bleGattSvcList = {
 };
 
 static bool g_batteryLevelCharNotifyTestEnable = false; /* 收到write 1 开启，0 关闭, 开启后每3秒发送一次 */
-static bool g_TestCharIndicateTestEnable = false; /* 收到write 1 开启，0 关闭，开启后每3秒发送一次 */
+static bool g_testCharIndicateTestEnable = false; /* 收到write 1 开启，0 关闭，开启后每3秒发送一次 */
 static uint8_t g_TestCharCnt = 0;
 static uint8_t g_batteryLevel = 0;
+#define BATTERY_LEVEL_MAX  101
 
 static int32_t BleGattTestCharReadFunc(uint8_t *buff, uint32_t *len)
 {
@@ -154,9 +155,9 @@ static int32_t BleGattTestCharWriteFunc(uint8_t *buff, uint32_t len)
     }
     DEMO_LOG("len=%u,buff=%02x", len, buff[0]);
     if (buff[0] == 0) {
-        g_TestCharIndicateTestEnable = false;
+        g_testCharIndicateTestEnable = false;
     } else {
-        g_TestCharIndicateTestEnable = true;
+        g_testCharIndicateTestEnable = true;
     }
     return 0;
 }
@@ -171,7 +172,7 @@ static int32_t BleGattBatteryLevelCharReadFunc(uint8_t *buff, uint32_t *len)
     buff[0] = g_batteryLevel;
     *len = 1;
     g_batteryLevel++;
-    if (g_batteryLevel >= 101) {
+    if (g_batteryLevel >= BATTERY_LEVEL_MAX) {
         g_batteryLevel = 0;
     }
     return 0;
@@ -202,7 +203,7 @@ static void BleGattTestTask(void *arg)
                 &g_batteryLevel, sizeof(g_batteryLevel));
             DEMO_LOG("battery level send ret = %d", ret);
             g_batteryLevel++;
-            if (g_batteryLevel >= 101) {
+            if (g_batteryLevel >= BATTERY_LEVEL_MAX) {
                 g_batteryLevel = 0;
             }
         }
@@ -211,11 +212,11 @@ static void BleGattTestTask(void *arg)
             DEMO_LOG("test char send ret = %d", ret);
             g_TestCharCnt++;
         }
-        AdapterSleepMs(3000);
+        AdapterSleepMs(3000);  // 避免频繁，休眠3s
     }
 }
 
-void StartBleGattTestTask(void)
+static void StartBleGattTestTask(void)
 {
     AdapterTaskParam task = {
         .arg = NULL,
@@ -230,7 +231,7 @@ void StartBleGattTestTask(void)
         DEMO_LOG("create iotc main task error %u", task.stackSize);
         return;
     }
-     DEMO_LOG("create BleGattTestTask success");
+    DEMO_LOG("create BleGattTestTask success");
 }
 
 static bool g_switch = false;
@@ -447,7 +448,7 @@ static int32_t RecvNetCfgInfo(const char *netInfo, uint32_t len)
     return 0;
 }
 
-int32_t IotcOhDemoEntry(void)
+static int32_t IotcOhDemoEntry(void)
 {
     static const IotcOhProfCallback PROF_CALLBACK = {
         .onPutCharState = PutCharState,
@@ -512,7 +513,7 @@ int32_t IotcOhDemoEntry(void)
     return ret;
 }
 
-void IotcOhDemoExit(void)
+static void IotcOhDemoExit(void)
 {
     int32_t ret = IotcOhStop();
     if (ret != 0) {
@@ -539,7 +540,7 @@ void IotcOhDemoExit(void)
 void AdapterMemDump(void);
 #endif
 
-void PressButton1(void)
+static void PressButton1(void)
 {
     DEMO_LOG("button 1 press");
 #if IOTC_CONF_MEM_DEBUG
@@ -548,7 +549,7 @@ void PressButton1(void)
     IotcOhReset();
 }
 
-void PressButton2(void)
+static void PressButton2(void)
 {
     DEMO_LOG("button 2 press");
 #if IOTC_CONF_MEM_DEBUG
