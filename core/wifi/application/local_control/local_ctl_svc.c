@@ -159,6 +159,8 @@ static int32_t LocalControlServiceStart(int32_t instanceId, ServiceFinishCallbac
     CHECK_RETURN_LOGW(onFinish != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     LocalControlContext *ctx = GetLocalCtlCtx();
+    CHECK_RETURN_LOGE(ctx != NULL, IOTC_ERR_CONTEXT_NULL, "local ctl ctx null");
+
     int32_t ret = LocalControlConfigSetup(param, ctx);
     if (ret != IOTC_OK) {
         IOTC_LOGW("conf setup error %d", ret);
@@ -206,6 +208,8 @@ static int32_t LocalControlServiceStop(int32_t instanceId, void *param)
 {
     NOT_USED(param);
     LocalControlContext *ctx = GetLocalCtlCtx();
+    CHECK_RETURN_LOGE(ctx != NULL, IOTC_ERR_CONTEXT_NULL, "local ctl ctx null");
+
     if (ctx->svcInfo.instanceId != instanceId) {
         IOTC_LOGW("invalid instance id %d/%d", instanceId, ctx->svcInfo.instanceId);
         return IOTC_ERR_PARAM_INVALID;

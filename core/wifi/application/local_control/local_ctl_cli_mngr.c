@@ -79,6 +79,7 @@ static void ClientExpireTimerCallback(int32_t id, void *userData)
     NOT_USED(userData);
 
     LocalControlContext *ctx = GetLocalCtlCtx();
+    CHECK_V_RETURN_LOGE(ctx != NULL, "local ctl ctx null");
     uint32_t curTime = AdapterGetSysTimeMs();
 
     int32_t ret = UtilsHashMapIterate(ctx->clientManager.clientMap, ClientMapTraversalCheckExpire, ctx, curTime);

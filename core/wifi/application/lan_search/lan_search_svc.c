@@ -73,8 +73,9 @@ static void LanSearchServiceStopInner(LanSearchContext *ctx)
 static int32_t LanSearchServiceStart(int32_t instanceId, ServiceFinishCallback onFinish, void *param)
 {
     LanSearchContext *ctx = GetLanSearchCtx();
-    LanSearchInitParamSetup(ctx, param);
+    CHECK_RETURN_LOGE(ctx != NULL, IOTC_ERR_CONTEXT_NULL, "lan search ctx null");
 
+    LanSearchInitParamSetup(ctx, param);
     ctx->svcInfo.instanceId = instanceId;
     ctx->svcInfo.onFinish = onFinish;
 
@@ -116,6 +117,8 @@ static int32_t LanSearchServiceStop(int32_t instanceId, void *param)
 {
     NOT_USED(param);
     LanSearchContext *ctx = GetLanSearchCtx();
+    CHECK_RETURN_LOGE(ctx != NULL, IOTC_ERR_CONTEXT_NULL, "lan search ctx null");
+
     if (ctx->svcInfo.instanceId != instanceId) {
         IOTC_LOGW("invalid instance id %d/%d", instanceId, ctx->svcInfo.instanceId);
         return IOTC_ERR_PARAM_INVALID;
