@@ -166,9 +166,11 @@ static int32_t LanSearchSpekeNotifySpekeFinishedCallback(SpekeSession *session, 
         IOTC_LOGW("peer speke finish error %d/%s", errorCode, anonyIp);
         return IOTC_OK;
     }
-    LanSearchContext *ctx = GetLanSearchCtx();
-    peer->timeInfo.expireTime = ctx->config.peerExpireTime;
     UTILS_BIT_SET(peer->bitMap, LAN_SEARCH_PEER_BIT_SPEKE_FINISHED);
+    LanSearchContext *ctx = GetLanSearchCtx();
+    CHECK_RETURN_LOGE(ctx != NULL, IOTC_ERR_CONTEXT_NULL, "lan search ctx null");
+
+    peer->timeInfo.expireTime = ctx->config.peerExpireTime;
     IOTC_LOGI("peer speke finish ok %s/%u", anonyIp, peer->timeInfo.expireTime);
     return IOTC_OK;
 }

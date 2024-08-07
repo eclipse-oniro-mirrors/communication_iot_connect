@@ -307,6 +307,8 @@ static void LocalCtrlMsgReportAfterGetCmd(const AdapterJson *dataArray,
     CHECK_V_RETURN_LOGW(dataArray != NULL && userData != NULL &&
         userDataLen == LOCAL_CONTROL_SESS_ID_STR_LEN, "param invalid");
     LocalControlContext *ctx = GetLocalCtlCtx();
+    CHECK_V_RETURN_LOGE(ctx != NULL, "local ctl ctx null");
+
     LocalControlClient *client = NULL;
     int32_t ret = GetLocalControlClient(ctx, CLIENT_SESS_ID, (const char *)userData, userDataLen, &client);
     if (ret != IOTC_OK || client == NULL) {
