@@ -15,7 +15,6 @@
 #include "adapter_ble.h"
 #include "securec.h"
 #include "ohos_bt_def.h"
-#include "ohos_bt_gap.h"
 #include "ohos_bt_gatt.h"
 #include "ohos_bt_gatt_server.h"
 #include "adapter_mem.h"

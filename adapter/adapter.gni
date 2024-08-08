@@ -46,7 +46,7 @@ if (iotc_ble_support) {
   }
   iotc_adapter_def += ["IOTC_CONF_BLE_SUPPORT=1"]
   if (board_name == "rtl8720") {
-    iotc_adapter_inc += ["$iotc_root_path/test/open_source/communication_bluetooth/interfaces/inner_api/include/c_header"]
+    iotc_adapter_inc += ["//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/bluetooth/realtek/sdk/example/bt_harmony_adapter"]
   } else {
     iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
     iotc_adapter_inc += ["//third_party/mbedtls/include"]
