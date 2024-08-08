@@ -8,26 +8,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+cmake_minimum_required(VERSION 3.14.1)
+project(IOT_CONNECT)
+set(IOTC_TARGET IOTC)
 
 add_subdirectory(adapter)
 add_subdirectory(core)
 add_subdirectory(sdk)
 
-set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
 set(IOTC_INC_LIST
     ${IOTC_INC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/interfaces/kits/common
     ${CMAKE_CURRENT_SOURCE_DIR}/interfaces/kits/oh_connect
 )
 
-set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)
-
-set(IOTC_TEST_INC_LIST ${IOTC_TEST_INC_LIST} PARENT_SCOPE)
+if (UT_TEST OR FUZZ_TEST)
+    add_subdirectory(tests)
+endif()
 
 # 输出静态库
-set(IOT_CONNECT_LIB_NAME "iotc")
-
+set(IOTC_LIB_NAME "iotc")
 add_library(${IOTC_TARGET} STATIC ${IOTC_SRC_LIST})
 target_include_directories(${IOTC_TARGET} PRIVATE ${IOTC_INC_LIST})
 target_compile_options(${IOTC_TARGET} PRIVATE ${CC_ALL_OPTIONS})
-set_target_properties(${IOTC_TARGET} PROPERTIES OUTPUT_NAME ${IOT_CONNECT_LIB_NAME})
+set_target_properties(${IOTC_TARGET} PROPERTIES OUTPUT_NAME ${IOTC_LIB_NAME})
