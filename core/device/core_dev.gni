@@ -39,6 +39,7 @@ iotc_core_device_src = [
   "$iotc_core_path/device/config/config_revoke.c",
   "$iotc_core_path/device/service/device_control.c",
   "$iotc_core_path/device/service/svc_cloud_setup.c",
+  "$iotc_core_path/device/service/svc_cloud_login.c",
   "$iotc_core_path/device/service/iotc_dev_svc.c",
   "$iotc_core_path/device/service/dev_svc_auth_setup.c",
   "$iotc_core_path/device/service/dev_mngr_ctx.c",
