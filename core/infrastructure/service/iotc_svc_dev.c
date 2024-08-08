@@ -100,6 +100,26 @@ int32_t DevSvcProxyGetAuthInfo(bool *isExist, DevAuthInfo *info)
     return devApi->onGetAuthInfo(isExist, info);
 }
 
+int32_t DevSvcProxyGetRegisterInfo(bool *isExist, DevRegInfo *info)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onGetRegInfo == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return devApi->onGetRegInfo(isExist, info);
+}
+
+int32_t DevSvcProxyGetLoginInfo(bool *isExist, DevLoginInfo *info)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onGetLoginInfo == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return devApi->onGetLoginInfo(isExist, info);
+}
+
 int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
@@ -108,6 +128,16 @@ int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json)
     }
 
     return devApi->onRecvAuthInfo(json);
+}
+
+int32_t DevSvcProxyRecvLoginInfo(const AdapterJson *json)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onRecvLoginInfo == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return devApi->onRecvLoginInfo(json);
 }
 
 bool DevDevSvcProxyGetOnlineStatus(void)

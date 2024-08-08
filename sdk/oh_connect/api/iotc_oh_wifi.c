@@ -97,6 +97,12 @@ static void EventBusStartWifiSvcCallback(uint32_t event, void *param, uint32_t l
         return;
     }
 
+    ret = ServiceProxyStartService(IOTC_SERVICE_ID_M2M_CLOUD, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("start cloud error %d", ret);
+        return;
+    }
+
     return;
 }
 

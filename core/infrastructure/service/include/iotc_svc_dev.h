@@ -72,6 +72,7 @@ typedef int32_t (*DevGetRegisterInfo)(bool *isExist, DevRegInfo *info);
 typedef int32_t (*DevGetAuthInfo)(bool *isExist, DevAuthInfo *info);
 typedef int32_t (*DevRecvBindInfo)(const AdapterJson *json);
 typedef int32_t (*DevRecvAuthInfo)(const AdapterJson *json);
+typedef int32_t (*DevRecvLoginInfo)(const AdapterJson *json);
 typedef bool (*DevGetOnlineStatus)(void);
 
 typedef struct {
@@ -85,6 +86,7 @@ typedef struct {
     DevGetAuthInfo onGetAuthInfo;
     DevRecvBindInfo onRecvBindInfo;
     DevRecvBindInfo onRecvAuthInfo;
+    DevRecvLoginInfo onRecvLoginInfo;
     DevGetOnlineStatus onGetOnlineStatus;
 } DevSvcApi;
 
@@ -100,7 +102,10 @@ int32_t DevSvcProxyCtlPutCharStates(const AdapterJson *inArray, AdapterJson **ou
 DevBindStatus DevSvcProxyGetBindStatus(void);
 int32_t DevSvcProxyProfReportCharState(const IotcCharState state[], uint32_t num);
 int32_t DevSvcProxyGetAuthInfo(bool *isExist, DevAuthInfo *info);
+int32_t DevSvcProxyGetRegisterInfo(bool *isExist, DevRegInfo *info);
+int32_t DevSvcProxyGetLoginInfo(bool *isExist, DevLoginInfo *info);
 int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json);
+int32_t DevSvcProxyRecvLoginInfo(const AdapterJson *json);
 bool DevDevSvcProxyGetOnlineStatus(void);
 
 #ifdef __cplusplus

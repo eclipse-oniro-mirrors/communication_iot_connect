@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,30 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef IOTC_SERVICE_H
-#define IOTC_SERVICE_H
+#ifndef SERVICE_CLOUD_LOGIN_H
+#define SERVICE_CLOUD_LOGIN_H
 #include <stdint.h>
-#include "iotc_def.h"
+#include "utils_json.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define IOTC_SERVICE_ID_BASE(module) ((module) << 8)
-
-typedef enum {
-    IOTC_SERVICE_ID_SOFTAP = IOTC_SERVICE_ID_BASE(IOTC_SUB_MODULE_CORE_WIFI),
-    IOTC_SERVICE_ID_WIFI_CONNECT,
-    IOTC_SERVICE_ID_LOCAL_CONTROL,
-    IOTC_SERVICE_ID_LAN_SEARCH,
-    IOTC_SERVICE_ID_M2M_CLOUD,
-
-    IOTC_SERVICE_ID_BLE = IOTC_SERVICE_ID_BASE(IOTC_SUB_MODULE_CORE_BLE),
-
-    IOTC_SERVICE_ID_DEVICE = IOTC_SERVICE_ID_BASE(IOTC_SUB_MODULE_CORE_DEVICE),
-} IotcServiceId;
+int32_t DeviceServiceRecvLoginInfo(const AdapterJson *jsonObj);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* IOTC_SERVICE_H */
+#endif /* SERVICE_CLOUD_LOGIN_H */

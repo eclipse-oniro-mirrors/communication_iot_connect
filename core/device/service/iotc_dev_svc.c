@@ -40,6 +40,7 @@
 #include "dev_svc_auth_setup.h"
 #include "config_online_status.h"
 #include "dev_mngr_ctx.h"
+#include "svc_cloud_login.h"
 
 static const char *DEVICE_SERVICE_NAME = "DEVICE";
 
@@ -85,7 +86,7 @@ static int32_t DeviceServiceStart(int32_t instanceId, ServiceFinishCallback onFi
         return ret;
     }
 
-    EventBusPublishSync(IOTC_EVENT_INNER_DEVICE_SVC_START, NULL, 0);
+    EventBusPublishAsync(IOTC_EVENT_INNER_DEVICE_SVC_START, NULL, 0, NULL);
     return IOTC_OK;
 }
 
@@ -175,6 +176,7 @@ int32_t DeviceServiceInit(void)
         .onGetAuthInfo = GetAuthInfo,
         .onRecvBindInfo = DeviceServiceRecvBindingInfo,
         .onRecvAuthInfo = DeviceServiceRecvAuthInfo,
+        .onRecvLoginInfo = DeviceServiceRecvLoginInfo,
         .onGetOnlineStatus = ConfigGetOnlineStatus,
     };
 
