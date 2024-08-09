@@ -23,12 +23,13 @@
 #include "m2m_cloud_errcode.h"
 #include "dev_info.h"
 #include "m2m_cloud_token.h"
+#include "m2m_cloud_heartbeat.h"
 #include "utils_bit_map.h"
 #include "m2m_cloud_utils.h"
 #include "iotc_errcode.h"
 #include "iotc_svc_dev.h"
 
-static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj)
+static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj, const M2mCloudContext *ctx)
 {
     uint32_t num = 0;
     const IotcServiceInfo *svcInfo = ModelGetSvcInfo(&num);
@@ -49,35 +50,54 @@ static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj)
         return ret;
     }
 
+    ret = AdapterJsonAddStr2Obj(rootObj, STR_JSON_DEVID, ctx->authInfo.loginInfo.devId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("add svc info to root err %d", ret);
+        return ret;
+    }
+
     return IOTC_OK;
 }
 
 AdapterJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx)
 {
-    AdapterJson *rootJson = AdapterCreateJson();
-    if (rootJson == NULL) {
-        IOTC_LOGW("create json error");
-        return NULL;
-    }
+    CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
+    AdapterJson *devInfoArr = AdapterJsonCreateArray();
+    CHECK_RETURN_LOGW(devInfoArr != NULL, NULL, "create json error");
 
+    AdapterJson *devinfoObj = NULL;
     int32_t ret;
     do {
-        ret = M2mCloudAddDevInfoToJson(rootJson);
+        devinfoObj = AdapterCreateJson();
+        if (devinfoObj == NULL) {
+            IOTC_LOGW("create json error");
+            ret = IOTC_ADAPTER_JSON_ERR_CREATE;
+            break;
+        }
+        ret = M2mCloudAddDevInfoToJson(devinfoObj);
         if (ret != IOTC_OK) {
+            AdapterJsonDelete(devinfoObj);
             IOTC_LOGW("add dev info error %d", ret);
             break;
         }
 
-        ret = BuildDevInfoSyncSvcInfo(rootJson);
+        ret = BuildDevInfoSyncSvcInfo(devinfoObj, (const M2mCloudContext *)ctx);
         if (ret != IOTC_OK) {
+            AdapterJsonDelete(devinfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }
 
-        return rootJson;
+        ret = AdapterJsonAddItem2Array(devInfoArr, devinfoObj);
+        if (ret != IOTC_OK) {
+            AdapterJsonDelete(devinfoObj);
+            IOTC_LOGW("add svc info error %d", ret);
+            break;
+        }
+        return devInfoArr;
     } while (0);
 
-    AdapterJsonDelete(rootJson);
+    AdapterJsonDelete(devInfoArr);
     return NULL;
 }
 
@@ -103,6 +123,10 @@ int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket 
         ret = DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
         if (ret != IOTC_OK) {
             IOTC_LOGW("report all error %d", ret);
+        }
+        ret = M2mCloudEnableHeartbeat(ctx);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("enable heartbeat error %d", ret);
         }
     }
     return IOTC_OK;

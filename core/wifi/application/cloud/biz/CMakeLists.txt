@@ -20,6 +20,10 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_token.c
     ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_utils.c
     ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_send.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_heartbeat.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_ctl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_report.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_dev_del.c
     PARENT_SCOPE
 )
 

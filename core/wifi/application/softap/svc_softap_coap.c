@@ -105,13 +105,22 @@ static int32_t NetCfgInfoRecvProcess(const char *netInfo, uint32_t len)
         return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
     }
 
-    /* 端云未就绪，当前仅有绑定信息 */
-    int32_t ret = DevSvcProxyRecvAuthInfo(dataObj);
+#if IOTC_CONF_AILIFE_SUPPORT
+    int32_t ret = DevSvcProxyRecvBindInfo(dataObj);
     if (ret != IOTC_OK) {
         AdapterJsonDelete(jsonObj);
         IOTC_LOGW("bind info process error %d", ret);
         return ret;
     }
+#else
+    /* TODO 端云未就绪，当前仅有绑定信息 */
+    int32_t ret = DevSvcProxyRecvAuthInfo(dataObj);
+    if (ret != IOTC_OK) {
+        AdapterJsonDelete(jsonObj);
+        IOTC_LOGW("auth info process error %d", ret);
+        return ret;
+    }
+#endif
 
     ret = ConnSvcProxySetNetCfgInfo(dataObj);
     AdapterJsonDelete(jsonObj);

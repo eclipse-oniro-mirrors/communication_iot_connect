@@ -18,7 +18,9 @@
 #include "comm_def.h"
 #include "utils_fsm.h"
 #include "service_manager.h"
+#include "coap_endpoint.h"
 #include "coap_endpoint_event_source.h"
+#include "coap_endpoint_client.h"
 #include "iotc_svc_dev.h"
 
 #ifdef __cplusplus
@@ -26,6 +28,23 @@ extern "C" {
 #endif
 
 #define M2M_CLOUD_URL_NUM 3
+
+typedef enum {
+    M2M_CLOUD_FSM_STATE_INIT = 0,
+    M2M_CLOUD_FSM_STATE_CREATE_LINK,
+    M2M_CLOUD_FSM_STATE_CONNECT,
+    M2M_CLOUD_FSM_STATE_REGISTER,
+    M2M_CLOUD_FSM_STATE_REGISTER_WAIT_RESP,
+    M2M_CLOUD_FSM_STATE_LOGIN,
+    M2M_CLOUD_FSM_STATE_LOGIN_WAIT_RESP,
+    M2M_CLOUD_FSM_STATE_REVOKE,
+    M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP,
+    M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC,
+    M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC_WAIT_RESP,
+    M2M_CLOUD_FSM_STATE_ONLINE,
+    M2M_CLOUD_FSM_STATE_DELETE,
+    M2M_CLOUD_FSM_STATE_EXIT,
+} M2mCloudFsmState;
 
 typedef enum {
     M2M_CLOUD_CTX_BIT_REGISTER = 0,
@@ -42,6 +61,7 @@ struct M2mCloudContext {
         int32_t regTimer;
         int32_t fsmTimer;
         int32_t tokenTimer;
+        int32_t hbTimer;
         UtilsFsm *fsmCtx;
     } stateManager;
     struct {
@@ -78,6 +98,10 @@ struct M2mCloudContext {
         uint32_t before;
         uint32_t interval;
     } backoffInfo;
+    struct {
+        uint16_t sentCnt;
+        uint32_t interval;
+    } heartbeatInfo;
 };
 
 M2mCloudContext *GetM2mCloudCtx(void);

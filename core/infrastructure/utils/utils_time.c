@@ -370,11 +370,11 @@ static void CleanTimeCtx(TimeContext *ctx)
     (void)memset_s(&ctx->timeZone, sizeof(TimeZoneInfo), 0, sizeof(TimeZoneInfo));
 }
 
-int32_t UtilsTimeDeinit(void)
+void UtilsTimeDeinit(void)
 {
     TimeContext *ctx = GetTimeCtx();
     if (!TIME_LOCK()) {
-        return IOTC_ERR_TIMEOUT;
+        return;
     }
     CleanTimeCtx(ctx);
     TIME_UNLOCK();
@@ -383,5 +383,4 @@ int32_t UtilsTimeDeinit(void)
         UtilsDestroyExMutex(&ctx->mutex);
     }
     IOTC_LOGN("time deinit succ");
-    return IOTC_OK;
 }

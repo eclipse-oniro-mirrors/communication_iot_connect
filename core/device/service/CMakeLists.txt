@@ -19,6 +19,7 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/device_control.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_dev_svc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/svc_cloud_setup.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/svc_cloud_login.c
     PARENT_SCOPE
 )
 

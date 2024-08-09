@@ -25,56 +25,6 @@
 #include "utils_bit_map.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "utils_time.h"
-
-static int32_t ParseLoginRespTokenInfo(M2mCloudContext *ctx, AdapterJson *jsonObj)
-{
-    const char *timestamp = AdapterJsonGetStr(AdapterJsonGetObj(jsonObj, STR_JSON_TIMESTAMP));
-    const char *timezone = AdapterJsonGetStr(AdapterJsonGetObj(jsonObj, STR_JSON_TIMESTAMP));
-    IOTC_LOGI("get time info %s/%s", NON_NULL_STR(timestamp), NON_NULL_STR(timezone));
-
-    int32_t ret;
-    if (timestamp != NULL && timezone != NULL) {
-        uint64_t ts = atoll(timestamp);
-        if (ts == 0) {
-            IOTC_LOGW("timestamp trans to num error");
-            return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_INVALID_TIMESTAMP;
-        }
-        ret = UtilsSetUtcTimeStamp(ts);
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("set timestamp error %d", ret);
-            return ret;
-        }
-    }
-
-    CloudTokenInfo token = {0};
-    uint32_t timeout = 0;
-
-    ret = UtilsJsonGetString(jsonObj, STR_JSON_ACCESS_TOKEN, token.access, sizeof(token.access));
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get access token error %d", ret);
-        return ret;
-    }
-
-    ret = UtilsJsonGetString(jsonObj, STR_JSON_REFRESH_TOKEN, token.refresh, sizeof(token.refresh));
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get refresh token error %d", ret);
-        return ret;
-    }
-
-    ret = UtilsJsonGetNum(jsonObj, STR_JSON_TIMEOUT, &timeout);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get refresh timeout error %d", ret);
-        return ret;
-    }
-    if (timeout > UINT32_MAX / UTILS_MS_PER_SECOND) {
-        IOTC_LOGE("get refresh timeout invalid %u", timeout);
-        return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_TOKEN_TIMEOUT_INVALID;
-    }
-    token.timeout = timeout * UTILS_MS_PER_SECOND;
-
-    return UpdateCloudTokenInfo(ctx, &token);
-}
 
 AdapterJson *M2mCloudBuildLoginRequest(M2mCloudContext *ctx)
 {
@@ -116,9 +66,14 @@ int32_t M2mCloudLoginResponseParse(M2mCloudContext *ctx, const CoapPacket *resp,
         AdapterJsonDelete(respJson);
         return ret;
     }
+    ret = DealErrCodeRsp(*errcode);
+    if (ret == IOTC_OK) {
+        AdapterJsonDelete(respJson);
+        return ret;
+    }
 
     if (*errcode == CLOUD_ERRCODE_OK) {
-        ret = ParseLoginRespTokenInfo(ctx, respJson);
+        ret = ParseTokenInfo(ctx, respJson);
     }
     AdapterJsonDelete(respJson);
 

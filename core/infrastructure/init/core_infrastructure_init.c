@@ -21,6 +21,7 @@
 #include "main_loop.h"
 #include "event_bus.h"
 #include "utils_common.h"
+#include "utils_time.h"
 #include "netcfg_service.h"
 #include "event_bus_public.h"
 #include "sched_event_loop.h"
@@ -43,6 +44,7 @@ static const FwkInitUnit CORE_COMM[] = {
     {FWK_INIT_LVL_DEP, "sched_main_loop", SchedMainLoopInit, NULL},
     {FWK_INIT_LVL_DEP, "sched_msg_queue", SchedMsgQueueInit, SchedMsgQueueDeinit},
     {FWK_INIT_LVL_COMP, "random", SecurityRandomInit, SecurityRandomDeinit},
+    {FWK_INIT_LVL_COMP, "time", UtilsTimeInit, UtilsTimeDeinit},
 };
 
 const FwkInitUnit *CoreInfrastructureGetInitUnit(void)

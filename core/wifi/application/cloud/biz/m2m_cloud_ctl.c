@@ -31,8 +31,8 @@ static int32_t GetSvcIdFromOption(const CoapPacket *req, char *svcId, uint32_t s
         return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPTION;
     }
 
-    if (strncpy_s(svcId, svcIdLen, uriOption->value.data, uriOption->value.len) != EOK) {
-        ADAPTER_LOGE("strcpy error %u", uriOption->value.len);
+    if (strncpy_s(svcId, svcIdLen, (const char *)uriOption->value.data, uriOption->value.len) != EOK) {
+        IOTC_LOGW("strcpy error %u", uriOption->value.len);
         return IOTC_ERR_SECUREC_STRCPY;
     }
 
@@ -41,7 +41,7 @@ static int32_t GetSvcIdFromOption(const CoapPacket *req, char *svcId, uint32_t s
 
 static AdapterJson *ParseCloudCtlMsg(const CoapPacket *req)
 {
-    char svcId[IOTC_OH_SVC_ID_STR_MAX_LEN] = {0};
+    char svcId[IOTC_SVC_ID_STR_MAX_LEN] = {0};
     int32_t ret = GetSvcIdFromOption(req, svcId, sizeof(svcId));
     if (ret != IOTC_OK) {
         IOTC_LOGW("Get svcId error %d", ret);
