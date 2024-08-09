@@ -19,6 +19,7 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/security_key.c
     ${CMAKE_CURRENT_SOURCE_DIR}/security_random.c
     ${CMAKE_CURRENT_SOURCE_DIR}/security_store.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_sess_key.c
     PARENT_SCOPE
 )
 

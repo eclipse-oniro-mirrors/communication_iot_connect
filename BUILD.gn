@@ -29,11 +29,11 @@ iotc_inc += [
 
 if (iotc_device_level == "mini") {
   iotc_def += ["IOTC_CONF_DEVICE_LEVEL=0"]
+  iotc_def += ["IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT=1"]
 } else if (iotc_device_level == "small") {
   iotc_def += ["IOTC_CONF_DEVICE_LEVEL=1"]
 } else {
   iotc_def += ["IOTC_CONF_DEVICE_LEVEL=2"]
-  iotc_def += ["IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT=0"]
 }
 
 if (defined(ohos_lite)) {

@@ -43,6 +43,7 @@ void IotcSetLogLevel(uint8_t level)
         IOTC_LOGW("invalid log level %u", level);
         return;
     }
+    AdapterSetLogLevel(level);
     IOTC_LOGN("set log level to %u", level);
     g_logLevel = level;
 }
