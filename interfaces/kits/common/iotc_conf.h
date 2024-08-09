@@ -28,7 +28,7 @@
 
 /* socket是否基于lwip，0-否，其他-是 */
 #ifndef IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
-    #define IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT 1
+    #define IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT 0
 #endif
 
 /* mbedtls是否启动debug，0-否，其他-是 */
