@@ -99,6 +99,7 @@ int32_t ConnSvcActionConnectWifi(void)
         IOTC_LOGW("add verify timer error %d", ctx->verifyTimerFd);
         return ctx->verifyTimerFd;
     }
+    EventBusPublishSync(IOTC_CORE_WIFI_EVENT_CONNECTED, NULL, 0);
     return IOTC_OK;
 }
 

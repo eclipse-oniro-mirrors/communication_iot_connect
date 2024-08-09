@@ -86,7 +86,7 @@ typedef struct {
     DevGetRegisterInfo onGetRegInfo;
     DevGetAuthInfo onGetAuthInfo;
     DevRecvBindInfo onRecvBindInfo;
-    DevRecvBindInfo onRecvAuthInfo;
+    DevRecvAuthInfo onRecvAuthInfo;
     DevRecvLoginInfo onRecvLoginInfo;
     DevCleanLoginInfo onCleanLoginInfo;
     DevGetOnlineStatus onGetOnlineStatus;

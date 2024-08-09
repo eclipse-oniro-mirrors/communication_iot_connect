@@ -89,10 +89,6 @@ int32_t LinkLayerSendBtPkg(const uint8_t *buff, uint32_t len)
             sendBuff[PKG_HEAD_PKGNUM_IDX], sendBuff[PKG_HEAD_ENCRYPT_TYPE_IDX], sendBuffLen);
         ret = LinkLayerBtDataSend(sendBuff, sendBuffLen);
         CHECK_RETURN(ret == IOTC_OK, ret);
-
-        if (leftLen > 0) {
-            AdapterSleepMs(SEND_PKG_INTERVAL);
-        }
     }
 
     return IOTC_OK;

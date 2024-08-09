@@ -654,7 +654,7 @@ static bool GetScanWifiResultFromOhos(const WifiDeviceConfig *config, WifiScanIn
     if ((size == 0) || (size > WIFI_SCAN_HOTSPOT_LIMIT)) {
         ADAPTER_LOGW("can not scan any wifi or scan size over limit, size: %u", size);
     } else {
-        ret = CopyWifiResultFromOhos(config, result, info, size);
+        ret = CopyWifiResultFromOhos(config, info, result, size);
     }
     AdapterFree(result);
     return ret;
@@ -752,6 +752,7 @@ int32_t AdapterConnectWifi(void)
         }
         if (GetScanWifiResultFromOhos(&config, &info)) {
             SetSecurityTypeByScanInfo(&config, &info);
+            break;
         }
         ADAPTER_LOGN("not find target wifi, tyr again");
     }

@@ -54,6 +54,23 @@ static void RegisterTimeoutTimerHandler(int32_t id, void *userData)
     }
 }
 
+static void RemoveRegisterTimeoutTimer(uint32_t event, void *param, uint32_t len)
+{
+    NOT_USED(event);
+    NOT_USED(param);
+    NOT_USED(len);
+
+    M2mCloudContext *ctx = GetM2mCloudCtx();
+    if (ctx == NULL) {
+        return;
+    }
+    if (ctx->stateManager.regTimer >= 0) {
+        SchedTimerRemove(ctx->stateManager.regTimer);
+        ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+    IOTC_LOGW("remove register timeout timer");
+}
+
 static int32_t CloudFsmInitHandler(void *param, int32_t cur)
 {
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -80,6 +97,11 @@ static int32_t CloudFsmInitHandler(void *param, int32_t cur)
         }
         UTILS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER);
         if (ctx->stateManager.regTimer < 0) {
+            ret = EventBusSubscribe(RemoveRegisterTimeoutTimer, IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE);
+            if (ret != IOTC_OK) {
+                IOTC_LOGW("sub event error %d", ret);
+                return cur;
+            }
             ctx->stateManager.regTimer = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_ONCE, RegisterTimeoutTimerHandler,
                 M2M_CLOUD_REGISTER_TIMEOUT_MS, ctx);
         }
@@ -351,5 +373,9 @@ void M2mCloudFsmDeinit(M2mCloudContext *ctx)
     if (ctx->stateManager.hbTimer >= 0) {
         SchedTimerRemove(ctx->stateManager.hbTimer);
         ctx->stateManager.hbTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+    if (ctx->stateManager.regTimer >= 0) {
+        SchedTimerRemove(ctx->stateManager.regTimer);
+        ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
     }
 }

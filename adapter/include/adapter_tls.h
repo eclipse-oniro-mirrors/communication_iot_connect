@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -192,7 +192,7 @@ int32_t AdapterTlsClientSend(AdapterTlsClient *cli, const uint8_t *buf, uint32_t
  */
 AdapterTlsCertVerify AdapterTlsClientVerifyCert(AdapterTlsClient *cli);
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

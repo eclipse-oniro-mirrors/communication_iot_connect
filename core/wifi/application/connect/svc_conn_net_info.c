@@ -26,6 +26,10 @@
 #include "securec.h"
 #include "event_bus.h"
 #include "iotc_event.h"
+#include "iotc_svc_dev.h"
+#include "sched_timer.h"
+
+#define DELAY_CONNECT_WIFI_INTERVAL 10
 
 int32_t ParseAndSaveNetCfgWifiInfo(const AdapterJson *jsonObj)
 {
@@ -70,6 +74,17 @@ static void SoftapStopEventCallback(uint32_t event, void *param, uint32_t len)
     }
 }
 
+static void DelayConnetWifiCb(int32_t id, void *userData)
+{
+    NOT_USED(userData);
+    int32_t ret = ConnSvcActionConnectWifi();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("wifi connect error %d", ret);
+    }
+    SchedTimerRemove(id);
+    IOTC_LOGN("delay connect Wifi timer cb finish");
+}
+
 int32_t SvcConnSetNetInfo(const AdapterJson *json)
 {
     CHECK_RETURN_LOGW(json != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -87,7 +102,13 @@ int32_t SvcConnSetNetInfo(const AdapterJson *json)
     }
 
     if (AdapterGetWifiMode() != ADAPTER_WIFI_MODE_SOFTAP) {
-        ret = ConnSvcActionConnectWifi();
+        /* 异步执行，避免阻塞状态码响应 */
+        int32_t delayTimer = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_ONCE, DelayConnetWifiCb,
+            DELAY_CONNECT_WIFI_INTERVAL, NULL);
+        if (delayTimer < 0) {
+            IOTC_LOGW("connect wifi timer start error %d", delayTimer);
+            return delayTimer;
+        }
     } else {
         ret = EventBusSubscribe(SoftapStopEventCallback, IOTC_CORE_WIFI_EVENT_SOFTAP_STOP);
     }
