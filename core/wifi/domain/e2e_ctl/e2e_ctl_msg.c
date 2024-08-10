@@ -14,6 +14,7 @@
  */
 #include "e2e_ctl_msg.h"
 #include <stddef.h>
+#include "securec.h"
 #include "comm_def.h"
 #include "iotc_errcode.h"
 #include "iotc_svc_dev.h"
@@ -34,7 +35,7 @@ static int32_t E2eCtrlMsgPutProcess(const AdapterJson *dataJsonArray)
 {
     int32_t ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("e2e ctrl put error %d", ret);
+        IOTC_LOGW("e2e ctrl put error %d", ret);
     }
     return ret;
 }
@@ -46,54 +47,60 @@ static void ReportAfterGetCmdExecutorCallback(void *userData)
     E2eCtlAsyncReportParam *param = (E2eCtlAsyncReportParam *)userData;
     if (param->func != NULL) {
         param->func(param->dataArray, param->userData, param->userDataLen);
+    } else {
+        IOTC_LOGW("report func null");
     }
     if (param->dataArray != NULL) {
         AdapterJsonDelete(param->dataArray);
     }
-    UTILS_FREE_2_NULL(param->userData);
+    if (param->userData != NULL) {
+        AdapterFree(param->userData);
+    }
     AdapterFree(param);
 }
 
 static int32_t E2eCtrlMsgGetProcess(const AdapterJson *dataJsonArray,
     E2eCtrlMsgReportAfterGetCmd reportFunc, const void *userData, uint32_t userDataLen)
 {
-    AdapterJson *outArray = NULL;
-    int32_t ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &outArray);
+    AdapterJson *reportJsonArray = NULL;
+    int32_t ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &reportJsonArray);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("e2e get char error %d", ret);
+        IOTC_LOGW("e2e get char error %d", ret);
         return ret;
     }
-
-    if (outArray == NULL) {
-        IOTC_LOGE("e2e get char no data");
-        return IOTC_CORE_WIFI_NETCFG_ERR_E2E_CTRL_NO_DATA;
+    if (reportJsonArray == NULL) {
+        IOTC_LOGW("e2e get char no data");
+        return IOTC_CORE_WIFI_E2E_CTL_ERR_GET_CHAR_NO_DATA;
     }
 
-    E2eCtlAsyncReportParam *param = (E2eCtlAsyncReportParam *)AdapterMalloc(sizeof(E2eCtlAsyncReportParam));
-    if (param == NULL) {
+    E2eCtlAsyncReportParam *asyncParam = (E2eCtlAsyncReportParam *)AdapterMalloc(sizeof(E2eCtlAsyncReportParam));
+    if (asyncParam == NULL) {
         IOTC_LOGW("malloc error");
-        AdapterJsonDelete(outArray);
+        AdapterJsonDelete(reportJsonArray);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
-    param->dataArray = outArray;
-    param->func = reportFunc;
+    (void)memset_s(asyncParam, sizeof(E2eCtlAsyncReportParam), 0, sizeof(E2eCtlAsyncReportParam));
+    asyncParam->dataArray = reportJsonArray;
+    asyncParam->func = reportFunc;
     if (userData != NULL && userDataLen != 0) {
-        param->userDataLen = userDataLen;
-        param->userData = UtilsMallocCopy(userData, userDataLen);
-        if (param->userData == NULL) {
+        asyncParam->userDataLen = userDataLen;
+        asyncParam->userData = (void *)UtilsMallocCopy(userData, userDataLen);
+        if (asyncParam->userData == NULL) {
             IOTC_LOGW("clone error %u", userDataLen);
-            AdapterJsonDelete(outArray);
-            AdapterFree(param);
+            AdapterJsonDelete(reportJsonArray);
+            AdapterFree(asyncParam);
             return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
         }
     }
 
-    ret = SchedAsyncExecutor(ReportAfterGetCmdExecutorCallback, param);
+    ret = SchedAsyncExecutor(ReportAfterGetCmdExecutorCallback, asyncParam);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("add executor error %d", ret);
-        AdapterJsonDelete(outArray);
-        UTILS_FREE_2_NULL(param->userData);
-        AdapterFree(param);
+        IOTC_LOGW("async report exec error %d", ret);
+        AdapterJsonDelete(reportJsonArray);
+        if (asyncParam->userData != NULL) {
+            AdapterFree(asyncParam->userData);
+        }
+        AdapterFree(asyncParam);
         return ret;
     }
     return IOTC_OK;
@@ -105,13 +112,13 @@ int32_t E2eCtrlMsgProcess(const AdapterJson *req, E2eCtrlMsgReportAfterGetCmd re
     CHECK_RETURN_LOGW(req != NULL && reportFunc != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     const AdapterJson *dataJsonArray = AdapterJsonGetObj(req, STR_JSON_DATA);
     if (dataJsonArray == NULL) {
-        IOTC_LOGE("no data array");
+        IOTC_LOGW("no data array");
         return IOTC_CORE_WIFI_NETCFG_ERR_E2E_CTRL_NO_DATA;
     }
     uint32_t dataJsonArraySize = 0;
     int32_t ret = AdapterJsonGetArraySize(dataJsonArray, &dataJsonArraySize);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("get data size error %d", ret);
+        IOTC_LOGW("get data size error %d", ret);
         return ret;
     }
 
@@ -120,12 +127,11 @@ int32_t E2eCtrlMsgProcess(const AdapterJson *req, E2eCtrlMsgReportAfterGetCmd re
         IOTC_LOGI("report all async");
         ret = DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
         if (ret != IOTC_OK) {
-            IOTC_LOGE("async report all error %d", ret);
+            IOTC_LOGW("async report all error %d", ret);
         }
         return ret;
     }
 
-    /* 携带data字段为控制指令，否则为查询指令 */
     bool isCtrl = AdapterJsonHasObj(AdapterJsonGetArrayItem(dataJsonArray, 0), STR_JSON_DATA);
     if (isCtrl) {
         return E2eCtrlMsgPutProcess(dataJsonArray);

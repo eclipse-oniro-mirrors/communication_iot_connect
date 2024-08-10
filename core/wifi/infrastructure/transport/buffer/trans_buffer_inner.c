@@ -87,7 +87,7 @@ UtilsBufferCtx *TransCreateRecvBuffer(void)
     return GetBufferCtx()->recvBuf;
 }
 
-/* 保留release接口用于屏蔽buffer内部实现 */
+/* 保留release接口用于对外屏蔽buffer内部的单例实现 */
 void TransReleaseBuffer(UtilsBufferCtx *ctx)
 {
     NOT_USED(ctx);
@@ -95,18 +95,21 @@ void TransReleaseBuffer(UtilsBufferCtx *ctx)
 
 int32_t TransBufferInit(void)
 {
-    if (GetBufferCtx()->sendBuf == NULL) {
-        GetBufferCtx()->sendBuf = UtilsBufferCtxNew(GetBufferCtx()->sendRes, GetBufferCtx()->sendMax);
-        if (GetBufferCtx()->sendBuf == NULL) {
-            IOTC_LOGW("create send buffer error %u/%u", GetBufferCtx()->sendRes, GetBufferCtx()->sendMax);
+    struct TransBufferContext *ctx = GetBufferCtx();
+    if (ctx->sendBuf == NULL) {
+        ctx->sendBuf = UtilsBufferCtxNew(ctx->sendRes, ctx->sendMax);
+        if (ctx->sendBuf == NULL) {
+            IOTC_LOGW("create send buffer error %u/%u", ctx->sendRes, ctx->sendMax);
             return IOTC_CORE_COMM_UTILS_ERR_BUFFER_CREATE;
         }
     }
 
-    if (GetBufferCtx()->recvBuf == NULL) {
-        GetBufferCtx()->recvBuf = UtilsBufferCtxNew(GetBufferCtx()->recvRes, GetBufferCtx()->recvMax);
-        if (GetBufferCtx()->sendBuf == NULL) {
-            IOTC_LOGW("create recv buffer error %u/%u", GetBufferCtx()->recvRes, GetBufferCtx()->recvMax);
+    if (ctx->recvBuf == NULL) {
+        ctx->recvBuf = UtilsBufferCtxNew(ctx->recvRes, ctx->recvMax);
+        if (ctx->sendBuf == NULL) {
+            IOTC_LOGW("create recv buffer error %u/%u", ctx->recvRes, ctx->recvMax);
+            UtilsBufferCtxFree(ctx->sendBuf);
+            ctx->sendBuf = NULL;
             return IOTC_CORE_COMM_UTILS_ERR_BUFFER_CREATE;
         }
     }
@@ -116,12 +119,13 @@ int32_t TransBufferInit(void)
 
 void TransBufferDeinit(void)
 {
-    if (GetBufferCtx()->sendBuf != NULL) {
-        UtilsBufferCtxFree(GetBufferCtx()->sendBuf);
-        GetBufferCtx()->sendBuf = NULL;
+    struct TransBufferContext *ctx = GetBufferCtx();
+    if (ctx->sendBuf != NULL) {
+        UtilsBufferCtxFree(ctx->sendBuf);
+        ctx->sendBuf = NULL;
     }
-    if (GetBufferCtx()->recvBuf != NULL) {
-        UtilsBufferCtxFree(GetBufferCtx()->recvBuf);
-        GetBufferCtx()->recvBuf = NULL;
+    if (ctx->recvBuf != NULL) {
+        UtilsBufferCtxFree(ctx->recvBuf);
+        ctx->recvBuf = NULL;
     }
 }

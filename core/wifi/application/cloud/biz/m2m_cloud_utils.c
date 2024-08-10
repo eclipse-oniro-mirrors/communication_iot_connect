@@ -33,8 +33,8 @@ int32_t M2mCloudAddDevInfoToJson(AdapterJson *rootObj)
         return IOTC_CORE_PROF_MDL_ERR_BUILD_DEV_INFO_JSON;
     }
 
-    char macStr[MAX_ADDR_STR_LEN + 1] = {0};
-    int32_t ret = WifiGetMacAddrStr(macStr, sizeof(macStr));
+    char macStr[MAC_ADDR_STR_LEN + 1] = {0};
+    int32_t ret = GetWifiMacAddrStr(macStr, sizeof(macStr));
     if (ret != IOTC_OK) {
         IOTC_LOGE("get mac error %d", ret);
         AdapterJsonDelete(devInfoObj);

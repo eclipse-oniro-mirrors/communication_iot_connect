@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(application)
-add_subdirectory(infrastructure)
-add_subdirectory(interfaces)
-add_subdirectory(domain)
+add_subdirectory(e2e_ctl)
 
 set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
 set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)

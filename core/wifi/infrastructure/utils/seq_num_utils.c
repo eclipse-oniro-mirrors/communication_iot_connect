@@ -36,16 +36,17 @@ static bool SeqNumCheckWithoutOverflow(uint32_t curSeq, uint32_t recvSeq,
     }
 }
 
+/* 当前seq较小，本地seq可能已翻转，有可能收到对端未翻转的seq */
 static bool SeqNumCheckWithCurSeqSmall(uint32_t curSeq, uint32_t recvSeq,
     uint32_t window, bool *isSmall, uint32_t *delta)
 {
     if (recvSeq < curSeq) {
-        /* 未翻转，接收到的seq小且在窗口内，未接收过有效 */
+        /* 未翻转，接收到的seq小且在窗口内 */
         *isSmall = true;
         *delta = curSeq - recvSeq;
         return true;
     } else if (recvSeq - curSeq <= window) {
-        /* 未翻转，接收到的seq大且在窗口内，有效 */
+        /* 未翻转，接收到的seq大且在窗口内 */
         *delta = recvSeq - curSeq;
         return true;
     } else if (UINT32_MAX - recvSeq + curSeq + 1 <= window) {
@@ -54,16 +55,17 @@ static bool SeqNumCheckWithCurSeqSmall(uint32_t curSeq, uint32_t recvSeq,
         *delta = UINT32_MAX - recvSeq + curSeq + 1;
         return true;
     } else {
-        /* 接收到的seq不在窗口 */
+        /* 不在窗口期 */
         return false;
     }
 }
 
+/* 当前seq较大，有可能收到对端已翻转的seq */
 static bool SeqNumCheckWithCurSeqBig(uint32_t curSeq, uint32_t recvSeq,
     uint32_t window, bool *isSmall, uint32_t *delta)
 {
     if (recvSeq > curSeq) {
-        /* 未翻转，接收到的seq大且在窗口期，有效 */
+        /* 未翻转，接收到的seq大且在窗口期 */
         *delta = recvSeq - curSeq;
         return true;
     } else if (curSeq - recvSeq <= window) {
@@ -72,11 +74,11 @@ static bool SeqNumCheckWithCurSeqBig(uint32_t curSeq, uint32_t recvSeq,
         *delta = curSeq - recvSeq;
         return true;
     } else if (UINT32_MAX - curSeq + recvSeq + 1 <= window) {
-        /* 已翻转，接收到的seq大且在窗口期，有效 */
+        /* 已翻转，接收到的seq大且在窗口期 */
         *delta = UINT32_MAX - curSeq + recvSeq + 1;
         return true;
     } else {
-        /* 不在窗口期，无效 */
+        /* 不在窗口期 */
         return false;
     }
 }
@@ -89,18 +91,15 @@ bool SeqNumCheck(uint32_t curSeq, uint32_t recvSeq, uint32_t window, bool *isSma
     *delta = 0;
 
     if (recvSeq == curSeq) {
-        /* 序列号一致，说明已接收 */
+        /* 接收到重传报文 */
         return false;
     }
 
     if (curSeq < window) {
-        /* 当前seq较小，可能已翻转，可能收到未翻转的seq */
         return SeqNumCheckWithCurSeqSmall(curSeq, recvSeq, window, isSmall, delta);
     } else if (curSeq > UINT32_MAX - window) {
-        /* 当前seq较大，可能收到已翻转的seq */
         return SeqNumCheckWithCurSeqBig(curSeq, recvSeq, window, isSmall, delta);
     } else {
-        /* 无翻转情况 */
         return SeqNumCheckWithoutOverflow(curSeq, recvSeq, window, isSmall, delta);
     }
 }
@@ -116,7 +115,7 @@ uint32_t CoapSeqToNum(const uint8_t *data, uint32_t len)
     } else if (len == sizeof(uint32_t)) {
         return AdapterNtohl(*(uint32_t *)data);
     } else {
-        /* 0字节左移16位得到高位，1字节左移8位得到中间位，2字节为低位 */
+        /* CI NOTE: 0字节左移16位得到高位，1字节左移8位得到中间位，2字节为低位 */
         return ((uint32_t)data[0] << 16) | ((uint32_t)data[1] << 8) | ((uint32_t)data[2]);
     }
 }
