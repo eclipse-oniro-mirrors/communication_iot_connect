@@ -19,6 +19,7 @@
 #include "iotc_errcode.h"
 #include "m2m_cloud_ctx.h"
 #include "m2m_cloud_fsm.h"
+#include "m2m_cloud_report.h"
 #include "utils_assert.h"
 #include "m2m_cloud_link.h"
 
@@ -28,6 +29,30 @@ static void M2mCloudServiceStopInner(M2mCloudContext *ctx)
 {
     M2mCloudFsmDeinit(ctx);
     M2mCloudLinkDeinit(ctx);
+}
+
+static int32_t M2mCloudDeviceReportMessageHandler(const ServiceMessage *req, ServiceResponseInfo *resp)
+{
+    NOT_USED(resp);
+    CHECK_RETURN_LOGW(req != NULL && req->msg != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    int32_t ret = M2mCloudReportMessage(req->msg, GetM2mCloudCtx());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("local ctl report error %d", ret);
+        return ret;
+    }
+    return IOTC_OK;
+}
+
+static int32_t M2mCloudServiceMsgSub(M2mCloudContext *ctx)
+{
+    int32_t ret = ServiceProxySubscribeMessage(ctx->svcInfo.instanceId, IOTC_SERVICE_ID_DEVICE,
+        DEVICE_SERVICE_MSG_ID_REPORT, M2mCloudDeviceReportMessageHandler);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("sub device service report error %d", ret);
+        return ret;
+    }
+    return IOTC_OK;
 }
 
 static int32_t M2mCloudServiceStart(int32_t instanceId, ServiceFinishCallback onFinish, void *param)
@@ -43,7 +68,12 @@ static int32_t M2mCloudServiceStart(int32_t instanceId, ServiceFinishCallback on
         IOTC_LOGW("cloud fsm init error %d", ret);
         return ret;
     }
-    return IOTC_OK;
+
+    ret = M2mCloudServiceMsgSub(ctx);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("cloud  Service Msg Sub error %d", ret);
+    }
+    return ret;
 }
 
 static int32_t M2mCloudServiceStop(int32_t instanceId, void *param)

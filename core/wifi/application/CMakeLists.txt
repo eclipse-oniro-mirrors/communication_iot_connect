@@ -16,6 +16,7 @@ add_subdirectory(connect)
 add_subdirectory(softap)
 add_subdirectory(local_control)
 add_subdirectory(lan_search)
+add_subdirectory(cloud)
 
 set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
 set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)

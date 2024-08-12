@@ -24,6 +24,8 @@ typedef enum {
     CLOUD_ERRCODE_OK = 0,
     CLOUD_ERRCODE_REGISTERED = 2,
     CLOUD_ERRCODE_CODE_EXPIRED = 3,
+    CLOUD_ERRCODE_CODE_SECRET_ERR = 5,
+    CLOUD_ERRCODE_CODE_DEV_DELETED = 6,
 } CloudErrcode;
 
 #ifdef __cplusplus

@@ -67,8 +67,7 @@ static int32_t TlsInitParamCopy(const SocketTlsInitParam *src, SocketTlsInitPara
 
     dst->suites.num = src->suites.num;
     uint32_t size = src->suites.num * sizeof(int32_t);
-    dst->suites.ciphersuites = (int32_t *)UtilsMallocCopy((uint8_t *)dst->suites.ciphersuites,
-        src->suites.num * sizeof(int32_t));
+    dst->suites.ciphersuites = (int32_t *)UtilsMallocCopy((uint8_t *)src->suites.ciphersuites, size);
     if (dst->suites.ciphersuites == NULL) {
         IOTC_LOGW("clone error %u", size);
         return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;

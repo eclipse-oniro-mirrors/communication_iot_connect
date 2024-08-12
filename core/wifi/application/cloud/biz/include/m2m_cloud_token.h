@@ -15,7 +15,7 @@
 #ifndef M2M_CLOUD_TOKEN_H
 #define M2M_CLOUD_TOKEN_H
 #include <stdint.h>
-#include "m2m_cloud_ctx.h"
+#include "m2m_cloud_send.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,8 @@ typedef struct {
     uint32_t timeout;
 } CloudTokenInfo;
 
-int32_t UpdateCloudTokenInfo(M2mCloudContext *ctx, const CloudTokenInfo *tokenInfo);
+int32_t ParseTokenInfo(M2mCloudContext *ctx, AdapterJson *jsonObj);
+int32_t DealErrCodeRsp(int32_t errcode);
 
 #ifdef __cplusplus
 }

@@ -12,24 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef M2M_CLOUD_DEV_DEL_H
+#define M2M_CLOUD_DEV_DEL_H
+
+#include <stdint.h>
 #include "m2m_cloud_ctx.h"
-#include "securec.h"
-#include "sched_timer.h"
-#include "iotc_errcode.h"
 
-M2mCloudContext *GetM2mCloudCtx(void)
-{
-    static M2mCloudContext ctx;
-    return &ctx;
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int32_t M2mCloudCtxInit(void)
-{
-    M2mCloudContext *ctx = GetM2mCloudCtx();
-    (void)memset_s(ctx, sizeof(M2mCloudContext), 0, sizeof(M2mCloudContext));
-    ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
-    ctx->stateManager.fsmTimer = EVENT_SOURCE_INVALID_TIMER_FD;
-    ctx->stateManager.tokenTimer = EVENT_SOURCE_INVALID_TIMER_FD;
-    ctx->stateManager.hbTimer = EVENT_SOURCE_INVALID_TIMER_FD;
-    return IOTC_OK;
+int32_t M2mCloudDeviveDelInit(M2mCloudContext *ctx);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* M2M_CLOUD_DEV_DEL_H */

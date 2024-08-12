@@ -80,16 +80,17 @@ static void M2mCloudHeartbbeatRespHandler(const CoapPacket *resp, const SocketAd
 {
     NOT_USED(addr);
 
+    M2mCloudContext *ctx = (M2mCloudContext *)userData;
+    CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
     if (timeout) {
         if (ctx->heartbeatInfo.sentCnt >= CLOUD_HB_TIMEOUT_CNT) {
             IOTC_LOGW("cloud mode heartbbeat reach max times!");
             M2mCloudDisableHeartbeat(ctx);
+            UtilsFsmSwitch(ctx->stateManager.fsmCtx, M2M_CLOUD_FSM_STATE_CONNECT);
         }
         return;
     }
 
-    M2mCloudContext *ctx = (M2mCloudContext *)userData;
-    CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
     CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
 
     AdapterJson *jsonObj = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);

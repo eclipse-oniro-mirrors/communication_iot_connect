@@ -140,6 +140,17 @@ int32_t DevSvcProxyRecvLoginInfo(const AdapterJson *json)
     return devApi->onRecvLoginInfo(json);
 }
 
+int32_t DevSvcProxyCleanLoginInfo(void)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onCleanLoginInfo == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    IOTC_LOGW("DevSvcProxyCleanLoginInfo");
+    return devApi->onCleanLoginInfo();
+}
+
 bool DevDevSvcProxyGetOnlineStatus(void)
 {
     const DevSvcApi *devApi = GetDevSvcApi();

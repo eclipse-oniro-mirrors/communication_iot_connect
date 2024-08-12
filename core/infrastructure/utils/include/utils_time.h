@@ -46,7 +46,7 @@ bool UtilsIsTimeSet(void);
 
 int32_t UtilsTimeInit(void);
 
-int32_t UtilsTimeDeinit(void);
+void UtilsTimeDeinit(void);
 
 #ifdef __cplusplus
 }

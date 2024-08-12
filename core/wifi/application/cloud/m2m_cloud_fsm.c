@@ -25,28 +25,13 @@
 #include "m2m_cloud_errcode.h"
 #include "m2m_cloud_login.h"
 #include "m2m_cloud_sync.h"
+#include "m2m_cloud_ctl.h"
+#include "m2m_cloud_dev_del.h"
 #include "event_bus.h"
 #include "m2m_cloud_link.h"
 #include "securec.h"
 
 #define M2M_CLOUD_REGISTER_TIMEOUT_MS UTILS_MIN_TO_MS(1)
-
-typedef enum {
-    M2M_CLOUD_FSM_STATE_INIT = 0,
-    M2M_CLOUD_FSM_STATE_CREATE_LINK,
-    M2M_CLOUD_FSM_STATE_CONNECT,
-    M2M_CLOUD_FSM_STATE_REGISTER,
-    M2M_CLOUD_FSM_STATE_REGISTER_WAIT_RESP,
-    M2M_CLOUD_FSM_STATE_LOGIN,
-    M2M_CLOUD_FSM_STATE_LOGIN_WAIT_RESP,
-    M2M_CLOUD_FSM_STATE_REVOKE,
-    M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP,
-    M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC,
-    M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC_WAIT_RESP,
-    M2M_CLOUD_FSM_STATE_ONLINE,
-    M2M_CLOUD_FSM_STATE_DELETE,
-    M2M_CLOUD_FSM_STATE_EXIT,
-} M2mCloudFsmState;
 
 #define CHANGE_FSM_TO(ctx, state) UtilsFsmSwitch((ctx)->stateManager.fsmCtx, (state));
 
@@ -112,6 +97,16 @@ static int32_t CloudFsmCreateLinkHandler(void *param, int32_t cur)
     int32_t ret = M2mCloudLinkCreate(ctx);
     if (ret != IOTC_OK) {
         IOTC_LOGW("create link error %d", ret);
+        return cur;
+    }
+    ret = M2mCloudCtlInit(ctx);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("ctl init error %d", ret);
+        return cur;
+    }
+    ret = M2mCloudDeviveDelInit(ctx);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("dev del init error %d", ret);
         return cur;
     }
     M2mCloudBackoffInit(ctx);
@@ -349,8 +344,12 @@ void M2mCloudFsmDeinit(M2mCloudContext *ctx)
         SchedTimerRemove(ctx->stateManager.tokenTimer);
         ctx->stateManager.tokenTimer = EVENT_SOURCE_INVALID_TIMER_FD;
     }
-    if (ctx->stateManager.tokenTimer >= 0) {
-        SchedTimerRemove(ctx->stateManager.tokenTimer);
-        ctx->stateManager.tokenTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    if (ctx->stateManager.regTimer >= 0) {
+        SchedTimerRemove(ctx->stateManager.regTimer);
+        ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+    if (ctx->stateManager.hbTimer >= 0) {
+        SchedTimerRemove(ctx->stateManager.hbTimer);
+        ctx->stateManager.hbTimer = EVENT_SOURCE_INVALID_TIMER_FD;
     }
 }

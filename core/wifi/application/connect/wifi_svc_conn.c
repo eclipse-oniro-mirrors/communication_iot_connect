@@ -29,6 +29,7 @@
 #include "event_bus.h"
 #include "iotc_event.h"
 #include "adapter_wifi.h"
+#include "fwk_main.h"
 
 static const char *NET_CONNECT_SERVICE_NAME = "CONNECT";
 
@@ -49,12 +50,18 @@ static void RevokeEventWifiInfoCallback(uint32_t event, void *param, uint32_t le
         IOTC_LOGI("clear wifi info ok");
     }
 
+    ret = AdapterRestartWifi();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("restart wifi error %d", ret);
+    }
+
     ret = ConfigClearNetInfoFlag();
     if (ret != IOTC_OK) {
-        IOTC_LOGW("clear net info flag error %d", ret);
-    } else {
-        IOTC_LOGI("clear net info flag ok");
+        IOTC_LOGF("clear net info flag error %d", ret);
     }
+
+    /* ¸´Î»»ØÍËµ½´ýÅäÍø */
+    IotcFwkNotifyReset();
 }
 
 static int32_t StopWifiConnectService(int32_t instanceId, void *param)

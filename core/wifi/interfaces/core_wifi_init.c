@@ -23,6 +23,7 @@
 #include "iotc_errcode.h"
 #include "lan_search_svc.h"
 #include "local_ctl_svc.h"
+#include "m2m_cloud_svc.h"
 
 static const FwkInitUnit CORE_WIFI[] = {
     /* 链路收发缓冲区组件 */
@@ -34,6 +35,7 @@ static const FwkInitUnit CORE_WIFI[] = {
     {FWK_INIT_LVL_BIZ, "wifi_connect", WifiServiceConnectInit, WifiServiceConnectDeinit},
     {FWK_INIT_LVL_BIZ, "lan_search", LanSearchServiceInit, LanSearchServiceDeinit},
     {FWK_INIT_LVL_BIZ, "local_control", LocalControlServiceInit, LocalControlServiceDeinit},
+    {FWK_INIT_LVL_BIZ, "cloud", M2mCloudServiceInit, M2mCloudServiceDeinit},
 };
 
 int32_t CoreWifiRegisterInitItem(void)

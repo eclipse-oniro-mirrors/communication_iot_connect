@@ -21,7 +21,7 @@ iotc_interface_path = "${iotc_root_path}/interfaces"
 declare_args() {
   iotc_ble_support = true
   iotc_wifi_support = true
-  iotc_ailife_support = false
+  iotc_ailife_support = true
   iotc_mbedtls_v2_support = false
   iotc_mbedtls_psk_support = false
   iotc_mbedtls_ccm_support = false

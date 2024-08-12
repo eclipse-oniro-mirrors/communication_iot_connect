@@ -40,7 +40,7 @@ static int32_t CloudTlsTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemai
     tlsParam.host.port = ctx->linkInfo.port == 0 ? WIFI_CLOUD_TLS_PORT : ctx->linkInfo.port;
     tlsParam.host.hostname = ctx->linkInfo.url[ctx->linkInfo.urlIndex];
 
-    static const int32_t CIPHERSUITE_LIST[] = {
+    static int32_t CIPHERSUITE_LIST[] = {
         ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
         ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
         ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
