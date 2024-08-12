@@ -16,7 +16,7 @@ set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_cli_mngr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_coap_api.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_coap_srv.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_coap_stack.c
     ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_report.c
     ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_ctx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/local_ctl_sess.c

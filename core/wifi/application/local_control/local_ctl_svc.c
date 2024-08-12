@@ -20,7 +20,7 @@
 #include "utils_assert.h"
 #include "iotc_svc_local_ctl.h"
 #include "utils_common.h"
-#include "local_ctl_coap_srv.h"
+#include "local_ctl_coap_stack.h"
 #include "local_ctl_cli_mngr.h"
 #include "event_bus.h"
 #include "iotc_event.h"
@@ -73,7 +73,7 @@ static int32_t LocalCtlServiceMsgSub(LocalControlContext *ctx)
 
 static void LocalControlServiceStopInner(LocalControlContext *ctx)
 {
-    LocalControlCoapServerDestroy(ctx);
+    LocalControlCoapStackDestroy(ctx);
     LocalCtlClientManagerDestroy(ctx);
 }
 
@@ -89,7 +89,7 @@ static void EventSubForLocalCoapServerStart(uint32_t event, void *param, uint32_
         return;
     }
 
-    int32_t ret = LocalControlCoapServerStart(GetLocalCtlCtx());
+    int32_t ret = LocalControlCoapStackStart(GetLocalCtlCtx());
     if (ret != IOTC_OK) {
         IOTC_LOGW("local coap server start error %d", ret);
     }
@@ -101,7 +101,7 @@ static void EventSubForLocalCoapServerStop(uint32_t event, void *param, uint32_t
     NOT_USED(param);
     NOT_USED(len);
 
-    LocalControlCoapServerStop(GetLocalCtlCtx());
+    LocalControlCoapStackStop(GetLocalCtlCtx());
 }
 
 static void EventSubForStopCoapServerAndClearAllClient(uint32_t event, void *param, uint32_t len)
@@ -111,7 +111,7 @@ static void EventSubForStopCoapServerAndClearAllClient(uint32_t event, void *par
     NOT_USED(len);
 
     LocalControlContext *ctx = GetLocalCtlCtx();
-    LocalControlCoapServerStop(ctx);
+    LocalControlCoapStackStop(ctx);
     ClearAllLocalControlClient(ctx);
 }
 
@@ -185,7 +185,7 @@ static int32_t LocalControlServiceStart(int32_t instanceId, ServiceFinishCallbac
         DevBindStatus bindStatus = DevSvcProxyGetBindStatus();
         bool isWifiConnected = ConnSvcProxyIsNetConnected();
         if (bindStatus == DEV_BIND_STATUS_BIND && isWifiConnected) {
-            ret = LocalControlCoapServerStart(ctx);
+            ret = LocalControlCoapStackStart(ctx);
             if (ret != IOTC_OK) {
                 IOTC_LOGW("start local coap server error %d", ret);
                 break;

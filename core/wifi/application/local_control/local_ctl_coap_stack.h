@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LOCAL_CONTROL_COAP_SERVER_H
-#define LOCAL_CONTROL_COAP_SERVER_H
+#ifndef LOCAL_CONTROL_COAP_STACK_H
+#define LOCAL_CONTROL_COAP_STACK_H
 #include <stdint.h>
-#include "lan_search_ctx.h"
+#include "local_ctl_ctx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t LanSearchCoapServerStart(LanSearchContext *ctx);
+int32_t LocalControlCoapStackStart(LocalControlContext *ctx);
 
-void LanSearchCoapServerStop(LanSearchContext *ctx);
+void LocalControlCoapStackStop(LocalControlContext *ctx);
 
-void LanSearchCoapServerDestroy(LanSearchContext *ctx);
+void LocalControlCoapStackDestroy(LocalControlContext *ctx);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* LOCAL_CONTROL_COAP_SERVER_H */
+#endif /* LOCAL_CONTROL_COAP_STACK_H */
