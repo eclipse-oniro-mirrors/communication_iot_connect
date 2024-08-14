@@ -74,6 +74,7 @@ typedef int32_t (*DevRecvBindInfo)(const AdapterJson *json);
 typedef int32_t (*DevRecvAuthInfo)(const AdapterJson *json);
 typedef int32_t (*DevRecvLoginInfo)(const AdapterJson *json);
 typedef int32_t (*DevCleanLoginInfo)(void);
+typedef int32_t (*DevCleanRevokeFlag)(void);
 typedef bool (*DevGetOnlineStatus)(void);
 
 typedef struct {
@@ -89,6 +90,7 @@ typedef struct {
     DevRecvAuthInfo onRecvAuthInfo;
     DevRecvLoginInfo onRecvLoginInfo;
     DevCleanLoginInfo onCleanLoginInfo;
+    DevCleanRevokeFlag onCleanRevokeFlag;
     DevGetOnlineStatus onGetOnlineStatus;
 } DevSvcApi;
 
@@ -109,6 +111,7 @@ int32_t DevSvcProxyGetLoginInfo(bool *isExist, DevLoginInfo *info);
 int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json);
 int32_t DevSvcProxyRecvLoginInfo(const AdapterJson *json);
 int32_t DevSvcProxyCleanLoginInfo(void);
+int32_t DevSvcProxyCleanRevokeFlag(void);
 bool DevDevSvcProxyGetOnlineStatus(void);
 
 #ifdef __cplusplus

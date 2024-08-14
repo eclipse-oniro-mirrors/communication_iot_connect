@@ -178,6 +178,7 @@ int32_t DeviceServiceInit(void)
         .onRecvAuthInfo = DeviceServiceRecvAuthInfo,
         .onRecvLoginInfo = DeviceServiceRecvLoginInfo,
         .onCleanLoginInfo = ConfigClearLoginInfo,
+        .onCleanRevokeFlag = ClearRevokeFlag,
         .onGetOnlineStatus = ConfigGetOnlineStatus,
     };
 
