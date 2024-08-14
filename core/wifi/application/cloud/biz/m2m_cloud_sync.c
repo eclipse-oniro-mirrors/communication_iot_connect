@@ -28,6 +28,8 @@
 #include "m2m_cloud_utils.h"
 #include "iotc_errcode.h"
 #include "iotc_svc_dev.h"
+#include "event_bus_pub.h"
+#include "iotc_event.h"
 
 static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj, const M2mCloudContext *ctx)
 {
@@ -120,6 +122,7 @@ int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket 
     }
 
     if (*errcode == CLOUD_ERRCODE_OK) {
+        EventBusPublishSync(IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE, NULL, 0);
         ret = DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
         if (ret != IOTC_OK) {
             IOTC_LOGW("report all error %d", ret);

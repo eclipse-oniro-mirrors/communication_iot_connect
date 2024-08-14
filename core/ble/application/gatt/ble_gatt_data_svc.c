@@ -81,7 +81,7 @@ static int32_t LinkLayerExecutorWaitCallback(void *inData, void **outData)
 static int32_t BleDataCharWrite(uint8_t *buff, uint32_t len)
 {
     CHECK_RETURN_LOGE((buff != NULL) && (len > 0), IOTC_ERR_PARAM_INVALID, "invalid param");
-    
+
     int32_t errcode;
     LinkLayerExecutorParam param = {.value = buff, .valueLen = len};
     int32_t ret = SchedAsyncExecutorWait(LinkLayerExecutorWaitCallback, &param, NULL, &errcode, UTILS_SEC_TO_MS(1));

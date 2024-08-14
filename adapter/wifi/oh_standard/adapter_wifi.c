@@ -752,6 +752,7 @@ int32_t AdapterConnectWifi(void)
         }
         if (GetScanWifiResultFromOhos(&config, &info)) {
             SetSecurityTypeByScanInfo(&config, &info);
+            break;
         }
         ADAPTER_LOGN("not find target wifi, tyr again");
     }

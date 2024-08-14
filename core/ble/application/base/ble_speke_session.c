@@ -41,7 +41,7 @@ static int32_t NotifySpekeFinished(SpekeSession *session, void *user, int32_t er
     NOT_USED(session);
     NOT_USED(user);
     g_bleSpekeErrCode = errorCode;
-    IOTC_LOGE("speke errcode:%d", errorCode);
+    IOTC_LOGN("speke errcode:%d", errorCode);
     return IOTC_OK;
 }
 

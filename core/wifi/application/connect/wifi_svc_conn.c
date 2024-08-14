@@ -43,16 +43,16 @@ static void RevokeEventWifiInfoCallback(uint32_t event, void *param, uint32_t le
         return;
     }
 
-    int32_t ret = AdapterDeleteWifiInfo();
+    int32_t ret = AdapterDisconnectWifi();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("restart wifi error %d", ret);
+    }
+
+    ret = AdapterDeleteWifiInfo();
     if (ret != IOTC_OK) {
         IOTC_LOGW("del wifi info error %d", ret);
     } else {
         IOTC_LOGI("clear wifi info ok");
-    }
-
-    ret = AdapterRestartWifi();
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("restart wifi error %d", ret);
     }
 
     ret = ConfigClearNetInfoFlag();
@@ -60,7 +60,7 @@ static void RevokeEventWifiInfoCallback(uint32_t event, void *param, uint32_t le
         IOTC_LOGF("clear net info flag error %d", ret);
     }
 
-    /* ¸´Î»»ØÍËµ½´ıÅäÍø */
+    /* å¤ä½å›é€€åˆ°å¾…é…ç½‘ */
     IotcFwkNotifyReset();
 }
 

@@ -26,7 +26,6 @@ bool IsRevokeFlagExist(void)
         IOTC_LOGW("get revoke flag error %d", ret);
         return false;
     }
-    IOTC_LOGI("get revoke flag %u", flag);
     return flag == REVOKE_FLAG_SET;
 }
 

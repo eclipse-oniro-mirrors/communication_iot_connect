@@ -25,6 +25,8 @@
 #define UNREG_ADV_NAME_HEAD "Oh"
 #define REGED_ADV_NAME_HEAD "OH"
 #define ADV_NAME_VER "1"
+#define BLE_NETCFG_CAPCITY 0b01100001
+#define BLE_NETCFG_CAPCITY_SIZE 1
 
 #define CUSTOM_NAME_BUF_LEN 64
 #define ADV_NAME_SN_LEN 4
@@ -122,12 +124,12 @@ static int32_t GenAdvName(BleAdvNameValue *value)
 
     ret = sprintf_s(value->buf, sizeof(value->buf), "%s-%.10s-%s%s%s",
         head, customName, ADV_NAME_VER, devInfo->prodId, advSn);
-    if (ret <= 0) {
-        IOTC_LOGE("sprintf error %d", ret);
+    if ((ret <= 0) || (ret + BLE_NETCFG_CAPCITY_SIZE) > sizeof(value->buf)) {
+        IOTC_LOGE("sprintf error %d,%u,%u", ret, BLE_NETCFG_CAPCITY_SIZE, sizeof(value->buf));
         return IOTC_ERR_SECUREC_SPRINTF;
     }
-
-    return strlen(value->buf);
+    value->buf[ret] = BLE_NETCFG_CAPCITY;
+    return ret + BLE_NETCFG_CAPCITY_SIZE;
 }
 
 static int32_t RspAdvCopyToBuf(uint8_t *out, uint32_t outSize)

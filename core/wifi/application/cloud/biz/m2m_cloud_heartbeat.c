@@ -82,6 +82,7 @@ static void M2mCloudHeartbbeatRespHandler(const CoapPacket *resp, const SocketAd
 
     M2mCloudContext *ctx = (M2mCloudContext *)userData;
     CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
+
     if (timeout) {
         if (ctx->heartbeatInfo.sentCnt >= CLOUD_HB_TIMEOUT_CNT) {
             IOTC_LOGW("cloud mode heartbbeat reach max times!");
