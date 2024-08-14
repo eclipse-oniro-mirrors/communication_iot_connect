@@ -76,7 +76,7 @@ struct M2mCloudContext {
         uint16_t port;
         uint16_t urlIndex;
         const char *url[M2M_CLOUD_URL_NUM];
-        void (*CloudLinkErrorCallback)(M2mCloudContext *ctx);
+        void (*cloudLinkErrorCallback)(M2mCloudContext *ctx);
         TransSocket *socket;
         TransLink *link;
         TransSess *sess;

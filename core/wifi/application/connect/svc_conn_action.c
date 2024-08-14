@@ -30,12 +30,13 @@
 
 #define WIFI_VERIFY_CONNECT_TIMEOUT_MS UTILS_SEC_TO_MS(60)
 #define WIFI_STATUS_CHECK_PERIOD UTILS_SEC_TO_MS(1)
+#define WIFI_AUTO_RECONNECT_TIMEVAL UTILS_SEC_TO_MS(20)
 
 static void WifiVerifyFailedProcess(void)
 {
     int32_t ret = AdapterDisconnectWifi();
     if (ret != IOTC_OK) {
-        IOTC_LOGW("restart wifi error %d", ret);
+        IOTC_LOGW("disconnect wifi error %d", ret);
     }
     
     ret = AdapterDeleteWifiInfo();
@@ -57,16 +58,14 @@ static void WifiVerifyConnectTimeoutTimerCallback(int32_t id, void *userData)
     NOT_USED(id);
     NOT_USED(userData);
     ConnectServiceContext *ctx = GetConnSvcCtx();
+    SchedTimerRemove(ctx->verifyTimerFd);
+    ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
     if (WifiIsNetConnected()) {
-        SchedTimerRemove(ctx->verifyTimerFd);
-        ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
         return;
     }
 
     EventBusPublishSync(IOTC_CORE_WIFI_EVENT_CONNECT_FAIL, NULL, 0);
     WifiVerifyFailedProcess();
-    SchedTimerRemove(ctx->verifyTimerFd);
-    ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
 }
 
 int32_t ConnSvcActionConnectWifi(void)
@@ -104,6 +103,16 @@ int32_t ConnSvcActionConnectWifi(void)
     return IOTC_OK;
 }
 
+static void WifiReconnectTimerCallback(int32_t id, void *userData)
+{
+    NOT_USED(id);
+    NOT_USED(userData);
+    int32_t ret = AdapterConnectWifi();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("connect wifi trig error %d", ret);
+    }
+}
+
 static void WifiStatusCheckTimerCallback(int32_t id, void *userData)
 {
     NOT_USED(id);
@@ -120,6 +129,16 @@ static void WifiStatusCheckTimerCallback(int32_t id, void *userData)
         IOTC_LOGI("wifi net disconnect");
         UTILS_BIT_RESET(ctx->bitMap, CONN_SVC_BIT_MAP_WIFI_CONNECTED);
         EventBusPublishSync(IOTC_SDK_AILIFE_EVENT_WIFI_NET_DISCONNECT, NULL, 0);
+        if (!ConfigIsNetInfoChecked()) {
+            return;
+        }
+        if (ctx->reconnectTimerFd < 0) {
+            ctx->reconnectTimerFd = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_REPEAT, WifiReconnectTimerCallback,
+                WIFI_AUTO_RECONNECT_TIMEVAL, NULL);
+            if (ctx->reconnectTimerFd < 0) {
+                IOTC_LOGE("create reconnect timer error %d", ctx->reconnectTimerFd);
+            }
+        }
         return;
     }
 
@@ -127,8 +146,18 @@ static void WifiStatusCheckTimerCallback(int32_t id, void *userData)
     UTILS_BIT_SET(ctx->bitMap, CONN_SVC_BIT_MAP_WIFI_CONNECTED);
     EventBusPublishSync(IOTC_SDK_AILIFE_EVENT_WIFI_NET_CONNECT, NULL, 0);
 
+    if (ctx->reconnectTimerFd >= 0) {
+        SchedTimerRemove(ctx->reconnectTimerFd);
+        ctx->reconnectTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+
     if (ConfigIsNetInfoChecked()) {
         return;
+    }
+
+    if (ctx->verifyTimerFd >= 0) {
+        SchedTimerRemove(ctx->verifyTimerFd);
+        ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
     }
 
     int32_t ret = ConfigSetNetInfoChecked();

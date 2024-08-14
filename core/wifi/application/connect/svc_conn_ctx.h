@@ -32,6 +32,7 @@ typedef struct {
     uint32_t bitMap;
     int32_t verifyTimerFd;
     int32_t netCheckTimerFd;
+    int32_t reconnectTimerFd;
     ServiceFinishCallback onFinish;
 } ConnectServiceContext;
 

@@ -68,7 +68,12 @@ static int32_t CloudTlsTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemai
 
 static void CloudLinkErrorProcess(TransLink *link, void *userData)
 {
-    /* TODO */
+    NOT_USED(link);
+    CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
+    M2mCloudContext *ctx = userData;
+    if (ctx->linkInfo.cloudLinkErrorCallback != NULL) {
+        ctx->linkInfo.cloudLinkErrorCallback(ctx);
+    }
 }
 
 static int32_t CloudTlsTransLinkInit(M2mCloudContext *ctx)

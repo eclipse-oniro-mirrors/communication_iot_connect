@@ -45,7 +45,7 @@ static void RevokeEventWifiInfoCallback(uint32_t event, void *param, uint32_t le
 
     int32_t ret = AdapterDisconnectWifi();
     if (ret != IOTC_OK) {
-        IOTC_LOGW("restart wifi error %d", ret);
+        IOTC_LOGW("disconnect wifi error %d", ret);
     }
 
     ret = AdapterDeleteWifiInfo();

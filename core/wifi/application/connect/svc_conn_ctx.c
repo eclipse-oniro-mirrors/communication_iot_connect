@@ -44,6 +44,10 @@ void ConnSvcCtxDeinit(void)
         SchedTimerRemove(ctx->verifyTimerFd);
         ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
     }
+    if (ctx->reconnectTimerFd >= 0) {
+        SchedTimerRemove(ctx->reconnectTimerFd);
+        ctx->reconnectTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
 }
 
 ConnectServiceContext *GetConnSvcCtx(void)
