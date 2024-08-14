@@ -27,6 +27,7 @@
 #include "m2m_cloud_sync.h"
 #include "m2m_cloud_ctl.h"
 #include "m2m_cloud_dev_del.h"
+#include "m2m_cloud_revoke.h"
 #include "event_bus.h"
 #include "m2m_cloud_link.h"
 #include "securec.h"
@@ -247,6 +248,35 @@ static void CloudLoginRespHandler(const CoapPacket *resp, const SocketAddr *addr
     }
 }
 
+static void CloudRevokeRespHandler(const CoapPacket *resp, const SocketAddr *addr, void *userData, bool timeout)
+{
+    NOT_USED(addr);
+    CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
+    M2mCloudContext *ctx = (M2mCloudContext *)userData;
+
+    if (ctx->stateManager.fsmCtx == NULL ||
+        ctx->stateManager.fsmCtx->cur != M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP) {
+        IOTC_LOGW("recv revoke resp invalid state %d", ctx->stateManager.fsmCtx->cur);
+        return;
+    }
+
+    if (timeout) {
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        IOTC_LOGW("revoke wait resp timeout");
+        return;
+    }
+    CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
+
+    int32_t errcode;
+    int32_t ret = M2mCloudRevokeResponseParse(ctx, resp, &errcode);
+    if (ret != IOTC_OK || errcode != CLOUD_ERRCODE_OK) {
+        IOTC_LOGW("revoke resp parse errogitr %d/%d", ret, errcode);
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        return;
+    }
+    CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_INIT);
+}
+
 static int32_t CloudFsmLoginHandler(void *param, int32_t cur)
 {
     NOT_USED(cur);
@@ -260,6 +290,21 @@ static int32_t CloudFsmLoginHandler(void *param, int32_t cur)
     }
 
     return M2M_CLOUD_FSM_STATE_LOGIN_WAIT_RESP;
+}
+
+static int32_t CloudFsmRevokeHandler(void *param, int32_t cur)
+{
+    NOT_USED(cur);
+    M2mCloudContext *ctx = (M2mCloudContext *)param;
+
+    int32_t ret = M2mCloudSendRequest(ctx, CloudRevokeRespHandler,
+        M2mCloudBuildRevokeRequest, M2mCloudGetRevokeOption());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("revoke error %d", ret);
+        return M2M_CLOUD_FSM_STATE_CONNECT;
+    }
+
+    return M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP;
 }
 
 static void CloudDevInfoSyncRespHandler(const CoapPacket *resp, const SocketAddr *addr, void *userData, bool timeout)
@@ -317,7 +362,7 @@ static UtilsFsm *GetM2mCloudFsm(void)
         { M2M_CLOUD_FSM_STATE_REGISTER_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_LOGIN, CloudFsmLoginHandler },
         { M2M_CLOUD_FSM_STATE_LOGIN_WAIT_RESP, UtilsFsmStateSelfCirculation },
-        { M2M_CLOUD_FSM_STATE_REVOKE, NULL },
+        { M2M_CLOUD_FSM_STATE_REVOKE, CloudFsmRevokeHandler },
         { M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC, CloudFsmDevInfoSyncHandler },
         { M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC_WAIT_RESP, UtilsFsmStateSelfCirculation },

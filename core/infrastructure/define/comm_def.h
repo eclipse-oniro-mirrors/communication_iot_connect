@@ -68,6 +68,7 @@ typedef struct {
 #define STR_URI_PATH_TOKEN "refresh"
 #define STR_URI_PATH_HB "heartbeat"
 #define STR_URI_PATH_DEV_DEL ".sys/delDevice"
+#define STR_URI_PATH_REVOKE "revoke"
 
 #define WIFI_CLOUD_TLS_PORT 5683
 #define WIFI_CLOUD_TCP_PORT 5685

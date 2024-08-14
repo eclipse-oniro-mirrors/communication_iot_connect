@@ -24,6 +24,7 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_ctl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_report.c
     ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_dev_del.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/m2m_cloud_revoke.c
     PARENT_SCOPE
 )
 

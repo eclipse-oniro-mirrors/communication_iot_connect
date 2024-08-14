@@ -84,6 +84,7 @@ iotc_core_wifi_src = [
   "$wifi_core_path/application/cloud/biz/m2m_cloud_ctl.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_report.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_dev_del.c",
+  "$wifi_core_path/application/cloud/biz/m2m_cloud_revoke.c",
   "$wifi_core_path/application/cloud/ctx/m2m_cloud_ctx.c",
   "$wifi_core_path/application/cloud/link/m2m_cloud_link.c",
   "$wifi_core_path/application/cloud/link/sess/tls/m2m_cloud_sess.c",

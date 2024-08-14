@@ -147,8 +147,17 @@ int32_t DevSvcProxyCleanLoginInfo(void)
         return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
     }
 
-    IOTC_LOGW("DevSvcProxyCleanLoginInfo");
     return devApi->onCleanLoginInfo();
+}
+
+int32_t DevSvcProxyCleanRevokeFlag(void)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onCleanRevokeFlag == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return devApi->onCleanRevokeFlag();
 }
 
 bool DevDevSvcProxyGetOnlineStatus(void)

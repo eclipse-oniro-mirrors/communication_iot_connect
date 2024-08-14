@@ -20,6 +20,7 @@
 #include "config_register_info.h"
 #include "config_authinfo.h"
 #include "iotc_log.h"
+#include "utils_combo.h"
 
 static void RevokeEventConfigCallback(uint32_t event, void *param, uint32_t len)
 {
@@ -28,9 +29,17 @@ static void RevokeEventConfigCallback(uint32_t event, void *param, uint32_t len)
     if (ret != IOTC_OK) {
         IOTC_LOGW("clear register info error %d", ret);
     }
-    ret = ConfigClearAuthInfo();
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("clear auth info error %d", ret);
+
+    if (UtilsGetComboType() == COMBO_TYPE_BLE_ONLY) {
+        ret = ConfigClearAuthInfo();
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("clear auth info error %d", ret);
+        }
+    } else {
+        ret = SetRevokeFlag();
+        if (ret != IOTC_OK) {
+            IOTC_LOGF("set revoke error %d", ret);
+        }
     }
 }
 
