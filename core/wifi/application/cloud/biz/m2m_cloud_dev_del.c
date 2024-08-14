@@ -22,6 +22,7 @@
 #include "coap_codec_utils.h"
 #include "coap_endpoint_server.h"
 #include "iotc_event.h"
+#include "fwk_main.h"
 
 static bool CheckIsValidDevId(const CoapPacket *req)
 {
@@ -81,7 +82,10 @@ static void M2mCloudCoapDeviveDelHandler(CoapEndpoint *endpoint, const CoapPacke
         IOTC_LOGW("clean loginInfo error %d", ret);
         return;
     }
-    EventBusPublishSync(IOTC_CORE_COMM_EVENT_MAIN_RESTORE, NULL, 0);
+    ret = IotcFwkRestore();
+    if (ret != IOTC_OK) {
+        IOTC_LOGF("restore error %d", ret);
+    }
 }
 
 int32_t M2mCloudDeviveDelInit(M2mCloudContext *ctx)

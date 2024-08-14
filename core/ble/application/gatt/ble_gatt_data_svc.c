@@ -64,7 +64,7 @@ typedef struct {
 
 static int32_t BleSendIndicate(const uint8_t *buff, uint32_t len)
 {
-    return IotcBleSendIndicateData(DATA_SVC_UUID, DATA_SVC_READ_UUID, buff, len);
+    return BleSendIndicateDataInner(DATA_SVC_UUID, DATA_SVC_READ_UUID, buff, len);
 }
 
 static int32_t LinkLayerExecutorWaitCallback(void *inData, void **outData)

@@ -261,6 +261,8 @@ int32_t IotcOhDevDeinit(void)
     CoreDeviceUnregisterInitUnit();
     FwkUnregInitUnit(OH_DEVICE_INIT);
     IotcOhOptionUnregister(DEVICE_OPTION_TABLE);
+    ModelDevInfoDeinit();
+    ModelSvcInfoDeinit();
     return IOTC_OK;
 }
 

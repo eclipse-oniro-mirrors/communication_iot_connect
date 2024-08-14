@@ -32,7 +32,7 @@ static int32_t RegkeyHook(void);
 static int32_t WatchDogRebootInit(void);
 
 static const FwkInitUnit CORE_PROFILE[] = {
-    {FWK_INIT_LVL_DEP, "report", ProfileReportInit, NULL},
+    {FWK_INIT_LVL_DEP, "report", ProfileReportInit, ProfileReportDeinit},
     {FWK_INIT_LVL_DEP, "key_hook", RegkeyHook, NULL},
     {FWK_INIT_LVL_DEP, "reboot_hook", WatchDogRebootInit, NULL},
     {FWK_INIT_LVL_DEP, "reg_info", ConfigClearRegisterInfo, NULL},
