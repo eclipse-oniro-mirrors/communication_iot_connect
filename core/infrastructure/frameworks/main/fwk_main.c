@@ -22,6 +22,7 @@
 #include "fwk_init.h"
 #include "event_bus.h"
 #include "iotc_errcode.h"
+#include "product_adapter.h"
 
 static bool g_existsFlag = false;
 static AdapterSemId *g_resetSem = NULL;
@@ -200,6 +201,12 @@ int32_t IotcFwkRestore(void)
     IOTC_LOGN("iotc restore");
     /* 发布恢复出厂事件，由订阅者完成操作 */
     EventBusPublishSync(IOTC_CORE_COMM_EVENT_MAIN_RESTORE, NULL, 0);
+
+    int32_t ret = ProductDevReboot(IOTC_REBOOT_RESTORE);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("can not reboot %d", ret);
+        IotcFwkNotifyReset();
+    }
     return IOTC_OK;
 }
 

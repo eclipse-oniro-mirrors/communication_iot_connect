@@ -88,8 +88,7 @@ int32_t ConfigInfoInit(void)
     }
     ret = SecurityStorePull(IOTC_STORE_KEY_INT_DEVICE_CONFIG);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("store data pull error %d", ret);
-        return ret;
+        IOTC_LOGF("store data pull error %d", ret);
     }
     /* 填充字符串结束符，避免非法的flash数据造成读越界 */
     g_storeInfo.devId[DEVICE_ID_MAX_STR_LEN] = '\0';

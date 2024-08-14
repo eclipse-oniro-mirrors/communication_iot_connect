@@ -158,12 +158,6 @@ static int32_t RestoreExecutorCallback(void *inData, void **outData)
         return ret;
     }
 
-    ret = ProductDevReboot(IOTC_REBOOT_RESTORE);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("can not reboot %d", ret);
-        IotcFwkNotifyReset();
-    }
-
     return IOTC_OK;
 }
 

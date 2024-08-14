@@ -33,13 +33,14 @@
 
 static void WifiVerifyFailedProcess(void)
 {
-    int32_t ret = AdapterDeleteWifiInfo();
-    if (ret != IOTC_OK) {
-        IOTC_LOGF("del wifi info error %d", ret);
-    }
-    ret = AdapterRestartWifi();
+    int32_t ret = AdapterDisconnectWifi();
     if (ret != IOTC_OK) {
         IOTC_LOGW("restart wifi error %d", ret);
+    }
+    
+    ret = AdapterDeleteWifiInfo();
+    if (ret != IOTC_OK) {
+        IOTC_LOGF("del wifi info error %d", ret);
     }
 
     ret = ConfigClearNetInfoFlag();

@@ -26,6 +26,7 @@
 #include "event_bus.h"
 #include "iotc_errcode.h"
 #include "iotc_event.h"
+#include "fwk_main.h"
 
 #define M2M_CLOUD_DEV_EXPIRED 3
 #define M2M_CLOUD_DEV_SECRET_ERR 5
@@ -71,7 +72,11 @@ int32_t DealErrCodeRsp(int32_t errcode)
             IOTC_LOGW("clean loginInfo error");
             return ret;
         }
-        EventBusPublishSync(IOTC_CORE_COMM_EVENT_MAIN_RESTORE, NULL, 0);
+        ret = IotcFwkRestore();
+        if (ret != IOTC_OK) {
+            IOTC_LOGF("restore error %d", ret);
+            return ret;
+        }
         return IOTC_OK;
     }
     return errcode;
