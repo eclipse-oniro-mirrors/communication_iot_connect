@@ -33,8 +33,6 @@ static const FwkInitUnit CORE_WIFI[] = {
     /* softap配网模式 */
     {FWK_INIT_LVL_BIZ, "softap", WifiServiceSoftapInit, WifiServiceSoftapDeinit},
     {FWK_INIT_LVL_BIZ, "wifi_connect", WifiServiceConnectInit, WifiServiceConnectDeinit},
-    {FWK_INIT_LVL_BIZ, "lan_search", LanSearchServiceInit, LanSearchServiceDeinit},
-    {FWK_INIT_LVL_BIZ, "local_control", LocalControlServiceInit, LocalControlServiceDeinit},
     {FWK_INIT_LVL_BIZ, "cloud", M2mCloudServiceInit, M2mCloudServiceDeinit},
 };
 
