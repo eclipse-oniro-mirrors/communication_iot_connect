@@ -116,6 +116,7 @@ static int32_t CloudFsmInitHandler(void *param, int32_t cur)
 static void CloudSessLinkErrorCallback(M2mCloudContext *ctx)
 {
     CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
+    M2mCloudLinkClose(ctx);
     M2mCloudDisableHeartbeat(ctx);
     CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
 }

@@ -142,9 +142,9 @@ int32_t M2mCloudEnableHeartbeat(M2mCloudContext *ctx)
 int32_t M2mCloudDisableHeartbeat(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    IOTC_LOGI("stop Heartbeat Timer[%u]", ctx->heartbeatInfo.interval);
     (void)memset_s(&ctx->heartbeatInfo, sizeof(ctx->heartbeatInfo), 0, sizeof(ctx->heartbeatInfo));
     if (ctx->stateManager.hbTimer >= 0) {
+        IOTC_LOGI("stop Heartbeat Timer[%u]", ctx->heartbeatInfo.interval);
         SchedTimerRemove(ctx->stateManager.hbTimer);
         ctx->stateManager.hbTimer = EVENT_SOURCE_INVALID_TIMER_FD;
     }

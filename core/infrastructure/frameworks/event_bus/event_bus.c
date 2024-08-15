@@ -80,7 +80,6 @@ static void AsyncHandle(void *param)
     if (asyncParam->freeFunc != NULL) {
         asyncParam->freeFunc(asyncParam->event, asyncParam->param, asyncParam->len);
     }
-    IOTC_LOGN("success event=%u,name=%s", asyncParam->event, NON_NULL_STR(asyncParam->name));
     AdapterFree(asyncParam);
 }
 
@@ -91,7 +90,7 @@ static int32_t SubScribe(const EventBusCallback listener, uint32_t event)
     }
     EventList *newNode = (EventList *)AdapterMalloc(sizeof(EventList));
     if (newNode == NULL) {
-        IOTC_LOGE("malloc");
+        IOTC_LOGW("malloc");
         return IOTC_ERROR;
     }
     (void)memset_s(newNode, sizeof(EventList), 0, sizeof(EventList));
@@ -100,7 +99,6 @@ static int32_t SubScribe(const EventBusCallback listener, uint32_t event)
     newNode->listener = listener;
     LIST_INIT(&newNode->list);
     LIST_INSERT_BEFORE(&newNode->list, &g_eventList);
-    IOTC_LOGN("success type=%u,event=%u", newNode->type, newNode->event);
     return IOTC_OK;
 }
 
@@ -111,7 +109,7 @@ static int32_t SubScribeMatch(const EventBusCallback listener, EventMatchFunc ma
     }
     EventList *newNode = (EventList *)AdapterMalloc(sizeof(EventList));
     if (newNode == NULL) {
-        IOTC_LOGE("malloc");
+        IOTC_LOGW("malloc");
         return IOTC_ERROR;
     }
     (void)memset_s(newNode, sizeof(EventList), 0, sizeof(EventList));
@@ -120,7 +118,6 @@ static int32_t SubScribeMatch(const EventBusCallback listener, EventMatchFunc ma
     newNode->match = match;
     LIST_INIT(&newNode->list);
     LIST_INSERT_BEFORE(&newNode->list, &g_eventList);
-    IOTC_LOGN("success type=%u", newNode->type);
     return IOTC_OK;
 }
 
@@ -131,7 +128,7 @@ static int32_t SubScribeAll(const EventBusCallback listener)
     }
     EventList *newNode = (EventList *)AdapterMalloc(sizeof(EventList));
     if (newNode == NULL) {
-        IOTC_LOGE("malloc");
+        IOTC_LOGW("malloc");
         return IOTC_ERROR;
     }
     (void)memset_s(newNode, sizeof(EventList), 0, sizeof(EventList));
@@ -139,7 +136,6 @@ static int32_t SubScribeAll(const EventBusCallback listener)
     newNode->listener = listener;
     LIST_INIT(&newNode->list);
     LIST_INSERT_BEFORE(&newNode->list, &g_eventList);
-    IOTC_LOGN("success type=%u", newNode->type);
     return IOTC_OK;
 }
 
@@ -157,10 +153,9 @@ static int32_t UnsubScribe(const EventBusCallback listener)
         }
     }
     if (!find) {
-        IOTC_LOGE("no find");
+        IOTC_LOGW("no find");
         return IOTC_ERROR;
     }
-    IOTC_LOGN("success");
     return IOTC_OK;
 }
 
@@ -171,7 +166,7 @@ int32_t EventBusInit(void)
     }
     g_eventMutex = UtilsCreateExMutex();
     if (g_eventMutex == NULL) {
-        IOTC_LOGE("create mutex");
+        IOTC_LOGW("create mutex");
         return IOTC_CORE_COMM_UTILS_ERR_EX_MUTEX_CREATE;
     }
     return IOTC_OK;
@@ -180,7 +175,7 @@ int32_t EventBusInit(void)
 int32_t EventBusRegAsyncExecutor(EventBusAsyncExecutor asyncExecutor)
 {
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERROR;
     }
     g_asyncExecutor = asyncExecutor;
@@ -203,11 +198,11 @@ void EventBusDeinit(void)
 int32_t EventBusSubscribe(const EventBusCallback listener, uint32_t event)
 {
     if (listener == NULL) {
-        IOTC_LOGE("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERROR;
     }
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERROR;
     }
     int32_t ret = SubScribe(listener, event);
@@ -218,11 +213,11 @@ int32_t EventBusSubscribe(const EventBusCallback listener, uint32_t event)
 int32_t EventBusSubscribeMatch(const EventBusCallback listener, EventMatchFunc match)
 {
     if ((listener == NULL) || (match == NULL)) {
-        IOTC_LOGE("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERROR;
     }
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERROR;
     }
     int32_t ret = SubScribeMatch(listener, match);
@@ -233,11 +228,11 @@ int32_t EventBusSubscribeMatch(const EventBusCallback listener, EventMatchFunc m
 int32_t EventBusSubscribeAll(const EventBusCallback listener)
 {
     if (listener == NULL) {
-        IOTC_LOGE("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERROR;
     }
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERROR;
     }
     int32_t ret = SubScribeAll(listener);
@@ -248,11 +243,11 @@ int32_t EventBusSubscribeAll(const EventBusCallback listener)
 int32_t EventBusUnsubscribe(const EventBusCallback listener)
 {
     if (listener == NULL) {
-        IOTC_LOGE("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERROR;
     }
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERROR;
     }
     int32_t ret = UnsubScribe(listener);
@@ -263,7 +258,7 @@ int32_t EventBusUnsubscribe(const EventBusCallback listener)
 static int32_t GetPublishList(EventList **list, uint32_t *num, uint32_t event)
 {
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
 
@@ -340,7 +335,7 @@ void EventBusPublishSyncInner(uint32_t event, const char *name, void *param, uin
             }
         }
     }
-    IOTC_LOGI("[EVENT BUS] pub [%u/%s/%u] to [%u] sub", event, NON_NULL_STR(name), len, num);
+    IOTC_LOGN("[EVENT BUS] pub [%u/%s/%u] to [%u] sub", event, NON_NULL_STR(name), len, num);
     AdapterFree(list);
     return;
 }
@@ -349,18 +344,18 @@ int32_t EventBusPublishAsyncInner(uint32_t event, const char *name, void *param,
     EventBusParamFreeHandler freeFunc)
 {
     if (!UtilsExMutexLock(g_eventMutex)) {
-        IOTC_LOGE("lock");
+        IOTC_LOGW("lock");
         return IOTC_ERROR;
     }
     EventBusAsyncExecutor asyncExecutor = g_asyncExecutor;
     UtilsExMutexUnlock(g_eventMutex);
     if (asyncExecutor == NULL) {
-        IOTC_LOGE("executor null");
+        IOTC_LOGW("executor null");
         return IOTC_ERR_PARAM_INVALID;
     }
     AsyncEventParam *newParam = (AsyncEventParam *)AdapterMalloc(sizeof(AsyncEventParam));
     if (newParam == NULL) {
-        IOTC_LOGE("malloc");
+        IOTC_LOGW("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(newParam, sizeof(AsyncEventParam), 0, sizeof(AsyncEventParam));
@@ -375,7 +370,7 @@ int32_t EventBusPublishAsyncInner(uint32_t event, const char *name, void *param,
         AdapterFree(newParam);
         return ret;
     }
-    IOTC_LOGI("[EVENT BUS] add async pub [%u/%s/%u]", event, NON_NULL_STR(name), len);
+    IOTC_LOGN("[EVENT BUS] add async pub [%u/%s/%u]", event, NON_NULL_STR(name), len);
     return IOTC_OK;
 }
 
