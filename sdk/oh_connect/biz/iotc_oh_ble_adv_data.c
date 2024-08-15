@@ -69,7 +69,7 @@ typedef struct {
 
 static void GenAdvFlags(BleFlagsAdvValue *value)
 {
-    memset_s(value, sizeof(BleFlagsAdvValue), 0, sizeof(BleFlagsAdvValue));
+    (void)memset_s(value, sizeof(BleFlagsAdvValue), 0, sizeof(BleFlagsAdvValue));
     value->leGeneralDiscoverableMode = 1;
     value->controller = 1;
 }

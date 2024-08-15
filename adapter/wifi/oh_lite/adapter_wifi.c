@@ -477,7 +477,7 @@ int32_t AdapterScanWifi(const AdapterWifiScanParam *param)
         ADAPTER_LOGW("wifi advance param fail");
         return IOTC_ADAPTER_WIFI_ERR_SCAN;
     }
-    (void)(void)memset_s(&scanParams, sizeof(scanParams), 0, sizeof(scanParams));
+    (void)memset_s(&scanParams, sizeof(scanParams), 0, sizeof(scanParams));
     return IOTC_OK;
 }
 
