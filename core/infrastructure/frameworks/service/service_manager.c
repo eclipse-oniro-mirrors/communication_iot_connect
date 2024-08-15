@@ -153,6 +153,7 @@ static void ClearServiceMsgSub(ServiceNode *svcNode, int32_t serviceId)
             }
             LIST_REMOVE(subItem);
             AdapterFree(subNode);
+            msgNode->subNum = msgNode->subNum > 0 ? msgNode->subNum - 1 : 0;
         }
     }
 }

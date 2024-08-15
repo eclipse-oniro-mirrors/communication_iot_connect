@@ -70,7 +70,7 @@ static void RemoveRegisterTimeoutTimer(uint32_t event, void *param, uint32_t len
         SchedTimerRemove(ctx->stateManager.regTimer);
         ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
     }
-    IOTC_LOGW("remove register timeout timer");
+    IOTC_LOGI("remove register timeout timer");
 }
 
 static int32_t CloudFsmInitHandler(void *param, int32_t cur)

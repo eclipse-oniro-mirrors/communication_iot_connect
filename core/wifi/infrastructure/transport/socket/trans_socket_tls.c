@@ -111,8 +111,9 @@ static int32_t GetUtcTime(uint64_t *stamp)
     CHECK_RETURN(stamp != NULL, IOTC_ERR_PARAM_INVALID);
 
     int32_t ret = UtilsGetUtcTimeStamp(stamp);
+    /* 启动后首次登录云，时间未同步，此处不告警 */
     if (ret != IOTC_OK) {
-        IOTC_LOGW("get time stamp error %d", ret);
+        IOTC_LOGI("get time stamp ret %d", ret);
         return ret;
     }
     return IOTC_OK;
