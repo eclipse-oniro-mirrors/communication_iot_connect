@@ -95,6 +95,7 @@ static int32_t LocalCtlSessionSetup(LocalControlContext *ctx)
     TransSessAddTailSendHandler(ctx->coapStack.sess, LocalCtlSessCoapSendEncrypt, "encrypt", NULL);
     TransSessAddTailSendHandler(ctx->coapStack.sess, LocalCtlSessCoapSendBase64Encode, "base64_encode", NULL);
 
+    CoapEndpointSessSetup(ctx->coapStack.endpoint);
     return IOTC_OK;
 }
 

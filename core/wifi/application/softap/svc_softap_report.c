@@ -140,7 +140,7 @@ int32_t SoftapServiceReportToAllPeer(const AdapterJson *dataArray)
         if (!UTILS_IS_BIT_SET(ctx->sess.peerSess[i].bitMap, SOFTAP_PEER_SESS_BIT_MAP_SPEKE_SESS_CREATED)) {
             continue;
         }
-        ServiceReportToSession(root, &ctx->sess.peerSess[i], ctx->sess.endpoint);
+        ServiceReportToSession(root, &ctx->sess.peerSess[i], ctx->sess.coapStack.endpoint);
     }
     AdapterJsonDelete(root);
     return IOTC_OK;
@@ -175,7 +175,7 @@ int32_t SoftapServiceReportToTargetPeer(const AdapterJson *dataArray, uint32_t p
         return ret;
     }
 
-    ServiceReportToSession(root, sess, ctx->sess.endpoint);
+    ServiceReportToSession(root, sess, ctx->sess.coapStack.endpoint);
     AdapterJsonDelete(root);
     return IOTC_OK;
 }

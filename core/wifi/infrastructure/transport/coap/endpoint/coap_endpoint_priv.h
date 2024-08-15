@@ -77,6 +77,7 @@ struct CoapEndpoint {
     CoapEndpointClient client;
     CoapEndpointServer server;
     CoapEndpointPacketEncode encoder;
+    CoapEndpointPacketDecode decoder;
     void *userData;
 };
 

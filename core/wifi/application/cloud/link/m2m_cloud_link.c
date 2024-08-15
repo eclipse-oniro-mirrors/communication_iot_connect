@@ -80,6 +80,7 @@ static int32_t CloudLinkCoapInit(M2mCloudContext *ctx)
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_ENDPOINT_CREATE;
     }
 
+    CoapEndpointSessSetup(ctx->linkInfo.endpoint);
     int32_t ret = CoapClientSetRespTimeout(ctx->linkInfo.endpoint, CLOUD_RESP_TIMEOUT_MS);
     if (ret != IOTC_OK) {
         IOTC_LOGW("set timeout error %d", ret);

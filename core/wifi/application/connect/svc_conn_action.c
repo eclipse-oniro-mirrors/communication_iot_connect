@@ -60,7 +60,7 @@ static void WifiVerifyConnectTimeoutTimerCallback(int32_t id, void *userData)
     ConnectServiceContext *ctx = GetConnSvcCtx();
     SchedTimerRemove(ctx->verifyTimerFd);
     ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
-    if (WifiIsNetConnected()) {
+    if (IsNetworkConnected()) {
         return;
     }
 

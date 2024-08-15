@@ -49,6 +49,7 @@ static int32_t LanSearchSessionSetup(LanSearchContext *ctx)
     TransSessAddTailSendHandler(ctx->coapStack.sess, LanSearchSessCoapSendEncrypt, "encrypt", NULL);
     TransSessAddTailSendHandler(ctx->coapStack.sess, LanSearchSessCoapRecvBase64Encode, "base64", NULL);
 
+    CoapEndpointSessSetup(ctx->coapStack.endpoint);
     return IOTC_OK;
 }
 

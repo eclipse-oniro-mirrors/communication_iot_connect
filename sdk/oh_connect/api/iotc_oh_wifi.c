@@ -85,6 +85,13 @@ static void EventBusStartWifiSvcCallback(uint32_t event, void *param, uint32_t l
         return;
     }
 
+#if IOTC_CONF_AILIFE_SUPPORT
+    ret = ServiceProxyStartService(IOTC_SERVICE_ID_M2M_CLOUD, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("start cloud error %d", ret);
+        return;
+    }
+#else
     ret = ServiceProxyStartService(IOTC_SERVICE_ID_LOCAL_CONTROL, NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGE("start local control service error %d", ret);
@@ -96,12 +103,7 @@ static void EventBusStartWifiSvcCallback(uint32_t event, void *param, uint32_t l
         IOTC_LOGE("start lan search error %d", ret);
         return;
     }
-
-    ret = ServiceProxyStartService(IOTC_SERVICE_ID_M2M_CLOUD, NULL);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("start cloud error %d", ret);
-        return;
-    }
+#endif
 
     return;
 }

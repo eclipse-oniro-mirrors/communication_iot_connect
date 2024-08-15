@@ -52,6 +52,15 @@ static SessCode SessMsgProcessCoapEndpoint(SessMsg *msg, UtilsBuffer *buf, SessA
     return SESS_CODE_CONTINUE;
 }
 
+void CoapEndpointSessSetup(CoapEndpoint *endpoint)
+{
+    CHECK_V_RETURN_LOGW(endpoint != NULL || endpoint->sess != NULL || endpoint->decoder != NULL, "param invalid");
+
+    /* coap sess recv msg process : first. code decode -> xxx -> last. coap endpoint dispatch */
+    TransSessAddHeadRecvHandler(endpoint->sess, SessMsgProcessCoapDecode, "coap_decode", endpoint->decoder);
+    TransSessAddTailRecvHandler(endpoint->sess, SessMsgProcessCoapEndpoint, "coap_endpoint", endpoint);
+}
+
 CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
     CoapEndpointPacketEncode encoder, CoapEndpointPacketDecode decoder, void *userData)
 {
@@ -68,6 +77,7 @@ CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
         endpoint->sess = sess;
         endpoint->userData = userData;
         endpoint->encoder = encoder;
+        endpoint->decoder = decoder;
         endpoint->sendBuf = buf;
 
         endpoint->mutex = UtilsCreateExMutex();
@@ -93,10 +103,6 @@ CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
             IOTC_LOGW("retrans init error %d", ret);
             break;
         }
-
-        /* coap sess recv msg process : first. code decode -> xxx -> last. coap endpoint dispatch */
-        TransSessAddHeadRecvHandler(sess, SessMsgProcessCoapDecode, "coap_decode", decoder);
-        TransSessAddTailRecvHandler(sess, SessMsgProcessCoapEndpoint, "coap_endpoint", endpoint);
         return endpoint;
     } while (0);
 
