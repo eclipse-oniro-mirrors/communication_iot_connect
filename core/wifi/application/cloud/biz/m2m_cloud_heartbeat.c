@@ -22,7 +22,7 @@
 
 #define STR_JSON_HB_CNT "cnt"
 #define CLOUD_HB_INTERVAL (50 * 1000)
-#define CLOUD_HB_TIMEOUT_CNT 3
+#define CLOUD_HB_TIMEOUT_CNT 2
 
 static const CloudOption *M2mCloudGetHeartbeatOption(void)
 {
