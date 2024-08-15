@@ -26,6 +26,7 @@
 #include "dfx_watch_dog.h"
 #include "iotc_oh_option.h"
 #include "product_adapter.h"
+#include "config_revoke_flag.h"
 
 #define IOTC_OH_RESTORE_TIMEOUT UTILS_SEC_TO_MS(10)
 #define IOTC_OH_DEFAULT_TASK_SIZE 0X8000
@@ -163,8 +164,14 @@ static int32_t RestoreExecutorCallback(void *inData, void **outData)
 
 int32_t IotcOhRestore(void)
 {
+    int32_t ret = SetRevokeFlag();
+    if (ret != IOTC_OK) {
+        IOTC_LOGF("set revoke error %d", ret);
+        return ret;
+    }
+
     int32_t errcode;
-    int32_t ret = SchedAsyncExecutorWait(RestoreExecutorCallback, NULL, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
+    ret = SchedAsyncExecutorWait(RestoreExecutorCallback, NULL, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
     if (ret != IOTC_OK) {
         IOTC_LOGF("executor restore error %d", ret);
         return ret;
