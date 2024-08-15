@@ -38,44 +38,6 @@ AdapterJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx)
     return rootJson;
 }
 
-int32_t M2mCloudRevokeResponseParse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode)
-{
-    CHECK_RETURN_LOGW(resp != NULL && errcode != NULL && ctx != NULL && resp->payload.data != NULL &&
-        resp->payload.len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
-
-    AdapterJson *respJson = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
-    if (respJson == NULL) {
-        IOTC_LOGW("create json error");
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
-    }
-
-    int32_t ret = UtilsJsonGetNum(respJson, STR_ERRCODE, errcode);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("json get errcode error %d", ret);
-        AdapterJsonDelete(respJson);
-        return ret;
-    }
-
-    if (*errcode == CLOUD_ERRCODE_OK) {
-        IOTC_LOGW("start revoke!!!");
-        ret = DevSvcProxyCleanLoginInfo();
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("clean loginInfo error %d", ret);
-            AdapterJsonDelete(respJson);
-            return ret;
-        }
-        ret = DevSvcProxyCleanRevokeFlag();
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("clean revoke flag error %d", ret);
-            AdapterJsonDelete(respJson);
-            return ret;
-        }
-    }
-    AdapterJsonDelete(respJson);
-
-    return ret;
-}
-
 const CloudOption *M2mCloudGetRevokeOption(void)
 {
     static const char *SYS_REVOKE[] = {STR_URI_PATH_SYS, STR_URI_PATH_REVOKE};
