@@ -46,9 +46,9 @@ int32_t SecurityRandomInit(void)
     AdapterTrngCallback trng = g_trngCallback;
     UtilsGlobalMutexUnlock();
     if (trng != NULL) {
-        IOTC_LOGN("use trng for random seed");
+        IOTC_LOGI("use trng for random seed");
     } else {
-        IOTC_LOGW("trng not use");
+        IOTC_LOGI("trng not use");
     }
     g_randomCtx = AdapterDrbgInit(RANDOM_CUSTOM_STR, trng);
     if (g_randomCtx == NULL) {

@@ -98,7 +98,6 @@ int32_t UtilsGetUtcTimeStamp(uint64_t *ts)
     do {
         TimeContext *ctx = GetTimeCtx();
         if (!ctx->isTimeSet) {
-            IOTC_LOGE("timeStamp is not sync");
             ret = IOTC_CORE_COMM_UTILS_ERR_TIME_NOT_SYNC;
             break;
         }

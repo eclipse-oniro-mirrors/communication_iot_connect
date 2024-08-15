@@ -26,6 +26,7 @@ int32_t ConnSvcCtxInit(void)
     (void)memset_s(ctx, sizeof(ConnectServiceContext), 0, sizeof(ConnectServiceContext));
     ctx->netCheckTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
     ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
+    ctx->reconnectTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
 
     return IOTC_OK;
 }

@@ -90,15 +90,9 @@ static int32_t GetWifiConfigFromOhos(WifiDeviceConfig *config)
     WifiDeviceConfig wifiConfig[WIFI_MAX_CONFIG_SIZE];
     (void)memset_s(wifiConfig, sizeof(wifiConfig), 0, sizeof(wifiConfig));
 
-    static bool isPrint = false;
     if (GetDeviceConfigs(wifiConfig, &size) != WIFI_SUCCESS) {
-        if (!isPrint) {
-            ADAPTER_LOGE("get device config fail");
-            isPrint = true;
-        }
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
-    isPrint = false;
 
     if (memcpy_s(config, sizeof(WifiDeviceConfig), &wifiConfig[0], sizeof(WifiDeviceConfig)) != EOK) {
         ADAPTER_LOGE("memcpy error");
