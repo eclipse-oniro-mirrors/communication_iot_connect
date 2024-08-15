@@ -180,6 +180,7 @@ int32_t DeviceServiceInit(void)
         .onCleanLoginInfo = ConfigClearLoginInfo,
         .onCleanRevokeFlag = ClearRevokeFlag,
         .onGetOnlineStatus = ConfigGetOnlineStatus,
+        .onSetOnlineStatus = ConfigSetOnlineStatus,
     };
 
     ServiceInstance instance = {

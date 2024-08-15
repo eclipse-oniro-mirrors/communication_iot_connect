@@ -343,7 +343,9 @@ static void CloudDevInfoSyncRespHandler(const CoapPacket *resp, const SocketAddr
         CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         return;
     }
+    DevSvcProxySetOnlineStatus(true);
     CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ONLINE);
+    EventBusPublishSync(IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE, NULL, 0);
 }
 
 static int32_t CloudFsmDevInfoSyncHandler(void *param, int32_t cur)
