@@ -40,6 +40,13 @@ if (defined(ohos_lite)) {
   import("//build/lite/config/component/lite_component.gni")
 
   if (ohos_kernel_type == "liteos_m") {
+    if (ohos_build_type == "debug") {
+      iotc_def += ["IOTC_CONF_COAP_DEBUG_DUMP_PACKET=1"]
+      iotc_def += ["IOTC_CONF_BUILD_TYPE=1"]
+      iotc_def += ["IOT_CONF_LOG_DEFAULT_LEVEL=7"]
+    } else {
+      iotc_def += ["IOTC_CONF_LOG_BUILD_LEVEL=2"]
+    }
     static_library("iotc_static") {
       sources = iotc_src
       include_dirs = iotc_inc

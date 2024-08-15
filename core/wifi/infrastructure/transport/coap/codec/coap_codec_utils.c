@@ -20,6 +20,7 @@
 #include "utils_common.h"
 #include "adapter_json.h"
 #include "iotc_errcode.h"
+#include "dfx_anonymize.h"
 
 int32_t CoapUtilsBuildJsonPayloadFunc(const CoapBuildPacket *build, CoapBuffer *buf, void *userData)
 {
@@ -142,19 +143,27 @@ static void CoapGetOptionChar(const CoapOption *option, char *buf, uint32_t len)
         return;
     }
     /* 只打印部分可见的option */
-    if (option->option != COAP_OPTION_TYPE_URI_PATH &&
-        option->option != COAP_OPTION_TYPE_URI_QUERY &&
-        option->option != COAP_OPTION_TYPE_DEV_ID &&
-        option->option != COAP_OPTION_TYPE_PUUID &&
-        option->option != COAP_OPTION_TYPE_ACCESS_TOKEN_ID) {
-        return;
-    }
-    int32_t ret = strncpy_s(buf, len, (const char *)option->value.data, option->value.len);
-    if (ret != EOK) {
-        buf[0] = '\0';
+    int32_t ret;
+    if (option->option == COAP_OPTION_TYPE_DEV_ID || option->option == COAP_OPTION_TYPE_PUUID) {
+        char idBuf[DEVICE_ID_MAX_STR_LEN + 1] = {0};
+        ret = strncpy_s(idBuf, sizeof(idBuf), (const char *)option->value.data, option->value.len);
+        if (ret != EOK) {
+            return;
+        }
+        ret = DfxAnonymizeStrWithBuffer(idBuf, ANONYMIZE_ID, buf, len);
+        if (ret != IOTC_OK) {
+            buf[0] = '\0';
+            return;
+        }
+    } else if (option->option == COAP_OPTION_TYPE_URI_PATH || option->option == COAP_OPTION_TYPE_URI_QUERY) {
+        ret = strncpy_s(buf, len, (const char *)option->value.data, option->value.len);
+        if (ret != EOK) {
+            return;
+        }
     }
 }
 
+#if IOTC_CONF_COAP_DEBUG_DUMP_PAYLOAD
 static void CoapGetPayloadChar(const uint8_t *payload, uint32_t len, char *buf, uint32_t bufLen)
 {
     buf[0] = '\0';
@@ -172,6 +181,7 @@ static void CoapGetPayloadChar(const uint8_t *payload, uint32_t len, char *buf, 
     }
     buf[i] = '\0';
 }
+#endif
 
 void CoapUtilsDumpPacket(const CoapPacket *pkt)
 {
@@ -198,8 +208,9 @@ void CoapUtilsDumpPacket(const CoapPacket *pkt)
         }
     }
 
+    IOTC_LOGD("PayloadLen: %u", pkt->payload.len);
+#if IOTC_CONF_COAP_DEBUG_DUMP_PAYLOAD
     if (pkt->payload.len != 0) {
-        IOTC_LOGD("PayloadLen: %u", pkt->payload.len);
         IOTC_LOGD("Payload:", pkt->payload.len);
 #define PRINT_PER_LINE 64
         for (uint32_t i = 0 ; i < pkt->payload.len && pkt->payload.data != NULL; i += PRINT_PER_LINE) {
@@ -208,6 +219,7 @@ void CoapUtilsDumpPacket(const CoapPacket *pkt)
             IOTC_LOGD("  %s", buf);
         }
     }
+#endif
     return;
 }
 #endif /* IOTC_CONF_COAP_DEBUG_DUMP_PACKET */

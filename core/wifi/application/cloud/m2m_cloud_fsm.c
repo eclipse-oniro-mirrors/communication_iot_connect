@@ -28,6 +28,7 @@
 #include "m2m_cloud_ctl.h"
 #include "m2m_cloud_dev_del.h"
 #include "m2m_cloud_revoke.h"
+#include "m2m_cloud_heartbeat.h"
 #include "event_bus.h"
 #include "m2m_cloud_link.h"
 #include "securec.h"
@@ -112,11 +113,19 @@ static int32_t CloudFsmInitHandler(void *param, int32_t cur)
     return cur;
 }
 
+static void CloudSessLinkErrorCallback(M2mCloudContext *ctx)
+{
+    CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
+    M2mCloudDisableHeartbeat(ctx);
+    CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+}
+
 static int32_t CloudFsmCreateLinkHandler(void *param, int32_t cur)
 {
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     M2mCloudContext *ctx = (M2mCloudContext *)param;
 
+    ctx->linkInfo.cloudLinkErrorCallback = CloudSessLinkErrorCallback;
     int32_t ret = M2mCloudLinkCreate(ctx);
     if (ret != IOTC_OK) {
         IOTC_LOGW("create link error %d", ret);
