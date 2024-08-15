@@ -326,7 +326,7 @@ static uint32_t GenExtendNearbyBase(BleCustomAdvValue *value)
 static void GetAdvProtocol(AdvProtocol *protocol)
 {
     DevBindStatus bindStatus = DevSvcProxyGetBindStatus();
-    bool onlineStatus = DevDevSvcProxyGetOnlineStatus();
+    bool onlineStatus = DevSvcProxyGetOnlineStatus();
 
     (void)memset_s(protocol, sizeof(AdvProtocol), 0, sizeof(AdvProtocol));
     protocol->memberSupport = 0;

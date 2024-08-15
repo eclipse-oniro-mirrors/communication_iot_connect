@@ -160,7 +160,7 @@ int32_t DevSvcProxyCleanRevokeFlag(void)
     return devApi->onCleanRevokeFlag();
 }
 
-bool DevDevSvcProxyGetOnlineStatus(void)
+bool DevSvcProxyGetOnlineStatus(void)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
     if (devApi == NULL || devApi->onGetOnlineStatus == NULL) {
@@ -168,4 +168,14 @@ bool DevDevSvcProxyGetOnlineStatus(void)
     }
 
     return devApi->onGetOnlineStatus();
+}
+
+void DevSvcProxySetOnlineStatus(bool isOnline)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onSetOnlineStatus == NULL) {
+        return;
+    }
+
+    devApi->onSetOnlineStatus(isOnline);
 }

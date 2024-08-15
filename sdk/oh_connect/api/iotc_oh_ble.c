@@ -38,12 +38,18 @@
 #include "product_adapter.h"
 #include "ble_common.h"
 #include "iotc_event_inner.h"
+#include "iotc_svc_dev.h"
 
 static void EventBusStartBleSvcCallback(uint32_t event, void *param, uint32_t len)
 {
     NOT_USED(event);
     NOT_USED(param);
     NOT_USED(len);
+    if (UtilsGetComboType() == COMBO_TYPE_COMBO &&
+        DevSvcProxyGetBindStatus() == DEV_BIND_STATUS_BIND) {
+        IOTC_LOGN("binded");
+        return;
+    }
 
     BleSvcInitParam svcParam = {0};
 #if IOTC_CONF_AILIFE_SUPPORT
@@ -61,11 +67,29 @@ static void EventBusStartBleSvcCallback(uint32_t event, void *param, uint32_t le
     return;
 }
 
+static void CloseBleService(uint32_t event, void *param, uint32_t len)
+{
+    NOT_USED(event);
+    NOT_USED(param);
+    NOT_USED(len);
+    if (!DevSvcProxyGetOnlineStatus()) {
+        return;
+    }
+    (void)EventBusUnsubscribe(CloseBleService);
+    (void)ServiceProxyStopService(IOTC_SERVICE_ID_BLE, NULL);
+    IOTC_LOGN("stop ble service success");
+}
+
 static int32_t IotcOhBleMainInit(void)
 {
     int32_t ret = EventBusSubscribe(EventBusStartBleSvcCallback, IOTC_EVENT_INNER_DEVICE_SVC_START);
     if (ret != IOTC_OK) {
         IOTC_LOGW("sub dev svc error %d", ret);
+        return ret;
+    }
+    ret = EventBusSubscribe(CloseBleService, IOTC_CORE_BLE_EVENT_GATT_DISCONNECT);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("sub online error %d", ret);
         return ret;
     }
     return IOTC_OK;
