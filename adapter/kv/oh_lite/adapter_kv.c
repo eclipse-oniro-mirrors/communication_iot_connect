@@ -178,13 +178,20 @@ int32_t AdapterKvGetValue(const char *key, uint8_t *buf, uint32_t *len)
 
 static uint32_t GetFileLenByName(const char *filePath, uint32_t *len)
 {
-    int32_t ret = UtilsFileStat(filePath, len);
-    if (ret != 0) {
-        ADAPTER_LOGD("stat file[%s] error, errno:%d, ret:%d", filePath, errno, ret);
-        *len = 0;
-        return (errno == ENOENT) ? IOTC_OK : IOTC_ADAPTER_KV_ERR_STAT_FILE;
+    int32_t fd = UtilsFileOpen(filePath, O_RDWR_FS | O_CREAT_FS, 0);
+    if (fd < 0) {
+        ADAPTER_LOGE("open file[%s] error", filePath);
+        return IOTC_ADAPTER_KV_ERR_OPEN_FILE;
     }
 
+    int32_t ret = UtilsFileStat(filePath, len);
+    if (ret != 0) {
+        ADAPTER_LOGE("stat file[%s] error", filePath);
+        UtilsFileClose(fd);
+        *len = 0;
+        return IOTC_ADAPTER_KV_ERR_STAT_FILE;
+    }
+    UtilsFileClose(fd);
     return IOTC_OK;
 }
 
