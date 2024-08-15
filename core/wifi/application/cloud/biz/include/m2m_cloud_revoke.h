@@ -23,8 +23,6 @@ extern "C" {
 
 AdapterJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx);
 
-int32_t M2mCloudRevokeResponseParse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode);
-
 const CloudOption *M2mCloudGetRevokeOption(void);
 
 #ifdef __cplusplus

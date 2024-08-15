@@ -54,6 +54,11 @@ int32_t ClearRevokeFlag(void)
         IOTC_LOGW("clear revoke flag error %d", ret);
         return ret;
     }
+    ret = ConfigInfoSave();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("revoke flag save error %d", ret);
+        return ret;
+    }
     IOTC_LOGN("clear revoke flag");
-    return IOTC_OK;
+    return ret;
 }

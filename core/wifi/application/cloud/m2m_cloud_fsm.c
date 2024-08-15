@@ -251,29 +251,28 @@ static void CloudLoginRespHandler(const CoapPacket *resp, const SocketAddr *addr
 static void CloudRevokeRespHandler(const CoapPacket *resp, const SocketAddr *addr, void *userData, bool timeout)
 {
     NOT_USED(addr);
+    NOT_USED(resp);
     CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
     M2mCloudContext *ctx = (M2mCloudContext *)userData;
 
-    if (ctx->stateManager.fsmCtx == NULL ||
-        ctx->stateManager.fsmCtx->cur != M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP) {
-        IOTC_LOGW("recv revoke resp invalid state %d", ctx->stateManager.fsmCtx->cur);
-        return;
-    }
-
+    IOTC_LOGN("recv revoke resp, start revoke!!!");
     if (timeout) {
-        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("revoke wait resp timeout");
-        return;
     }
-    CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
 
-    int32_t errcode;
-    int32_t ret = M2mCloudRevokeResponseParse(ctx, resp, &errcode);
-    if (ret != IOTC_OK || errcode != CLOUD_ERRCODE_OK) {
-        IOTC_LOGW("revoke resp parse errogitr %d/%d", ret, errcode);
-        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+    int32_t ret = DevSvcProxyCleanRevokeFlag();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("clean revoke flag error %d", ret);
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_INIT);
         return;
     }
+    ret = DevSvcProxyCleanLoginInfo();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("clean loginInfo error %d", ret);
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_INIT);
+        return;
+    }
+    IOTC_LOGN("revoke success!!!");
     CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_INIT);
 }
 
