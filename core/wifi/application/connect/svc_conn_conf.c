@@ -56,8 +56,7 @@ int32_t ConnectConfigInfoInit(void)
     }
     ret = SecurityStorePull(IOTC_STORE_KEY_INT_WIFI_CONN_CONFIG);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("store data pull error %d", ret);
-        return ret;
+        IOTC_LOGF("store data pull error %d", ret);
     }
 
     return IOTC_OK;
