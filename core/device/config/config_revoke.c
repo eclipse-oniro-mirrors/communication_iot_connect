@@ -35,11 +35,6 @@ static void RevokeEventConfigCallback(uint32_t event, void *param, uint32_t len)
         if (ret != IOTC_OK) {
             IOTC_LOGW("clear auth info error %d", ret);
         }
-    } else {
-        ret = SetRevokeFlag();
-        if (ret != IOTC_OK) {
-            IOTC_LOGF("set revoke error %d", ret);
-        }
     }
 }
 
