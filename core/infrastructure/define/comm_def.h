@@ -119,6 +119,7 @@ typedef struct {
 #define STR_JSON_SUB_PROD_ID "subProdId"
 #define STR_JSON_PROT_TYPE "protType"
 #define STR_JSON_DEV_TYPE "devType"
+#define STR_JSON_DISC_TYPE "discType"
 #define STR_JSON_MODEL "model"
 #define STR_JSON_MANU "manu"
 #define STR_JSON_FWV "fwv"
