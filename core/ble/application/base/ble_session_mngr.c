@@ -225,7 +225,7 @@ static int32_t BleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     CHECK_RETURN_LOGE(pid != NULL && strlen(pid) > 0, IOTC_CORE_BLE_INVALID_PID, "pid err");
     /* 生成密文 */
     BleSessKeyInfo *sessInfo = &g_sessParam.sessInfo;
-    AdapterAesGcmParam param = {
+    IotcAesGcmParam param = {
         .key        = sessInfo->key,
         .keyLen     = SESSION_KEY_LEN,
         .iv         = outBuff,
@@ -235,7 +235,7 @@ static int32_t BleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .data       = data,
         .dataLen    = dataLen,
     };
-    ret = AdapterAesGcmEncrypt(&param, outBuff + SESS_IV_LEN + dataLen, SESS_TAG_LEN,
+    ret = IotcAesGcmEncrypt(&param, outBuff + SESS_IV_LEN + dataLen, SESS_TAG_LEN,
         outBuff + SESS_IV_LEN);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen encData err:%d", ret);
 
@@ -264,7 +264,7 @@ static int32_t BleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     CHECK_RETURN_LOGE(pid != NULL && strlen(pid) > 0, IOTC_CORE_BLE_INVALID_PID, "pid err");
     (void)memset_s(outBuff, outLen, 0, outLen);
     /* AES解密 */
-    AdapterAesGcmParam param = {
+    IotcAesGcmParam param = {
         .key        = sessInfo->key,
         .keyLen     = SESSION_KEY_LEN,
         .iv         = data,
@@ -274,7 +274,7 @@ static int32_t BleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .data       = data + SESS_IV_LEN,
         .dataLen    = outLen,
     };
-    ret = AdapterAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
+    ret = IotcAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen decData err:%d", ret);
     
     return IOTC_OK;

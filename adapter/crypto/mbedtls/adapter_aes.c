@@ -25,7 +25,7 @@
 
 #define BITS_PER_BYTES 8
 
-static bool IsAesGcmParamValid(const AdapterAesGcmParam *param)
+static bool IsAesGcmParamValid(const IotcAesGcmParam *param)
 {
     if (param == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -58,7 +58,7 @@ static bool IsAesGcmParamValid(const AdapterAesGcmParam *param)
     return true;
 }
 
-int32_t AdapterAesGcmEncrypt(const AdapterAesGcmParam *param, uint8_t *tag, uint32_t tagLen, uint8_t *buf)
+int32_t IotcAesGcmEncrypt(const IotcAesGcmParam *param, uint8_t *tag, uint32_t tagLen, uint8_t *buf)
 {
     if (!IsAesGcmParamValid(param)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -87,7 +87,7 @@ int32_t AdapterAesGcmEncrypt(const AdapterAesGcmParam *param, uint8_t *tag, uint
     return ret == 0 ? IOTC_OK : IOTC_ADAPTER_CRYPTO_ERR_AES_GCM_ENC;
 }
 
-int32_t AdapterAesGcmDecrypt(const AdapterAesGcmParam *param, const uint8_t *tag, uint32_t tagLen, uint8_t *buf)
+int32_t IotcAesGcmDecrypt(const IotcAesGcmParam *param, const uint8_t *tag, uint32_t tagLen, uint8_t *buf)
 {
     if (!IsAesGcmParamValid(param)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -117,7 +117,7 @@ int32_t AdapterAesGcmDecrypt(const AdapterAesGcmParam *param, const uint8_t *tag
     return ret == 0 ? IOTC_OK : IOTC_ADAPTER_CRYPTO_ERR_AES_GCM_DEC;
 }
 
-static mbedtls_cipher_padding_t GetMbedtlsPaddingMode(AdapterPaddingMode mode)
+static mbedtls_cipher_padding_t GetMbedtlsPaddingMode(IotcPaddingMode mode)
 {
     switch (mode) {
         case ADAPTER_PADDING_PKCS7:
@@ -133,7 +133,7 @@ static mbedtls_cipher_padding_t GetMbedtlsPaddingMode(AdapterPaddingMode mode)
     }
 }
 
-static bool IsAesCbcParamValid(const AdapterAesCbcParam *param)
+static bool IsAesCbcParamValid(const IotcAesCbcParam *param)
 {
     if (param == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -177,7 +177,7 @@ static mbedtls_cipher_type_t GetMbedtlsCbcCipherType(uint32_t keyLen)
     }
 }
 
-static int32_t AesCbcCrypt(const AdapterAesCbcParam *param, int32_t mode, uint8_t *buf, uint32_t *bufLen)
+static int32_t AesCbcCrypt(const IotcAesCbcParam *param, int32_t mode, uint8_t *buf, uint32_t *bufLen)
 {
     mbedtls_cipher_context_t ctx;
     mbedtls_cipher_init(&ctx);
@@ -215,7 +215,7 @@ static int32_t AesCbcCrypt(const AdapterAesCbcParam *param, int32_t mode, uint8_
     return IOTC_OK;
 }
 
-int32_t AdapterAesCbcEncrypt(const AdapterAesCbcParam *param, uint8_t *buf,  uint32_t *bufLen)
+int32_t IotcAesCbcEncrypt(const IotcAesCbcParam *param, uint8_t *buf,  uint32_t *bufLen)
 {
     if (!IsAesCbcParamValid(param) || buf == NULL || bufLen == NULL || *bufLen == 0) {
         return IOTC_ERR_PARAM_INVALID;
@@ -223,7 +223,7 @@ int32_t AdapterAesCbcEncrypt(const AdapterAesCbcParam *param, uint8_t *buf,  uin
     return AesCbcCrypt(param, MBEDTLS_DECRYPT, buf, bufLen);
 }
 
-int32_t AdapterAesCbcDecrypt(const AdapterAesCbcParam *param, uint8_t *buf, uint32_t *bufLen)
+int32_t IotcAesCbcDecrypt(const IotcAesCbcParam *param, uint8_t *buf, uint32_t *bufLen)
 {
     if (!IsAesCbcParamValid(param) || buf == NULL || bufLen == NULL || *bufLen == 0) {
         return IOTC_ERR_PARAM_INVALID;
@@ -231,7 +231,7 @@ int32_t AdapterAesCbcDecrypt(const AdapterAesCbcParam *param, uint8_t *buf, uint
     return AesCbcCrypt(param, MBEDTLS_ENCRYPT, buf, bufLen);
 }
 
-static bool IsAesCcmParamValid(const AdapterAesCcmParam *param)
+static bool IsAesCcmParamValid(const IotcAesCcmParam *param)
 {
     if (param == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -264,7 +264,7 @@ static bool IsAesCcmParamValid(const AdapterAesCcmParam *param)
     return true;
 }
 
-int32_t AdapterAesCcmDecrypt(const AdapterAesCcmParam *param, const uint8_t *tag, uint32_t tagLen, uint8_t *buf)
+int32_t IotcAesCcmDecrypt(const IotcAesCcmParam *param, const uint8_t *tag, uint32_t tagLen, uint8_t *buf)
 {
     if (!IsAesCcmParamValid(param)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -297,7 +297,7 @@ int32_t AdapterAesCcmDecrypt(const AdapterAesCcmParam *param, const uint8_t *tag
     return IOTC_ERR_NOT_SUPPORT;
 }
 
-int32_t AdapterAesCcmEncrypt(const AdapterAesCcmParam *param, uint8_t *tag, uint32_t tagLen, uint8_t *buf)
+int32_t IotcAesCcmEncrypt(const IotcAesCcmParam *param, uint8_t *tag, uint32_t tagLen, uint8_t *buf)
 {
     if (!IsAesCcmParamValid(param)) {
         return IOTC_ERR_PARAM_INVALID;

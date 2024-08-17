@@ -271,7 +271,7 @@ int32_t SpekeDecryptData(SpekeSession *session, const uint8_t *data, uint32_t da
     (void)memset_s(outData, outDataLen, 0, outDataLen);
 
     /* AES解密, 第0字节为版本, 第1-12字节为IV, 最后16字节为TAG */
-    AdapterAesGcmParam param = {
+    IotcAesGcmParam param = {
         .key        = session->dataEncKey,
         .keyLen     = SESSION_KEY_LEN,
         .iv         = data + GCM_VER_LEN,
@@ -281,7 +281,7 @@ int32_t SpekeDecryptData(SpekeSession *session, const uint8_t *data, uint32_t da
         .data       = data + GCM_VER_LEN + GCM_IV_LEN,
         .dataLen    = outDataLen,
     };
-    int32_t ret = AdapterAesGcmDecrypt(&param, data + dataLen - GCM_TAG_LEN, GCM_TAG_LEN, outData);
+    int32_t ret = IotcAesGcmDecrypt(&param, data + dataLen - GCM_TAG_LEN, GCM_TAG_LEN, outData);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke decrypt err:%d", ret);
         AdapterFree(outData);
@@ -318,7 +318,7 @@ int32_t SpekeEncryptData(SpekeSession *session, const uint8_t *data, uint32_t da
     }
 
     /* AES加密, 第0字节为版本, 第1-12字节为IV, 最后16字节为TAG */
-    AdapterAesGcmParam param = {
+    IotcAesGcmParam param = {
         .key        = session->dataEncKey,
         .keyLen     = SESSION_KEY_LEN,
         .iv         = outData + GCM_VER_LEN,
@@ -328,7 +328,7 @@ int32_t SpekeEncryptData(SpekeSession *session, const uint8_t *data, uint32_t da
         .data       = data,
         .dataLen    = dataLen,
     };
-    ret = AdapterAesGcmEncrypt(&param, outData + outDataLen - GCM_TAG_LEN, GCM_TAG_LEN,
+    ret = IotcAesGcmEncrypt(&param, outData + outDataLen - GCM_TAG_LEN, GCM_TAG_LEN,
         outData + GCM_VER_LEN + GCM_IV_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke encrypt err:%d", ret);

@@ -363,9 +363,9 @@ static int32_t CipherV1HmacVerifyAndCopy(SecurityStoreItem *storeItem, StoreCiph
 static int32_t CipherV1AesGcmDecrypt(SecurityStoreItem *storeItem, StoreCipherHeader *header,
     uint8_t *cipher, uint32_t cipLen, uint8_t key[SECURITY_HKDF_LOCAL_KEY_LEN])
 {
-    AdapterAesGcmParam aesParam = {key, STORE_CIPHER_GCM_KEY_LEN, key + STORE_CIPHER_GCM_KEY_LEN,
+    IotcAesGcmParam aesParam = {key, STORE_CIPHER_GCM_KEY_LEN, key + STORE_CIPHER_GCM_KEY_LEN,
         STORE_CIPHER_GCM_IV_LEN, NULL, 0, cipher, cipLen};
-    int32_t ret = AdapterAesGcmDecrypt(&aesParam, header->mac, ADAPTER_AES_GCM_TAG_MAX_LEN, storeItem->buffer);
+    int32_t ret = IotcAesGcmDecrypt(&aesParam, header->mac, ADAPTER_AES_GCM_TAG_MAX_LEN, storeItem->buffer);
     if (ret != IOTC_OK) {
         IOTC_LOGW("aes gcm dec error %d", ret);
         return ret;
@@ -511,9 +511,9 @@ static int32_t CipherV1Encrypt(SecurityStoreItem *storeItem, StoreCipherHeader *
     uint8_t *cipherBuf, uint32_t bufLen, uint8_t key[SECURITY_HKDF_LOCAL_KEY_LEN])
 {
     /* 前16byte作为秘钥 后16byte作为iv */
-    AdapterAesGcmParam aesParam = {key, STORE_CIPHER_GCM_KEY_LEN, key + STORE_CIPHER_GCM_KEY_LEN,
+    IotcAesGcmParam aesParam = {key, STORE_CIPHER_GCM_KEY_LEN, key + STORE_CIPHER_GCM_KEY_LEN,
         STORE_CIPHER_GCM_IV_LEN, NULL, 0, storeItem->buffer, storeItem->len};
-    int32_t ret = AdapterAesGcmEncrypt(&aesParam, header->mac, ADAPTER_AES_GCM_TAG_MAX_LEN, cipherBuf);
+    int32_t ret = IotcAesGcmEncrypt(&aesParam, header->mac, ADAPTER_AES_GCM_TAG_MAX_LEN, cipherBuf);
     if (ret != IOTC_OK) {
         IOTC_LOGW("aes gcm enc error %d", ret);
         return ret;

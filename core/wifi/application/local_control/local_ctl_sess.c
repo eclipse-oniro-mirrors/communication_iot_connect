@@ -199,7 +199,7 @@ SessCode LocalCtlSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
         IOTC_LOGW("calloc error %u", dataLen);
         return SESS_CODE_ERR;
     }
-    AdapterAesGcmParam gcmParam = {
+    IotcAesGcmParam gcmParam = {
         .key = sessMsg->client->sessInfo.transKey,
         .keyLen = SESS_TRANS_KEY_LEN,
         .iv = sessMsg->packet.payload.data,
@@ -209,7 +209,7 @@ SessCode LocalCtlSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
         .data = sessMsg->packet.payload.data + LOCAL_CTL_GCM_IV_LEN,
         .dataLen = dataLen,
     };
-    int32_t ret = AdapterAesGcmDecrypt(&gcmParam, sessMsg->packet.payload.data + LOCAL_CTL_GCM_IV_LEN + dataLen,
+    int32_t ret = IotcAesGcmDecrypt(&gcmParam, sessMsg->packet.payload.data + LOCAL_CTL_GCM_IV_LEN + dataLen,
         LOCAL_CTL_GCM_TAG_LEN, decBuf);
     if (ret != IOTC_OK) {
         AdapterFree(decBuf);
@@ -258,7 +258,7 @@ SessCode LocalCtlSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
 
     /* 前12字节为随机IV */
     (void)SecurityRandom(encBuf, LOCAL_CTL_GCM_IV_LEN);
-    AdapterAesGcmParam gcmParam = {
+    IotcAesGcmParam gcmParam = {
         .key = sessMsg->client->sessInfo.transKey,
         .keyLen = SESS_TRANS_KEY_LEN,
         .iv = encBuf,
@@ -269,7 +269,7 @@ SessCode LocalCtlSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
         .dataLen = sessMsg->packet.payload.len,
     };
 
-    int32_t ret = AdapterAesGcmEncrypt(&gcmParam, encBuf + sessMsg->packet.payload.len + LOCAL_CTL_GCM_IV_LEN,
+    int32_t ret = IotcAesGcmEncrypt(&gcmParam, encBuf + sessMsg->packet.payload.len + LOCAL_CTL_GCM_IV_LEN,
         LOCAL_CTL_GCM_TAG_LEN, encBuf + LOCAL_CTL_GCM_IV_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("enc error %d", ret);
