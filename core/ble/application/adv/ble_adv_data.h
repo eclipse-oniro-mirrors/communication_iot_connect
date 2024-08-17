@@ -28,7 +28,7 @@ extern "C" {
  * @param advData [OUT] 广播数据
  * @return 0 成功，非0 失败
  */
-int32_t GetBleAdvData(AdapterBleAdvData *advData);
+int32_t GetBleAdvData(IotcAdptBleAdvData *advData);
 
 #ifdef __cplusplus
 }

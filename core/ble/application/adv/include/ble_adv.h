@@ -26,7 +26,7 @@ int32_t BleAdvInit(void);
 
 void BleSetAdvType(BleSvcAdvDataType type);
 
-typedef int32_t (*CustomAdvDataCb)(AdapterBleAdvData *advData);
+typedef int32_t (*CustomAdvDataCb)(IotcAdptBleAdvData *advData);
 int32_t RegCustomAdvDataCb(CustomAdvDataCb cb);
 
 #ifdef __cplusplus

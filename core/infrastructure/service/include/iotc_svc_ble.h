@@ -38,7 +38,7 @@ typedef enum {
     IOTC_BLE_ADV_TYPE_CUSTOM,                /* 用户自定义广播 */
 } BleSvcAdvDataType;
 
-typedef int32_t (*BleSvcCustomAdvDataCallback)(AdapterBleAdvData *advData);
+typedef int32_t (*BleSvcCustomAdvDataCallback)(IotcAdptBleAdvData *advData);
 typedef int32_t (*BleStartAdv)(uint32_t ms);
 typedef int32_t (*BleStopAdv)(void);
 typedef void (*BleSetAdvDataType)(BleSvcAdvDataType type);

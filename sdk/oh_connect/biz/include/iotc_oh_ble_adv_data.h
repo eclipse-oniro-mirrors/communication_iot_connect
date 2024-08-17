@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int32_t IotcOhGetBleAdvData(AdapterBleAdvData *advData);
+int32_t IotcOhGetBleAdvData(IotcAdptBleAdvData *advData);
 
 #ifdef __cplusplus
 }

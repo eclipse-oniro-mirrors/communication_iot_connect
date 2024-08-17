@@ -18,20 +18,20 @@
 #include "iotc_log.h"
 #include "utils_assert.h"
 
-static const AdapterBleAdvParam g_advParam = {
-    .advType = ADAPTER_BLE_ADV_TYPE_IND,
+static const IotcAdptBleAdvParam g_advParam = {
+    .advType = IOTC_ADPT_BLE_ADV_TYPE_IND,
     .advMinInt = 0x20,
     .advMaxInt = 0x40,
-    .ownerAddrType = ADAPTER_BLE_ADV_ADDR_PUBLIC,
-    .directAddrType = ADAPTER_BLE_ADV_ADDR_PUBLIC,
+    .ownerAddrType = IOTC_ADPT_BLE_ADV_ADDR_PUBLIC,
+    .directAddrType = IOTC_ADPT_BLE_ADV_ADDR_PUBLIC,
     .directAddr = NULL,
-    .channelMap = ADAPTER_BLE_CHNL_ALL,
+    .channelMap = IOTC_ADPT_BLE_CHNL_ALL,
 };
 
-int32_t GetBleAdvParam(AdapterBleAdvParam *advParam)
+int32_t GetBleAdvParam(IotcAdptBleAdvParam *advParam)
 {
     CHECK_RETURN_LOGW(advParam != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    if (memcpy_s(advParam, sizeof(AdapterBleAdvParam), &g_advParam, sizeof(AdapterBleAdvParam)) != EOK) {
+    if (memcpy_s(advParam, sizeof(IotcAdptBleAdvParam), &g_advParam, sizeof(IotcAdptBleAdvParam)) != EOK) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }

@@ -487,13 +487,13 @@ static int32_t GenAdvName(BleAdvNameValue *value)
     int32_t snLen = strlen(devInfo->sn);
     if (snLen < ADV_NAME_SN_LEN) {
         IOTC_LOGW("set mac to adv sn");
-        uint8_t mac[ADAPTER_BLE_ADDR_LEN] = {0};
-        if (AdapterBleGetBleMac(mac, ADAPTER_BLE_ADDR_LEN) != IOTC_OK) {
+        uint8_t mac[IOTC_ADPT_BLE_ADDR_LEN] = {0};
+        if (IotcBleGetBleMac(mac, IOTC_ADPT_BLE_ADDR_LEN) != IOTC_OK) {
             IOTC_LOGE("get ble mac");
             return IOTC_ERROR;
         }
         if (sprintf_s(advSn, sizeof(advSn), "%02X%02X",
-            mac[ADAPTER_BLE_ADDR_LEN - ONE_BYTE], mac[ADAPTER_BLE_ADDR_LEN - TWO_BYTE]) <= 0) {
+            mac[IOTC_ADPT_BLE_ADDR_LEN - ONE_BYTE], mac[IOTC_ADPT_BLE_ADDR_LEN - TWO_BYTE]) <= 0) {
             IOTC_LOGE("sprintf_s");
             return IOTC_ERROR;
         }
@@ -533,10 +533,10 @@ static int32_t RspAdvCopyToBuf(uint8_t *out, uint32_t outSize)
     return adv.len + 1;
 }
 
-static int32_t GetBleAilifeAdvDataInner(AdapterBleAdvData *advData)
+static int32_t GetBleAilifeAdvDataInner(IotcAdptBleAdvData *advData)
 {
     CHECK_RETURN_LOGW(advData != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    (void)memset_s(advData, sizeof(AdapterBleAdvData), 0, sizeof(AdapterBleAdvData));
+    (void)memset_s(advData, sizeof(IotcAdptBleAdvData), 0, sizeof(IotcAdptBleAdvData));
 
     int32_t len = 0;
     len = AdvFlagsCopyToBuf(&advData->advData[advData->advDataLen], sizeof(advData->advData) - advData->advDataLen);
@@ -565,7 +565,7 @@ static int32_t GetBleAilifeAdvDataInner(AdapterBleAdvData *advData)
     return IOTC_OK;
 }
 
-int32_t GetBleAdvData(AdapterBleAdvData *advData)
+int32_t GetBleAdvData(IotcAdptBleAdvData *advData)
 {
     if (!UtilsGlobalMutexLock()) {
         IOTC_LOGW("glock error");

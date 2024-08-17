@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-typedef int32_t (*BleGetAdvInfoCallback)(AdapterBleAdvParam *advPara, AdapterBleAdvData *advData);
+typedef int32_t (*BleGetAdvInfoCallback)(IotcAdptBleAdvParam *advPara, IotcAdptBleAdvData *advData);
 int32_t BleRegAdvAdvInfoCallback(BleGetAdvInfoCallback cb);
 int32_t BleAdvCtrlStartSpecific(const IotcBleAdvParam *advPara, const IotcBleAdvData *advData, uint32_t ms);
 int32_t BleAdvCtrlStart(uint32_t ms);

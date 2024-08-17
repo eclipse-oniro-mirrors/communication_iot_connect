@@ -108,38 +108,38 @@ static AdvStopResult g_advStopResult;
 
 static int32_t g_advId = INVALID_ADV_ID;
 
-static AdapterBleGattCallback g_gattEventHandler = NULL;
+static IotcAdptBleGattCallback g_gattEventHandler = NULL;
 
-static AdapterBleStatus OhosStatusToAdapterStatus(int32_t status)
+static IotcAdptBleStatus OhosStatusToAdapterStatus(int32_t status)
 {
-    return (status == OHOS_BT_STATUS_SUCCESS) ? ADAPTER_BLE_STATUS_SUCCESS : ADAPTER_BLE_STATUS_FAIL;
+    return (status == OHOS_BT_STATUS_SUCCESS) ? IOTC_ADPT_BLE_STATUS_SUCCESS : IOTC_ADPT_BLE_STATUS_FAIL;
 }
 
 static uint32_t AdapterPemissionToOhosPermission(uint32_t permission)
 {
     uint32_t ohosPermission = 0;
-    if (permission & ADAPTER_BLE_CHAR_PERM_READ) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_READ) {
         ohosPermission |= OHOS_GATT_PERMISSION_READ;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_READ_ENCRYPTED) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_READ_ENCRYPTED) {
         ohosPermission |= OHOS_GATT_PERMISSION_READ_ENCRYPTED;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_READ_ENCRYPTED_MITM) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_READ_ENCRYPTED_MITM) {
         ohosPermission |= OHOS_GATT_PERMISSION_READ_ENCRYPTED_MITM;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_WRITE) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_WRITE) {
         ohosPermission |= OHOS_GATT_PERMISSION_WRITE;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_WRITE_ENCRYPTED) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_WRITE_ENCRYPTED) {
         ohosPermission |= OHOS_GATT_PERMISSION_WRITE_ENCRYPTED;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_WRITE_ENCRYPTED_MITM) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_WRITE_ENCRYPTED_MITM) {
         ohosPermission |= OHOS_GATT_PERMISSION_WRITE_ENCRYPTED_MITM;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_WRITE_SIGNED) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_WRITE_SIGNED) {
         ohosPermission |= OHOS_GATT_PERMISSION_WRITE_SIGNED;
     }
-    if (permission & ADAPTER_BLE_CHAR_PERM_WRITE_SIGNED_MITM) {
+    if (permission & IOTC_ADPT_BLE_CHAR_PERM_WRITE_SIGNED_MITM) {
         ohosPermission |= OHOS_GATT_PERMISSION_WRITE_SIGNED_MITM;
     }
     return ohosPermission;
@@ -149,61 +149,61 @@ static uint32_t AdapterPropertyToOhosProperty(uint32_t property)
 {
     uint32_t ohosProperty = 0;
     
-    if (property & ADAPTER_BLE_CHAR_PROP_BROADCAST) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_BROADCAST) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_BROADCAST;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_READ) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_READ) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_READ;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_WRITE_WITHOUT_RESP) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_WRITE_WITHOUT_RESP) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_WRITE_NO_RSP;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_WRITE) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_WRITE) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_WRITE;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_NOTIFY) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_NOTIFY) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_NOTIFY;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_INDICATE) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_INDICATE) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_INDICATE;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_SIGNED_WRITE) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_SIGNED_WRITE) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_SIGNED_WRITE;
     }
-    if (property & ADAPTER_BLE_CHAR_PROP_EXTENDED_PROPERTY) {
+    if (property & IOTC_ADPT_BLE_CHAR_PROP_EXTENDED_PROPERTY) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_EXTENDED_PROPERTY;
     }
     return ohosProperty;
 }
 
-static BleAdvType AdapterAdvTypeToOhosAdvType(AdapterBleAdvType type)
+static BleAdvType AdapterAdvTypeToOhosAdvType(IotcAdptBleAdvType type)
 {
-    if (type == ADAPTER_BLE_ADV_TYPE_IND) {
+    if (type == IOTC_ADPT_BLE_ADV_TYPE_IND) {
         return OHOS_BLE_ADV_IND;
-    } else if (type == ADAPTER_BLE_ADV_TYPE_DIRECT_IND_HIGH) {
+    } else if (type == IOTC_ADPT_BLE_ADV_TYPE_DIRECT_IND_HIGH) {
         return OHOS_BLE_ADV_DIRECT_IND_HIGH;
-    } else if (type == ADAPTER_BLE_ADV_TYPE_SCAN_IND) {
+    } else if (type == IOTC_ADPT_BLE_ADV_TYPE_SCAN_IND) {
         return OHOS_BLE_ADV_SCAN_IND;
-    } else if (type == ADAPTER_BLE_ADV_TYPE_NONCONN_IND) {
+    } else if (type == IOTC_ADPT_BLE_ADV_TYPE_NONCONN_IND) {
         return OHOS_BLE_ADV_NONCONN_IND;
-    } else if (type == ADAPTER_BLE_ADV_TYPE_DIRECT_IND_LOW) {
+    } else if (type == IOTC_ADPT_BLE_ADV_TYPE_DIRECT_IND_LOW) {
         return OHOS_BLE_ADV_DIRECT_IND_LOW;
     }
     ADAPTER_LOGW("type:%d", type);
     return OHOS_BLE_ADV_IND;
 }
 
-static BleScanResultAddrType AdapterAddrTypeToOhosAddrType(AdapterBleAdvAddr type)
+static BleScanResultAddrType AdapterAddrTypeToOhosAddrType(IotcAdptBleAdvAddr type)
 {
-    if (type == ADAPTER_BLE_ADV_ADDR_PUBLIC) {
+    if (type == IOTC_ADPT_BLE_ADV_ADDR_PUBLIC) {
         return OHOS_BLE_PUBLIC_DEVICE_ADDRESS;
-    } else if (type == ADAPTER_BLE_ADV_ADDR_RANDOM) {
+    } else if (type == IOTC_ADPT_BLE_ADV_ADDR_RANDOM) {
         return OHOS_BLE_RANDOM_DEVICE_ADDRESS;
-    } else if (type == ADAPTER_BLE_ADV_ADDR_PUBLIC_ID) {
+    } else if (type == IOTC_ADPT_BLE_ADV_ADDR_PUBLIC_ID) {
         return OHOS_BLE_PUBLIC_IDENTITY_ADDRESS;
-    } else if (type == ADAPTER_BLE_ADV_ADDR_RANDOM_ID) {
+    } else if (type == IOTC_ADPT_BLE_ADV_ADDR_RANDOM_ID) {
         return OHOS_BLE_RANDOM_STATIC_IDENTITY_ADDRESS;
-    } else if (type == ADAPTER_BLE_ADV_ADDR_UNKNOWN_TYPE) {
+    } else if (type == IOTC_ADPT_BLE_ADV_ADDR_UNKNOWN_TYPE) {
         return OHOS_BLE_NO_ADDRESS;
     }
     ADAPTER_LOGW("type:%d", type);
@@ -216,10 +216,10 @@ static void AdvStartCompleteCb(int32_t clientId, int32_t status)
     g_advStartResult.clientId = clientId;
     g_advStartResult.status = status;
     g_advStartResult.has = true;
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.startAdv.status = OhosStatusToAdapterStatus(status);
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_START_ADV_RESULT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_START_ADV_RESULT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("gatt adv start event");
     }
 }
@@ -230,10 +230,10 @@ static void AdvStopCompleteCb(int32_t clientId, int32_t status)
     g_advStopResult.clientId = clientId;
     g_advStopResult.status = status;
     g_advStopResult.has = true;
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.stopAdv.status = OhosStatusToAdapterStatus(status);
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_STOP_ADV_RESULT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_STOP_ADV_RESULT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("gap adv stop event");
     }
 }
@@ -261,15 +261,15 @@ static void ConnectServerCb(int32_t connId, int32_t serverId, const BdAddr *bdAd
         ADAPTER_LOGE("bdAddr null");
         return;
     }
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.connSvc.connId = connId;
     eventParam.connSvc.serverId = serverId;
-    if (memcpy_s(eventParam.connSvc.devAddr, ADAPTER_BLE_ADDR_LEN, bdAddr, OHOS_BD_ADDR_LEN) != EOK) {
+    if (memcpy_s(eventParam.connSvc.devAddr, IOTC_ADPT_BLE_ADDR_LEN, bdAddr, OHOS_BD_ADDR_LEN) != EOK) {
         ADAPTER_LOGE("memcpy_s");
         return;
     }
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_CONNECT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_CONNECT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
     g_advId = INVALID_ADV_ID; /* 蓝牙连接后系统会自动关闭蓝牙广播 */
@@ -282,16 +282,16 @@ static void DisconnectServerCb(int32_t connId, int32_t serverId, const BdAddr *b
         ADAPTER_LOGE("bdAddr null");
         return;
     }
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.disconnSvc.connId = connId;
     eventParam.disconnSvc.serverId = serverId;
-    eventParam.disconnSvc.reason = ADAPTER_BLE_GATT_UNKNOWN_REASON;
-    if (memcpy_s(eventParam.disconnSvc.devAddr, ADAPTER_BLE_ADDR_LEN, bdAddr, OHOS_BD_ADDR_LEN) != EOK) {
+    eventParam.disconnSvc.reason = IOTC_ADPT_BLE_GATT_UNKNOWN_REASON;
+    if (memcpy_s(eventParam.disconnSvc.devAddr, IOTC_ADPT_BLE_ADDR_LEN, bdAddr, OHOS_BD_ADDR_LEN) != EOK) {
         ADAPTER_LOGE("memcpy_s");
         return;
     }
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_DISCONNECT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_DISCONNECT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
 }
@@ -299,12 +299,12 @@ static void DisconnectServerCb(int32_t connId, int32_t serverId, const BdAddr *b
 static void ServiceStartCb(int32_t status, int32_t serverId, int32_t svcHandle)
 {
     ADAPTER_LOGD("service start cb:status:%d,serverId:%d,svcHandle=%d", status, serverId, svcHandle);
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.startSvc.status = OhosStatusToAdapterStatus(status);
     eventParam.startSvc.serverId = serverId;
     eventParam.startSvc.svcHandle = svcHandle;
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_START_SVC_RESULT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_START_SVC_RESULT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
 }
@@ -312,12 +312,12 @@ static void ServiceStartCb(int32_t status, int32_t serverId, int32_t svcHandle)
 static void ServiceStopCb(int32_t status, int32_t serverId, int32_t svcHandle)
 {
     ADAPTER_LOGD("service stop cb:status:%d,serverId:%d,svcHandle=%d", status, serverId, svcHandle);
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.stopSvc.status = OhosStatusToAdapterStatus(status);
     eventParam.stopSvc.serverId = serverId;
     eventParam.stopSvc.svcHandle = (uint32_t)svcHandle;
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_STOP_SVC_RESULT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_STOP_SVC_RESULT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
 }
@@ -325,11 +325,11 @@ static void ServiceStopCb(int32_t status, int32_t serverId, int32_t svcHandle)
 static void IndicationSendCb(int32_t connId, int32_t status)
 {
     ADAPTER_LOGD("indication send cb:status:%d,connId:%d", status, connId);
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.indicateConf.status = OhosStatusToAdapterStatus(status);
     eventParam.indicateConf.connId = connId;
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_INDICATE_CONF, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_INDICATE_CONF, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
 }
@@ -337,12 +337,12 @@ static void IndicationSendCb(int32_t connId, int32_t status)
 static void MtuChangeCb(int32_t connId, int32_t mtu)
 {
     ADAPTER_LOGD("mtu event:connId:%d,mtu:%d", connId, mtu);
-    AdapterBleGattEventParam eventParam;
-    eventParam.setMtu.status = ADAPTER_BLE_STATUS_SUCCESS;
+    IotcAdptBleGattEventParam eventParam;
+    eventParam.setMtu.status = IOTC_ADPT_BLE_STATUS_SUCCESS;
     eventParam.setMtu.connId = connId;
     eventParam.setMtu.mtu = mtu;
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_SET_MTU_RESULT, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_SET_MTU_RESULT, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
 }
@@ -415,12 +415,12 @@ static void RequestReadCb(BtReqReadCbPara readCbPara)
 {
     ADAPTER_LOGD("request read cb:connId=%d, transId=%d, attrHandle=%d, offset=%d, isLong=%d",
         readCbPara.connId, readCbPara.transId, readCbPara.attrHandle, readCbPara.offset, readCbPara.isLong);
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.reqRead.connId =readCbPara.connId;
     eventParam.reqRead.attrHandle = readCbPara.attrHandle;
     eventParam.reqRead.transId = readCbPara.transId;
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_REQ_READ, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_REQ_READ, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
     }
 }
@@ -430,7 +430,7 @@ static void RequestWriteCb(BtReqWriteCbPara writeCbPara)
     ADAPTER_LOGD("request write cb:connId=%d, transId=%d, attrHandle=%d, offset=%d, length=%d, needRsp=%d, isPrep=%d",
         writeCbPara.connId, writeCbPara.transId, writeCbPara.attrHandle, writeCbPara.offset,
         writeCbPara.length, writeCbPara.needRsp, writeCbPara.isPrep);
-    AdapterBleGattEventParam eventParam;
+    IotcAdptBleGattEventParam eventParam;
     eventParam.reqWrite.connId =writeCbPara.connId;
     eventParam.reqWrite.attrHandle = writeCbPara.attrHandle;
     eventParam.reqWrite.transId = writeCbPara.transId;
@@ -447,7 +447,7 @@ static void RequestWriteCb(BtReqWriteCbPara writeCbPara)
     }
     eventParam.reqWrite.valueLen = writeCbPara.length;
     if (g_gattEventHandler != NULL &&
-        g_gattEventHandler(ADAPTER_BLE_GATT_EVENT_REQ_WRITE, &eventParam) != IOTC_OK) {
+        g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_REQ_WRITE, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
         AdapterFree(eventParam.reqWrite.value);
         eventParam.reqWrite.value = NULL;
@@ -603,7 +603,7 @@ static int32_t WaitRegGattAppResult(void)
     return IOTC_ERROR;
 }
 
-static int32_t AddGattService(AdapterBleGattService *svc)
+static int32_t AddGattService(IotcAdptBleGattService *svc)
 {
     BtUuid srvcUuid;
     srvcUuid.uuid = ConvertUuid(svc->uuid);
@@ -622,7 +622,7 @@ static int32_t AddGattService(AdapterBleGattService *svc)
     return IOTC_OK;
 }
 
-static int32_t WaitAddGattServiceResult(AdapterBleGattService *svc)
+static int32_t WaitAddGattServiceResult(IotcAdptBleGattService *svc)
 {
     char *uuid = ConvertUuid(svc->uuid);
     if (uuid == NULL) {
@@ -644,7 +644,7 @@ static int32_t WaitAddGattServiceResult(AdapterBleGattService *svc)
     return IOTC_ERROR;
 }
 
-static int32_t AddGattChar(AdapterBleGattService *svc, AdapterBleGattsChar *charcter)
+static int32_t AddGattChar(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *charcter)
 {
     BtUuid characUuid;
     characUuid.uuid =  ConvertUuid(charcter->uuid);
@@ -666,7 +666,7 @@ static int32_t AddGattChar(AdapterBleGattService *svc, AdapterBleGattsChar *char
     return IOTC_OK;
 }
 
-static int32_t WaitAddGattCharResult(AdapterBleGattService *svc, AdapterBleGattsChar *charcter)
+static int32_t WaitAddGattCharResult(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *charcter)
 {
     char *uuid = ConvertUuid(charcter->uuid);
     if (uuid == NULL) {
@@ -687,7 +687,7 @@ static int32_t WaitAddGattCharResult(AdapterBleGattService *svc, AdapterBleGatts
     return IOTC_ERROR;
 }
 
-static int32_t AddGattDesc(AdapterBleGattService *svc, AdapterBleGattCharDesc *desc)
+static int32_t AddGattDesc(IotcAdptBleGattService *svc, IotcAdptBleGattCharDesc *desc)
 {
     BtUuid descUuid;
     descUuid.uuid = ConvertUuid(desc->uuid);
@@ -707,7 +707,7 @@ static int32_t AddGattDesc(AdapterBleGattService *svc, AdapterBleGattCharDesc *d
     return IOTC_OK;
 }
 
-static int32_t WaitAddGattDescResult(AdapterBleGattService *svc, AdapterBleGattCharDesc *desc)
+static int32_t WaitAddGattDescResult(IotcAdptBleGattService *svc, IotcAdptBleGattCharDesc *desc)
 {
     char *uuid = ConvertUuid(desc->uuid);
     if (uuid == NULL) {
@@ -728,7 +728,7 @@ static int32_t WaitAddGattDescResult(AdapterBleGattService *svc, AdapterBleGattC
     return IOTC_ERROR;
 }
 
-static int32_t AddGattConfigDesc(AdapterBleGattService *svc)
+static int32_t AddGattConfigDesc(IotcAdptBleGattService *svc)
 {
     BtUuid descUuid;
     descUuid.uuid = DESCRIPTOR_CONFIGURE_UUID;
@@ -744,7 +744,7 @@ static int32_t AddGattConfigDesc(AdapterBleGattService *svc)
     return IOTC_OK;
 }
 
-static int32_t WaitAddGattConfigDescResult(AdapterBleGattService *svc)
+static int32_t WaitAddGattConfigDescResult(IotcAdptBleGattService *svc)
 {
     uint32_t waitMs = 0;
     while (waitMs < BLE_CB_WAIT_TIMEOUT) {
@@ -759,11 +759,11 @@ static int32_t WaitAddGattConfigDescResult(AdapterBleGattService *svc)
     return IOTC_ERROR;
 }
 
-static int32_t AddGattDescs(AdapterBleGattService *svc, AdapterBleGattsChar *character)
+static int32_t AddGattDescs(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *character)
 {
     int32_t ret = 0;
-    if ((character->property & ADAPTER_BLE_CHAR_PROP_NOTIFY) ||
-        (character->property & ADAPTER_BLE_CHAR_PROP_INDICATE)) {
+    if ((character->property & IOTC_ADPT_BLE_CHAR_PROP_NOTIFY) ||
+        (character->property & IOTC_ADPT_BLE_CHAR_PROP_INDICATE)) {
         ret = AddGattConfigDesc(svc);
         if (ret != IOTC_OK) {
             ADAPTER_LOGE("add gatt desc err ret=%d", ret);
@@ -790,7 +790,7 @@ static int32_t AddGattDescs(AdapterBleGattService *svc, AdapterBleGattsChar *cha
     return IOTC_OK;
 }
 
-static int32_t AddGattChars(AdapterBleGattService *svc)
+static int32_t AddGattChars(IotcAdptBleGattService *svc)
 {
     int32_t ret = 0;
     for (uint8_t i = 0; i < svc->charNum; i++) {
@@ -828,7 +828,7 @@ static int32_t StartRegGattApp(void)
     return IOTC_OK;
 }
 
-static int32_t StartGattService(AdapterBleGattService *svc)
+static int32_t StartGattService(IotcAdptBleGattService *svc)
 {
     int32_t ret = AddGattService(svc);
     if (ret != IOTC_OK) {
@@ -853,7 +853,7 @@ static int32_t StartGattService(AdapterBleGattService *svc)
     return IOTC_OK;
 }
 
-int32_t AdapterBleInitStack(void)
+int32_t IotcBleInitStack(void)
 {
     int32_t ret = InitBtStack();
     if (ret != OHOS_BT_STATUS_SUCCESS) {
@@ -868,13 +868,13 @@ int32_t AdapterBleInitStack(void)
     return IOTC_OK;
 }
 
-int32_t AdapterBleSetConnectParam(const AdapterBleConnectParam *param)
+int32_t IotcBleSetConnectParam(const IotcAdptBleConnectParam *param)
 {
     (void)param;
     return IOTC_OK;
 }
 
-int32_t AdapterBleRegisterGattCb(const AdapterBleGattCallback callback)
+int32_t IotcBleRegisterGattCb(const IotcAdptBleGattCallback callback)
 {
     if (callback == NULL) {
         ADAPTER_LOGE("invalid param");
@@ -898,13 +898,13 @@ int32_t AdapterBleRegisterGattCb(const AdapterBleGattCallback callback)
     return IOTC_OK;
 }
 
-int32_t AdapterBleSetBleName(const char *name)
+int32_t IotcBleSetBleName(const char *name)
 {
     (void)name;
     return IOTC_OK;
 }
 
-int32_t AdapterBleStartAdv(const AdapterBleAdvParam *advParam, const AdapterBleAdvData *advData)
+int32_t IotcBleStartAdv(const IotcAdptBleAdvParam *advParam, const IotcAdptBleAdvData *advData)
 {
     if ((advParam == NULL) || (advData == NULL)) {
         ADAPTER_LOGE("invalid param");
@@ -929,7 +929,7 @@ int32_t AdapterBleStartAdv(const AdapterBleAdvParam *advParam, const AdapterBleA
     ohosAdvParam.ownAddrType = AdapterAddrTypeToOhosAddrType(advParam->ownerAddrType);
     if (advParam->directAddr != NULL) {
         if (memcpy_s(ohosAdvParam.peerAddr.addr, sizeof(ohosAdvParam.peerAddr.addr),
-            advParam->directAddr, ADAPTER_BLE_ADDR_LEN) != EOK) {
+            advParam->directAddr, IOTC_ADPT_BLE_ADDR_LEN) != EOK) {
             ADAPTER_LOGE("set peer addr");
             return IOTC_ERROR;
         }
@@ -949,7 +949,7 @@ int32_t AdapterBleStartAdv(const AdapterBleAdvParam *advParam, const AdapterBleA
     return IOTC_OK;
 }
 
-int32_t AdapterBleStopAdv(void)
+int32_t IotcBleStopAdv(void)
 {
     /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
     if (g_advId == INVALID_ADV_ID) {
@@ -967,7 +967,7 @@ int32_t AdapterBleStopAdv(void)
     return IOTC_OK;
 }
 
-int32_t AdapterBleStartGattsService(AdapterBleGattService *svc, uint8_t svcNum)
+int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint8_t svcNum)
 {
     if ((svc == NULL) || (svcNum == 0)) {
         ADAPTER_LOGE("invalid param");
@@ -989,7 +989,7 @@ int32_t AdapterBleStartGattsService(AdapterBleGattService *svc, uint8_t svcNum)
     return IOTC_OK;
 }
 
-int32_t AdapterBleStopGattsService(int32_t serverId, uint32_t svcHandle)
+int32_t IotcBleStopGattsService(int32_t serverId, uint32_t svcHandle)
 {
     int32_t ret = BleGattsStopService(serverId, svcHandle);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
@@ -999,7 +999,7 @@ int32_t AdapterBleStopGattsService(int32_t serverId, uint32_t svcHandle)
     return IOTC_OK;
 }
 
-int32_t AdapterBleSendGattsIndicate(const AdapterBleSendIndicateParam *param)
+int32_t IotcBleSendGattsIndicate(const IotcAdptBleSendIndicateParam *param)
 {
     if ((param == NULL) || (param->value == NULL) || (param->valueLen == 0)) {
         ADAPTER_LOGE("invalid param");
@@ -1021,7 +1021,7 @@ int32_t AdapterBleSendGattsIndicate(const AdapterBleSendIndicateParam *param)
     return IOTC_OK;
 }
 
-int32_t AdapterBleSendGattsResponse(const AdapterBleResponseParam *param)
+int32_t IotcBleSendGattsResponse(const IotcAdptBleResponseParam *param)
 {
     if (param == NULL) {
         ADAPTER_LOGE("invalid param");
@@ -1041,7 +1041,7 @@ int32_t AdapterBleSendGattsResponse(const AdapterBleResponseParam *param)
     return IOTC_OK;
 }
 
-int32_t AdapterBleGetBleMac(uint8_t *mac, uint32_t len)
+int32_t IotcBleGetBleMac(uint8_t *mac, uint32_t len)
 {
     if (mac == NULL) {
         ADAPTER_LOGE("mac null");
@@ -1055,7 +1055,7 @@ int32_t AdapterBleGetBleMac(uint8_t *mac, uint32_t len)
     return IOTC_OK;
 }
 
-int32_t AdapterBleDissconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
+int32_t IotcBleDisconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
 {
     if ((bdAddr == NULL) || (addrLen > OHOS_BD_ADDR_LEN)) {
         ADAPTER_LOGE("invalid param");
@@ -1074,7 +1074,7 @@ int32_t AdapterBleDissconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
     return IOTC_OK;
 }
 
-int32_t AdapterBleDeInitStack(void)
+int32_t IotcBleDeInitStack(void)
 {
     int32_t ret = DisableBtStack();
     if (ret != OHOS_BT_STATUS_SUCCESS) {
