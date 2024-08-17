@@ -85,6 +85,18 @@ static void EventBusStartWifiSvcCallback(uint32_t event, void *param, uint32_t l
         return;
     }
 
+    ret = ServiceProxyStartService(IOTC_SERVICE_ID_LOCAL_CONTROL, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("start local control service error %d", ret);
+        return;
+    }
+
+    ret = ServiceProxyStartService(IOTC_SERVICE_ID_LAN_SEARCH, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("start lan search error %d", ret);
+        return;
+    }
+
     ret = ServiceProxyStartService(IOTC_SERVICE_ID_M2M_CLOUD, NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGE("start cloud error %d", ret);

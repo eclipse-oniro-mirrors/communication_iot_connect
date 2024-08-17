@@ -28,11 +28,13 @@
 static const FwkInitUnit CORE_WIFI[] = {
     /* 链路收发缓冲区组件 */
     {FWK_INIT_LVL_COMP, "wifi_buffer", TransBufferInit, TransBufferDeinit},
-    /* 套接字监听及时间分发框架 */
+    /* 套接字监听及事件分发框架 */
     {FWK_INIT_LVL_FWK, "wifi_fd_watch", WifiSchedFdWatchInit, WifiSchedFdWatchDeinit},
     /* softap配网模式 */
     {FWK_INIT_LVL_BIZ, "softap", WifiServiceSoftapInit, WifiServiceSoftapDeinit},
     {FWK_INIT_LVL_BIZ, "wifi_connect", WifiServiceConnectInit, WifiServiceConnectDeinit},
+    {FWK_INIT_LVL_BIZ, "lan_search", LanSearchServiceInit, LanSearchServiceDeinit},
+    {FWK_INIT_LVL_BIZ, "local_control", LocalControlServiceInit, LocalControlServiceDeinit},
     {FWK_INIT_LVL_BIZ, "cloud", M2mCloudServiceInit, M2mCloudServiceDeinit},
 };
 

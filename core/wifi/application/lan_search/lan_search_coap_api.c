@@ -132,6 +132,15 @@ static bool LanSearchAddDevInfo(AdapterJson *json)
         IOTC_LOGE("add prot err %d", ret);
         return false;
     }
+
+    /* 高四bit预留，低四bit依次为softap coap sle ble */
+    const uint8_t DISCOVERY_TYPE = 0b01100100;
+    ret = AdapterJsonAddNum2Obj(devInfoJson, STR_JSON_DISC_TYPE, DISCOVERY_TYPE);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("add disc err %d", ret);
+        return false;
+    }
+
     return true;
 }
 
