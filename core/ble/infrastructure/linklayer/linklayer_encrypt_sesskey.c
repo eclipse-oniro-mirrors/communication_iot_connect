@@ -78,7 +78,7 @@ int32_t LinkLayerSessKeyEncrypt(const uint8_t *data, uint32_t dataLen, uint8_t *
     /* iv + encbody + sessId 组成新的body */
     uint32_t totalBodyLen = SESS_IV_LEN + encBodyLen + SESS_ID_LEN;
     uint32_t outLen = svcHeaderLen + totalBodyLen + SESS_HMAC_LEN;
-    uint8_t *out = (uint8_t *)AdapterCalloc(outLen, sizeof(uint8_t));
+    uint8_t *out = (uint8_t *)IotcCalloc(outLen, sizeof(uint8_t));
     CHECK_RETURN_LOGE(out != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "out calloc err");
 
     /* 设置新的svcHeader */
@@ -109,7 +109,7 @@ int32_t LinkLayerSessKeyEncrypt(const uint8_t *data, uint32_t dataLen, uint8_t *
     return IOTC_OK;
 
 ERROR_EXIT:
-    AdapterFree(out);
+    IotcFree(out);
     return ret;
 }
 
@@ -133,7 +133,7 @@ int32_t LinkLayerSessKeyDecrypt(uint8_t *data, uint32_t *dataLen)
     uint32_t svcHeaderLen = *dataLen - SESS_HMAC_LEN - cmdParam.requestLen;
     uint32_t decBodyLen = cmdParam.requestLen - SESS_TAG_LEN - SESS_IV_LEN - SESS_ID_LEN;
     uint32_t outLen = svcHeaderLen + decBodyLen;
-    uint8_t *out = (uint8_t *)AdapterCalloc(outLen, sizeof(uint8_t));
+    uint8_t *out = (uint8_t *)IotcCalloc(outLen, sizeof(uint8_t));
     CHECK_RETURN_LOGE(out != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "out calloc err");
 
     /* 设置新的svcHeader */
@@ -164,7 +164,7 @@ int32_t LinkLayerSessKeyDecrypt(uint8_t *data, uint32_t *dataLen)
     ret = IOTC_OK;
 
 EXIT:
-    AdapterFree(out);
+    IotcFree(out);
     return ret;
 }
 

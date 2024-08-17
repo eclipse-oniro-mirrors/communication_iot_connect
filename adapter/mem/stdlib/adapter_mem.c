@@ -38,7 +38,7 @@ typedef struct {
 #define NON_NULL_STR(_s) ((_s) == NULL? "NULL" : (_s))
 #endif
 
-static AdapterMutexId *g_mutex = NULL;
+static IotcMutexId *g_mutex = NULL;
 static ListEntry g_memList = LIST_DECLARE_INIT(&g_memList);
 
 static uint32_t DeltaTime(uint32_t timeNew, uint32_t timeOld)
@@ -57,21 +57,21 @@ static uint32_t DeltaTime(uint32_t timeNew, uint32_t timeOld)
 void MemLock(void)
 {
     if (g_mutex == NULL) {
-        g_mutex = AdapterCreateMutex();
+        g_mutex = IotcMutexCreate();
     }
     if (g_mutex != NULL) {
-        (void)AdapterLockMutex(g_mutex, ADAPTER_WAIT_FOREVER);
+        (void)IotcMutexLock(g_mutex, IOTC_WAIT_FOREVER);
     }
 }
 
 void MemUnlock(void)
 {
     if (g_mutex != NULL) {
-        (void)AdapterUnlockMutex(g_mutex);
+        (void)IotcMutexUnlock(g_mutex);
     }
 }
 
-static void *AdapterDebugMallocInsert(uint32_t size, const char *func, uint32_t line, bool init)
+static void *IotcDebugMallocInsert(uint32_t size, const char *func, uint32_t line, bool init)
 {
     MemNode *newNode = (MemNode *)malloc(size + sizeof(MemNode));
     if (newNode == NULL) {
@@ -84,7 +84,7 @@ static void *AdapterDebugMallocInsert(uint32_t size, const char *func, uint32_t 
     newNode->func = func;
     newNode->line = line;
     newNode->size = size;
-    newNode->time = AdapterGetSysTimeMs();
+    newNode->time = IotcGetSysTimeMs();
 
     if (init) {
         /* 用与内存测试，malloc时不对用户使用的空间做初始化 */
@@ -97,27 +97,27 @@ static void *AdapterDebugMallocInsert(uint32_t size, const char *func, uint32_t 
     return newNode->mem;
 }
 
-void *AdapterDebugMalloc(uint32_t size, const char *func, uint32_t line)
+void *IotcDebugMalloc(uint32_t size, const char *func, uint32_t line)
 {
     if (size == 0) {
         ADAPTER_LOGF("malloc zero %s/%u!!", NON_NULL_STR(func), line);
         return NULL;
     }
 
-    return AdapterDebugMallocInsert(size, func, line, false);
+    return IotcDebugMallocInsert(size, func, line, false);
 }
 
-void *AdapterDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t line)
+void *IotcDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t line)
 {
     if ((size == 0) || (num == 0)) {
         ADAPTER_LOGF("calloc zero %s/%u!!", NON_NULL_STR(func), line);
         return NULL;
     }
 
-    return AdapterDebugMallocInsert(num * size, func, line, true);
+    return IotcDebugMallocInsert(num * size, func, line, true);
 }
 
-void AdapterDebugFree(void *pt, const char *func, uint32_t line)
+void IotcDebugFree(void *pt, const char *func, uint32_t line)
 {
     if (pt == NULL) {
         ADAPTER_LOGF("free null %s/%u!!", NON_NULL_STR(func), line);
@@ -161,9 +161,9 @@ void AdapterDebugFree(void *pt, const char *func, uint32_t line)
 #endif
 }
 
-void AdapterMemDump(void)
+void IotcMemDump(void)
 {
-    uint32_t cur = AdapterGetSysTimeMs();
+    uint32_t cur = IotcGetSysTimeMs();
     MemLock();
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM_REV(item, &g_memList) {
@@ -176,7 +176,7 @@ void AdapterMemDump(void)
 
 #else /* IOTC_CONF_MEM_DEBUG */
 
-void *AdapterMalloc(uint32_t size)
+void *IotcMalloc(uint32_t size)
 {
     if (size == 0) {
         return NULL;
@@ -185,7 +185,7 @@ void *AdapterMalloc(uint32_t size)
     return malloc(size);
 }
 
-void *AdapterCalloc(uint32_t num, uint32_t size)
+void *IotcCalloc(uint32_t num, uint32_t size)
 {
     if ((size == 0) || (num == 0)) {
         return NULL;
@@ -194,7 +194,7 @@ void *AdapterCalloc(uint32_t num, uint32_t size)
     return calloc(num, size);
 }
 
-void AdapterFree(void *pt)
+void IotcFree(void *pt)
 {
     if (pt == NULL) {
         return;

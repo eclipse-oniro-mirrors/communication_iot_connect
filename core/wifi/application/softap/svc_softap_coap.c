@@ -63,7 +63,7 @@ void SoftapCoapSpekeReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     if (ret != IOTC_OK || respMsg == NULL || respLen == 0) {
         IOTC_LOGW("speke process packet error %d/%u", ret, respLen);
         if (respMsg != NULL) {
-            AdapterFree(respMsg);
+            IotcFree(respMsg);
         }
         return;
     }
@@ -290,7 +290,7 @@ SessCode SoftapCoapMsgSendEncryptProcess(SessMsg *msg, UtilsBuffer *buf, SessAdd
     CoapData payloadEnc = {encData, encLen};
     /* 密文替换掉原始coap报文中的明文 */
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadEnc);
-    AdapterFree(encData);
+    IotcFree(encData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace enc payload error %d", ret);
         return SESS_CODE_ERR;
@@ -349,7 +349,7 @@ SessCode SoftapCoapMsgRecvDecryptProcess(SessMsg *msg, UtilsBuffer *buf, SessAdd
     CoapData payloadDec = {decData, decLen};
     /* 将解密后的明文替换掉原始coap报文中的密文 */
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadDec);
-    AdapterFree(decData);
+    IotcFree(decData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace dec payload error %d", ret);
         return SESS_CODE_ERR;
@@ -380,7 +380,7 @@ SessCode SoftapCoapMsgRecvBase64DecodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
         return SESS_CODE_ERR;
     }
 
-    uint8_t *decodeData = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *decodeData = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     if (decodeData == NULL) {
         IOTC_LOGW("calloc error %d", len);
         return SESS_CODE_ERR;
@@ -389,13 +389,13 @@ SessCode SoftapCoapMsgRecvBase64DecodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, decodeData, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 decode error %d", ret);
-        AdapterFree(decodeData);
+        IotcFree(decodeData);
         return SESS_CODE_ERR;
     }
 
     CoapData payloadDecode = {decodeData, len};
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadDecode);
-    AdapterFree(decodeData);
+    IotcFree(decodeData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace decode payload error %d", ret);
         return SESS_CODE_ERR;
@@ -426,7 +426,7 @@ SessCode SoftapCoapMsgSendBase64EncodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
         return SESS_CODE_ERR;
     }
 
-    uint8_t *encodeData = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *encodeData = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     if (encodeData == NULL) {
         IOTC_LOGW("calloc error %d", len);
         return SESS_CODE_ERR;
@@ -435,13 +435,13 @@ SessCode SoftapCoapMsgSendBase64EncodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, encodeData, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 encode error %d", ret);
-        AdapterFree(encodeData);
+        IotcFree(encodeData);
         return SESS_CODE_ERR;
     }
 
     CoapData payloadDecode = {encodeData, len};
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadDecode);
-    AdapterFree(encodeData);
+    IotcFree(encodeData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace encode payload error %d", ret);
         return SESS_CODE_ERR;

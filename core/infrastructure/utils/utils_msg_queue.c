@@ -26,8 +26,8 @@
 struct UtilsMsgQueue {
     UtilsQueue *queue;
     UtilsExMutex *lock;
-    AdapterSemId *sendSem;
-    AdapterSemId *recvSem;
+    IotcSemId *sendSem;
+    IotcSemId *recvSem;
     bool pushOnOff;
 };
 
@@ -44,12 +44,12 @@ static int32_t MsgQueueDataInit(UtilsMsgQueue *msgQueue, uint32_t capacity, Queu
         IOTC_LOGW("create mutex err");
         return IOTC_ERROR;
     }
-    msgQueue->sendSem = AdapterCreateSem(0);
+    msgQueue->sendSem = IotcSemCreate(0);
     if (msgQueue->sendSem == NULL) {
         IOTC_LOGW("create sem err");
         return IOTC_ERROR;
     }
-    msgQueue->recvSem = AdapterCreateSem(0);
+    msgQueue->recvSem = IotcSemCreate(0);
     if (msgQueue->recvSem == NULL) {
         IOTC_LOGW("create sem err");
         return IOTC_ERROR;
@@ -67,11 +67,11 @@ static void MsgQueueDestroy(UtilsMsgQueue **msgQueueAddr)
     }
     UtilsQueueDestroy(&msgQueue->queue);
     if (msgQueue->sendSem != NULL) {
-        AdapterDestroySem(msgQueue->sendSem);
+        IotcSemDestroy(msgQueue->sendSem);
         msgQueue->sendSem = NULL;
     }
     if (msgQueue->recvSem != NULL) {
-        AdapterDestroySem(msgQueue->recvSem);
+        IotcSemDestroy(msgQueue->recvSem);
         msgQueue->recvSem = NULL;
     }
     if (msgQueue->lock != NULL) {
@@ -81,7 +81,7 @@ static void MsgQueueDestroy(UtilsMsgQueue **msgQueueAddr)
         UtilsDestroyExMutex(&msgQueue->lock);
         msgQueue->lock = NULL;
     }
-    AdapterFree(msgQueue);
+    IotcFree(msgQueue);
     *msgQueueAddr = NULL;
 }
 
@@ -114,7 +114,7 @@ static int32_t PushWait(UtilsMsgQueue *msgQueue, uint32_t timeout)
     UtilsExMutexUnlock(msgQueue->lock);
     if (full && (timeout > 0)) {
         IOTC_LOGI("wait sem enter");
-        if (AdapterWaitSem(msgQueue->recvSem, timeout) != IOTC_OK) {
+        if (IotcSemWait(msgQueue->recvSem, timeout) != IOTC_OK) {
             IOTC_LOGW("wait sem err");
             return IOTC_ADAPTER_OS_ERR_WAIT_SEM;
         }
@@ -139,7 +139,7 @@ static int32_t PopWait(UtilsMsgQueue *msgQueue, uint32_t timeout)
     }
     UtilsExMutexUnlock(msgQueue->lock);
     if (empty && (timeout > 0)) {
-        int32_t ret = AdapterWaitSem(msgQueue->sendSem, timeout);
+        int32_t ret = IotcSemWait(msgQueue->sendSem, timeout);
         if (ret != IOTC_OK) {
             return ret;
         }
@@ -149,7 +149,7 @@ static int32_t PopWait(UtilsMsgQueue *msgQueue, uint32_t timeout)
 
 UtilsMsgQueue *UtilsMsgQueueCreate(uint32_t capacity, QueueFreeValue freeValue)
 {
-    UtilsMsgQueue *msgQueue = (UtilsMsgQueue *)AdapterMalloc(sizeof(UtilsMsgQueue));
+    UtilsMsgQueue *msgQueue = (UtilsMsgQueue *)IotcMalloc(sizeof(UtilsMsgQueue));
     if (msgQueue == NULL) {
         IOTC_LOGW("malloc");
         return NULL;
@@ -193,8 +193,8 @@ int32_t UtilsMsgQueuePush(UtilsMsgQueue *msgQueue, const void *value, uint32_t v
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_PUSH;
     }
-    if (AdapterGetSemCount(msgQueue->sendSem) == 0) {
-        AdapterPostSem(msgQueue->sendSem);
+    if (IotcSemGetCount(msgQueue->sendSem) == 0) {
+        IotcSemPost(msgQueue->sendSem);
     }
     UtilsExMutexUnlock(msgQueue->lock);
 
@@ -229,8 +229,8 @@ int32_t UtilsMsgQueuePushMem(UtilsMsgQueue *msgQueue, void **value, uint32_t val
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_PUSH;
     }
-    if (AdapterGetSemCount(msgQueue->sendSem) == 0) {
-        AdapterPostSem(msgQueue->sendSem);
+    if (IotcSemGetCount(msgQueue->sendSem) == 0) {
+        IotcSemPost(msgQueue->sendSem);
     }
     UtilsExMutexUnlock(msgQueue->lock);
 
@@ -262,8 +262,8 @@ int32_t UtilsMsgQueuePop(UtilsMsgQueue *msgQueue, void *value, uint32_t valueSiz
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_POP;
     }
-    if (AdapterGetSemCount(msgQueue->recvSem) == 0) {
-        AdapterPostSem(msgQueue->recvSem);
+    if (IotcSemGetCount(msgQueue->recvSem) == 0) {
+        IotcSemPost(msgQueue->recvSem);
     }
     UtilsExMutexUnlock(msgQueue->lock);
 
@@ -295,8 +295,8 @@ int32_t UtilsMsgQueuePopMem(UtilsMsgQueue *msgQueue, void **value, uint32_t *val
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_POP;
     }
-    if (AdapterGetSemCount(msgQueue->recvSem) == 0) {
-        AdapterPostSem(msgQueue->recvSem);
+    if (IotcSemGetCount(msgQueue->recvSem) == 0) {
+        IotcSemPost(msgQueue->recvSem);
     }
     UtilsExMutexUnlock(msgQueue->lock);
     IOTC_LOGD("msg queue pop success timeout=%u,valueLen=%u", timeout, *valueLen);

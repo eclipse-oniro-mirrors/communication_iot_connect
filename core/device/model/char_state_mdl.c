@@ -39,7 +39,7 @@ void MdlCharStatesFree(IotcCharState **states, uint32_t size)
 static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t size,
     CharStateDataType type)
 {
-    IotcCharState *statesTmp = (IotcCharState *)AdapterCalloc(size, sizeof(IotcCharState));
+    IotcCharState *statesTmp = (IotcCharState *)IotcCalloc(size, sizeof(IotcCharState));
     if (statesTmp == NULL) {
         IOTC_LOGW("calloc error %u", size);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -116,8 +116,8 @@ int32_t MdlGetJsonArrayToCharStates(const IotcJson *json, IotcCharState **states
 int32_t MdlBuildGetCharStatesData(uint32_t size, char ***data, uint32_t **len)
 {
     CHECK_RETURN_LOGE(size != 0 && data != NULL && len != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    *data = (char **)AdapterCalloc(size, sizeof(char *));
-    *len = (uint32_t *)AdapterCalloc(size, sizeof(uint32_t));
+    *data = (char **)IotcCalloc(size, sizeof(char *));
+    *len = (uint32_t *)IotcCalloc(size, sizeof(uint32_t));
     if (*data == NULL || *len == NULL) {
         IOTC_LOGW("calloc error %u", size);
         UTILS_FREE_2_NULL(*data);
@@ -130,8 +130,8 @@ int32_t MdlBuildGetCharStatesData(uint32_t size, char ***data, uint32_t **len)
 int32_t MdlInitGetCharStatesData(uint32_t size, GetCharStatesData *charData)
 {
     CHECK_RETURN_LOGW(size != 0 && charData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    charData->data = (char **)AdapterCalloc(size, sizeof(char *));
-    charData->len = (uint32_t *)AdapterCalloc(size, sizeof(uint32_t));
+    charData->data = (char **)IotcCalloc(size, sizeof(char *));
+    charData->len = (uint32_t *)IotcCalloc(size, sizeof(uint32_t));
     if (charData->data == NULL || charData->len == NULL) {
         IOTC_LOGW("calloc error %u", size);
         UTILS_FREE_2_NULL(charData->data);
@@ -206,7 +206,7 @@ int32_t MdlUpdateCharStates(IotcCharState states[], const GetCharStatesData *cha
     
     for (uint32_t i = 0; i < num; ++i) {
         if (states[i].data != NULL) {
-            AdapterFree((char *)states[i].data);
+            IotcFree((char *)states[i].data);
         }
         states[i].data = UtilsStrDupWithLen(charData->data[i], charData->len[i]);
         if (states[i].data == NULL) {

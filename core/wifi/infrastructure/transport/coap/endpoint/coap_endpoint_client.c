@@ -50,7 +50,7 @@ void CoapEndpointClientDeinit(CoapEndpointClient *cli)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &cli->reqList) {
         CoapReqNode *node = CONTAINER_OF(item, CoapReqNode, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
     return;
 }
@@ -83,7 +83,7 @@ static CoapClientRespHandler GetRespHandler(CoapEndpoint *endpoint, const CoapPa
             /* 移除匹配到的节点 */
             ret = node->respHandler;
             LIST_REMOVE(item);
-            AdapterFree(node);
+            IotcFree(node);
             endpoint->client.reqCnt = endpoint->client.reqCnt > 0 ? endpoint->client.reqCnt - 1 : 0;
             break;
         }
@@ -105,7 +105,7 @@ static CoapClientRespHandler GetTimeoutRespHandler(CoapEndpoint *endpoint, uint3
             /* 移除超时节点 */
             ret = node->respHandler;
             LIST_REMOVE(item);
-            AdapterFree(node);
+            IotcFree(node);
             endpoint->client.reqCnt = endpoint->client.reqCnt > 0 ? endpoint->client.reqCnt - 1 : 0;
         }
     }
@@ -130,7 +130,7 @@ int32_t CoapEndpointClientRecvRespPacket(CoapEndpoint *endpoint, const CoapPacke
 void CoapClientRespTimeoutCheck(CoapEndpoint *endpoint)
 {
     CHECK_V_RETURN_LOGW(endpoint, "param invalid");
-    uint32_t cur = AdapterGetSysTimeMs();
+    uint32_t cur = IotcGetSysTimeMs();
 
     CoapClientRespHandler handler = NULL;
     do {
@@ -175,7 +175,7 @@ static int32_t CoapClientInsertReq(CoapEndpoint *endpoint, uint16_t msgId, const
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_ENDPOINT_REQ_LIST_FULL;
     }
 
-    CoapReqNode *newNode = (CoapReqNode *)AdapterMalloc(sizeof(CoapReqNode));
+    CoapReqNode *newNode = (CoapReqNode *)IotcMalloc(sizeof(CoapReqNode));
     if (newNode == NULL) {
         IOTC_LOGW("calloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -185,13 +185,13 @@ static int32_t CoapClientInsertReq(CoapEndpoint *endpoint, uint16_t msgId, const
     if (tkl != 0) {
         int32_t ret = memcpy_s(newNode->token, sizeof(newNode->token), token, tkl);
         if (ret != EOK) {
-            AdapterFree(newNode);
+            IotcFree(newNode);
             return IOTC_ERR_SECUREC_MEMCPY;
         }
     }
 
     newNode->respHandler = handler;
-    newNode->time = AdapterGetSysTimeMs();
+    newNode->time = IotcGetSysTimeMs();
 
     LIST_INSERT_BEFORE(&newNode->node, &endpoint->client.reqList);
     endpoint->client.reqCnt++;
@@ -259,7 +259,7 @@ void CoapClientReqPrepare(CoapEndpoint *endpoint, uint32_t *timeout)
         return;
     }
 
-    uint32_t now = AdapterGetSysTimeMs();
+    uint32_t now = IotcGetSysTimeMs();
     ENDPOINT_LOCK_V_RETURN(endpoint);
     ListEntry *item = LIST_HEAD(&endpoint->client.reqList);
     if (item != NULL) {

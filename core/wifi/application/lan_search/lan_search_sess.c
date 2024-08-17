@@ -110,7 +110,7 @@ static bool LanSearchSessSpekeProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
 
     CoapData newPayload = {data, dataLen};
     ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace payload error %d", ret);
         return false;
@@ -141,7 +141,7 @@ static bool LanSearchSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtl
         return false;
     }
 
-    uint8_t *data = (uint8_t *)AdapterCalloc(dataLen, sizeof(uint8_t));
+    uint8_t *data = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
     if (data == NULL) {
         IOTC_LOGW("calloc error %u", dataLen);
         return false;
@@ -154,13 +154,13 @@ static bool LanSearchSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtl
     }
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 error %d/%d", ret, type);
-        AdapterFree(data);
+        IotcFree(data);
         return false;
     }
 
     CoapData newPayload = {data, dataLen};
     ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace payload error %d", ret);
         return false;

@@ -125,7 +125,7 @@ int32_t EventLoopAddSource(EventLoop *loop, EventSource *source);
  */
 void EventLoopDelSource(EventLoop *loop, EventSource *source);
 
-AdapterTaskId *EventLoopGetTaskId(EventLoop *loop);
+IotcTaskId *EventLoopGetTaskId(EventLoop *loop);
 
 #ifdef __cplusplus
 }

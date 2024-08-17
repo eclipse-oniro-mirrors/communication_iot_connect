@@ -24,15 +24,15 @@
 #define MBEDTLS_RADIX_NUM_BASE 16
 
 typedef struct {
-    AdapterRsaPkcs1Mode padding;
+    IotcRsaPkcs1Mode padding;
     IotcMdType md;
     mbedtls_rsa_context rsa;
     int32_t (*rng)(uint8_t *out, uint32_t len);
 } RsaContext;
 
-AdapterRsaContext *AdapterRsaInit(AdapterRsaPkcs1Mode padding, IotcMdType md)
+IotcRsaContext *IotcRsaInit(IotcRsaPkcs1Mode padding, IotcMdType md)
 {
-    RsaContext *ctx = (RsaContext *)AdapterMalloc(sizeof(RsaContext));
+    RsaContext *ctx = (RsaContext *)IotcMalloc(sizeof(RsaContext));
     if (ctx == NULL) {
         ADAPTER_LOGW("malloc error");
         return NULL;
@@ -49,17 +49,17 @@ AdapterRsaContext *AdapterRsaInit(AdapterRsaPkcs1Mode padding, IotcMdType md)
     return ctx;
 }
 
-void AdapterRsaFree(AdapterRsaContext *ctx)
+void IotcRsaFree(IotcRsaContext *ctx)
 {
     if (ctx == NULL) {
         ADAPTER_LOGW("invalid param");
         return;
     }
     mbedtls_rsa_free(&((RsaContext *)ctx)->rsa);
-    AdapterFree(ctx);
+    IotcFree(ctx);
 }
 
-int AdapterRsaParamImport(AdapterRsaContext *ctx, const AdapterRsaParam *param)
+int IotcRsaParamImport(IotcRsaContext *ctx, const IotcRsaParam *param)
 {
     if ((ctx == NULL) || (param == NULL)) {
         ADAPTER_LOGW("invalid param");
@@ -75,7 +75,7 @@ int AdapterRsaParamImport(AdapterRsaContext *ctx, const AdapterRsaParam *param)
     return IOTC_OK;
 }
 
-int AdapterRsaPkcs1Verify(AdapterRsaContext *ctx, const AdapterRsaVerifyParam *param)
+int IotcRsaPkcs1Verify(IotcRsaContext *ctx, const IotcRsaVerifyParam *param)
 {
     if (ctx == NULL || param == NULL || param->hash == NULL || param->hashLen == 0 ||
         param->sig == NULL || param->sigLen != mbedtls_rsa_get_len(&((RsaContext *)ctx)->rsa) ||
@@ -112,7 +112,7 @@ static int32_t RngForMbedtls(void *param, unsigned char *out, size_t len)
     return ctx->rng(out, len);
 }
 
-int AdapterRsaPkcs1Decrypt(const AdapterRsaCryptParam *param, uint8_t *buf, uint32_t *len)
+int IotcRsaPkcs1Decrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t *len)
 {
     if (param == NULL || param->ctx == NULL || param->input == NULL || buf == NULL ||
         param->inLen != mbedtls_rsa_get_len(&(((RsaContext *)(param->ctx))->rsa)) || len == NULL || *len == 0) {
@@ -156,7 +156,7 @@ int AdapterRsaPkcs1Decrypt(const AdapterRsaCryptParam *param, uint8_t *buf, uint
     return IOTC_OK;
 }
 
-int AdapterRsaPkcs1Encrypt(const AdapterRsaCryptParam *param, uint8_t *buf, uint32_t len)
+int IotcRsaPkcs1Encrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t len)
 {
     if (param == NULL || param->ctx == NULL || param->input == NULL || buf == NULL ||
         len < mbedtls_rsa_get_len(&(((RsaContext *)(param->ctx))->rsa))) {

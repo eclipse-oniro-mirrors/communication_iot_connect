@@ -182,13 +182,13 @@ void SecurityStoreDeinit(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &GetContext()->storeList) {
         StoreItemsNode *node = CONTAINER_OF(item, StoreItemsNode, node);
         LIST_REMOVE(&node->node);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 
 static StoreItemsNode *StoreItemsNodeNew(SecurityStoreItem *list, uint32_t num)
 {
-    StoreItemsNode *newNode = (StoreItemsNode *)AdapterMalloc(sizeof(StoreItemsNode));
+    StoreItemsNode *newNode = (StoreItemsNode *)IotcMalloc(sizeof(StoreItemsNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -240,7 +240,7 @@ void SecurityStoreUnregStoreList(SecurityStoreItem *list)
             continue;
         }
         LIST_REMOVE(&node->node);
-        AdapterFree(node);
+        IotcFree(node);
         break;
     }
 
@@ -443,7 +443,7 @@ static int32_t StoreItemReadCipher(SecurityStoreItem *storeItem, uint8_t mac[IOT
         return IOTC_CORE_COMM_UTILS_ERR_STORE_INVALID_KV_LEN;
     }
 
-    uint8_t *buffer = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *buffer = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     if (buffer == NULL) {
         IOTC_LOGW("calloc error %u", len);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -452,7 +452,7 @@ static int32_t StoreItemReadCipher(SecurityStoreItem *storeItem, uint8_t mac[IOT
     ret = UtilsStoreKvGetValue(storeItem->keyChar, buffer, &len);
     if (ret != IOTC_OK) {
         STORE_ITEM_LOGW_CODE("kv read error", ret, storeItem);
-        AdapterFree(buffer);
+        IotcFree(buffer);
         return ret;
     }
 
@@ -462,7 +462,7 @@ static int32_t StoreItemReadCipher(SecurityStoreItem *storeItem, uint8_t mac[IOT
         ret = IOTC_CORE_COMM_UTILS_ERR_STORE_INVALID_VERSION;
     }
 
-    AdapterFree(buffer);
+    IotcFree(buffer);
     return ret;
 }
 
@@ -528,7 +528,7 @@ static int32_t StoreItemWriteCipher(SecurityStoreItem *storeItem)
         return IOTC_CORE_COMM_UTILS_ERR_STORE_INVALID_ITEM;
     }
     uint32_t len = storeItem->len + sizeof(StoreCipherHeader);
-    uint8_t *buf = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *buf = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     if (buf == NULL) {
         IOTC_LOGW("calloc error %u", len);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -543,7 +543,7 @@ static int32_t StoreItemWriteCipher(SecurityStoreItem *storeItem)
     int32_t ret = SecurityGenHkdfLocalKey(header->salt, sizeof(header->salt), key);
     if (ret != IOTC_OK) {
         IOTC_LOGW("gen hkdf key error %d", ret);
-        AdapterFree(buf);
+        IotcFree(buf);
         return ret;
     }
 
@@ -556,18 +556,18 @@ static int32_t StoreItemWriteCipher(SecurityStoreItem *storeItem)
     }
     (void)memset_s(key, sizeof(key), 0, sizeof(key));
     if (ret != IOTC_OK) {
-        AdapterFree(buf);
+        IotcFree(buf);
         return ret;
     }
     ret = UtilsStoreKvSetValue(storeItem->keyChar, buf, len);
     if (ret != IOTC_OK) {
-        AdapterFree(buf);
+        IotcFree(buf);
         STORE_ITEM_LOGW_CODE("kv write error", ret, storeItem);
         return ret;
     }
     uint8_t mac[IOTC_MD_SHA256_BYTE_LEN] = {0};
     ret = memcpy_s(mac, sizeof(mac), header->mac, sizeof(header->mac));
-    AdapterFree(buf);
+    IotcFree(buf);
     if (ret !=  EOK) {
         return IOTC_ERR_SECUREC_MEMCPY;
     }

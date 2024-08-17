@@ -36,7 +36,7 @@ struct SessKeyContext {
 
 SessKeyContext *SecuritySessKeyInit(void)
 {
-    SessKeyContext *ctx = AdapterMalloc(sizeof(SessKeyContext));
+    SessKeyContext *ctx = IotcMalloc(sizeof(SessKeyContext));
     if (ctx == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -175,5 +175,5 @@ void SecuritySessDestroy(SessKeyContext *ctx)
     CHECK_V_RETURN(ctx != NULL);
 
     (void)memset_s(ctx, sizeof(SessKeyContext), 0, sizeof(SessKeyContext));
-    AdapterFree(ctx);
+    IotcFree(ctx);
 }

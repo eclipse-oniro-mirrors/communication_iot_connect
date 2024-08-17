@@ -97,7 +97,7 @@ void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint8_t num)
 int32_t BleAddGattSvc(const IotcBleGattProfileSvc *svc)
 {
     CHECK_RETURN_LOGW(svc != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    BleGattSvcList *newNode = (BleGattSvcList *)AdapterMalloc(sizeof(BleGattSvcList));
+    BleGattSvcList *newNode = (BleGattSvcList *)IotcMalloc(sizeof(BleGattSvcList));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -120,7 +120,7 @@ static void DestroyBleGattSvcList(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, GetBleGattSvcListHead()) {
         BleGattSvcList *node = CONTAINER_OF(item, BleGattSvcList, list);
         LIST_REMOVE(&node->list);
-        AdapterFree(node);
+        IotcFree(node);
     }
     g_gattSvcListNum = 0;
     UtilsGlobalMutexUnlock();
@@ -200,7 +200,7 @@ static int32_t ProfileCharCopyToAdapterChar(const IotcBleGattProfileChar *in, Io
         return IOTC_OK;
     }
     uint32_t descMallocSize = in->descNum * sizeof(IotcAdptBleGattCharDesc);
-    IotcAdptBleGattCharDesc *desc = (IotcAdptBleGattCharDesc *)AdapterMalloc(descMallocSize);
+    IotcAdptBleGattCharDesc *desc = (IotcAdptBleGattCharDesc *)IotcMalloc(descMallocSize);
     if (desc == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -221,7 +221,7 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, IotcA
     CHECK_RETURN_LOGW((in->uuid != NULL) && (in->charNum != 0) && (in->character != NULL),
         IOTC_ERR_PARAM_INVALID, "invalid param");
     uint32_t charMallocSize = in->charNum * sizeof(IotcAdptBleGattsChar);
-    IotcAdptBleGattsChar *character = (IotcAdptBleGattsChar *)AdapterMalloc(charMallocSize);
+    IotcAdptBleGattsChar *character = (IotcAdptBleGattsChar *)IotcMalloc(charMallocSize);
     if (character == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -231,7 +231,7 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, IotcA
         int32_t ret = ProfileCharCopyToAdapterChar(&in->character[i], &character[i]);
         if (ret != IOTC_OK) {
             IOTC_LOGE("copy ret=%d", ret);
-            AdapterFree(character);
+            IotcFree(character);
             return ret;
         }
     }
@@ -256,15 +256,15 @@ static void GattServiceDestroy(IotcAdptBleGattService **svcAddr, uint8_t svcNum)
             if (svc[i].character[j].desc == NULL) {
                 continue;
             }
-            AdapterFree(svc[i].character[j].desc);
+            IotcFree(svc[i].character[j].desc);
             svc[i].character[j].desc = NULL;
             svc[i].character[j].descNum = 0;
         }
-        AdapterFree(svc[i].character);
+        IotcFree(svc[i].character);
         svc[i].character = NULL;
         svc[i].charNum = 0;
     }
-    AdapterFree(svc);
+    IotcFree(svc);
     *svcAddr = NULL;
 }
 
@@ -276,7 +276,7 @@ static int32_t BleGattProfileSvcInit(void)
     }
 
     uint32_t svcNum = GetBleGattSvcListNum();
-    IotcAdptBleGattService *svc = (IotcAdptBleGattService *)AdapterCalloc(svcNum, sizeof(IotcAdptBleGattService));
+    IotcAdptBleGattService *svc = (IotcAdptBleGattService *)IotcCalloc(svcNum, sizeof(IotcAdptBleGattService));
     if (svc == NULL) {
         IOTC_LOGE("calloc error %u", svcNum);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -307,7 +307,7 @@ static int32_t BleGattProfileSvcInit(void)
 static int32_t BleGattPeerDevInfoInit(void)
 {
     uint32_t mallocSize = BLE_DEFAULT_MAX_CONN_NUM * sizeof(BlePeerDevInfo);
-    BlePeerDevInfo *peerDevInfo = (BlePeerDevInfo *)AdapterMalloc(mallocSize);
+    BlePeerDevInfo *peerDevInfo = (BlePeerDevInfo *)IotcMalloc(mallocSize);
     if (peerDevInfo == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -348,7 +348,7 @@ void BleGattMgtDestroy(void)
     GattServiceDestroy(&g_bleGattApp.svc, g_bleGattApp.svcNum);
     g_bleGattApp.svcNum = 0;
     if (GetBleGattMgtApp()->peerDevInfo != NULL) {
-        AdapterFree(GetBleGattMgtApp()->peerDevInfo);
+        IotcFree(GetBleGattMgtApp()->peerDevInfo);
         GetBleGattMgtApp()->peerDevInfo = NULL;
     }
     DestroyBleGattSvcList();
@@ -570,7 +570,7 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
         IOTC_LOGE("get server id err ret=%d", ret);
         return ret;
     }
-    param.value = AdapterCalloc(1, IOTC_ADPT_BLE_GATT_READ_BUF_SIZE);
+    param.value = IotcCalloc(1, IOTC_ADPT_BLE_GATT_READ_BUF_SIZE);
     if (param.value == NULL) {
         (void)IotcBleSendGattsResponse(&param);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -578,7 +578,7 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
     IotcAdptBleGattReadFunc func = FindAttrHandleReadFunc(attrHandle);
     if (func == NULL) {
         IOTC_LOGE("no find read func");
-        AdapterFree(param.value);
+        IotcFree(param.value);
         param.value = NULL;
         (void)IotcBleSendGattsResponse(&param);
         return IOTC_ERROR;
@@ -587,7 +587,7 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
     ret = func(param.value, (uint32_t *)&param.valueLen);
     if ((ret != IOTC_OK) || (param.valueLen == 0)) {
         IOTC_LOGE("read err ret=%d, len=%d", ret, param.valueLen);
-        AdapterFree(param.value);
+        IotcFree(param.value);
         param.value = NULL;
         param.valueLen = 0;
         (void)IotcBleSendGattsResponse(&param);
@@ -596,11 +596,11 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
     ret = IotcBleSendGattsResponse(&param);
     if (ret != IOTC_OK) {
         IOTC_LOGE("response err ret=%d", ret);
-        AdapterFree(param.value);
+        IotcFree(param.value);
         param.value = NULL;
         return IOTC_ERROR;
     }
-    AdapterFree(param.value);
+    IotcFree(param.value);
     param.value = NULL;
     return IOTC_OK;
 }

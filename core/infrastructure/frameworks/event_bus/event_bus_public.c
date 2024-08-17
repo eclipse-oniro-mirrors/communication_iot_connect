@@ -56,7 +56,7 @@ static void ListenerEventBusCallback(uint32_t event, void *param, uint32_t len)
         }
 
         /* 将回调函数拷贝出来，避免在锁中执行 */
-        listeners = (IotcEventCallback *)AdapterCalloc(g_listenerNum, sizeof(IotcEventCallback));
+        listeners = (IotcEventCallback *)IotcCalloc(g_listenerNum, sizeof(IotcEventCallback));
         if (listeners == NULL) {
             IOTC_LOGW("calloc error %u", g_listenerNum);
             break;
@@ -77,7 +77,7 @@ static void ListenerEventBusCallback(uint32_t event, void *param, uint32_t len)
             listeners[i](event);
         }
     }
-    AdapterFree(listeners);
+    IotcFree(listeners);
 }
 
 int32_t IotcPublicEventListenerInit(void)
@@ -101,7 +101,7 @@ int32_t IotcRegPublicEventListener(IotcEventCallback listener)
     CHECK_RETURN_LOGW(g_listenerNum <= LISTENER_MAX_NUM, IOTC_SDK_AILIFE_COMM_ERR_EVENT_LISTENER_MAX,
         "event listener over size");
 
-    EventListenerNode *newNode = (EventListenerNode *)AdapterMalloc(sizeof(EventListenerNode));
+    EventListenerNode *newNode = (EventListenerNode *)IotcMalloc(sizeof(EventListenerNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -130,7 +130,7 @@ int32_t IotcUnregPublicEventListener(IotcEventCallback listener)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(curNode);
+        IotcFree(curNode);
         --g_listenerNum;
     }
 
@@ -147,7 +147,7 @@ int32_t IotcUnregAllPublicEventListener(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_listenerList) {
         EventListenerNode *curNode = CONTAINER_OF(item, EventListenerNode, node);
         LIST_REMOVE(item);
-        AdapterFree(curNode);
+        IotcFree(curNode);
     }
     g_listenerNum = 0;
     UtilsGlobalMutexUnlock();

@@ -28,9 +28,9 @@
 #define US_PER_MS       1000
 #endif
 
-AdapterTaskId *AdapterCreateTask(AdapterTaskParam *param)
+IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
 {
-    if ((param == NULL) || (param->func == NULL) || (param->prio > ADAPTER_TASK_PRIORITY_MAX) ||
+    if ((param == NULL) || (param->func == NULL) || (param->prio > IOTC_TASK_PRIORITY_MAX) ||
         (param->stackSize == 0)) {
         ADAPTER_LOGW("invalid param");
         return NULL;
@@ -50,10 +50,10 @@ AdapterTaskId *AdapterCreateTask(AdapterTaskParam *param)
     attr.priority = prioMap[param->prio];
     attr.stack_size = param->stackSize;
 
-    return (AdapterTaskId *)osThreadNew((osThreadFunc_t)param->func, param->arg, &attr);
+    return (IotcTaskId *)osThreadNew((osThreadFunc_t)param->func, param->arg, &attr);
 }
 
-int32_t AdapterSuspendTask(AdapterTaskId *id)
+int32_t IotcTaskSuspend(IotcTaskId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -68,7 +68,7 @@ int32_t AdapterSuspendTask(AdapterTaskId *id)
     return IOTC_OK;
 }
 
-int32_t AdapterResumeTask(AdapterTaskId *id)
+int32_t IotcTaskResume(IotcTaskId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -83,7 +83,7 @@ int32_t AdapterResumeTask(AdapterTaskId *id)
     return IOTC_OK;
 }
 
-void AdapterDeleteTask(AdapterTaskId *id)
+void IotcTaskDelete(IotcTaskId *id)
 {
     if (id == NULL) {
         return;
@@ -95,14 +95,14 @@ void AdapterDeleteTask(AdapterTaskId *id)
     }
 }
 
-AdapterTaskId *AdapterGetCurrentTaskId(void)
+IotcTaskId *IotcTaskGetCurrentTaskId(void)
 {
-    return (AdapterTaskId *)osThreadGetId();
+    return (IotcTaskId *)osThreadGetId();
 }
 
-AdapterMutexId *AdapterCreateMutex(void)
+IotcMutexId *IotcMutexCreate(void)
 {
-    return (AdapterMutexId *)osMutexNew(NULL);
+    return (IotcMutexId *)osMutexNew(NULL);
 }
 
 static inline uint32_t MsToTick(uint32_t ms)
@@ -114,7 +114,7 @@ static inline uint32_t MsToTick(uint32_t ms)
     return (uint32_t)tick;
 }
 
-int32_t AdapterLockMutex(AdapterMutexId *id, uint32_t ms)
+int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -133,7 +133,7 @@ int32_t AdapterLockMutex(AdapterMutexId *id, uint32_t ms)
     return IOTC_OK;
 }
 
-int32_t AdapterUnlockMutex(AdapterMutexId *id)
+int32_t IotcMutexUnlock(IotcMutexId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -148,7 +148,7 @@ int32_t AdapterUnlockMutex(AdapterMutexId *id)
     return IOTC_OK;
 }
 
-void AdapterDestroyMutex(AdapterMutexId *id)
+void IotcMutexDestroy(IotcMutexId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -161,13 +161,13 @@ void AdapterDestroyMutex(AdapterMutexId *id)
     }
 }
 
-AdapterSemId *AdapterCreateSem(uint32_t count)
+IotcSemId *IotcSemCreate(uint32_t count)
 {
     /* count为0是默认为二元信号量 */
-    return (AdapterSemId *)osSemaphoreNew(count > 0 ? count : 1, count, NULL);
+    return (IotcSemId *)osSemaphoreNew(count > 0 ? count : 1, count, NULL);
 }
 
-int32_t AdapterWaitSem(AdapterSemId *id, uint32_t ms)
+int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -186,7 +186,7 @@ int32_t AdapterWaitSem(AdapterSemId *id, uint32_t ms)
     return IOTC_ADAPTER_OS_ERR_WAIT_SEM;
 }
 
-int32_t AdapterPostSem(AdapterSemId *id)
+int32_t IotcSemPost(IotcSemId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -202,7 +202,7 @@ int32_t AdapterPostSem(AdapterSemId *id)
     return IOTC_OK;
 }
 
-uint32_t AdapterGetSemCount(AdapterSemId *id)
+uint32_t IotcSemGetCount(IotcSemId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -211,7 +211,7 @@ uint32_t AdapterGetSemCount(AdapterSemId *id)
     return osSemaphoreGetCount((osSemaphoreId_t)id);
 }
 
-void AdapterDestroySem(AdapterSemId *id)
+void IotcSemDestroy(IotcSemId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -224,18 +224,18 @@ void AdapterDestroySem(AdapterSemId *id)
     }
 }
 
-int32_t AdapterSleepMs(uint32_t ms)
+int32_t IotcSleepMs(uint32_t ms)
 {
     (void)osDelay(MsToTick(ms));
     return IOTC_OK;
 }
 
-void AdapterSchedYield(void)
+void IotcSchedYield(void)
 {
     (void)osThreadYield();
 }
 
-uint32_t AdapterGetSysTimeMs(void)
+uint32_t IotcGetSysTimeMs(void)
 {
     if (osKernelGetTickFreq() == 0) {
         ADAPTER_LOGW("invalid tick freq");
@@ -244,7 +244,7 @@ uint32_t AdapterGetSysTimeMs(void)
     return ((uint32_t)osKernelGetTickCount() * MS_PER_SECOND / osKernelGetTickFreq());
 }
 
-int32_t AdapterGetErrno(void)
+int32_t IotcGetErrno(void)
 {
     return errno;
 }

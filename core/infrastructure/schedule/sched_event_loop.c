@@ -42,7 +42,7 @@ EventLoop *GetSchedEventLoop(void)
     return g_wifiEventLoop;
 }
 
-AdapterTaskId *GetSchedEventLoopTaskId(void)
+IotcTaskId *GetSchedEventLoopTaskId(void)
 {
     return EventLoopGetTaskId(g_wifiEventLoop);
 }

@@ -50,7 +50,7 @@ int32_t UtilsJsonAddStrTable(IotcJson *json, const UtilsJsonStrItem *tbl, uint32
 
 int32_t UtilsJsonParseStrTable(IotcJson *json, UtilsJsonStrBufItem *tbl, uint32_t size);
 
-/* json使用AdapterMalloc分配内存打印，返回的指针必须使用AdapterFree释放 */
+/* json使用IotcMalloc分配内存打印，返回的指针必须使用IotcFree释放 */
 char *UtilsJsonPrintByMalloc(const IotcJson *json);
 
 IotcJson *UtilsJsonCreateKeyIntValue(const char *key, int32_t value);

@@ -35,7 +35,7 @@ bool IsM2mCloudBackoffTime(M2mCloudContext *ctx)
         return false;
     }
 
-    if (UtilsDeltaTime(AdapterGetSysTimeMs(), ctx->backoffInfo.before) >= ctx->backoffInfo.interval) {
+    if (UtilsDeltaTime(IotcGetSysTimeMs(), ctx->backoffInfo.before) >= ctx->backoffInfo.interval) {
         return false;
     }
     return true;
@@ -84,7 +84,7 @@ void M2mCloudBackoffUpdate(M2mCloudContext *ctx)
 
     uint32_t random = SecurityRandomUint32();
     ctx->backoffInfo.interval = (random % (max - min)) + min;
-    ctx->backoffInfo.before = AdapterGetSysTimeMs();
+    ctx->backoffInfo.before = IotcGetSysTimeMs();
     IOTC_LOGI("cloud backoff time update %u/%u/%u",
         ctx->backoffInfo.cnt, ctx->backoffInfo.interval, ctx->backoffInfo.before);
 }

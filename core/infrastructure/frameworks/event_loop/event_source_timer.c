@@ -104,7 +104,7 @@ static bool TimerSourcePrepare(EventSource *self, uint32_t *timeout)
         TimerNode *node = CONTAINER_OF(item, TimerNode, node);
         if (UTILS_IS_BIT_SET(node->bitMap, TIMER_SOURCE_BIT_MAP_DELETE)) {
             LIST_REMOVE(item);
-            AdapterFree(node);
+            IotcFree(node);
             continue;
         }
         *timeout = UTILS_MIN(*timeout, node->remainTime);
@@ -116,7 +116,7 @@ static bool TimerSourceCheck(EventSource *self)
 {
     CHECK_RETURN(self != NULL, false);
     EventSourceTimer *timer = (EventSourceTimer *)self;
-    uint32_t now = AdapterGetSysTimeMs();
+    uint32_t now = IotcGetSysTimeMs();
 
     bool ready = false;
     ListEntry *item = NULL;
@@ -170,13 +170,13 @@ static void TimerSourceFinalize(EventSource *self)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &timerSource->addList) {
         TimerNode *node = CONTAINER_OF(item, TimerNode, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 
     LIST_FOR_EACH_ITEM_SAFE(item, next, &timerSource->timerList) {
         TimerNode *node = CONTAINER_OF(item, TimerNode, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 
@@ -209,14 +209,14 @@ static void TimerNodeUpdate(TimerNode *node, EventSourceTimerType type, uint32_t
     node->type = type;
     node->interval = ms;
     node->remainTime = ms;
-    node->lastTime = AdapterGetSysTimeMs();
+    node->lastTime = IotcGetSysTimeMs();
     node->status = EVENT_SOURCE_TIMER_STATUS_RUNNING;
 }
 
 static TimerNode *TimerNodeNew(int32_t id, EventSourceTimerType type, EventSourceTimerCallback cb,
     uint32_t ms, void *userData)
 {
-    TimerNode *newNode = (TimerNode *)AdapterMalloc(sizeof(TimerNode));
+    TimerNode *newNode = (TimerNode *)IotcMalloc(sizeof(TimerNode));
     if (newNode == NULL) {
         return NULL;
     }
@@ -263,7 +263,7 @@ void EventSourceTimerRemove(EventSource *source, int32_t id)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
         return;
     }
 

@@ -50,7 +50,7 @@ uint32_t UtilsDeltaTime(uint32_t timeNew, uint32_t timeOld)
 uint16_t UtilsGetCurTaskIdShort(void)
 {
 #define TASK_ID_MOD_NUMBER 1000
-    return (long)AdapterGetCurrentTaskId() % TASK_ID_MOD_NUMBER;
+    return (long)IotcTaskGetCurrentTaskId() % TASK_ID_MOD_NUMBER;
 }
 
 uint16_t UtilsGetTaskIdShort(void *taskId)
@@ -208,7 +208,7 @@ char *UtilsStrDupWithLen(const char *str, uint32_t len)
     uint32_t curLen = strlen(ret);
     if (curLen != len) {
         IOTC_LOGW("str dup len not match %u/%u", curLen, len);
-        AdapterFree(ret);
+        IotcFree(ret);
         return NULL;
     }
     return ret;
@@ -220,12 +220,12 @@ uint8_t *UtilsMallocCopy(const uint8_t *data, uint32_t len)
         return NULL;
     }
 
-    uint8_t *ret = AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *ret = IotcCalloc(len, sizeof(uint8_t));
     if (ret == NULL) {
         return NULL;
     }
     if (memcpy_s(ret, len, data, len) != EOK) {
-        AdapterFree(ret);
+        IotcFree(ret);
         return NULL;
     }
     return ret;

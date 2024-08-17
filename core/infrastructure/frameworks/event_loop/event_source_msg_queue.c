@@ -163,7 +163,7 @@ int32_t EventSourceMsgQueueSend(EventSource *source, const uint8_t *msg, uint32_
     }
 
     uint32_t msgInfoLen = len + sizeof(EventSourceMsg);
-    EventSourceMsg *msgInfo = (EventSourceMsg *)AdapterMalloc(msgInfoLen);
+    EventSourceMsg *msgInfo = (EventSourceMsg *)IotcMalloc(msgInfoLen);
     if (msgInfo == NULL) {
         IOTC_LOGW("malloc error %u", msgInfoLen);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -174,13 +174,13 @@ int32_t EventSourceMsgQueueSend(EventSource *source, const uint8_t *msg, uint32_
     msgInfo->len = len;
     int32_t ret = memcpy_s(msgInfo->msg, len, msg, len);
     if (ret != EOK) {
-        AdapterFree(msgInfo);
+        IotcFree(msgInfo);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
     ret = UtilsMsgQueuePushMem(mqSource->msgQueue, (void **)&msgInfo, msgInfoLen, timeout);
     if (ret != IOTC_OK) {
-        AdapterFree(msgInfo);
+        IotcFree(msgInfo);
         IOTC_LOGW("msg push queue error %d/%u", ret, timeout);
         return ret;
     }

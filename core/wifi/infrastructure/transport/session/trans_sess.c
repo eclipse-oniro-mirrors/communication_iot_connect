@@ -50,7 +50,7 @@ MsgCor *MsgCorNew(SessMsgProcess handler, const char *comment, void *corData)
     if (handler == NULL) {
         return NULL;
     }
-    MsgCor *cor = AdapterMalloc(sizeof(MsgCor));
+    MsgCor *cor = IotcMalloc(sizeof(MsgCor));
     if (cor == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -77,7 +77,7 @@ TransSess *TransSessNew(TransLink *link, uint32_t msgSize, const char *name, voi
     if (link == NULL || msgSize == 0 || msgSize > TRANS_SESS_MSG_MAX_SIZE) {
         return NULL;
     }
-    TransSess *sess = (TransSess *)AdapterMalloc(sizeof(TransSess));
+    TransSess *sess = (TransSess *)IotcMalloc(sizeof(TransSess));
     if (sess == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -89,7 +89,7 @@ TransSess *TransSessNew(TransLink *link, uint32_t msgSize, const char *name, voi
     sess->msgSize = msgSize;
     sess->link = link;
     sess->name = name;
-    sess->msg = (uint8_t *)AdapterCalloc(msgSize, sizeof(uint8_t));
+    sess->msg = (uint8_t *)IotcCalloc(msgSize, sizeof(uint8_t));
     if (sess->msg == NULL) {
         TransSessFree(sess);
         return NULL;
@@ -115,16 +115,16 @@ void TransSessFree(TransSess *sess)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &sess->recvCor) {
         MsgCor *node = CONTAINER_OF(item, MsgCor, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
     LIST_FOR_EACH_ITEM_SAFE(item, next, &sess->sendCor) {
         MsgCor *node = CONTAINER_OF(item, MsgCor, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
     TransLinkUnregDataCallback(sess->link);
     UTILS_FREE_2_NULL(sess->msg);
-    AdapterFree(sess);
+    IotcFree(sess);
 }
 
 static void AddCorListHandler(TransSess *sess, SessMsgProcess handler, const char *comment, void *corData, CorType type)
@@ -196,7 +196,7 @@ void TransSessRemoveHandler(TransSess *sess, SessMsgProcess handler)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
     LIST_FOR_EACH_ITEM_SAFE(item, next, &sess->sendCor) {
         MsgCor *node = CONTAINER_OF(item, MsgCor, node);
@@ -204,7 +204,7 @@ void TransSessRemoveHandler(TransSess *sess, SessMsgProcess handler)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 

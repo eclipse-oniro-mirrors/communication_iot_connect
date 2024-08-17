@@ -73,7 +73,7 @@ bool UtilsExMutexLockInner(UtilsExMutex *mutex, uint32_t timeout, const char *fu
  * @param mutex [IN] 互斥锁
  * @return true成功false失败
  */
-#define UtilsExMutexLockAnyway(mutex) UtilsExMutexLockTimeout(mutex, ADAPTER_WAIT_FOREVER)
+#define UtilsExMutexLockAnyway(mutex) UtilsExMutexLockTimeout(mutex, IOTC_WAIT_FOREVER)
 
 /**
  * @brief 互斥锁解锁

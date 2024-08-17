@@ -45,7 +45,7 @@
 #endif
 #define NS_PER_US   1000
 
-AdapterTaskId *AdapterCreateTask(AdapterTaskParam *param)
+IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
 {
     if ((param == NULL) || (param->func == NULL) || (param->stackSize == 0)) {
         ADAPTER_LOGW("invalid param");
@@ -93,38 +93,38 @@ AdapterTaskId *AdapterCreateTask(AdapterTaskParam *param)
         return NULL;
     }
 
-    return (AdapterTaskId *)tid;
+    return (IotcTaskId *)tid;
 }
 
-int32_t AdapterSuspendTask(AdapterTaskId *id)
+int32_t IotcTaskSuspend(IotcTaskId *id)
 {
     (void)id;
     return IOTC_ERR_NOT_SUPPORT;
 }
 
-int32_t AdapterResumeTask(AdapterTaskId *id)
+int32_t IotcTaskResume(IotcTaskId *id)
 {
     (void)id;
     return IOTC_ERR_NOT_SUPPORT;
 }
 
-void AdapterDeleteTask(AdapterTaskId *id)
+void IotcTaskDelete(IotcTaskId *id)
 {
     (void)id;
     return;
 }
 
-AdapterTaskId *AdapterGetCurrentTaskId(void)
+IotcTaskId *IotcTaskGetCurrentTaskId(void)
 {
-    return (AdapterTaskId *)pthread_self();
+    return (IotcTaskId *)pthread_self();
 }
 
-AdapterMutexId *AdapterCreateMutex(void)
+IotcMutexId *IotcMutexCreate(void)
 {
 #if IOTC_CONF_MEM_DEBUG
     pthread_mutex_t *mutex = malloc(sizeof(pthread_mutex_t));
 #else
-    pthread_mutex_t *mutex = AdapterMalloc(sizeof(pthread_mutex_t));
+    pthread_mutex_t *mutex = IotcMalloc(sizeof(pthread_mutex_t));
 #endif
     if (mutex == NULL) {
         ADAPTER_LOGW("malloc error");
@@ -133,22 +133,22 @@ AdapterMutexId *AdapterCreateMutex(void)
 
     int32_t ret = pthread_mutex_init(mutex, NULL);
     if (ret != 0) {
-        AdapterFree(mutex);
+        IotcFree(mutex);
         ADAPTER_LOGW("pthread mutex init error %d", ret);
         return NULL;
     }
 
-    return (AdapterMutexId *)mutex;
+    return (IotcMutexId *)mutex;
 }
 
-int32_t AdapterLockMutex(AdapterMutexId *id, uint32_t ms)
+int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret;
-    if (ms == ADAPTER_WAIT_FOREVER) {
+    if (ms == IOTC_WAIT_FOREVER) {
         ret = pthread_mutex_lock((pthread_mutex_t *)id);
         if (ret != 0) {
             ADAPTER_LOGW("mutex lock error %d", ret);
@@ -186,7 +186,7 @@ int32_t AdapterLockMutex(AdapterMutexId *id, uint32_t ms)
     return IOTC_OK;
 }
 
-int32_t AdapterUnlockMutex(AdapterMutexId *id)
+int32_t IotcMutexUnlock(IotcMutexId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -202,7 +202,7 @@ int32_t AdapterUnlockMutex(AdapterMutexId *id)
     return IOTC_OK;
 }
 
-void AdapterDestroyMutex(AdapterMutexId *id)
+void IotcMutexDestroy(IotcMutexId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -216,14 +216,14 @@ void AdapterDestroyMutex(AdapterMutexId *id)
 #if IOTC_CONF_MEM_DEBUG
     free(id);
 #else
-    AdapterFree(id);
+    IotcFree(id);
 #endif
     return;
 }
 
-AdapterSemId *AdapterCreateSem(uint32_t count)
+IotcSemId *IotcSemCreate(uint32_t count)
 {
-    sem_t *sem = AdapterMalloc(sizeof(sem_t));
+    sem_t *sem = IotcMalloc(sizeof(sem_t));
     if (sem == NULL) {
         ADAPTER_LOGW("malloc error");
         return NULL;
@@ -231,15 +231,15 @@ AdapterSemId *AdapterCreateSem(uint32_t count)
 
     int32_t ret = sem_init(sem, 0, count);
     if (ret != 0) {
-        AdapterFree(sem);
+        IotcFree(sem);
         ADAPTER_LOGW("sem init error %d count %u", ret, count);
         return NULL;
     }
 
-    return (AdapterSemId *)sem;
+    return (IotcSemId *)sem;
 }
 
-int32_t AdapterWaitSem(AdapterSemId *id, uint32_t ms)
+int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -273,7 +273,7 @@ int32_t AdapterWaitSem(AdapterSemId *id, uint32_t ms)
     return IOTC_OK;
 }
 
-int32_t AdapterPostSem(AdapterSemId *id)
+int32_t IotcSemPost(IotcSemId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -289,7 +289,7 @@ int32_t AdapterPostSem(AdapterSemId *id)
     return IOTC_OK;
 }
 
-uint32_t AdapterGetSemCount(AdapterSemId *id)
+uint32_t IotcSemGetCount(IotcSemId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -304,7 +304,7 @@ uint32_t AdapterGetSemCount(AdapterSemId *id)
     return count;
 }
 
-void AdapterDestroySem(AdapterSemId *id)
+void IotcSemDestroy(IotcSemId *id)
 {
     if (id == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -315,11 +315,11 @@ void AdapterDestroySem(AdapterSemId *id)
     if (ret != 0) {
         ADAPTER_LOGW("sem release error %d", ret);
     }
-    AdapterFree(id);
+    IotcFree(id);
     return;
 }
 
-int32_t AdapterSleepMs(uint32_t ms)
+int32_t IotcSleepMs(uint32_t ms)
 {
     int32_t ret;
     struct timeval tv;
@@ -337,12 +337,12 @@ int32_t AdapterSleepMs(uint32_t ms)
     return IOTC_OK;
 }
 
-void AdapterSchedYield(void)
+void IotcSchedYield(void)
 {
     (void)sleep(0);
 }
 
-uint32_t AdapterGetSysTimeMs(void)
+uint32_t IotcGetSysTimeMs(void)
 {
     struct timespec ts;
     int32_t ret = clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -354,7 +354,7 @@ uint32_t AdapterGetSysTimeMs(void)
     return (uint32_t)(ts.tv_sec * MS_PER_SECOND + ts.tv_nsec / NS_PER_MS);
 }
 
-int32_t AdapterGetErrno(void)
+int32_t IotcGetErrno(void)
 {
     return errno;
 }

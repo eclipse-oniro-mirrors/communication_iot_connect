@@ -54,7 +54,7 @@ static int32_t MbedtlsEntropySourceCallback(void *data, unsigned char *output, s
 IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
 {
     /* 入参可以为空 */
-    DrbgContext *ctx = (DrbgContext *)AdapterMalloc(sizeof(DrbgContext));
+    DrbgContext *ctx = (DrbgContext *)IotcMalloc(sizeof(DrbgContext));
     if (ctx == NULL) {
         ADAPTER_LOGW("malloc err");
         return NULL;
@@ -100,7 +100,7 @@ void IotcDrbgDeinit(IotcDrbgContext *ctx)
 
     mbedtls_entropy_free(&((DrbgContext *)ctx)->entropy);
     mbedtls_ctr_drbg_free(&((DrbgContext *)ctx)->drbg);
-    AdapterFree(ctx);
+    IotcFree(ctx);
 }
 
 int32_t IotcDrbgRandom(IotcDrbgContext *ctx, uint8_t *out, uint32_t outLen)

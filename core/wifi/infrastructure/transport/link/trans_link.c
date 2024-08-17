@@ -44,7 +44,7 @@ TransLink *TransLinkNew(TransSocket *socket, UtilsBufferCtx *buffer, const char 
         IOTC_LOGW("param invalid");
         return NULL;
     }
-    TransLink *link = (TransLink *)AdapterMalloc(sizeof(TransLink));
+    TransLink *link = (TransLink *)IotcMalloc(sizeof(TransLink));
     if (link == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -68,7 +68,7 @@ void TransLinkFree(TransLink *link)
     TransSocketFree(link->socket);
     link->socket = NULL;
     IOTC_LOGD("link[%s] destroy", NON_NULL_STR(link->name));
-    AdapterFree(link);
+    IotcFree(link);
 }
 
 int32_t TransLinkRegErrorCallback(TransLink *link, OnLinkError cb, void *userData)

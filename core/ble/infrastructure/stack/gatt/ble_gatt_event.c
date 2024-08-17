@@ -88,16 +88,16 @@ static const GattEventToScheduleEvent EVENT_COVERT_MAP[] = {
 
 static void MsgFree(void *msg)
 {
-    /* AdapterFree may be macro when debug */
-    AdapterFree(msg);
+    /* IotcFree may be macro when debug */
+    IotcFree(msg);
 }
 
 static void ReqWriteMsgFree(void *msg)
 {
     IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)msg;
-    AdapterFree(eventParam->reqWrite.value);
+    IotcFree(eventParam->reqWrite.value);
     eventParam->reqWrite.value = NULL;
-    AdapterFree(msg);
+    IotcFree(msg);
 }
 
 static int32_t BleGattEventHandler(IotcAdptBleGattEvent gattEvent, const IotcAdptBleGattEventParam *param)
@@ -121,7 +121,7 @@ static int32_t BleGattEventHandler(IotcAdptBleGattEvent gattEvent, const IotcAdp
         msg.free = EVENT_COVERT_MAP[i].msgFree;
         int32_t ret = BleSchedMsgQueueSend(&msg, 0);
         if (ret != IOTC_OK) {
-            AdapterFree(eventParam);
+            IotcFree(eventParam);
             IOTC_LOGW("send msg error %d", ret);
             return ret;
         }
@@ -136,10 +136,10 @@ static void BleSendIndicateDataFree(void *param)
     CHECK_V_RETURN(param != NULL);
     BleIndicateParam *indParam = (BleIndicateParam *)param;
     if (indParam->value != NULL) {
-        AdapterFree(indParam->value);
+        IotcFree(indParam->value);
         indParam->value = NULL;
     }
-    AdapterFree(indParam);
+    IotcFree(indParam);
 }
 
 int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
@@ -148,14 +148,14 @@ int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
         IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    BleIndicateParam *param = AdapterCalloc(1, sizeof(BleIndicateParam));
+    BleIndicateParam *param = IotcCalloc(1, sizeof(BleIndicateParam));
     if (param == NULL) {
         IOTC_LOGE("malloc err");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     param->value = UtilsMallocCopy(value, valueLen);
     if (param->value == NULL) {
-        AdapterFree(param);
+        IotcFree(param);
         IOTC_LOGE("malloc err");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
@@ -169,8 +169,8 @@ int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     msg.free = BleSendIndicateDataFree;
     int32_t ret = BleSchedMsgQueueSend(&msg, 0);
     if (ret != IOTC_OK) {
-        AdapterFree(param->value);
-        AdapterFree(param);
+        IotcFree(param->value);
+        IotcFree(param);
         IOTC_LOGE("send msg err ret=%d", ret);
         return ret;
     }

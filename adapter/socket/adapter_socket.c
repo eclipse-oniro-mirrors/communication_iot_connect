@@ -44,12 +44,12 @@
 #define MAX_DNS_RES_NUM 10
 
 typedef struct AddrInfoInner {
-    AdapterAddrInfo hiAddr;
+    IotcAddrInfo hiAddr;
     struct addrinfo *addr;
 } AddrInfoInner;
 
 typedef struct {
-    AdapterSocketOption option;
+    IotcSocketOption option;
     int32_t (*setOptionFunc)(int32_t fd, const void *value, uint32_t len);
 } OptionItem;
 
@@ -59,21 +59,21 @@ typedef struct {
 } SocketTypePair;
 
 static const SocketTypePair AF_MAP[] = {
-    {ADAPTER_SOCKET_DOMAIN_AF_INET, AF_INET},
-    {ADAPTER_SOCKET_DOMAIN_AF_INET6, AF_INET6},
-    {ADAPTER_SOCKET_DOMAIN_UNSPEC, AF_UNSPEC},
+    {IOTC_SOCKET_DOMAIN_AF_INET, AF_INET},
+    {IOTC_SOCKET_DOMAIN_AF_INET6, AF_INET6},
+    {IOTC_SOCKET_DOMAIN_UNSPEC, AF_UNSPEC},
 };
 
 static const SocketTypePair AP_MAP[] = {
-    {ADAPTER_SOCKET_PROTO_IP, IPPROTO_IP},
-    {ADAPTER_SOCKET_PROTO_TCP, IPPROTO_TCP},
-    {ADAPTER_SOCKET_PROTO_UDP, IPPROTO_UDP},
+    {IOTC_SOCKET_PROTO_IP, IPPROTO_IP},
+    {IOTC_SOCKET_PROTO_TCP, IPPROTO_TCP},
+    {IOTC_SOCKET_PROTO_UDP, IPPROTO_UDP},
 };
 
 static const SocketTypePair AS_MAP[] = {
-    {ADAPTER_SOCKET_TYPE_STREAM, SOCK_STREAM},
-    {ADAPTER_SOCKET_TYPE_DGRAM, SOCK_DGRAM},
-    {ADAPTER_SOCKET_TYPE_RAW, SOCK_RAW},
+    {IOTC_SOCKET_TYPE_STREAM, SOCK_STREAM},
+    {IOTC_SOCKET_TYPE_DGRAM, SOCK_DGRAM},
+    {IOTC_SOCKET_TYPE_RAW, SOCK_RAW},
 };
 
 static int32_t AiFamily2Socket(int32_t af)
@@ -136,7 +136,7 @@ static int32_t Socket2AiSocket(int32_t as)
     return as;
 }
 
-static void GetAdapterAddrInfo(AdapterAddrInfo *out, struct addrinfo *in,
+static void GetIotcAddrInfo(IotcAddrInfo *out, struct addrinfo *in,
     int32_t level, int32_t maxLevel)
 {
     if ((level > maxLevel) || (in == NULL) || (out == NULL)) {
@@ -147,28 +147,28 @@ static void GetAdapterAddrInfo(AdapterAddrInfo *out, struct addrinfo *in,
     out->aiFamily = Socket2AiFamily(in->ai_family);
     out->aiProtocol = Socket2AiProtocal(in->ai_protocol);
     out->aiSocktype = Socket2AiSocket(in->ai_socktype);
-    out->aiAddr = (AdapterSockaddr *)in->ai_addr;
+    out->aiAddr = (IotcSockaddr *)in->ai_addr;
     out->aiCanonname = in->ai_canonname;
 
     if (in->ai_next != NULL) {
-        out->aiNext = (AdapterAddrInfo *)AdapterMalloc(sizeof(AdapterAddrInfo));
+        out->aiNext = (IotcAddrInfo *)IotcMalloc(sizeof(IotcAddrInfo));
         if (out->aiNext == NULL) {
             ADAPTER_LOGE("malloc error");
         } else {
-            (void)memset_s(out->aiNext, sizeof(AdapterAddrInfo), 0, sizeof(AdapterAddrInfo));
-            GetAdapterAddrInfo(out->aiNext, in->ai_next, level + 1, maxLevel);
+            (void)memset_s(out->aiNext, sizeof(IotcAddrInfo), 0, sizeof(IotcAddrInfo));
+            GetIotcAddrInfo(out->aiNext, in->ai_next, level + 1, maxLevel);
         }
     }
     return;
 }
 
-static void FreeAdapterAddrInfo(AdapterAddrInfo *addr)
+static void FreeIotcAddrInfo(IotcAddrInfo *addr)
 {
     if (addr->aiNext != NULL) {
-        FreeAdapterAddrInfo(addr->aiNext);
+        FreeIotcAddrInfo(addr->aiNext);
         addr->aiNext = NULL;
     }
-    AdapterFree(addr);
+    IotcFree(addr);
 }
 
 static void FreeAddrInfoInner(AddrInfoInner *addrInner)
@@ -177,28 +177,28 @@ static void FreeAddrInfoInner(AddrInfoInner *addrInner)
         freeaddrinfo(addrInner->addr);
         addrInner->addr = NULL;
     }
-    FreeAdapterAddrInfo((AdapterAddrInfo *)addrInner);
+    FreeIotcAddrInfo((IotcAddrInfo *)addrInner);
 }
 
-static AdapterAddrInfo *GetAddrInfoInner(struct addrinfo *addr)
+static IotcAddrInfo *GetAddrInfoInner(struct addrinfo *addr)
 {
     if (addr == NULL) {
         return NULL;
     }
-    AddrInfoInner *addrInner = (AddrInfoInner *)AdapterMalloc(sizeof(AddrInfoInner));
+    AddrInfoInner *addrInner = (AddrInfoInner *)IotcMalloc(sizeof(AddrInfoInner));
     if (addrInner == NULL) {
         ADAPTER_LOGE("malloc error");
         freeaddrinfo(addr);
         return NULL;
     }
     (void)memset_s(addrInner, sizeof(AddrInfoInner), 0, sizeof(AddrInfoInner));
-    GetAdapterAddrInfo(&addrInner->hiAddr, addr, 1, MAX_DNS_RES_NUM);
+    GetIotcAddrInfo(&addrInner->hiAddr, addr, 1, MAX_DNS_RES_NUM);
     addrInner->addr = addr;
-    return (AdapterAddrInfo *)addrInner;
+    return (IotcAddrInfo *)addrInner;
 }
 
-int32_t AdapterGetAddrInfo(const char *nodename, const char *servname,
-    const AdapterAddrInfo *hints, AdapterAddrInfo **result)
+int32_t IotcGetAddrInfo(const char *nodename, const char *servname,
+    const IotcAddrInfo *hints, IotcAddrInfo **result)
 {
     if ((nodename == NULL) || (result == NULL)) {
         ADAPTER_LOGE("invalid param");
@@ -210,7 +210,7 @@ int32_t AdapterGetAddrInfo(const char *nodename, const char *servname,
     struct addrinfo hintsInfo;
     ADAPTER_LOGD("get addinfo %s", nodename);
     if (hints != NULL) {
-        if (memcpy_s(&hintsInfo, sizeof(struct addrinfo), hints, sizeof(AdapterAddrInfo)) != EOK) {
+        if (memcpy_s(&hintsInfo, sizeof(struct addrinfo), hints, sizeof(IotcAddrInfo)) != EOK) {
             ADAPTER_LOGE("memcpy error");
             return IOTC_ERR_SECUREC_MEMCPY;
         }
@@ -230,7 +230,7 @@ int32_t AdapterGetAddrInfo(const char *nodename, const char *servname,
     return IOTC_OK;
 }
 
-void AdapterFreeAddrInfo(AdapterAddrInfo *addrInfo)
+void IotcFreeAddrInfo(IotcAddrInfo *addrInfo)
 {
     if (addrInfo == NULL) {
         ADAPTER_LOGE("invalid param");
@@ -240,7 +240,7 @@ void AdapterFreeAddrInfo(AdapterAddrInfo *addrInfo)
     return;
 }
 
-int32_t AdapterSocket(AdapterSocketDomain domain, AdapterSocketType type, AdapterSocketProto proto)
+int32_t IotcSocket(IotcSocketDomain domain, IotcSocketType type, IotcSocketProto proto)
 {
     int32_t af = AiFamily2Socket(domain);
     int32_t st = AiSocket2Socket(type);
@@ -249,7 +249,7 @@ int32_t AdapterSocket(AdapterSocketDomain domain, AdapterSocketType type, Adapte
     return socket(af, st, ap);
 }
 
-void AdapterClose(int32_t fd)
+void IotcClose(int32_t fd)
 {
     (void)close(fd);
     return;
@@ -352,11 +352,11 @@ static int32_t SetSocketOptionDisableReuseAddr(int32_t fd, const void *value, ui
 
 static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, bool isAdd)
 {
-    if (value == NULL || len < sizeof(AdapterSocketMultiAddr)) {
+    if (value == NULL || len < sizeof(IotcSocketMultiAddr)) {
         ADAPTER_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
-    AdapterSocketMultiAddr *addr = (AdapterSocketMultiAddr *)value;
+    IotcSocketMultiAddr *addr = (IotcSocketMultiAddr *)value;
     if (addr->local == NULL || addr->multi == NULL) {
         ADAPTER_LOGE("invalid ip");
         return IOTC_ERR_PARAM_INVALID;
@@ -364,13 +364,13 @@ static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, 
 
     struct ip_mreq group;
     (void)memset_s(&group, sizeof(struct ip_mreq), 0, sizeof(struct ip_mreq));
-    group.imr_multiaddr.s_addr = AdapterInetAddr(addr->multi);
-    group.imr_interface.s_addr = AdapterInetAddr(addr->local);
+    group.imr_multiaddr.s_addr = IotcInetAddr(addr->multi);
+    group.imr_interface.s_addr = IotcInetAddr(addr->local);
 
     int32_t flag = isAdd ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP;
     int32_t ret = setsockopt(fd, IPPROTO_IP, flag, (void *)&group, sizeof(group));
     if (ret != 0) {
-        ADAPTER_LOGE("set opt %d failed %d %d", flag, ret, AdapterGetSocketErrno(fd));
+        ADAPTER_LOGE("set opt %d failed %d %d", flag, ret, IotcGetSocketErrno(fd));
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -462,23 +462,23 @@ static int32_t SetSocketOptionReadBuffer(int32_t fd, const void *value, uint32_t
     return IOTC_OK;
 }
 
-int32_t AdapterSetSocketOpt(int32_t fd, AdapterSocketOption option, const void *value, uint32_t len)
+int32_t IotcSetSocketOpt(int32_t fd, IotcSocketOption option, const void *value, uint32_t len)
 {
     static const OptionItem optionList[] = {
-        {ADAPTER_SOCKET_OPTION_SETFL_BLOCK, SetSocketOptionBlock},
-        {ADAPTER_SOCKET_OPTION_SETFL_NONBLOCK, SetSocketOptionNonblock},
-        {ADAPTER_SOCKET_OPTION_READ_TIMEOUT, SetSocketOptionReadTimeout},
-        {ADAPTER_SOCKET_OPTION_SEND_TIMEOUT, SetSocketOptionSendTimeout},
-        {ADAPTER_SOCKET_OPTION_ENABLE_REUSEADDR, SetSocketOptionEnableReuseAddr},
-        {ADAPTER_SOCKET_OPTION_DISABLE_REUSEADDR, SetSocketOptionDisableReuseAddr},
-        {ADAPTER_SOCKET_OPTION_ADD_MULTI_GROUP, SetSocketOptionAddMultiGroup},
-        {ADAPTER_SOCKET_OPTION_DROP_MULTI_GROUP, SetSocketOptionDropMultiGroup},
-        {ADAPTER_SOCKET_OPTION_ENABLE_BROADCAST, SetSocketOptionEnableBroadcast},
-        {ADAPTER_SOCKET_OPTION_DISABLE_BROADCAST, SetSocketOptionDisableBroadcast},
-        {ADAPTER_SOCKET_OPTION_ENABLE_MULTI_LOOP, SetSocketOptionEnableMultiLoop},
-        {ADAPTER_SOCKET_OPTION_DISABLE_MULTI_LOOP, SetSocketOptionDisableMultiLoop},
-        {ADAPTER_SOCKET_OPTION_SEND_BUFFER, SetSocketOptionSendBuffer},
-        {ADAPTER_SOCKET_OPTION_READ_BUFFER, SetSocketOptionReadBuffer},
+        {IOTC_SOCKET_OPTION_SETFL_BLOCK, SetSocketOptionBlock},
+        {IOTC_SOCKET_OPTION_SETFL_NONBLOCK, SetSocketOptionNonblock},
+        {IOTC_SOCKET_OPTION_READ_TIMEOUT, SetSocketOptionReadTimeout},
+        {IOTC_SOCKET_OPTION_SEND_TIMEOUT, SetSocketOptionSendTimeout},
+        {IOTC_SOCKET_OPTION_ENABLE_REUSEADDR, SetSocketOptionEnableReuseAddr},
+        {IOTC_SOCKET_OPTION_DISABLE_REUSEADDR, SetSocketOptionDisableReuseAddr},
+        {IOTC_SOCKET_OPTION_ADD_MULTI_GROUP, SetSocketOptionAddMultiGroup},
+        {IOTC_SOCKET_OPTION_DROP_MULTI_GROUP, SetSocketOptionDropMultiGroup},
+        {IOTC_SOCKET_OPTION_ENABLE_BROADCAST, SetSocketOptionEnableBroadcast},
+        {IOTC_SOCKET_OPTION_DISABLE_BROADCAST, SetSocketOptionDisableBroadcast},
+        {IOTC_SOCKET_OPTION_ENABLE_MULTI_LOOP, SetSocketOptionEnableMultiLoop},
+        {IOTC_SOCKET_OPTION_DISABLE_MULTI_LOOP, SetSocketOptionDisableMultiLoop},
+        {IOTC_SOCKET_OPTION_SEND_BUFFER, SetSocketOptionSendBuffer},
+        {IOTC_SOCKET_OPTION_READ_BUFFER, SetSocketOptionReadBuffer},
     };
     for (uint32_t i = 0; i < (sizeof(optionList) / sizeof(OptionItem)); ++i) {
         if (option == optionList[i].option) {
@@ -489,7 +489,7 @@ int32_t AdapterSetSocketOpt(int32_t fd, AdapterSocketOption option, const void *
     return IOTC_ERR_NOT_SUPPORT;
 }
 
-int32_t AdapterBind(int32_t fd, const AdapterSockaddr *addr, uint32_t addrLen)
+int32_t IotcBind(int32_t fd, const IotcSockaddr *addr, uint32_t addrLen)
 {
     (void)addrLen;
     if (addr == NULL) {
@@ -505,7 +505,7 @@ int32_t AdapterBind(int32_t fd, const AdapterSockaddr *addr, uint32_t addrLen)
     return bind(fd, &addrIn, sizeof(struct sockaddr));
 }
 
-int32_t AdapterConnect(int32_t fd, const AdapterSockaddr *addr, uint32_t addrLen)
+int32_t IotcConnect(int32_t fd, const IotcSockaddr *addr, uint32_t addrLen)
 {
     (void)addrLen;
     if (addr == NULL) {
@@ -521,17 +521,17 @@ int32_t AdapterConnect(int32_t fd, const AdapterSockaddr *addr, uint32_t addrLen
     return connect(fd, &addrIn, sizeof(struct sockaddr));
 }
 
-int32_t AdapterRecv(int32_t fd, uint8_t *buf, uint32_t len)
+int32_t IotcRecv(int32_t fd, uint8_t *buf, uint32_t len)
 {
     return recv(fd, buf, len, MSG_DONTWAIT);
 }
 
-int32_t AdapterSend(int32_t fd, const uint8_t *buf, uint32_t len)
+int32_t IotcSend(int32_t fd, const uint8_t *buf, uint32_t len)
 {
     return send(fd, buf, len, MSG_DONTWAIT);
 }
 
-int32_t AdapterRecvFrom(int32_t fd, uint8_t *buf, uint32_t len, AdapterSockaddr *from, uint32_t *fromLen)
+int32_t IotcRecvFrom(int32_t fd, uint8_t *buf, uint32_t len, IotcSockaddr *from, uint32_t *fromLen)
 {
     if ((from == NULL) || (fromLen == NULL) || (buf == NULL)) {
         ADAPTER_LOGE("invalid param");
@@ -548,7 +548,7 @@ int32_t AdapterRecvFrom(int32_t fd, uint8_t *buf, uint32_t len, AdapterSockaddr 
     return ret;
 }
 
-int32_t AdapterSendTo(int32_t fd, const uint8_t *buf, uint32_t len, const AdapterSockaddr *to, uint32_t toLen)
+int32_t IotcSendTo(int32_t fd, const uint8_t *buf, uint32_t len, const IotcSockaddr *to, uint32_t toLen)
 {
     if ((to == NULL) || (buf == NULL)) {
         ADAPTER_LOGE("invalid param");
@@ -564,7 +564,7 @@ int32_t AdapterSendTo(int32_t fd, const uint8_t *buf, uint32_t len, const Adapte
     return sendto(fd, buf, len, 0, &addr, toLen);
 }
 
-static void GetFdSet(AdapterFdSet *set, fd_set *fdSet, int32_t *maxfd)
+static void GetFdSet(IotcFdSet *set, fd_set *fdSet, int32_t *maxfd)
 {
     if ((set == NULL) || (set->fdSet == NULL)) {
         return;
@@ -579,7 +579,7 @@ static void GetFdSet(AdapterFdSet *set, fd_set *fdSet, int32_t *maxfd)
     }
 }
 
-static void FdIsSet(AdapterFdSet *set, fd_set *fdSet)
+static void FdIsSet(IotcFdSet *set, fd_set *fdSet)
 {
     if (set == NULL) {
         return;
@@ -593,7 +593,7 @@ static void FdIsSet(AdapterFdSet *set, fd_set *fdSet)
     return;
 }
 
-int32_t AdapterSelect(AdapterFdSet *readSet, AdapterFdSet *writeSet, AdapterFdSet *exceptSet, uint32_t ms)
+int32_t IotcSelect(IotcFdSet *readSet, IotcFdSet *writeSet, IotcFdSet *exceptSet, uint32_t ms)
 {
     int32_t maxFd = -1;
     fd_set read, write, except;
@@ -616,7 +616,7 @@ int32_t AdapterSelect(AdapterFdSet *readSet, AdapterFdSet *writeSet, AdapterFdSe
     return ret;
 }
 
-int32_t AdapterGetSocketErrno(int32_t fd)
+int32_t IotcGetSocketErrno(int32_t fd)
 {
 #if defined(errno)
     if (fd < 0) {
@@ -632,48 +632,48 @@ int32_t AdapterGetSocketErrno(int32_t fd)
 
     switch (socketErr) {
         case EINTR:
-            return ADAPTER_SOCKET_ERRNO_EINTR;
+            return IOTC_SOCKET_ERRNO_EINTR;
         case EAGAIN:
-            return ADAPTER_SOCKET_ERRNO_EAGAIN;
+            return IOTC_SOCKET_ERRNO_EAGAIN;
         case EINPROGRESS:
-            return ADAPTER_SOCKET_ERRNO_EINPROGRESS;
+            return IOTC_SOCKET_ERRNO_EINPROGRESS;
         default:
             break;
     }
     return socketErr;
 }
 
-uint32_t AdapterHtonl(uint32_t hl)
+uint32_t IotcHtonl(uint32_t hl)
 {
     return htonl(hl);
 }
 
-uint32_t AdapterNtohl(uint32_t nl)
+uint32_t IotcNtohl(uint32_t nl)
 {
     return ntohl(nl);
 }
 
-uint16_t AdapterHtons(uint16_t hs)
+uint16_t IotcHtons(uint16_t hs)
 {
     return htons(hs);
 }
 
-uint16_t AdapterNtohs(uint16_t ns)
+uint16_t IotcNtohs(uint16_t ns)
 {
     return ntohs(ns);
 }
 
-int32_t AdapterInetAton(const char *ip, uint32_t *addr)
+int32_t IotcInetAton(const char *ip, uint32_t *addr)
 {
     return inet_aton(ip, (struct in_addr *)addr);
 }
 
-uint32_t AdapterInetAddr(const char *ip)
+uint32_t IotcInetAddr(const char *ip)
 {
     return inet_addr(ip);
 }
 
-const char *AdapterInetNtoa(uint32_t addr, char *buf, uint32_t buflen)
+const char *IotcInetNtoa(uint32_t addr, char *buf, uint32_t buflen)
 {
     struct in_addr tempAddr;
     tempAddr.s_addr = addr;

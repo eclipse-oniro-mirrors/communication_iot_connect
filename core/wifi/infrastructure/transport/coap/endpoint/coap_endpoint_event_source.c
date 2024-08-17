@@ -44,7 +44,7 @@ static bool CoapEndpointSourceCheck(EventSource *self)
     CHECK_RETURN(self != NULL, false);
     CoapEndpointEventSource *coapSource = (CoapEndpointEventSource *)self;
     CoapEndpoint *endpoint = coapSource->endpoint;
-    uint32_t now = AdapterGetSysTimeMs();
+    uint32_t now = IotcGetSysTimeMs();
     if (CoapEndpointRetransCheck(endpoint, now)) {
         return true;
     }

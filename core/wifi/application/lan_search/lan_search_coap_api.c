@@ -243,7 +243,7 @@ void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     if (ret != IOTC_OK || respMsg == NULL || respLen == 0) {
         IOTC_LOGW("speke process packet error %d/%u", ret, respLen);
         if (respMsg != NULL) {
-            AdapterFree(respMsg);
+            IotcFree(respMsg);
         }
         return;
     }
@@ -254,7 +254,7 @@ void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     UTILS_BIT_SET(sendMsg.bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN);
     sendMsg.peer = sessMsg->peer;
     LanSearchSendDataResp(endpoint, req, addr, &respPayload, &sendMsg);
-    AdapterFree(respMsg);
+    IotcFree(respMsg);
 }
 
 void LanSearchCoapCloudSetupHandler(CoapEndpoint *endpoint, const CoapPacket *req,

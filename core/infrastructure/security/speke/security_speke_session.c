@@ -70,7 +70,7 @@ SpekeSession *SpekeInitSession(SpekeType spekeType, const SpekeCallback *cb, voi
         return NULL;
     }
 
-    SpekeSession *session = (SpekeSession *)AdapterMalloc(sizeof(SpekeSession));
+    SpekeSession *session = (SpekeSession *)IotcMalloc(sizeof(SpekeSession));
     if (session == NULL) {
         IOTC_LOGE("Speke session malloc err");
         return NULL;
@@ -125,7 +125,7 @@ void SpekeFreeSession(SpekeSession *session)
     }
 
     (void)memset_s(session, sizeof(SpekeSession), 0, sizeof(SpekeSession));
-    AdapterFree(session);
+    IotcFree(session);
 }
 
 int32_t SpekeStartSession(const SpekeSession *session, uint8_t **msg, uint32_t *len)
@@ -263,7 +263,7 @@ int32_t SpekeDecryptData(SpekeSession *session, const uint8_t *data, uint32_t da
     }
 
     uint32_t outDataLen = dataLen - SPEKE_ENC_DATA_MIN_LEN;
-    uint8_t *outData = (uint8_t *)AdapterMalloc(outDataLen);
+    uint8_t *outData = (uint8_t *)IotcMalloc(outDataLen);
     if (outData == NULL) {
         IOTC_LOGE("Speke decrypt malloc(%u) err", outDataLen);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -284,7 +284,7 @@ int32_t SpekeDecryptData(SpekeSession *session, const uint8_t *data, uint32_t da
     int32_t ret = IotcAesGcmDecrypt(&param, data + dataLen - GCM_TAG_LEN, GCM_TAG_LEN, outData);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke decrypt err:%d", ret);
-        AdapterFree(outData);
+        IotcFree(outData);
         return ret;
     }
 
@@ -303,7 +303,7 @@ int32_t SpekeEncryptData(SpekeSession *session, const uint8_t *data, uint32_t da
     }
 
     uint32_t outDataLen = dataLen + SPEKE_ENC_DATA_MIN_LEN;
-    uint8_t *outData = (uint8_t *)AdapterMalloc(outDataLen);
+    uint8_t *outData = (uint8_t *)IotcMalloc(outDataLen);
     if (outData == NULL) {
         IOTC_LOGE("Speke encrypt malloc(%u) err", outDataLen);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -313,7 +313,7 @@ int32_t SpekeEncryptData(SpekeSession *session, const uint8_t *data, uint32_t da
     int32_t ret = SecurityRandom(outData + GCM_VER_LEN, GCM_IV_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke encrypt gen iv err:%d", ret);
-        AdapterFree(outData);
+        IotcFree(outData);
         return ret;
     }
 
@@ -332,7 +332,7 @@ int32_t SpekeEncryptData(SpekeSession *session, const uint8_t *data, uint32_t da
         outData + GCM_VER_LEN + GCM_IV_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke encrypt err:%d", ret);
-        AdapterFree(outData);
+        IotcFree(outData);
         return ret;
     }
 

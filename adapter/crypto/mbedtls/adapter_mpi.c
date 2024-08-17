@@ -19,9 +19,9 @@
 #include "adapter_mem.h"
 #include "adapter_log.h"
 
-AdapterMpi *AdapterMpiInit(void)
+IotcMpi *IotcMpiInit(void)
 {
-    mbedtls_mpi *mpi = (mbedtls_mpi *)AdapterMalloc(sizeof(mbedtls_mpi));
+    mbedtls_mpi *mpi = (mbedtls_mpi *)IotcMalloc(sizeof(mbedtls_mpi));
     if (mpi == NULL) {
         ADAPTER_LOGW("malloc error");
         return NULL;
@@ -30,21 +30,21 @@ AdapterMpi *AdapterMpiInit(void)
     return mpi;
 }
 
-mbedtls_mpi *GetMbedtlsMpi(AdapterMpi *mpi)
+mbedtls_mpi *GetMbedtlsMpi(IotcMpi *mpi)
 {
     return mpi;
 }
 
-void AdapterMpiFree(AdapterMpi *mpi)
+void IotcMpiFree(IotcMpi *mpi)
 {
     if (mpi == NULL) {
         return;
     }
     mbedtls_mpi_free(GetMbedtlsMpi(mpi));
-    AdapterFree(mpi);
+    IotcFree(mpi);
 }
 
-int32_t AdapterMpiExpMod(AdapterMpi *x, AdapterMpi *a, AdapterMpi *e, AdapterMpi *n)
+int32_t IotcMpiExpMod(IotcMpi *x, IotcMpi *a, IotcMpi *e, IotcMpi *n)
 {
     if ((x == NULL) || (a == NULL) || (e == NULL) || (n == NULL)) {
         ADAPTER_LOGW("invalid param");
@@ -58,7 +58,7 @@ int32_t AdapterMpiExpMod(AdapterMpi *x, AdapterMpi *a, AdapterMpi *e, AdapterMpi
     return IOTC_OK;
 }
 
-int32_t AdapterMpiCmpInt(AdapterMpi *x, int64_t z)
+int32_t IotcMpiCmpInt(IotcMpi *x, int64_t z)
 {
     if (x == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -68,7 +68,7 @@ int32_t AdapterMpiCmpInt(AdapterMpi *x, int64_t z)
     return mbedtls_mpi_cmp_int(GetMbedtlsMpi(x), z);
 }
 
-int32_t AdapterMpiSubInt(AdapterMpi *x, AdapterMpi *a, int64_t b)
+int32_t IotcMpiSubInt(IotcMpi *x, IotcMpi *a, int64_t b)
 {
     if ((x == NULL) || (a == NULL)) {
         ADAPTER_LOGW("invalid param");
@@ -82,7 +82,7 @@ int32_t AdapterMpiSubInt(AdapterMpi *x, AdapterMpi *a, int64_t b)
     return IOTC_OK;
 }
 
-int32_t AdapterMpiCmpMpi(AdapterMpi *x, AdapterMpi *y)
+int32_t IotcMpiCmpMpi(IotcMpi *x, IotcMpi *y)
 {
     if ((x == NULL) || (y == NULL)) {
         ADAPTER_LOGW("invalid param");
@@ -91,7 +91,7 @@ int32_t AdapterMpiCmpMpi(AdapterMpi *x, AdapterMpi *y)
     return mbedtls_mpi_cmp_mpi(GetMbedtlsMpi(x), GetMbedtlsMpi(y));
 }
 
-int32_t AdapterMpiReadString(AdapterMpi *mpi, uint8_t radix, const char *s)
+int32_t IotcMpiReadString(IotcMpi *mpi, uint8_t radix, const char *s)
 {
     /* 2和16代表进制 */
     if ((mpi == NULL) || (s == NULL) || (radix < 2) || (radix > 16)) {
@@ -106,7 +106,7 @@ int32_t AdapterMpiReadString(AdapterMpi *mpi, uint8_t radix, const char *s)
     return IOTC_OK;
 }
 
-int32_t AdapterMpiWriteString(AdapterMpi *mpi, uint8_t radix, char *buf, uint32_t *bufLen)
+int32_t IotcMpiWriteString(IotcMpi *mpi, uint8_t radix, char *buf, uint32_t *bufLen)
 {
     /* 2和16代表进制*/
     if ((mpi == NULL) || (buf == NULL) || (radix < 2) || (radix > 16) || (bufLen == NULL) ||
@@ -124,7 +124,7 @@ int32_t AdapterMpiWriteString(AdapterMpi *mpi, uint8_t radix, char *buf, uint32_
     return IOTC_OK;
 }
 
-int32_t AdapterMpiReadBinary(AdapterMpi *mpi, const uint8_t *buf, uint32_t bufLen)
+int32_t IotcMpiReadBinary(IotcMpi *mpi, const uint8_t *buf, uint32_t bufLen)
 {
     if ((mpi == NULL) || (buf == NULL) || (bufLen == 0)) {
         ADAPTER_LOGW("invalid param");
@@ -138,7 +138,7 @@ int32_t AdapterMpiReadBinary(AdapterMpi *mpi, const uint8_t *buf, uint32_t bufLe
     return IOTC_OK;
 }
 
-int32_t AdapterMpiWriteBinary(AdapterMpi *mpi, uint8_t *buf, uint32_t bufLen)
+int32_t IotcMpiWriteBinary(IotcMpi *mpi, uint8_t *buf, uint32_t bufLen)
 {
     if ((mpi == NULL) || (buf == NULL) || (bufLen == 0)) {
         ADAPTER_LOGW("invalid param");

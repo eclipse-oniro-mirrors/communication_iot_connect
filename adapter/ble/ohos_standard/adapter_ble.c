@@ -434,14 +434,14 @@ static void RequestWriteCb(BtReqWriteCbPara writeCbPara)
     eventParam.reqWrite.connId =writeCbPara.connId;
     eventParam.reqWrite.attrHandle = writeCbPara.attrHandle;
     eventParam.reqWrite.transId = writeCbPara.transId;
-    eventParam.reqWrite.value = AdapterMalloc(writeCbPara.length);
+    eventParam.reqWrite.value = IotcMalloc(writeCbPara.length);
     if (eventParam.reqWrite.value == NULL) {
         ADAPTER_LOGE("malloc err len=%d", writeCbPara.length);
         return;
     }
     if (memcpy_s(eventParam.reqWrite.value, writeCbPara.length, writeCbPara.value, writeCbPara.length) != EOK) {
         ADAPTER_LOGE("memcpy_s err len=%d", writeCbPara.length);
-        AdapterFree(eventParam.reqWrite.value);
+        IotcFree(eventParam.reqWrite.value);
         eventParam.reqWrite.value = NULL;
         return;
     }
@@ -449,7 +449,7 @@ static void RequestWriteCb(BtReqWriteCbPara writeCbPara)
     if (g_gattEventHandler != NULL &&
         g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_REQ_WRITE, &eventParam) != IOTC_OK) {
         ADAPTER_LOGE("doing gatt event");
-        AdapterFree(eventParam.reqWrite.value);
+        IotcFree(eventParam.reqWrite.value);
         eventParam.reqWrite.value = NULL;
         return;
     }
@@ -479,7 +479,7 @@ static int32_t WaitStartAdvResult(int32_t advId)
                 return (g_advStartResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;
@@ -511,7 +511,7 @@ static int32_t WaitStopAdvResult(int32_t advId)
                 return (g_advStopResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;
@@ -597,7 +597,7 @@ static int32_t WaitRegGattAppResult(void)
                 return (g_regGattAppResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;
@@ -638,7 +638,7 @@ static int32_t WaitAddGattServiceResult(IotcAdptBleGattService *svc)
                 return (g_addGattSvcResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;
@@ -681,7 +681,7 @@ static int32_t WaitAddGattCharResult(IotcAdptBleGattService *svc, IotcAdptBleGat
                 return (g_addGattCharResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;
@@ -722,7 +722,7 @@ static int32_t WaitAddGattDescResult(IotcAdptBleGattService *svc, IotcAdptBleGat
                 return (g_addGattDescResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;
@@ -753,7 +753,7 @@ static int32_t WaitAddGattConfigDescResult(IotcAdptBleGattService *svc)
                 return (g_addGattDescResult.status == OHOS_BT_STATUS_SUCCESS) ? IOTC_OK : IOTC_ERROR;
             }
         }
-        AdapterSleepMs(BLE_CB_WAIT_SLEEP_MS);
+        IotcSleepMs(BLE_CB_WAIT_SLEEP_MS);
         waitMs += BLE_CB_WAIT_SLEEP_MS;
     }
     return IOTC_ERROR;

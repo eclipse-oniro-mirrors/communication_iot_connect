@@ -54,9 +54,9 @@ static void ReportAfterGetCmdExecutorCallback(void *userData)
         IotcJsonDelete(param->dataArray);
     }
     if (param->userData != NULL) {
-        AdapterFree(param->userData);
+        IotcFree(param->userData);
     }
-    AdapterFree(param);
+    IotcFree(param);
 }
 
 static int32_t E2eCtrlMsgGetProcess(const IotcJson *dataJsonArray,
@@ -73,7 +73,7 @@ static int32_t E2eCtrlMsgGetProcess(const IotcJson *dataJsonArray,
         return IOTC_CORE_WIFI_E2E_CTL_ERR_GET_CHAR_NO_DATA;
     }
 
-    E2eCtlAsyncReportParam *asyncParam = (E2eCtlAsyncReportParam *)AdapterMalloc(sizeof(E2eCtlAsyncReportParam));
+    E2eCtlAsyncReportParam *asyncParam = (E2eCtlAsyncReportParam *)IotcMalloc(sizeof(E2eCtlAsyncReportParam));
     if (asyncParam == NULL) {
         IOTC_LOGW("malloc error");
         IotcJsonDelete(reportJsonArray);
@@ -88,7 +88,7 @@ static int32_t E2eCtrlMsgGetProcess(const IotcJson *dataJsonArray,
         if (asyncParam->userData == NULL) {
             IOTC_LOGW("clone error %u", userDataLen);
             IotcJsonDelete(reportJsonArray);
-            AdapterFree(asyncParam);
+            IotcFree(asyncParam);
             return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
         }
     }
@@ -98,9 +98,9 @@ static int32_t E2eCtrlMsgGetProcess(const IotcJson *dataJsonArray,
         IOTC_LOGW("async report exec error %d", ret);
         IotcJsonDelete(reportJsonArray);
         if (asyncParam->userData != NULL) {
-            AdapterFree(asyncParam->userData);
+            IotcFree(asyncParam->userData);
         }
-        AdapterFree(asyncParam);
+        IotcFree(asyncParam);
         return ret;
     }
     return IOTC_OK;

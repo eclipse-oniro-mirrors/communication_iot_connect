@@ -31,7 +31,7 @@ typedef struct {
 } LoopNode;
 
 struct MainLoopCtx {
-    AdapterSemId *stop;
+    IotcSemId *stop;
     ListEntry loopList;
 } g_mainLoopCtx;
 
@@ -45,7 +45,7 @@ int32_t FwkMainLoopInit(void)
 void FwkMainLoopDeinit(void)
 {
     if (g_mainLoopCtx.stop != NULL) {
-        AdapterDestroySem(g_mainLoopCtx.stop);
+        IotcSemDestroy(g_mainLoopCtx.stop);
         g_mainLoopCtx.stop = NULL;
     }
     ListEntry *item = NULL;
@@ -53,7 +53,7 @@ void FwkMainLoopDeinit(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_mainLoopCtx.loopList) {
         LoopNode *node = CONTAINER_OF(item, LoopNode, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 
@@ -79,20 +79,20 @@ static void LoopTask(void *param)
         if (memcmp(loop, &node->loop, sizeof(FwkLoop)) == 0) {
             isTask = node->taskFlag;
             LIST_REMOVE(item);
-            AdapterFree(node);
+            IotcFree(node);
             break;
         }
     }
     /* 最后一个任务退出时如果非主线程则使用信号量通知主线程，通知后变量loop被释放不可用 */
     if (LIST_EMPTY(&g_mainLoopCtx.loopList) && g_mainLoopCtx.stop != NULL) {
-        ret = AdapterPostSem(g_mainLoopCtx.stop);
+        ret = IotcSemPost(g_mainLoopCtx.stop);
         if (ret != IOTC_OK) {
             IOTC_LOGW("post stop sem error %d", ret);
         }
     }
     UtilsGlobalMutexUnlock();
     if (isTask) {
-        AdapterDeleteTask(NULL);
+        IotcTaskDelete(NULL);
     }
 }
 
@@ -101,7 +101,7 @@ int32_t FwkMainLoopReg(const FwkLoop *loop)
     CHECK_RETURN(loop != NULL && loop->entry != NULL && loop->exit != NULL && loop->name != NULL,
         IOTC_ERR_PARAM_INVALID);
 
-    LoopNode *newNode = (LoopNode *)AdapterMalloc(sizeof(LoopNode));
+    LoopNode *newNode = (LoopNode *)IotcMalloc(sizeof(LoopNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -109,12 +109,12 @@ int32_t FwkMainLoopReg(const FwkLoop *loop)
     (void)memset_s(newNode, sizeof(LoopNode), 0, sizeof(LoopNode));
     int32_t ret = memcpy_s(&newNode->loop, sizeof(FwkLoop), loop, sizeof(FwkLoop));
     if (ret != EOK) {
-        AdapterFree(newNode);
+        IotcFree(newNode);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
     if (!UtilsGlobalMutexLock()) {
-        AdapterFree(newNode);
+        IotcFree(newNode);
         return IOTC_ERR_TIMEOUT;
     }
 
@@ -134,7 +134,7 @@ static FwkLoop *GetLoopArray(uint32_t *cnt)
     if (*cnt == 0) {
         return NULL;
     }
-    FwkLoop *ret = (FwkLoop *)AdapterCalloc(*cnt, sizeof(FwkLoop));
+    FwkLoop *ret = (FwkLoop *)IotcCalloc(*cnt, sizeof(FwkLoop));
     if (ret == NULL) {
         IOTC_LOGW("calloc error");
         return NULL;
@@ -145,7 +145,7 @@ static FwkLoop *GetLoopArray(uint32_t *cnt)
         LoopNode *curNode = CONTAINER_OF(item, LoopNode, node);
         error = memcpy_s(ret + index, sizeof(FwkLoop), &curNode->loop, sizeof(FwkLoop));
         if (error != EOK) {
-            AdapterFree(ret);
+            IotcFree(ret);
             return NULL;
         }
         if (index != 0) {
@@ -164,14 +164,14 @@ static void StartTaskForLoop(const FwkLoop *loops, uint32_t cnt, uint32_t taskSi
             continue;
         }
 
-        AdapterTaskParam task = {
+        IotcTaskParam task = {
             .arg = (void *)&loops[i],
             .func = LoopTask,
             .name = loops[i].name,
-            .prio = ADAPTER_TASK_PRIORITY_MID,
+            .prio = IOTC_TASK_PRIORITY_MID,
             .stackSize = taskSize,
         };
-        AdapterTaskId *id = AdapterCreateTask(&task);
+        IotcTaskId *id = IotcTaskCreate(&task);
         if (id == NULL) {
             IOTC_LOGE("create loop task error %s/%u", task.name, task.stackSize);
         } else {
@@ -208,35 +208,35 @@ void FwkMainLoopEntry(uint32_t taskSize)
     }
     
     if (!UtilsGlobalMutexLock()) {
-        AdapterFree(loops);
+        IotcFree(loops);
         return;
     }
 
     if (LIST_EMPTY(&g_mainLoopCtx.loopList)) {
         UtilsGlobalMutexUnlock();
-        AdapterFree(loops);
+        IotcFree(loops);
         IOTC_LOGN("main loop exit no wait");
         return;
     }
 
     if (g_mainLoopCtx.stop != NULL) {
-        g_mainLoopCtx.stop = AdapterCreateSem(0);
+        g_mainLoopCtx.stop = IotcSemCreate(0);
     }
     UtilsGlobalMutexUnlock();
     if (g_mainLoopCtx.stop == NULL) {
         IOTC_LOGE("create sem error");
-        AdapterFree(loops);
+        IotcFree(loops);
         return;
     }
     /* 等待所有线程退出 */
-    int32_t ret = AdapterWaitSem(g_mainLoopCtx.stop, ADAPTER_WAIT_FOREVER);
+    int32_t ret = IotcSemWait(g_mainLoopCtx.stop, IOTC_WAIT_FOREVER);
     if (ret != IOTC_OK) {
         IOTC_LOGE("wait all task stop error %d", ret);
     } else {
         IOTC_LOGN("main loop exit");
     }
-    AdapterFree(loops);
-    AdapterDestroySem(g_mainLoopCtx.stop);
+    IotcFree(loops);
+    IotcSemDestroy(g_mainLoopCtx.stop);
     g_mainLoopCtx.stop = NULL;
     return;
 }
@@ -259,5 +259,5 @@ void FwkMainLoopExit(void)
             loops[i].exit(loops[i].userData);
         }
     }
-    AdapterFree(loops);
+    IotcFree(loops);
 }

@@ -28,7 +28,7 @@ extern "C" {
 
 mbedtls_md_type_t GetMbedtlsMdType(IotcMdType type);
 
-mbedtls_mpi *GetMbedtlsMpi(AdapterMpi *mpi);
+mbedtls_mpi *GetMbedtlsMpi(IotcMpi *mpi);
 
 bool IsMdLenValid(IotcMdType type, uint32_t len);
 

@@ -19,7 +19,7 @@
 #include "iotc_errcode.h"
 
 struct UtilsExMutex {
-    AdapterMutexId *mutexId;
+    IotcMutexId *mutexId;
     const char *func;
     uint32_t time;
     bool isLock;
@@ -28,7 +28,7 @@ struct UtilsExMutex {
 
 UtilsExMutex *UtilsCreateExMutex(void)
 {
-    UtilsExMutex *mutex = AdapterMalloc(sizeof(UtilsExMutex));
+    UtilsExMutex *mutex = IotcMalloc(sizeof(UtilsExMutex));
     if (mutex == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -37,7 +37,7 @@ UtilsExMutex *UtilsCreateExMutex(void)
     (void)memset_s(mutex, sizeof(UtilsExMutex), 0, sizeof(UtilsExMutex));
 
     mutex->func = "INIT";
-    mutex->mutexId = AdapterCreateMutex();
+    mutex->mutexId = IotcMutexCreate();
     if (mutex->mutexId != NULL) {
         return mutex;
     }
@@ -54,8 +54,8 @@ bool UtilsExMutexLockInner(UtilsExMutex *mutex, uint32_t timeout, const char *fu
         return false;
     }
 
-    int32_t ret = AdapterLockMutex(mutex->mutexId, timeout);
-    uint32_t curTime = AdapterGetSysTimeMs();
+    int32_t ret = IotcMutexLock(mutex->mutexId, timeout);
+    uint32_t curTime = IotcGetSysTimeMs();
     uint16_t curThread = UtilsGetCurTaskIdShort();
     if (ret != IOTC_OK) {
         /* 持有函数/持有时间/持有线程，当前函数/超时时间/当前线程 */
@@ -78,7 +78,7 @@ void UtilsExMutexUnlockInner(UtilsExMutex *mutex, const char *func)
         return;
     }
 
-    uint32_t curTime = AdapterGetSysTimeMs();
+    uint32_t curTime = IotcGetSysTimeMs();
     uint16_t curThread = UtilsGetCurTaskIdShort();
 
     if (!mutex->isLock) {
@@ -91,7 +91,7 @@ void UtilsExMutexUnlockInner(UtilsExMutex *mutex, const char *func)
     mutex->time = curTime;
     mutex->func = func;
     mutex->isLock = false;
-    int32_t ret = AdapterUnlockMutex(mutex->mutexId);
+    int32_t ret = IotcMutexUnlock(mutex->mutexId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("unlock error %s/%d", func, ret);
     }
@@ -106,7 +106,7 @@ void UtilsDestroyExMutex(UtilsExMutex **mutex)
     }
 
     if ((*mutex)->mutexId != NULL) {
-        AdapterDestroyMutex((*mutex)->mutexId);
+        IotcMutexDestroy((*mutex)->mutexId);
         (*mutex)->mutexId = NULL;
     }
 

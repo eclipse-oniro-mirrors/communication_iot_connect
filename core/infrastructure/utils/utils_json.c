@@ -112,18 +112,18 @@ int32_t UtilsGenErrcodeJsonStr(int32_t errcode, char **out, uint32_t *outLen)
 int32_t UtilsJsonAddHexify(IotcJson *json, const char *name, const uint8_t *input, uint32_t inputLen)
 {
     uint32_t dataLen = HEXIFY_LEN(inputLen) + 1;
-    char *data = (char *)AdapterCalloc(dataLen, sizeof(char));
+    char *data = (char *)IotcCalloc(dataLen, sizeof(char));
     if (data == NULL) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
 
     if (!UtilsHexify(input, inputLen, data, dataLen)) {
-        AdapterFree(data);
+        IotcFree(data);
         return IOTC_CORE_COMM_UTILS_ERR_HEXIFY;
     }
 
     int32_t ret = IotcJsonAddStr2Obj(json, name, data);
-    AdapterFree(data);
+    IotcFree(data);
     return ret;
 }
 

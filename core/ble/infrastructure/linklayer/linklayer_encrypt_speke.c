@@ -56,10 +56,10 @@ int32_t LinkLayerSpekeDecrypt(uint8_t *data, uint32_t *dataLen)
     ret = memcpy_s(data, *dataLen, decData, decDataLen);
     if (ret != EOK) {
         IOTC_LOGE("speke memcpy buffLen:%u, decDataLen:%u err", *dataLen, decDataLen);
-        AdapterFree(decData);
+        IotcFree(decData);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    AdapterFree(decData);
+    IotcFree(decData);
     if (decDataLen < *dataLen) {
         data[decDataLen] = 0;
     }

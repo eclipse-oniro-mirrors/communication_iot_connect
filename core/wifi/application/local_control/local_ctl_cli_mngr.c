@@ -34,12 +34,12 @@ static void LocalClientFree(LocalControlClient *cli)
     if (cli->appInfo.puuid != NULL) {
         DFX_ANONYMIZE_ID_STR(anonyPuuid, cli->appInfo.puuid);
         IOTC_LOGD("client free %s", anonyPuuid);
-        AdapterFree(cli->appInfo.puuid);
+        IotcFree(cli->appInfo.puuid);
         cli->appInfo.puuid = NULL;
     }
 
     (void)memset_s(&cli->sessInfo, sizeof(cli->sessInfo), 0, sizeof(cli->sessInfo));
-    AdapterFree(cli);
+    IotcFree(cli);
 }
 
 static void ClientHashMapFreeValue(void *value)
@@ -80,7 +80,7 @@ static void ClientExpireTimerCallback(int32_t id, void *userData)
 
     LocalControlContext *ctx = GetLocalCtlCtx();
     CHECK_V_RETURN_LOGE(ctx != NULL, "local ctl ctx null");
-    uint32_t curTime = AdapterGetSysTimeMs();
+    uint32_t curTime = IotcGetSysTimeMs();
 
     int32_t ret = UtilsHashMapIterate(ctx->clientManager.clientMap, ClientMapTraversalCheckExpire, ctx, curTime);
     if (ret != IOTC_OK) {
@@ -242,21 +242,21 @@ static bool LocalControlSessKeyCreate(LocalControlClient *client, const LocalCli
 
 static LocalControlClient *LocalControlClientNew(LocalControlContext *ctx, const LocalClientBuildParam *param)
 {
-    LocalControlClient *newCli = (LocalControlClient *)AdapterMalloc(sizeof(LocalControlClient));
+    LocalControlClient *newCli = (LocalControlClient *)IotcMalloc(sizeof(LocalControlClient));
     if (newCli == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
     }
     (void)memset_s(newCli, sizeof(LocalControlClient), 0, sizeof(LocalControlClient));
 
-    newCli->timeInfo.createTime = AdapterGetSysTimeMs();
+    newCli->timeInfo.createTime = IotcGetSysTimeMs();
     newCli->timeInfo.expireTime = ctx->config.clientExpireTime;
     newCli->sessInfo.recvSeq = SecurityRandomUint32() % UINT16_MAX;
     uint8_t sessId[LOCAL_CONTROL_SESS_ID_LEN] = {0};
     (void)SecurityRandom(sessId, sizeof(sessId));
     if (!UtilsHexify(sessId, sizeof(sessId), newCli->sessInfo.sessId, LOCAL_CONTROL_SESS_ID_STR_LEN)) {
         IOTC_LOGW("gen sess id error");
-        AdapterFree(newCli);
+        IotcFree(newCli);
         return NULL;
     }
     newCli->appInfo.addr = param->addr;
@@ -264,12 +264,12 @@ static LocalControlClient *LocalControlClientNew(LocalControlContext *ctx, const
     newCli->appInfo.puuid = UtilsStrDupWithLen(param->puuid, param->puuidLen);
     if (newCli->appInfo.puuid == NULL) {
         IOTC_LOGW("str dup error");
-        AdapterFree(newCli);
+        IotcFree(newCli);
         return NULL;
     }
 
     if (!LocalControlSessKeyCreate(newCli, param)) {
-        AdapterFree(newCli);
+        IotcFree(newCli);
         return NULL;
     }
 
@@ -339,7 +339,7 @@ static int32_t LocalControlClientInsert(LocalControlClient *client, LocalControl
 
         const char *earliestSessId = NULL;
         uint32_t maxLifeTime = 0;
-        uint32_t curTime = AdapterGetSysTimeMs();
+        uint32_t curTime = IotcGetSysTimeMs();
         (void)UtilsHashMapIterate(ctx->clientManager.clientMap, GetEarliestClientSessId,
             ctx, &earliestSessId, &maxLifeTime, curTime);
         if (earliestSessId == NULL) {

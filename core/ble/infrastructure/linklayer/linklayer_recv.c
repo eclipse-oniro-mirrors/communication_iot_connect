@@ -62,13 +62,13 @@ static void CachePkgDataFree(CachePkgData *pkgData)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &pkgData->subPkgList.subPkgs) {
         SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
         if (subPkg->buff != NULL) {
-            AdapterFree(subPkg->buff);
+            IotcFree(subPkg->buff);
         }
         LIST_REMOVE(&subPkg->node);
-        AdapterFree(subPkg);
+        IotcFree(subPkg);
     }
 
-    AdapterFree(pkgData);
+    IotcFree(pkgData);
 }
 
 void LinkLayerClearAllCachePkg(void)
@@ -85,7 +85,7 @@ void LinkLayerClearAllCachePkg(void)
 
 static void ClearTimeoutPkg(void)
 {
-    uint64_t curTime = AdapterGetSysTimeMs();
+    uint64_t curTime = IotcGetSysTimeMs();
 
     ListEntry *item;
     ListEntry *next;
@@ -124,17 +124,17 @@ static int32_t InsertSubPkg(SubPkgList *subPkgList, uint8_t pkgIdx, const uint8_
         }
     }
 
-    SubPkg *newSubPkg = (SubPkg *)AdapterCalloc(1, sizeof(SubPkg));
+    SubPkg *newSubPkg = (SubPkg *)IotcCalloc(1, sizeof(SubPkg));
     CHECK_RETURN(newSubPkg != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC);
 
-    newSubPkg->buff = (uint8_t *)AdapterCalloc(dataLen, sizeof(uint8_t));
+    newSubPkg->buff = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
     if (newSubPkg->buff == NULL) {
-        AdapterFree(newSubPkg);
+        IotcFree(newSubPkg);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
     if (memcpy_s(newSubPkg->buff, dataLen, data, dataLen) != EOK) {
-        AdapterFree(newSubPkg->buff);
-        AdapterFree(newSubPkg);
+        IotcFree(newSubPkg->buff);
+        IotcFree(newSubPkg);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     newSubPkg->buffLen = dataLen;
@@ -151,10 +151,10 @@ static int32_t InsertPkg(uint8_t token, uint8_t pkgNum, CachePkgData **cachePkgD
 {
     CHECK_RETURN(g_pkgList.size < PKG_MAX_NUM, IOTC_CORE_BLE_LL_ERR_POOL_FULL);
 
-    CachePkgData *pkgData = (CachePkgData *)AdapterCalloc(1, sizeof(CachePkgData));
+    CachePkgData *pkgData = (CachePkgData *)IotcCalloc(1, sizeof(CachePkgData));
     CHECK_RETURN(pkgData != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC);
 
-    pkgData->savedTime = AdapterGetSysTimeMs();
+    pkgData->savedTime = IotcGetSysTimeMs();
     pkgData->token = token;
     pkgData->pkgNum = pkgNum;
 
@@ -230,7 +230,7 @@ int32_t LinkLayerRecvMergePkgs(uint8_t token, uint8_t **outData, uint32_t *outDa
     CHECK_RETURN_LOGE(dataLen != 0, IOTC_CORE_BLE_LL_ERR_PKGLEN, "ll merge pkg with 0 len err");
 
     /* 合包补充结束符, 防止报文不带结束符 */
-    uint8_t *data = (uint8_t *)AdapterCalloc(dataLen + 1, sizeof(uint8_t));
+    uint8_t *data = (uint8_t *)IotcCalloc(dataLen + 1, sizeof(uint8_t));
     CHECK_RETURN(data != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC);
 
     uint8_t *curPtr = data;
@@ -240,14 +240,14 @@ int32_t LinkLayerRecvMergePkgs(uint8_t token, uint8_t **outData, uint32_t *outDa
         SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
         if (subPkg->buff == NULL) {
             IOTC_LOGE("ll merge sub pkg null err");
-            AdapterFree(data);
+            IotcFree(data);
             LIST_REMOVE(&pkgData->node);
             CachePkgDataFree(pkgData);
             g_pkgList.size--;
             return IOTC_CORE_BLE_LL_ERR_SUBPKG_NULL;
         }
         if (memcpy_s(curPtr, dataLen - curLen, subPkg->buff, subPkg->buffLen) != EOK) {
-            AdapterFree(data);
+            IotcFree(data);
             return IOTC_ERR_SECUREC_MEMCPY;
         }
         curPtr += subPkg->buffLen;

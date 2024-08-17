@@ -24,12 +24,12 @@
 #include "iotc_conf.h"
 #include "adapter_log.h"
 
-int32_t AdapterGetSoftApIp(char *buf, uint32_t len)
+int32_t IotcGetSoftApIp(char *buf, uint32_t len)
 {
-    return AdapterGetLocalIp(buf, len);
+    return IotcGetLocalIp(buf, len);
 }
 
-int32_t AdapterGetLocalIp(char *buf, uint32_t len)
+int32_t IotcGetLocalIp(char *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
         ADAPTER_LOGE("invalid param");
@@ -49,16 +49,16 @@ int32_t AdapterGetLocalIp(char *buf, uint32_t len)
     }
     isPrint = false;
 
-    const char *ip = AdapterInetNtoa(info.ipAddress, buf, len);
+    const char *ip = IotcInetNtoa(info.ipAddress, buf, len);
     if ((ip == NULL) || (ip[0] == '\0')) {
         return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
     }
     return IOTC_OK;
 }
 
-int32_t AdapterGetMacAddr(uint8_t *buf, uint32_t len)
+int32_t IotcGetMacAddr(uint8_t *buf, uint32_t len)
 {
-    if ((buf == NULL) || (len < ADAPTER_MAC_ADDRESS_LEN)) {
+    if ((buf == NULL) || (len < IOTC_MAC_ADDRESS_LEN)) {
         ADAPTER_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
@@ -71,20 +71,20 @@ int32_t AdapterGetMacAddr(uint8_t *buf, uint32_t len)
     return IOTC_OK;
 }
 
-AdapterNetworkState AdapterGetNetworkState(void)
+IotcNetworkState IotcGetNetworkState(void)
 {
     if (IsWifiActive() != WIFI_STA_ACTIVE) {
-        return ADAPTER_NETWORK_NOT_CONNECTED;
+        return IOTC_NETWORK_NOT_CONNECTED;
     }
     WifiLinkedInfo info;
     (void)memset_s(&info, sizeof(WifiLinkedInfo), 0, sizeof(WifiLinkedInfo));
     if (GetLinkedInfo(&info) != WIFI_SUCCESS) {
-        return ADAPTER_NETWORK_NOT_CONNECTED;
+        return IOTC_NETWORK_NOT_CONNECTED;
     }
-    return (AdapterNetworkState)info.connState;
+    return (IotcNetworkState)info.connState;
 }
 
-int32_t AdapterGetBroadcastAddr(char *buf, uint32_t len)
+int32_t IotcGetBroadcastAddr(char *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
         ADAPTER_LOGE("invalid param");
@@ -95,12 +95,12 @@ int32_t AdapterGetBroadcastAddr(char *buf, uint32_t len)
     WifiErrorCode ret = GetIpInfo(&ipInfo);
     if (ret != WIFI_SUCCESS) {
         ADAPTER_LOGE("get ip info error %d", ret);
-        return IOTC_ADAPTER_NETWORK_ERR_GET_BROADCAST_IP;
+        return IOTC_IOTC_NETWORK_ERR_GET_BROADCAST_IP;
     }
     uint32_t broadcastIp = (ipInfo.ipAddress & ipInfo.netMask) | (~ipInfo.netMask);
-    const char *ip = AdapterInetNtoa(broadcastIp, buf, len);
+    const char *ip = IotcInetNtoa(broadcastIp, buf, len);
     if ((ip == NULL) || (ip[0] == '\0')) {
-        return IOTC_ADAPTER_NETWORK_ERR_GET_BROADCAST_IP;
+        return IOTC_IOTC_NETWORK_ERR_GET_BROADCAST_IP;
     }
 #endif
     return IOTC_OK;

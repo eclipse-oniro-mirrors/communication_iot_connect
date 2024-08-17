@@ -40,7 +40,7 @@ static void AdvCtrlTimerCb(int32_t id, void *userData)
 
 static int32_t StartBleAdvTimer(uint32_t ms)
 {
-    g_advStartTime = AdapterGetSysTimeMs();
+    g_advStartTime = IotcGetSysTimeMs();
     g_advDuration = ms;
     if (ms == IOTC_BLE_ADV_ALWAYS) {
         return IOTC_OK;
@@ -172,7 +172,7 @@ int32_t BleAdvCtrlResume(void)
         return IOTC_OK;
     }
 
-    uint32_t delta = UtilsDeltaTime(AdapterGetSysTimeMs(), g_advStartTime);
+    uint32_t delta = UtilsDeltaTime(IotcGetSysTimeMs(), g_advStartTime);
     if (delta >= g_advDuration) {
         g_advDuration = 0;
         return IOTC_OK;

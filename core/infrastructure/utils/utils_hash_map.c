@@ -72,20 +72,20 @@ static uint32_t Hash(const uint8_t *key, uint32_t keyLen)
 static HashNode *CreateNode(const uint8_t *key, uint32_t keyLen, void *value)
 {
     /* 创建一个node节点 */
-    HashNode *node = (HashNode *)AdapterMalloc(sizeof(HashNode));
+    HashNode *node = (HashNode *)IotcMalloc(sizeof(HashNode));
     if (node == NULL) {
         return NULL;
     }
     (void)memset_s(node, sizeof(HashNode), 0, sizeof(HashNode));
-    uint8_t *keyCopy = (uint8_t *)AdapterMalloc(keyLen);
+    uint8_t *keyCopy = (uint8_t *)IotcMalloc(keyLen);
     if (keyCopy == NULL) {
-        AdapterFree(node);
+        IotcFree(node);
         return NULL;
     }
     (void)memset_s(keyCopy, keyLen, 0, keyLen);
     if (memcpy_s(keyCopy, keyLen, key, keyLen) != EOK) {
-        AdapterFree(node);
-        AdapterFree(keyCopy);
+        IotcFree(node);
+        IotcFree(keyCopy);
         return NULL;
     }
     node->key = keyCopy;
@@ -97,7 +97,7 @@ static HashNode *CreateNode(const uint8_t *key, uint32_t keyLen, void *value)
 
 static void HashMapMallocFree(void *ptr)
 {
-    AdapterFree(ptr);
+    IotcFree(ptr);
 }
 
 /**
@@ -114,7 +114,7 @@ HashMap *UtilsHashMapCreate(uint32_t n, const char *name, HashMapFreeValue freeV
         IOTC_LOGW("invalid param");
         return NULL;
     }
-    HashMap *hashMap = (HashMap *)AdapterMalloc(sizeof(HashMap));
+    HashMap *hashMap = (HashMap *)IotcMalloc(sizeof(HashMap));
     if (hashMap == NULL) {
         IOTC_LOGW("malloc hashMap failed");
         return NULL;
@@ -122,10 +122,10 @@ HashMap *UtilsHashMapCreate(uint32_t n, const char *name, HashMapFreeValue freeV
     (void)memset_s(hashMap, sizeof(HashMap), 0, sizeof(HashMap));
 
     uint32_t hashArrLen = n * sizeof(HashNode *);
-    hashMap->hashArr = (HashNode **)AdapterMalloc(hashArrLen);
+    hashMap->hashArr = (HashNode **)IotcMalloc(hashArrLen);
     if (hashMap->hashArr == NULL) {
         IOTC_LOGW("malloc hashMap hashArr failed");
-        AdapterFree(hashMap);
+        IotcFree(hashMap);
         return NULL;
     }
     (void)memset_s(hashMap->hashArr, hashArrLen, 0, hashArrLen);
@@ -139,8 +139,8 @@ HashMap *UtilsHashMapCreate(uint32_t n, const char *name, HashMapFreeValue freeV
     uint32_t cpLen = (nameLen > sizeof(hashMap->name) - 1) ? (sizeof(hashMap->name) - 1) : nameLen;
     if (memcpy_s(hashMap->name, sizeof(hashMap->name) - 1, name, cpLen) != EOK) {
         IOTC_LOGW("init hashMap name fail");
-        AdapterFree(hashMap->hashArr);
-        AdapterFree(hashMap);
+        IotcFree(hashMap->hashArr);
+        IotcFree(hashMap);
         return NULL;
     }
 
@@ -191,8 +191,8 @@ int32_t UtilsHashMapInsert(HashMap *hashMapId, const uint8_t *key, uint32_t keyL
                 IOTC_LOGW("Hashmap(%s) HashMapInsert keyLen=%u overwr", hashMap->name, keyLen);
                 hashMap->freeValue(temp->value);
                 temp->value = node->value;
-                AdapterFree(node->key);
-                AdapterFree(node);
+                IotcFree(node->key);
+                IotcFree(node);
                 return IOTC_OK;
             }
         }
@@ -257,9 +257,9 @@ void UtilsHashMapDelete(HashMap *hashMapId)
         while (temp != NULL) {
             prev = temp;
             temp = temp->next;
-            AdapterFree(prev->key);
+            IotcFree(prev->key);
             hashMap->freeValue(prev->value);
-            AdapterFree(prev);
+            IotcFree(prev);
         }
     }
 
@@ -298,9 +298,9 @@ int32_t UtilsHashMapRemove(HashMap *hashMapId, const uint8_t *key, uint32_t keyL
     /* 如果第一个就匹配中 */
     if ((temp->keyLen == keyLen) && (memcmp(temp->key, key, keyLen) == 0)) {
         hashMap->hashArr[index] = temp->next;
-        AdapterFree(temp->key);
+        IotcFree(temp->key);
         hashMap->freeValue(temp->value);
-        AdapterFree(temp);
+        IotcFree(temp);
         hashMap->size--;
         return IOTC_OK;
     }
@@ -310,9 +310,9 @@ int32_t UtilsHashMapRemove(HashMap *hashMapId, const uint8_t *key, uint32_t keyL
     while (temp != NULL) {
         if ((temp->keyLen == keyLen) && (memcmp(temp->key, key, keyLen) == 0)) {
             prev->next = temp->next;
-            AdapterFree(temp->key);
+            IotcFree(temp->key);
             hashMap->freeValue(temp->value);
-            AdapterFree(temp);
+            IotcFree(temp);
             hashMap->size--;
             return IOTC_OK;
         }
@@ -398,7 +398,7 @@ void UtilsHashMapDestroy(HashMap **hashMapIdAddr)
     }
     HashMap *hashMap = *hashMapIdAddr;
     UtilsHashMapDelete(hashMap);
-    AdapterFree(hashMap->hashArr);
-    AdapterFree(hashMap);
+    IotcFree(hashMap->hashArr);
+    IotcFree(hashMap);
     *hashMapIdAddr = NULL;
 }

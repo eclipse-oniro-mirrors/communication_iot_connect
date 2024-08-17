@@ -129,7 +129,7 @@ static void CloudTokenRefreshRespHandler(const CoapPacket *resp, const SocketAdd
 static int32_t CalcWaitTime(const M2mCloudContext *ctx, uint32_t *waitTime)
 {
     uint32_t expireTime = ctx->tokenInfo.timeout;
-    uint32_t passTime = UtilsDeltaTime(AdapterGetSysTimeMs(), ctx->tokenInfo.updateTime);
+    uint32_t passTime = UtilsDeltaTime(IotcGetSysTimeMs(), ctx->tokenInfo.updateTime);
     if (passTime >= expireTime || ctx->tokenInfo.cnt > TOKEN_MAX_REQ_TIME) {
         IOTC_LOGE("token timeout %u/%u/%u", expireTime, passTime, ctx->tokenInfo.cnt);
         return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_TOKEN_EXPIRE;
@@ -204,7 +204,7 @@ static int32_t UpdateCloudTokenInfo(M2mCloudContext *ctx, const CloudTokenInfo *
         return IOTC_ERR_SECUREC_MEMCPY;
     };
 
-    ctx->tokenInfo.updateTime = AdapterGetSysTimeMs();
+    ctx->tokenInfo.updateTime = IotcGetSysTimeMs();
     ctx->tokenInfo.timeout = token->timeout;
 
     ret = UpdateTokenRefreshTimer(ctx);

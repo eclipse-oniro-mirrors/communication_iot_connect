@@ -121,10 +121,10 @@ static int32_t ClientInitNegoCtx(const uint8_t *pinCode, uint32_t pinCodeLen,
     /* 客户端使用对端 salt 初始化协商上下文句柄 */
     NegoContext *negoCtx = NegoContextInit(pinCode, pinCodeLen, salt, saltLen, primeType);
     if (negoCtx == NULL) {
-        AdapterFree(salt);
+        IotcFree(salt);
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_NEGOCTX_INIT;
     }
-    AdapterFree(salt);
+    IotcFree(salt);
 
     uint8_t *remoteChallenge = NULL;
     uint32_t remoteChallengeLen = 0;
@@ -142,7 +142,7 @@ static int32_t ClientInitNegoCtx(const uint8_t *pinCode, uint32_t pinCodeLen,
         *negoContext = negoCtx;
     }
 
-    AdapterFree(remoteChallenge);
+    IotcFree(remoteChallenge);
     return ret;
 }
 
@@ -160,17 +160,17 @@ static int32_t InitNegoCtxFromPayload(const SpekeSession *session, const IotcJso
     NegoContext *negoCtx = NULL;
     ret = ClientInitNegoCtx(session->pinCode, session->pinCodeLen, payload, remotePubKeyLen, &negoCtx);
     if (ret != IOTC_OK) {
-        AdapterFree(remotePubKey);
+        IotcFree(remotePubKey);
         return ret;
     }
     ret = NegoContextGenSessionKey(negoCtx, remotePubKey, remotePubKeyLen);
     if (ret != IOTC_OK) {
-        AdapterFree(remotePubKey);
+        IotcFree(remotePubKey);
         NegoContextFree(negoCtx);
         return ret;
     }
 
-    AdapterFree(remotePubKey);
+    IotcFree(remotePubKey);
     *negoContext = negoCtx;
     return IOTC_OK;
 }
@@ -287,10 +287,10 @@ int32_t SpekeClientProcessCfm(SpekeProcessParam param, uint8_t **msg, uint32_t *
     }
     ret = NegoContextVerifyHmac(session->negoContext, remoteHmac, remoteHmacLen);
     if (ret != IOTC_OK) {
-        AdapterFree(remoteHmac);
+        IotcFree(remoteHmac);
         return ret;
     }
-    AdapterFree(remoteHmac);
+    IotcFree(remoteHmac);
 
     return NegoContextGenDataEncKey(session->negoContext, session->dataEncKey, sizeof(session->dataEncKey));
 }

@@ -19,11 +19,11 @@
 extern "C" {
 #endif
 
-#define ADAPTER_IP_STR_MAX_LEN 16
-#define ADAPTER_WIFI_SSID_MAX_LEN 32
-#define ADAPTER_WIFI_PWD_MAX_LEN 64
-#define ADAPTER_MAC_ADDRESS_LEN 6
-#define ADAPTER_WIFI_BSSID_LEN 6
+#define IOTC_IP_STR_MAX_LEN 16
+#define IOTC_WIFI_SSID_MAX_LEN 32
+#define IOTC_WIFI_PWD_MAX_LEN 64
+#define IOTC_MAC_ADDRESS_LEN 6
+#define IOTC_WIFI_BSSID_LEN 6
 
 #ifdef __cplusplus
 }

@@ -39,7 +39,7 @@ UtilsQueue *UtilsQueueCreate(uint32_t capacity, QueueFreeValue freeValue)
         return NULL;
     }
 
-    UtilsQueue *queue = (UtilsQueue *)AdapterMalloc(sizeof(UtilsQueue));
+    UtilsQueue *queue = (UtilsQueue *)IotcMalloc(sizeof(UtilsQueue));
     if (queue == NULL) {
         IOTC_LOGW("malloc");
         return NULL;
@@ -69,22 +69,22 @@ int32_t UtilsQueuePush(UtilsQueue *queue, const void *value, uint32_t valueLen)
         return IOTC_CORE_COMM_UTILS_ERR_QUEUE_FULL;
     }
 
-    QueueNode *newNode = (QueueNode *)AdapterMalloc(sizeof(QueueNode));
+    QueueNode *newNode = (QueueNode *)IotcMalloc(sizeof(QueueNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(newNode, sizeof(QueueNode), 0, sizeof(QueueNode));
-    newNode->value = AdapterMalloc(valueLen);
+    newNode->value = IotcMalloc(valueLen);
     if (newNode->value == NULL) {
         IOTC_LOGW("malloc");
-        AdapterFree(newNode);
+        IotcFree(newNode);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     if (memcpy_s(newNode->value, valueLen, value, valueLen) != EOK) {
         IOTC_LOGW("memcpy_s");
-        AdapterFree(newNode->value);
-        AdapterFree(newNode);
+        IotcFree(newNode->value);
+        IotcFree(newNode);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     newNode->valueLen = valueLen;
@@ -107,7 +107,7 @@ int32_t UtilsQueuePushMem(UtilsQueue *queue, void **value, uint32_t valueLen)
         return IOTC_CORE_COMM_UTILS_ERR_QUEUE_FULL;
     }
 
-    QueueNode *newNode = (QueueNode *)AdapterMalloc(sizeof(QueueNode));
+    QueueNode *newNode = (QueueNode *)IotcMalloc(sizeof(QueueNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -142,8 +142,8 @@ int32_t UtilsQueuePop(UtilsQueue *queue, void *value, uint32_t valueSize, uint32
     }
     *valueLen = node->valueLen;
     LIST_REMOVE(&node->list);
-    AdapterFree(node->value);
-    AdapterFree(node);
+    IotcFree(node->value);
+    IotcFree(node);
     queue->count--;
     IOTC_LOGI("queue pop success count=%u,capacity=%u,valueLen=%u,valueSize=%u",
         queue->count, queue->capacity, *valueLen, valueSize);
@@ -166,7 +166,7 @@ int32_t UtilsQueuePopMem(UtilsQueue *queue, void **value, uint32_t *valueLen)
     *valueLen = node->valueLen;
 
     LIST_REMOVE(&node->list);
-    AdapterFree(node);
+    IotcFree(node);
     queue->count--;
     IOTC_LOGI("queue pop success count=%u,capacity=%u,valueLen=%u",
         queue->count, queue->capacity, *valueLen);
@@ -207,10 +207,10 @@ void UtilsQueueDestroy(UtilsQueue **queueAddr)
         if (queue->freeValue != NULL) {
             queue->freeValue(node->value);
         }
-        AdapterFree(node->value);
-        AdapterFree(node);
+        IotcFree(node->value);
+        IotcFree(node);
     }
-    AdapterFree(queue);
+    IotcFree(queue);
     *queueAddr = NULL;
     IOTC_LOGI("queue destroy success");
 }

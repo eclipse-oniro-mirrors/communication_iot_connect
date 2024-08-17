@@ -21,67 +21,67 @@
 extern "C" {
 #endif
 
-#define ADAPTER_WAIT_FOREVER 0xFFFFFFFFU
+#define IOTC_WAIT_FOREVER 0xFFFFFFFFU
 
-typedef void AdapterTaskId;
+typedef void IotcTaskId;
 
-typedef void AdapterMutexId;
+typedef void IotcMutexId;
 
-typedef void AdapterSemId;
+typedef void IotcSemId;
 
-typedef void (*AdapterTaskEntryFunc)(void *arg);
+typedef void (*IotcTaskEntryFunc)(void *arg);
 
 typedef enum {
-    ADAPTER_TASK_PRIORITY_MIN = 0,
-    ADAPTER_TASK_PRIORITY_LOW,
-    ADAPTER_TASK_PRIORITY_MID,
-    ADAPTER_TASK_PRIORITY_HIGH,
-    ADAPTER_TASK_PRIORITY_MAX,
-} AdapterTaskPrio;
+    IOTC_TASK_PRIORITY_MIN = 0,
+    IOTC_TASK_PRIORITY_LOW,
+    IOTC_TASK_PRIORITY_MID,
+    IOTC_TASK_PRIORITY_HIGH,
+    IOTC_TASK_PRIORITY_MAX,
+} IotcTaskPrio;
 
-typedef struct AdapterTaskParam {
-    AdapterTaskEntryFunc func;
-    AdapterTaskPrio prio;
+typedef struct IotcTaskParam {
+    IotcTaskEntryFunc func;
+    IotcTaskPrio prio;
     uint32_t stackSize;
     void *arg;
     const char *name;
-} AdapterTaskParam;
+} IotcTaskParam;
 
-AdapterTaskId *AdapterCreateTask(AdapterTaskParam *param);
+IotcTaskId *IotcTaskCreate(IotcTaskParam *param);
 
-int32_t AdapterSuspendTask(AdapterTaskId *id);
+int32_t IotcTaskSuspend(IotcTaskId *id);
 
-int32_t AdapterResumeTask(AdapterTaskId *id);
+int32_t IotcTaskResume(IotcTaskId *id);
 
-void AdapterDeleteTask(AdapterTaskId *id);
+void IotcTaskDelete(IotcTaskId *id);
 
-AdapterTaskId *AdapterGetCurrentTaskId(void);
+IotcTaskId *IotcTaskGetCurrentTaskId(void);
 
-AdapterMutexId *AdapterCreateMutex(void);
+IotcMutexId *IotcMutexCreate(void);
 
-int32_t AdapterLockMutex(AdapterMutexId *id, uint32_t ms);
+int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms);
 
-int32_t AdapterUnlockMutex(AdapterMutexId *id);
+int32_t IotcMutexUnlock(IotcMutexId *id);
 
-void AdapterDestroyMutex(AdapterMutexId *id);
+void IotcMutexDestroy(IotcMutexId *id);
 
-AdapterSemId *AdapterCreateSem(uint32_t count);
+IotcSemId *IotcSemCreate(uint32_t count);
 
-int32_t AdapterWaitSem(AdapterSemId *id, uint32_t ms);
+int32_t IotcSemWait(IotcSemId *id, uint32_t ms);
 
-int32_t AdapterPostSem(AdapterSemId *id);
+int32_t IotcSemPost(IotcSemId *id);
 
-uint32_t AdapterGetSemCount(AdapterSemId *id);
+uint32_t IotcSemGetCount(IotcSemId *id);
 
-void AdapterDestroySem(AdapterSemId *id);
+void IotcSemDestroy(IotcSemId *id);
 
-int32_t AdapterSleepMs(uint32_t ms);
+int32_t IotcSleepMs(uint32_t ms);
 
-void AdapterSchedYield(void);
+void IotcSchedYield(void);
 
-uint32_t AdapterGetSysTimeMs(void);
+uint32_t IotcGetSysTimeMs(void);
 
-int32_t AdapterGetErrno(void);
+int32_t IotcGetErrno(void);
 
 #ifdef __cplusplus
 }

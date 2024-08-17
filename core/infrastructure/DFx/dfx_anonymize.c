@@ -197,12 +197,12 @@ int32_t DfxAnonymizeStr(const char *src, AnonymizeType type, char **dst)
     CHECK_RETURN_LOGW(src != NULL && IS_VALID_ANONYMIZE_TYPE(type) && dst != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
     uint32_t dstBufLen = strlen(src) + 1;
-    char *dstBuf = AdapterCalloc(1, dstBufLen);
+    char *dstBuf = IotcCalloc(1, dstBufLen);
     CHECK_RETURN_LOGW(dstBuf != NULL, IOTC_ADAPTER_MEM_ERR_MALLOC, "malloc failed");
     int32_t ret = DfxAnonymizeStrWithBuffer(src, type, dstBuf, dstBufLen);
     if (ret != IOTC_OK) {
         IOTC_LOGW("anonymize str err ret=%d", ret);
-        AdapterFree(dstBuf);
+        IotcFree(dstBuf);
         return ret;
     }
 

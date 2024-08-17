@@ -167,24 +167,24 @@ int32_t SpekeCommonAddDataToJson(IotcJson *target, const char *name, const uint8
     }
 
     uint32_t dataLen = HEXIFY_LEN(inputLen) + 1;
-    char *data = (char *)AdapterMalloc(dataLen);
+    char *data = (char *)IotcMalloc(dataLen);
     if (data == NULL) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(data, dataLen, 0, dataLen);
 
     if (!UtilsHexify(input, inputLen, data, dataLen)) {
-        AdapterFree(data);
+        IotcFree(data);
         return IOTC_CORE_COMM_UTILS_ERR_HEXIFY;
     }
 
     int32_t ret = IotcJsonAddStr2Obj(target, name, data);
     if (ret != IOTC_OK) {
-        AdapterFree(data);
+        IotcFree(data);
         return ret;
     }
 
-    AdapterFree(data);
+    IotcFree(data);
     return IOTC_OK;
 }
 
@@ -207,14 +207,14 @@ int32_t SpekeCommonParseDataFromJson(const IotcJson *src, const char *name, uint
     if (dataLen == 0) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
-    uint8_t *data = (uint8_t *)AdapterMalloc(dataLen);
+    uint8_t *data = (uint8_t *)IotcMalloc(dataLen);
     if (data == NULL) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(data, dataLen, 0, dataLen);
 
     if (!UtilsUnhexify(srcStr, strlen(srcStr), data, dataLen)) {
-        AdapterFree(data);
+        IotcFree(data);
         return IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY;
     }
 

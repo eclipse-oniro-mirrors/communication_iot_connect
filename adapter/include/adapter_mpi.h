@@ -22,22 +22,22 @@ extern "C" {
 #endif
 
 /** 标识多精度整数MPI */
-typedef void AdapterMpi;
+typedef void IotcMpi;
 
 /**
  * @brief 大数初始化
  *
  * @return 非NULL大数指针，NULL失败
- * @attention 返回的大数使用完毕调用AdapterMpiFree释放
+ * @attention 返回的大数使用完毕调用IotcMpiFree释放
  */
-AdapterMpi *AdapterMpiInit(void);
+IotcMpi *IotcMpiInit(void);
 
 /**
  * @brief 释放大数资源
  *
  * @param mpi [IN] 已初始化的MPI
  */
-void AdapterMpiFree(AdapterMpi *mpi);
+void IotcMpiFree(IotcMpi *mpi);
 
 /**
  * @brief 模指数运算 x = a^e mod n
@@ -48,7 +48,7 @@ void AdapterMpiFree(AdapterMpi *mpi);
  * @param n [IN] 模数，应为已初始化的MPI
  * @return 0表示成功，非0失败
  */
-int32_t AdapterMpiExpMod(AdapterMpi *x, AdapterMpi *a, AdapterMpi *e, AdapterMpi *n);
+int32_t IotcMpiExpMod(IotcMpi *x, IotcMpi *a, IotcMpi *e, IotcMpi *n);
 
 /**
  * @brief MPI与整数比较
@@ -60,7 +60,7 @@ int32_t AdapterMpiExpMod(AdapterMpi *x, AdapterMpi *a, AdapterMpi *e, AdapterMpi
  * @retval -1 x小于z
  * @retval 其他 失败
  */
-int32_t AdapterMpiCmpInt(AdapterMpi *x, int64_t z);
+int32_t IotcMpiCmpInt(IotcMpi *x, int64_t z);
 
 /**
  * @brief MPI与整数相减 x = a - b
@@ -70,7 +70,7 @@ int32_t AdapterMpiCmpInt(AdapterMpi *x, int64_t z);
  * @param b [IN] 减数
  * @return 0成功，非0失败
  */
-int32_t AdapterMpiSubInt(AdapterMpi *x, AdapterMpi *a, int64_t b);
+int32_t IotcMpiSubInt(IotcMpi *x, IotcMpi *a, int64_t b);
 
 /**
  * @brief 两个MPI比较大小
@@ -82,7 +82,7 @@ int32_t AdapterMpiSubInt(AdapterMpi *x, AdapterMpi *a, int64_t b);
  * @retval -1 x小于Y
  * @retval 其他 失败
  */
-int32_t AdapterMpiCmpMpi(AdapterMpi *x, AdapterMpi *y);
+int32_t IotcMpiCmpMpi(IotcMpi *x, IotcMpi *y);
 
 /**
  * @brief 从字符串读导入MPI
@@ -92,7 +92,7 @@ int32_t AdapterMpiCmpMpi(AdapterMpi *x, AdapterMpi *y);
  * @param s [IN] 待读取的字符串
  * @return 0成功，非0失败
  */
-int32_t AdapterMpiReadString(AdapterMpi *mpi, uint8_t radix, const char *s);
+int32_t IotcMpiReadString(IotcMpi *mpi, uint8_t radix, const char *s);
 
 /**
  * @brief 从MPI导出字符串
@@ -103,7 +103,7 @@ int32_t AdapterMpiReadString(AdapterMpi *mpi, uint8_t radix, const char *s);
  * @param bufLen [IN,OUT] 输入为输出缓冲区长度，输出为包括\0的字符串长度
  * @return 0成功，非0失败
  */
-int32_t AdapterMpiWriteString(AdapterMpi *mpi, uint8_t radix, char *buf, uint32_t *bufLen);
+int32_t IotcMpiWriteString(IotcMpi *mpi, uint8_t radix, char *buf, uint32_t *bufLen);
 
 /**
  * @brief 从无符号大端二进制数据导入MPI
@@ -113,7 +113,7 @@ int32_t AdapterMpiWriteString(AdapterMpi *mpi, uint8_t radix, char *buf, uint32_
  * @param bufLen [IN] 二进制数据长度
  * @return 0成功，非0失败
  */
-int32_t AdapterMpiReadBinary(AdapterMpi *mpi, const uint8_t *buf, uint32_t bufLen);
+int32_t IotcMpiReadBinary(IotcMpi *mpi, const uint8_t *buf, uint32_t bufLen);
 
 /**
  * @brief 从MPI导出无符号大端二进制数据
@@ -123,7 +123,7 @@ int32_t AdapterMpiReadBinary(AdapterMpi *mpi, const uint8_t *buf, uint32_t bufLe
  * @param bufLen [IN] 缓冲区长度
  * @return 0成功，非0失败
  */
-int32_t AdapterMpiWriteBinary(AdapterMpi *mpi, uint8_t *buf, uint32_t bufLen);
+int32_t IotcMpiWriteBinary(IotcMpi *mpi, uint8_t *buf, uint32_t bufLen);
 
 #ifdef __cplusplus
 }

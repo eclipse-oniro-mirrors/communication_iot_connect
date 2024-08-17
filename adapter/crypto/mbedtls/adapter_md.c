@@ -90,7 +90,7 @@ int32_t IotcHmacCalc(const IotcHmacParam *param, uint8_t *hmac, uint32_t hmacLen
 
 IotcMdContext *IotcMdInit(IotcMdType type)
 {
-    MdContext *ctx = (MdContext *)AdapterMalloc(sizeof(MdContext));
+    MdContext *ctx = (MdContext *)IotcMalloc(sizeof(MdContext));
     if (ctx == NULL) {
         ADAPTER_LOGW("malloc error");
         return NULL;
@@ -155,5 +155,5 @@ void IotcMdFree(IotcMdContext *ctx)
         return;
     }
     mbedtls_md_free(&((MdContext *)ctx)->mdCtx);
-    AdapterFree(ctx);
+    IotcFree(ctx);
 }

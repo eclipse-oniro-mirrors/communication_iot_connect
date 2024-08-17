@@ -23,27 +23,27 @@ extern "C" {
 #endif
 
 #if !IOTC_CONF_MEM_DEBUG
-void *AdapterMalloc(uint32_t size);
+void *IotcMalloc(uint32_t size);
 
-void *AdapterCalloc(uint32_t num, uint32_t size);
+void *IotcCalloc(uint32_t num, uint32_t size);
 
-void AdapterFree(void *pt);
+void IotcFree(void *pt);
 
 #else
 
-void *AdapterDebugMalloc(uint32_t size, const char *func, uint32_t line);
+void *IotcDebugMalloc(uint32_t size, const char *func, uint32_t line);
 
-void *AdapterDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t line);
+void *IotcDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t line);
 
-void AdapterDebugFree(void *pt, const char *func, uint32_t line);
+void IotcDebugFree(void *pt, const char *func, uint32_t line);
 
-void AdapterMemDump(void);
+void IotcMemDump(void);
 
-#define AdapterMalloc(size) AdapterDebugMalloc(size, __func__, __LINE__)
+#define IotcMalloc(size) IotcDebugMalloc(size, __func__, __LINE__)
 
-#define AdapterCalloc(num, size) AdapterDebugCalloc(num, size, __func__, __LINE__)
+#define IotcCalloc(num, size) IotcDebugCalloc(num, size, __func__, __LINE__)
 
-#define AdapterFree(size) AdapterDebugFree(size, __func__, __LINE__)
+#define IotcFree(size) IotcDebugFree(size, __func__, __LINE__)
 
 #endif
 

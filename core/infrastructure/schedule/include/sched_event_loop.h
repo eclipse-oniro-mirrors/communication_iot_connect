@@ -27,7 +27,7 @@ void SchedEventLoopDeinit(void);
 
 EventLoop *GetSchedEventLoop(void);
 
-AdapterTaskId *GetSchedEventLoopTaskId(void);
+IotcTaskId *GetSchedEventLoopTaskId(void);
 
 #ifdef __cplusplus
 }

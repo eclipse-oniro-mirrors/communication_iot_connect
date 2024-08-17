@@ -48,7 +48,7 @@ typedef enum {
 
 typedef struct {
     SocketAddr addrInfo;
-    uint8_t mac[ADAPTER_MAC_ADDRESS_LEN];
+    uint8_t mac[IOTC_MAC_ADDRESS_LEN];
     uint8_t bitMap;
     uint8_t sendBitMap;
     uint8_t recvBitMap;

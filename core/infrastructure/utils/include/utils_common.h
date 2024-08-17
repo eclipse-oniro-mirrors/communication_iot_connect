@@ -55,7 +55,7 @@ extern "C" {
 
 #define UTILS_FREE_2_NULL(ptr) do { \
     if ((ptr) != NULL) { \
-        AdapterFree((void *)(ptr)); \
+        IotcFree((void *)(ptr)); \
         (ptr) = NULL; \
     } \
 } while (0)

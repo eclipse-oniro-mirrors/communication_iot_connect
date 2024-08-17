@@ -25,8 +25,8 @@
 static EventSource *g_wifiFdEventSource = NULL;
 
 #define EVENT_SOURCE_FD_SET_TO_ADAPTER(eventSourceFdSet, adapterFdSet) \
-    AdapterFdSet buffer##adapterFdSet = {0, NULL}; \
-    AdapterFdSet *(adapterFdSet) = NULL; \
+    IotcFdSet buffer##adapterFdSet = {0, NULL}; \
+    IotcFdSet *(adapterFdSet) = NULL; \
     if ((eventSourceFdSet) != NULL && (eventSourceFdSet)->num != 0 && \
         (eventSourceFdSet)->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) { \
         (buffer##adapterFdSet).fdSet = (eventSourceFdSet)->fd; \
@@ -48,7 +48,7 @@ static int32_t FdSocketPollBySelect(EventSourceFdSet *read, EventSourceFdSet *wr
     EVENT_SOURCE_FD_SET_TO_ADAPTER(write, pWrite);
     EVENT_SOURCE_FD_SET_TO_ADAPTER(except, pExcept);
 
-    int32_t ret = AdapterSelect(pRead, pWrite, pExcept, timeout);
+    int32_t ret = IotcSelect(pRead, pWrite, pExcept, timeout);
     if (ret > 0) {
         return ret;
     }

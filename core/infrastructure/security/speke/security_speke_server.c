@@ -132,10 +132,10 @@ static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const IotcJson *paylo
     ret = NegoContextSetRemoteChallenge(negoCtx, remoteChallenge, remoteChallengeLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server set remote challenge err:%d", ret);
-        AdapterFree(remoteChallenge);
+        IotcFree(remoteChallenge);
         return ret;
     }
-    AdapterFree(remoteChallenge);
+    IotcFree(remoteChallenge);
 
     uint8_t *remotePubKey = NULL;
     uint32_t remotePubKeyLen = 0;
@@ -146,10 +146,10 @@ static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const IotcJson *paylo
     }
     ret = NegoContextGenSessionKey(negoCtx, remotePubKey, remotePubKeyLen);
     if (ret != IOTC_OK) {
-        AdapterFree(remotePubKey);
+        IotcFree(remotePubKey);
         return ret;
     }
-    AdapterFree(remotePubKey);
+    IotcFree(remotePubKey);
 
     uint8_t *remoteHmac = NULL;
     uint32_t remoteHmacLen = 0;
@@ -160,10 +160,10 @@ static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const IotcJson *paylo
     }
     ret = NegoContextVerifyHmac(negoCtx, remoteHmac, remoteHmacLen);
     if (ret != IOTC_OK) {
-        AdapterFree(remoteHmac);
+        IotcFree(remoteHmac);
         return ret;
     }
-    AdapterFree(remoteHmac);
+    IotcFree(remoteHmac);
 
     return IOTC_OK;
 }

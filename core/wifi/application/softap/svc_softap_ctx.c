@@ -28,7 +28,7 @@ SoftapServiceContext *GetSoftapServiceContext()
 
 int32_t SoftapServiceContextInit(void)
 {
-    g_softapCtx = (SoftapServiceContext *)AdapterMalloc(sizeof(SoftapServiceContext));
+    g_softapCtx = (SoftapServiceContext *)IotcMalloc(sizeof(SoftapServiceContext));
     if (g_softapCtx == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;

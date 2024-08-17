@@ -81,27 +81,27 @@ static const char *SPEKE_SESSION_KEY_INFO = "hichain_speke_sessionkey_info";
 /* data info, 业务会话密钥派生时使用 */
 static const char *SPEKE_DATA_KEY_INFO = "hichain_return_key";
 
-static AdapterMpi *InitMpiByString(uint8_t radix, const char *s)
+static IotcMpi *InitMpiByString(uint8_t radix, const char *s)
 {
-    AdapterMpi *mpi = AdapterMpiInit();
+    IotcMpi *mpi = IotcMpiInit();
     if (mpi == NULL) {
         return NULL;
     }
 
-    int32_t ret = AdapterMpiReadString(mpi, radix, s);
+    int32_t ret = IotcMpiReadString(mpi, radix, s);
     if (ret != IOTC_OK) {
-        AdapterMpiFree(mpi);
+        IotcMpiFree(mpi);
         return NULL;
     }
 
     return mpi;
 }
 
-static int32_t InitNegoCtxPrime(PrimeType primeType, AdapterMpi **outPrimeMpi)
+static int32_t InitNegoCtxPrime(PrimeType primeType, IotcMpi **outPrimeMpi)
 {
     const char *prime = (primeType == PRIME_NORMAL ? SPEKE_PRIME : SPEKE_BIG_PRIME);
 
-    AdapterMpi *primeMpi = InitMpiByString(NUMERIC_BASE, prime);
+    IotcMpi *primeMpi = InitMpiByString(NUMERIC_BASE, prime);
     if (primeMpi == NULL) {
         IOTC_LOGE("NegoCtx prime mpi init err");
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
@@ -117,7 +117,7 @@ static char *GenerateSpekeNegoRandom(PrimeType primeType)
         return NULL;
     }
     uint32_t randomLen = (primeType == PRIME_NORMAL ? RANDOM_LEN_NORMAL : RANDOM_LEN_BIG);
-    uint8_t *random = (uint8_t *)AdapterMalloc(randomLen);
+    uint8_t *random = (uint8_t *)IotcMalloc(randomLen);
     if (random == NULL) {
         IOTC_LOGE("NegoCtx random malloc err");
         return NULL;
@@ -126,44 +126,44 @@ static char *GenerateSpekeNegoRandom(PrimeType primeType)
     int32_t ret = SecurityRandom(random, randomLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx random gen err:%d", ret);
-        AdapterFree(random);
+        IotcFree(random);
         return NULL;
     }
 
     uint32_t randomStrLen = HEXIFY_LEN(randomLen) + 1;
-    char *randomStr = (char *)AdapterMalloc(randomStrLen);
+    char *randomStr = (char *)IotcMalloc(randomStrLen);
     if (randomStr == NULL) {
         IOTC_LOGE("NegoCtx random str malloc err");
-        AdapterFree(random);
+        IotcFree(random);
         return NULL;
     }
     (void)memset_s(randomStr, randomStrLen, 0, randomStrLen);
     if (!UtilsHexify(random, randomLen, randomStr, randomStrLen)) {
         IOTC_LOGE("NegoCtx random hexify err");
-        AdapterFree(random);
-        AdapterFree(randomStr);
+        IotcFree(random);
+        IotcFree(randomStr);
         return NULL;
     }
 
-    AdapterFree(random);
+    IotcFree(random);
     return randomStr;
 }
 
-static int32_t InitNegoCtxRandom(PrimeType primeType, AdapterMpi **outRandomMpi)
+static int32_t InitNegoCtxRandom(PrimeType primeType, IotcMpi **outRandomMpi)
 {
     char *randomStr = GenerateSpekeNegoRandom(primeType);
     if (randomStr == NULL) {
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_RANDOM_GEN;
     }
 
-    AdapterMpi *randomMpi = InitMpiByString(NUMERIC_BASE, randomStr);
+    IotcMpi *randomMpi = InitMpiByString(NUMERIC_BASE, randomStr);
     if (randomMpi == NULL) {
         IOTC_LOGE("NegoCtx random mpi init err");
-        AdapterFree(randomStr);
+        IotcFree(randomStr);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
 
-    AdapterFree(randomStr);
+    IotcFree(randomStr);
     *outRandomMpi = randomMpi;
     return IOTC_OK;
 }
@@ -198,9 +198,9 @@ static int32_t NegoGenHkdfSecret(const uint8_t *salt, uint32_t saltLen,
 }
 
 static int32_t CalNegoGenerator(const NegoContext *context,
-    const uint8_t *pinCode, uint32_t pinCodeLen, AdapterMpi **outGenerator)
+    const uint8_t *pinCode, uint32_t pinCodeLen, IotcMpi **outGenerator)
 {
-    AdapterMpi *exp = InitMpiByString(NUMERIC_BASE, SPEKE_EXP);
+    IotcMpi *exp = InitMpiByString(NUMERIC_BASE, SPEKE_EXP);
     if (exp == NULL) {
         IOTC_LOGE("NegoCtx init generator exp mpi init err");
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
@@ -209,78 +209,78 @@ static int32_t CalNegoGenerator(const NegoContext *context,
     char sha256Hex[HKDF_KEY_HEX_BUF_LEN] = { 0 };
     int32_t ret = NegoGenHkdfSecret(context->salt, context->saltLen, pinCode, pinCodeLen, sha256Hex);
     if (ret != IOTC_OK) {
-        AdapterMpiFree(exp);
+        IotcMpiFree(exp);
         return ret;
     }
-    AdapterMpi *secret = InitMpiByString(NUMERIC_BASE, sha256Hex);
+    IotcMpi *secret = InitMpiByString(NUMERIC_BASE, sha256Hex);
     (void)memset_s(sha256Hex, sizeof(sha256Hex), 0, sizeof(sha256Hex));
     if (secret == NULL) {
         IOTC_LOGE("NegoCtx init generator secret mpi init err");
-        AdapterMpiFree(exp);
+        IotcMpiFree(exp);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
 
-    AdapterMpi *generator = AdapterMpiInit();
+    IotcMpi *generator = IotcMpiInit();
     if (generator == NULL) {
         IOTC_LOGE("NegoCtx init generator mpi init err");
-        AdapterMpiFree(exp);
-        AdapterMpiFree(secret);
+        IotcMpiFree(exp);
+        IotcMpiFree(secret);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
-    ret = AdapterMpiExpMod(generator, secret, exp, context->prime);
+    ret = IotcMpiExpMod(generator, secret, exp, context->prime);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx init generator cal err:%d", ret);
-        AdapterMpiFree(exp);
-        AdapterMpiFree(secret);
-        AdapterMpiFree(generator);
+        IotcMpiFree(exp);
+        IotcMpiFree(secret);
+        IotcMpiFree(generator);
         return ret;
     }
 
-    AdapterMpiFree(exp);
-    AdapterMpiFree(secret);
+    IotcMpiFree(exp);
+    IotcMpiFree(secret);
     *outGenerator = generator;
     return IOTC_OK;
 }
 
 static int32_t InitNegoCtxPubKey(NegoContext *context, const uint8_t *pinCode, uint32_t pinCodeLen)
 {
-    AdapterMpi *generator = NULL;
+    IotcMpi *generator = NULL;
     int32_t ret = CalNegoGenerator(context, pinCode, pinCodeLen, &generator);
     if (ret != IOTC_OK) {
         return ret;
     }
 
-    AdapterMpi *pubKeyMpi = AdapterMpiInit();
+    IotcMpi *pubKeyMpi = IotcMpiInit();
     if (pubKeyMpi == NULL) {
         IOTC_LOGE("NegoCtx pubKey mpi init err");
-        AdapterMpiFree(generator);
+        IotcMpiFree(generator);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
-    ret = AdapterMpiExpMod(pubKeyMpi, generator, context->random, context->prime);
+    ret = IotcMpiExpMod(pubKeyMpi, generator, context->random, context->prime);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx pubKey cal err:%d", ret);
-        AdapterMpiFree(generator);
-        AdapterMpiFree(pubKeyMpi);
+        IotcMpiFree(generator);
+        IotcMpiFree(pubKeyMpi);
         return ret;
     }
-    AdapterMpiFree(generator);
+    IotcMpiFree(generator);
 
-    uint8_t *pubKey = (uint8_t *)AdapterMalloc(PRIME_KEY_LEN);
+    uint8_t *pubKey = (uint8_t *)IotcMalloc(PRIME_KEY_LEN);
     if (pubKey == NULL) {
         IOTC_LOGE("NegoCtx pubKey malloc err");
-        AdapterMpiFree(pubKeyMpi);
+        IotcMpiFree(pubKeyMpi);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(pubKey, PRIME_KEY_LEN, 0, PRIME_KEY_LEN);
-    ret = AdapterMpiWriteBinary(pubKeyMpi, pubKey, PRIME_KEY_LEN);
+    ret = IotcMpiWriteBinary(pubKeyMpi, pubKey, PRIME_KEY_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx pubKey write err:%d", ret);
-        AdapterMpiFree(pubKeyMpi);
-        AdapterFree(pubKey);
+        IotcMpiFree(pubKeyMpi);
+        IotcFree(pubKey);
         return ret;
     }
 
-    AdapterMpiFree(pubKeyMpi);
+    IotcMpiFree(pubKeyMpi);
     context->pubKey = pubKey;
     context->pubKeyLen = PRIME_KEY_LEN;
     return IOTC_OK;
@@ -308,7 +308,7 @@ NegoContext *NegoContextInit(const uint8_t *pinCode, uint32_t pinCodeLen,
         return NULL;
     }
 
-    NegoContext *negoContext = (NegoContext *)AdapterMalloc(sizeof(NegoContext));
+    NegoContext *negoContext = (NegoContext *)IotcMalloc(sizeof(NegoContext));
     if (negoContext == NULL) {
         IOTC_LOGE("NegoCtx malloc err");
         return NULL;
@@ -363,20 +363,20 @@ void NegoContextFree(NegoContext *context)
     }
 
     if (context->pubKey != NULL) {
-        AdapterFree(context->pubKey);
+        IotcFree(context->pubKey);
         context->pubKey = NULL;
     }
     if (context->random != NULL) {
-        AdapterMpiFree(context->random);
+        IotcMpiFree(context->random);
         context->random = NULL;
     }
     if (context->prime != NULL) {
-        AdapterMpiFree(context->prime);
+        IotcMpiFree(context->prime);
         context->prime = NULL;
     }
 
     (void)memset_s(context, sizeof(NegoContext), 0, sizeof(NegoContext));
-    AdapterFree(context);
+    IotcFree(context);
 }
 
 int32_t NegoContextSetRemoteChallenge(NegoContext *context, const uint8_t *challenge, uint32_t challengeLen)
@@ -393,85 +393,85 @@ int32_t NegoContextSetRemoteChallenge(NegoContext *context, const uint8_t *chall
     return IOTC_OK;
 }
 
-static int32_t VerifyRemotePubKey(AdapterMpi *prime, AdapterMpi *pubKey)
+static int32_t VerifyRemotePubKey(IotcMpi *prime, IotcMpi *pubKey)
 {
-    int32_t ret = AdapterMpiCmpInt(pubKey, MIN_PUB_KEY);
+    int32_t ret = IotcMpiCmpInt(pubKey, MIN_PUB_KEY);
     if (ret < 0) {
         IOTC_LOGE("remote pubKey too small:%d", ret);
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_PUBKEY;
     }
 
-    AdapterMpi *result = AdapterMpiInit();
+    IotcMpi *result = IotcMpiInit();
     if (result == NULL) {
         IOTC_LOGE("verify remote pubKey mpi init err");
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
-    ret = AdapterMpiSubInt(result, prime, MIN_PUB_KEY);
+    ret = IotcMpiSubInt(result, prime, MIN_PUB_KEY);
     if (ret != IOTC_OK) {
         IOTC_LOGE("remote pubKey subtract err:%d", ret);
-        AdapterMpiFree(result);
+        IotcMpiFree(result);
         return ret;
     }
-    ret = AdapterMpiCmpMpi(pubKey, result);
+    ret = IotcMpiCmpMpi(pubKey, result);
     if (ret > 0) {
         IOTC_LOGE("remote pubKey too large:%d", ret);
-        AdapterMpiFree(result);
+        IotcMpiFree(result);
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_PUBKEY;
     }
 
-    AdapterMpiFree(result);
+    IotcMpiFree(result);
     return IOTC_OK;
 }
 
 static int32_t CalSharedKey(const NegoContext *context, const uint8_t *pubKey, uint32_t pubKeyLen,
     uint8_t **sharedKey, uint32_t *sharedKeyLen)
 {
-    AdapterMpi *remotePubKey = AdapterMpiInit();
+    IotcMpi *remotePubKey = IotcMpiInit();
     if (remotePubKey == NULL) {
         IOTC_LOGE("NegoCtx remote pubKey mpi init err");
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
-    int32_t ret = AdapterMpiReadBinary(remotePubKey, pubKey, pubKeyLen);
+    int32_t ret = IotcMpiReadBinary(remotePubKey, pubKey, pubKeyLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx remote pubKey mpi read err:%d", ret);
-        AdapterMpiFree(remotePubKey);
+        IotcMpiFree(remotePubKey);
         return ret;
     }
     ret = VerifyRemotePubKey(context->prime, remotePubKey);
     if (ret != IOTC_OK) {
-        AdapterMpiFree(remotePubKey);
+        IotcMpiFree(remotePubKey);
         return ret;
     }
 
-    AdapterMpi *sharedKeyMpi = AdapterMpiInit();
+    IotcMpi *sharedKeyMpi = IotcMpiInit();
     if (sharedKeyMpi == NULL) {
         IOTC_LOGE("NegoCtx cal sharedKey mpi init err");
-        AdapterMpiFree(remotePubKey);
+        IotcMpiFree(remotePubKey);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
     /* 共享密钥计算: sharedKey = remotePubKey ^ random mod prime */
-    ret = AdapterMpiExpMod(sharedKeyMpi, remotePubKey, context->random, context->prime);
+    ret = IotcMpiExpMod(sharedKeyMpi, remotePubKey, context->random, context->prime);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx sharedKey cal err:%d", ret);
-        AdapterMpiFree(remotePubKey);
-        AdapterMpiFree(sharedKeyMpi);
+        IotcMpiFree(remotePubKey);
+        IotcMpiFree(sharedKeyMpi);
         return ret;
     }
-    AdapterMpiFree(remotePubKey);
+    IotcMpiFree(remotePubKey);
 
     uint32_t keyLen = PRIME_KEY_LEN;
-    uint8_t *key = (uint8_t *)AdapterCalloc(keyLen, sizeof(uint8_t));
+    uint8_t *key = (uint8_t *)IotcCalloc(keyLen, sizeof(uint8_t));
     if (key == NULL) {
         IOTC_LOGE("NegoCtx sharedKey calloc err");
-        AdapterMpiFree(sharedKeyMpi);
+        IotcMpiFree(sharedKeyMpi);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
-    ret = AdapterMpiWriteBinary(sharedKeyMpi, key, keyLen);
-    AdapterMpiFree(sharedKeyMpi);
+    ret = IotcMpiWriteBinary(sharedKeyMpi, key, keyLen);
+    IotcMpiFree(sharedKeyMpi);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx sharedKey write err:%d", ret);
         (void)memset_s(key, keyLen, 0, keyLen);
-        AdapterFree(key);
+        IotcFree(key);
         return ret;
     }
 
@@ -529,7 +529,7 @@ int32_t NegoContextGenSessionKey(NegoContext *context, const uint8_t *pubKey, ui
 
     ret = GenSessionKey(context, sharedKey, sharedKeyLen);
     (void)memset_s(sharedKey, sharedKeyLen, 0, sharedKeyLen);
-    AdapterFree(sharedKey);
+    IotcFree(sharedKey);
     return ret;
 }
 

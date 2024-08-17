@@ -164,7 +164,7 @@ static void PutCharReportExecutorCallback(void *userData)
         return;
     }
     ret = LinkLayerReportSvcDataEnc(BLE_SVC_CUSTOM_SEC_DATA, data, len);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("rpt custom sec data err:%d", ret);
     }

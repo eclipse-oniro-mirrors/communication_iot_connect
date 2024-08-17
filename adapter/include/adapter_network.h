@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ADAPTER_NETWORK_H
-#define ADAPTER_NETWORK_H
+#ifndef IOTC_NETWORK_H
+#define IOTC_NETWORK_H
 
 #include <stdint.h>
 #include "adapter_wifi_def.h"
@@ -23,22 +23,22 @@ extern "C" {
 #endif
 
 typedef enum {
-    ADAPTER_NETWORK_NOT_CONNECTED = 0,
-    ADAPTER_NETWORK_CONNECTED,
-} AdapterNetworkState;
+    IOTC_NETWORK_NOT_CONNECTED = 0,
+    IOTC_NETWORK_CONNECTED,
+} IotcNetworkState;
 
-int32_t AdapterGetLocalIp(char *buf, uint32_t len);
+int32_t IotcGetLocalIp(char *buf, uint32_t len);
 
-int32_t AdapterGetSoftApIp(char *buf, uint32_t len);
+int32_t IotcGetSoftApIp(char *buf, uint32_t len);
 
-int32_t AdapterGetMacAddr(uint8_t *buf, uint32_t len);
+int32_t IotcGetMacAddr(uint8_t *buf, uint32_t len);
 
-int32_t AdapterGetBroadcastAddr(char *buf, uint32_t len);
+int32_t IotcGetBroadcastAddr(char *buf, uint32_t len);
 
-AdapterNetworkState AdapterGetNetworkState(void);
+IotcNetworkState IotcGetNetworkState(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* ADAPTER_NETWORK_H */
+#endif /* IOTC_NETWORK_H */
