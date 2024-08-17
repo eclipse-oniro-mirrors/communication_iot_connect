@@ -37,7 +37,6 @@
 #define BLE_SVC_CREATE_SESSION_IDX 84
 #define BLE_SVC_CUSTOM_SEC_DATA_IDX 79
 
-/* 回调函数可能由蓝牙协议栈调用，不能在回调函数中执行耗时操作 */
 static const BtSvcInfo g_svcInfoTab[] = {
     {.svcIdx = BLE_SVC_NET_CFG_VER_IDX, .service = BLE_SVC_NET_CFG_VER, .suppEncType = ENC_SUPP_PLAIN,
         .getFunc = GetBleSvcNetCfgVer, .putFunc = NULL},

@@ -152,6 +152,8 @@ uint32_t BleSessSendSeqGet(void)
 
 int32_t BleSessKeyGen(const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, uint32_t sn2Len)
 {
+    CHECK_RETURN_LOGE((sn1 != NULL) && (sn1Len > 0) && (sn2 != NULL) && (sn2Len > 0),
+        IOTC_ERR_PARAM_INVALID, "param invalid, sn1Len:%u, sn2Len:%u", sn1Len, sn2Len);
     BleSessKeyInfo *sessInfo = &g_sessParam.sessInfo;
     int32_t ret = memcpy_s(sessInfo->salt, RAND_SN_LEN, sn1, sn1Len);
     CHECK_RETURN_LOGE(ret == EOK, IOTC_ERR_SECUREC_MEMCPY, "cpy sn1 err:%d", ret);
