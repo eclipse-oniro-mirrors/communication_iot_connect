@@ -26,7 +26,7 @@
 #define NUMERIC_BASE 16
 #define RANDOM_LEN_BIG 32
 #define RANDOM_LEN_NORMAL 24
-#define HKDF_KEY_HEX_BUF_LEN (HEXIFY_LEN(ADAPTER_MD_SHA256_BYTE_LEN) + 1)
+#define HKDF_KEY_HEX_BUF_LEN (HEXIFY_LEN(IOTC_MD_SHA256_BYTE_LEN) + 1)
 #define SPEKE_EXP "2"
 #define MIN_PUB_KEY 2
 #define MIN_SALT_LEN 8
@@ -171,9 +171,9 @@ static int32_t InitNegoCtxRandom(PrimeType primeType, AdapterMpi **outRandomMpi)
 static int32_t NegoGenHkdfSecret(const uint8_t *salt, uint32_t saltLen,
     const uint8_t *pinCode, uint32_t pinCodeLen, char sha256Hex[HKDF_KEY_HEX_BUF_LEN])
 {
-    uint8_t sha256Dec[ADAPTER_MD_SHA256_BYTE_LEN] = { 0 };
-    AdapterHkdfParam param = {
-        .md             = ADAPTER_MD_SHA256,
+    uint8_t sha256Dec[IOTC_MD_SHA256_BYTE_LEN] = { 0 };
+    IotcHkdfParam param = {
+        .md             = IOTC_MD_SHA256,
         .salt           = salt,
         .saltLen        = saltLen,
         .info           = (uint8_t *)SPEKE_BASE_INFO,
@@ -181,18 +181,18 @@ static int32_t NegoGenHkdfSecret(const uint8_t *salt, uint32_t saltLen,
         .material       = pinCode,
         .materialLen    = pinCodeLen,
     };
-    int32_t ret = AdapterHkdf(&param, sha256Dec, ADAPTER_MD_SHA256_BYTE_LEN);
+    int32_t ret = IotcHkdf(&param, sha256Dec, IOTC_MD_SHA256_BYTE_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx init pubKey cal secret err:%d", ret);
         return ret;
     }
 
-    if (!UtilsHexify(sha256Dec, ADAPTER_MD_SHA256_BYTE_LEN, sha256Hex, HKDF_KEY_HEX_BUF_LEN)) {
+    if (!UtilsHexify(sha256Dec, IOTC_MD_SHA256_BYTE_LEN, sha256Hex, HKDF_KEY_HEX_BUF_LEN)) {
         IOTC_LOGE("NegoCtx init pubKey hexify secret err");
-        (void)memset_s(sha256Dec, ADAPTER_MD_SHA256_BYTE_LEN, 0, ADAPTER_MD_SHA256_BYTE_LEN);
+        (void)memset_s(sha256Dec, IOTC_MD_SHA256_BYTE_LEN, 0, IOTC_MD_SHA256_BYTE_LEN);
         return IOTC_CORE_COMM_UTILS_ERR_HEXIFY;
     }
-    (void)memset_s(sha256Dec, ADAPTER_MD_SHA256_BYTE_LEN, 0, ADAPTER_MD_SHA256_BYTE_LEN);
+    (void)memset_s(sha256Dec, IOTC_MD_SHA256_BYTE_LEN, 0, IOTC_MD_SHA256_BYTE_LEN);
 
     return IOTC_OK;
 }
@@ -482,8 +482,8 @@ static int32_t CalSharedKey(const NegoContext *context, const uint8_t *pubKey, u
 
 static int32_t GenSessionKey(NegoContext *context, uint8_t *sharedKey, uint32_t sharedKeyLen)
 {
-    AdapterHkdfParam param = {
-        .md             = ADAPTER_MD_SHA256,
+    IotcHkdfParam param = {
+        .md             = IOTC_MD_SHA256,
         .salt           = context->salt,
         .saltLen        = context->saltLen,
         .info           = (uint8_t *)SPEKE_SESSION_KEY_INFO,
@@ -493,7 +493,7 @@ static int32_t GenSessionKey(NegoContext *context, uint8_t *sharedKey, uint32_t 
     };
     uint8_t sessionKey[SESSION_KEY_LEN + SESSION_KEY_LEN] = { 0 };
     uint32_t keyLen = SESSION_KEY_LEN + SESSION_KEY_LEN;
-    int32_t ret = AdapterHkdf(&param, sessionKey, keyLen);
+    int32_t ret = IotcHkdf(&param, sessionKey, keyLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx gen session key err:%d", ret);
         return ret;
@@ -546,14 +546,14 @@ static int32_t GenNegoHmac(const uint8_t *hmacKey, const uint8_t challenge1[CHAL
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    AdapterHmacParam param = {
-        .md         = ADAPTER_MD_SHA256,
+    IotcHmacParam param = {
+        .md         = IOTC_MD_SHA256,
         .key        = hmacKey,
         .keyLen     = SESSION_KEY_LEN,
         .data       = challenge,
         .dataLen    = sizeof(challenge),
     };
-    ret = AdapterHmacCalc(&param, output, outputLen);
+    ret = IotcHmacCalc(&param, output, outputLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx gen hmac err:%d", ret);
     }
@@ -596,8 +596,8 @@ int32_t NegoContextGenDataEncKey(const NegoContext *context, uint8_t *output, ui
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    AdapterHkdfParam param = {
-        .md             = ADAPTER_MD_SHA256,
+    IotcHkdfParam param = {
+        .md             = IOTC_MD_SHA256,
         .salt           = context->salt,
         .saltLen        = context->saltLen,
         .info           = (uint8_t *)SPEKE_DATA_KEY_INFO,
@@ -605,7 +605,7 @@ int32_t NegoContextGenDataEncKey(const NegoContext *context, uint8_t *output, ui
         .material       = context->identityEncKey,
         .materialLen    = SESSION_KEY_LEN,
     };
-    int32_t ret = AdapterHkdf(&param, output, SESSION_KEY_LEN);
+    int32_t ret = IotcHkdf(&param, output, SESSION_KEY_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx gen data key err:%d", ret);
         return ret;

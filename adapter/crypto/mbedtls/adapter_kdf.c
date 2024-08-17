@@ -19,16 +19,16 @@
 #include "mbedtls/pkcs5.h"
 #include "adapter_log.h"
 
-static mbedtls_md_type_t GetMbedtlsMdType(AdapterMdType type)
+static mbedtls_md_type_t GetMbedtlsMdType(IotcMdType type)
 {
     switch (type) {
-        case ADAPTER_MD_NONE:
+        case IOTC_MD_NONE:
             return MBEDTLS_MD_NONE;
-        case ADAPTER_MD_SHA256:
+        case IOTC_MD_SHA256:
             return MBEDTLS_MD_SHA256;
-        case ADAPTER_MD_SHA384:
+        case IOTC_MD_SHA384:
             return MBEDTLS_MD_SHA384;
-        case ADAPTER_MD_SHA512:
+        case IOTC_MD_SHA512:
             return MBEDTLS_MD_SHA512;
         default:
             ADAPTER_LOGW("invalid mode");
@@ -36,7 +36,7 @@ static mbedtls_md_type_t GetMbedtlsMdType(AdapterMdType type)
     }
 }
 
-int32_t AdapterPkcs5Pbkdf2Hmac(const AdapterPbkdf2HmacParam *param, uint8_t *key, uint32_t keyLen)
+int32_t IotcPkcs5Pbkdf2Hmac(const IotcPbkdf2HmacParam *param, uint8_t *key, uint32_t keyLen)
 {
     if ((param == NULL) || (param->password == NULL) || (param->passwordLen == 0) ||
         (param->salt == NULL) || (param->saltLen == 0) || (key == NULL) || (keyLen == 0)) {
@@ -68,7 +68,7 @@ int32_t AdapterPkcs5Pbkdf2Hmac(const AdapterPbkdf2HmacParam *param, uint8_t *key
     return ret == 0? IOTC_OK : IOTC_ADAPTER_CRYPTO_ERR_PKCS5_PBKDF2_HMAC;
 }
 
-int32_t AdapterHkdf(const AdapterHkdfParam *param, uint8_t *key, uint32_t keyLen)
+int32_t IotcHkdf(const IotcHkdfParam *param, uint8_t *key, uint32_t keyLen)
 {
     if ((param == NULL) || (param->material == NULL) || (key == NULL) ||
         (param->materialLen == 0) || (keyLen == 0)) {

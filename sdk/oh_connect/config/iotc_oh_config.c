@@ -40,12 +40,12 @@ int32_t IotcOhStoreDataInit(void)
         }
     }
     SecurityStoreCallback callbacks = {
-        .onInit = AdapterKvInit,
-        .onDeinit = AdapterKvDeInit,
-        .onSetValue = AdapterKvSetValue,
-        .onGetValue = AdapterKvGetValue,
-        .onGetValueLen = AdapterKvGetLen,
-        .onDelValue = AdapterKvDelValue,
+        .onInit = IotcKvInit,
+        .onDeinit = IotcKvDeInit,
+        .onSetValue = IotcKvSetValue,
+        .onGetValue = IotcKvGetValue,
+        .onGetValueLen = IotcKvGetLen,
+        .onDelValue = IotcKvDelValue,
     };
     ret = SecurityStoreInit(storePath, &callbacks);
     if (ret != IOTC_OK) {

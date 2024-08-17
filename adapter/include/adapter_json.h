@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ADAPTER_KV_H
-#define ADAPTER_KV_H
+#ifndef IOTC_KV_H
+#define IOTC_KV_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -105,4 +105,4 @@ void IotcJsonArrayDeleteItem(IotcJson *json, uint32_t index);
 }
 #endif
 
-#endif /* ADAPTER_KV_H */
+#endif /* IOTC_KV_H */

@@ -55,7 +55,7 @@ typedef struct {
     uint8_t ver;
     uint8_t rsv[3]; /* 对齐 */
     uint8_t salt[STORE_CIPHER_SALT_LEN];
-    uint8_t mac[ADAPTER_MD_SHA256_BYTE_LEN];
+    uint8_t mac[IOTC_MD_SHA256_BYTE_LEN];
     uint32_t len;
 } StoreCipherHeader;
 
@@ -340,9 +340,9 @@ int32_t SecurityStoreGetLen(int32_t key, uint32_t *len)
 static int32_t CipherV1HmacVerifyAndCopy(SecurityStoreItem *storeItem, StoreCipherHeader *header,
     uint8_t *cipher, uint32_t cipLen, uint8_t key[SECURITY_HKDF_LOCAL_KEY_LEN])
 {
-    uint8_t hmac[ADAPTER_MD_SHA256_BYTE_LEN] = {0};
-    AdapterHmacParam hmacParam = {ADAPTER_MD_SHA256, key, SECURITY_HKDF_LOCAL_KEY_LEN, cipher, cipLen};
-    int32_t ret = AdapterHmacCalc(&hmacParam, hmac, sizeof(hmac));
+    uint8_t hmac[IOTC_MD_SHA256_BYTE_LEN] = {0};
+    IotcHmacParam hmacParam = {IOTC_MD_SHA256, key, SECURITY_HKDF_LOCAL_KEY_LEN, cipher, cipLen};
+    int32_t ret = IotcHmacCalc(&hmacParam, hmac, sizeof(hmac));
     if (ret != IOTC_OK) {
         IOTC_LOGW("calc hmac error %d", ret);
         return ret;
@@ -375,7 +375,7 @@ static int32_t CipherV1AesGcmDecrypt(SecurityStoreItem *storeItem, StoreCipherHe
 }
 
 static int32_t CipherV1DecryptAndVerify(SecurityStoreItem *storeItem, uint8_t *buffer, uint32_t len,
-    uint8_t mac[ADAPTER_MD_SHA256_BYTE_LEN], bool check)
+    uint8_t mac[IOTC_MD_SHA256_BYTE_LEN], bool check)
 {
     if (len < sizeof(StoreCipherHeader)) {
         IOTC_LOGW("invalid v1 len %u", len);
@@ -406,7 +406,7 @@ static int32_t CipherV1DecryptAndVerify(SecurityStoreItem *storeItem, uint8_t *b
     (void)memset_s(key, sizeof(key), 0, sizeof(key));
     if (ret == IOTC_OK && check) {
         /* 读出后通过与预期mac比对，确保数据正确写入 */
-        if (memcmp(mac, header->mac, ADAPTER_MD_SHA256_BYTE_LEN) != 0) {
+        if (memcmp(mac, header->mac, IOTC_MD_SHA256_BYTE_LEN) != 0) {
             ret = IOTC_CORE_COMM_UTILS_ERR_STORE_MAC_NOT_SAME;
         }
     }
@@ -422,7 +422,7 @@ static int32_t CipherV1DecryptAndVerify(SecurityStoreItem *storeItem, uint8_t *b
  * @param check [IN] 是否校验验证码
  * @return IOTC_OK成功，其他失败
  */
-static int32_t StoreItemReadCipher(SecurityStoreItem *storeItem, uint8_t mac[ADAPTER_MD_SHA256_BYTE_LEN], bool check)
+static int32_t StoreItemReadCipher(SecurityStoreItem *storeItem, uint8_t mac[IOTC_MD_SHA256_BYTE_LEN], bool check)
 {
     uint32_t len = 0;
     int32_t ret = UtilsStoreKvGetLen(storeItem->keyChar, &len);
@@ -497,9 +497,9 @@ static int32_t CipherV1GenHmacAndCopy(SecurityStoreItem *storeItem, StoreCipherH
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    AdapterHmacParam hmacParam = {ADAPTER_MD_SHA256, key, SECURITY_HKDF_LOCAL_KEY_LEN,
+    IotcHmacParam hmacParam = {IOTC_MD_SHA256, key, SECURITY_HKDF_LOCAL_KEY_LEN,
         storeItem->buffer, storeItem->len};
-    ret = AdapterHmacCalc(&hmacParam, header->mac, sizeof(header->mac));
+    ret = IotcHmacCalc(&hmacParam, header->mac, sizeof(header->mac));
     if (ret != IOTC_OK) {
         IOTC_LOGW("calc hmac error %d", ret);
         return ret;
@@ -565,7 +565,7 @@ static int32_t StoreItemWriteCipher(SecurityStoreItem *storeItem)
         STORE_ITEM_LOGW_CODE("kv write error", ret, storeItem);
         return ret;
     }
-    uint8_t mac[ADAPTER_MD_SHA256_BYTE_LEN] = {0};
+    uint8_t mac[IOTC_MD_SHA256_BYTE_LEN] = {0};
     ret = memcpy_s(mac, sizeof(mac), header->mac, sizeof(header->mac));
     AdapterFree(buf);
     if (ret !=  EOK) {

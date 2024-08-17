@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ADAPTER_MEM_H
-#define ADAPTER_MEM_H
+#ifndef IOTC_MEM_H
+#define IOTC_MEM_H
 
 #include <stdint.h>
 #include "iotc_conf.h"
@@ -51,4 +51,4 @@ void AdapterMemDump(void);
 }
 #endif
 
-#endif /* ADAPTER_MEM_H */
+#endif /* IOTC_MEM_H */

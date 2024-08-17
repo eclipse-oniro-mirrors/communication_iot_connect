@@ -21,20 +21,20 @@
 #include "adapter_log.h"
 
 typedef struct {
-    AdapterMdType type;
+    IotcMdType type;
     mbedtls_md_context_t mdCtx;
 } MdContext;
 
-mbedtls_md_type_t GetMbedtlsMdType(AdapterMdType type)
+mbedtls_md_type_t GetMbedtlsMdType(IotcMdType type)
 {
     switch (type) {
-        case ADAPTER_MD_NONE:
+        case IOTC_MD_NONE:
             return MBEDTLS_MD_NONE;
-        case ADAPTER_MD_SHA256:
+        case IOTC_MD_SHA256:
             return MBEDTLS_MD_SHA256;
-        case ADAPTER_MD_SHA384:
+        case IOTC_MD_SHA384:
             return MBEDTLS_MD_SHA384;
-        case ADAPTER_MD_SHA512:
+        case IOTC_MD_SHA512:
             return MBEDTLS_MD_SHA512;
         default:
             ADAPTER_LOGW("invalid mode");
@@ -42,20 +42,20 @@ mbedtls_md_type_t GetMbedtlsMdType(AdapterMdType type)
     }
 }
 
-bool IsMdLenValid(AdapterMdType type, uint32_t len)
+bool IsMdLenValid(IotcMdType type, uint32_t len)
 {
-    if (type == ADAPTER_MD_SHA256) {
-        return len >= ADAPTER_MD_SHA256_BYTE_LEN;
-    } else if (type == ADAPTER_MD_SHA384) {
-        return len >= ADAPTER_MD_SHA384_BYTE_LEN;
-    } else if (type == ADAPTER_MD_SHA512) {
-        return len >= ADAPTER_MD_SHA512_BYTE_LEN;
+    if (type == IOTC_MD_SHA256) {
+        return len >= IOTC_MD_SHA256_BYTE_LEN;
+    } else if (type == IOTC_MD_SHA384) {
+        return len >= IOTC_MD_SHA384_BYTE_LEN;
+    } else if (type == IOTC_MD_SHA512) {
+        return len >= IOTC_MD_SHA512_BYTE_LEN;
     }
     ADAPTER_LOGW("invalid type %d", type);
     return false;
 }
 
-int32_t AdapterMdCalc(AdapterMdType type, const uint8_t *inData, uint32_t inLen, uint8_t *md, uint32_t mdLen)
+int32_t IotcMdCalc(IotcMdType type, const uint8_t *inData, uint32_t inLen, uint8_t *md, uint32_t mdLen)
 {
     if (inData == NULL || inLen == 0 || md == NULL || !IsMdLenValid(type, mdLen)) {
         ADAPTER_LOGW("invalid param");
@@ -70,7 +70,7 @@ int32_t AdapterMdCalc(AdapterMdType type, const uint8_t *inData, uint32_t inLen,
     return IOTC_OK;
 }
 
-int32_t AdapterHmacCalc(const AdapterHmacParam *param, uint8_t *hmac, uint32_t hmacLen)
+int32_t IotcHmacCalc(const IotcHmacParam *param, uint8_t *hmac, uint32_t hmacLen)
 {
     if ((param == NULL) || (param->key == NULL) || (param->keyLen == 0) ||
         (param->data == NULL) || (param->dataLen == 0) || (hmac == NULL) ||
@@ -88,7 +88,7 @@ int32_t AdapterHmacCalc(const AdapterHmacParam *param, uint8_t *hmac, uint32_t h
     return IOTC_OK;
 }
 
-AdapterMdContext *AdapterMdInit(AdapterMdType type)
+IotcMdContext *IotcMdInit(IotcMdType type)
 {
     MdContext *ctx = (MdContext *)AdapterMalloc(sizeof(MdContext));
     if (ctx == NULL) {
@@ -104,21 +104,21 @@ AdapterMdContext *AdapterMdInit(AdapterMdType type)
     if (ret != 0) {
         ADAPTER_LOGW("mbedtls md setup error [-0x%04x]", -ret);
         mbedtls_md_free(&ctx->mdCtx);
-        AdapterMdFree(ctx);
+        IotcMdFree(ctx);
         return NULL;
     }
     ret = mbedtls_md_starts(&ctx->mdCtx);
     if (ret != 0) {
         ADAPTER_LOGW("mbedtls md start error [-0x%04x]", -ret);
         mbedtls_md_free(&ctx->mdCtx);
-        AdapterMdFree(ctx);
+        IotcMdFree(ctx);
         return NULL;
     }
 
     return ctx;
 }
 
-int32_t AdapterMdUpdate(AdapterMdContext *ctx, const uint8_t *inData, uint32_t inLen)
+int32_t IotcMdUpdate(IotcMdContext *ctx, const uint8_t *inData, uint32_t inLen)
 {
     if (ctx == NULL) {
         ADAPTER_LOGW("invalid param");
@@ -134,7 +134,7 @@ int32_t AdapterMdUpdate(AdapterMdContext *ctx, const uint8_t *inData, uint32_t i
     return IOTC_OK;
 }
 
-int32_t AdapterMdFinish(AdapterMdContext *ctx, uint8_t *outData, uint32_t outLen)
+int32_t IotcMdFinish(IotcMdContext *ctx, uint8_t *outData, uint32_t outLen)
 {
     if (ctx == NULL || !IsMdLenValid(((MdContext *)ctx)->type, outLen)) {
         ADAPTER_LOGW("invalid param");
@@ -149,7 +149,7 @@ int32_t AdapterMdFinish(AdapterMdContext *ctx, uint8_t *outData, uint32_t outLen
     return IOTC_OK;
 }
 
-void AdapterMdFree(AdapterMdContext *ctx)
+void IotcMdFree(IotcMdContext *ctx)
 {
     if (ctx == NULL) {
         return;

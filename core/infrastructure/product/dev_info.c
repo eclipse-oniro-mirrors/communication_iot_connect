@@ -159,8 +159,8 @@ int32_t ModelGetUdid(uint8_t *buf, uint32_t len)
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
-    uint8_t sha256Buf[ADAPTER_MD_SHA256_BYTE_LEN] = {0};
-    ret = AdapterMdCalc(ADAPTER_MD_SHA256, (uint8_t *)strBuf, strlen(strBuf), sha256Buf, sizeof(sha256Buf));
+    uint8_t sha256Buf[IOTC_MD_SHA256_BYTE_LEN] = {0};
+    ret = IotcMdCalc(IOTC_MD_SHA256, (uint8_t *)strBuf, strlen(strBuf), sha256Buf, sizeof(sha256Buf));
     if (ret != IOTC_OK) {
         IOTC_LOGW("calc sha256 error %d", ret);
         return ret;

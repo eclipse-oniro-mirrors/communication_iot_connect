@@ -26,11 +26,11 @@
 extern "C" {
 #endif
 
-mbedtls_md_type_t GetMbedtlsMdType(AdapterMdType type);
+mbedtls_md_type_t GetMbedtlsMdType(IotcMdType type);
 
 mbedtls_mpi *GetMbedtlsMpi(AdapterMpi *mpi);
 
-bool IsMdLenValid(AdapterMdType type, uint32_t len);
+bool IsMdLenValid(IotcMdType type, uint32_t len);
 
 #ifdef __cplusplus
 }

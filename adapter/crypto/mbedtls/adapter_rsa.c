@@ -25,12 +25,12 @@
 
 typedef struct {
     AdapterRsaPkcs1Mode padding;
-    AdapterMdType md;
+    IotcMdType md;
     mbedtls_rsa_context rsa;
     int32_t (*rng)(uint8_t *out, uint32_t len);
 } RsaContext;
 
-AdapterRsaContext *AdapterRsaInit(AdapterRsaPkcs1Mode padding, AdapterMdType md)
+AdapterRsaContext *AdapterRsaInit(AdapterRsaPkcs1Mode padding, IotcMdType md)
 {
     RsaContext *ctx = (RsaContext *)AdapterMalloc(sizeof(RsaContext));
     if (ctx == NULL) {
@@ -79,7 +79,7 @@ int AdapterRsaPkcs1Verify(AdapterRsaContext *ctx, const AdapterRsaVerifyParam *p
 {
     if (ctx == NULL || param == NULL || param->hash == NULL || param->hashLen == 0 ||
         param->sig == NULL || param->sigLen != mbedtls_rsa_get_len(&((RsaContext *)ctx)->rsa) ||
-        (param->md != ADAPTER_MD_NONE && !IsMdLenValid(param->md, param->hashLen))) {
+        (param->md != IOTC_MD_NONE && !IsMdLenValid(param->md, param->hashLen))) {
         ADAPTER_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }

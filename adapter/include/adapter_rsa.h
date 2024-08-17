@@ -58,7 +58,7 @@ typedef struct {
 
 /** RSA签名校验参数 */
 typedef struct {
-    AdapterMdType md;    /* hash类型 */
+    IotcMdType md;    /* hash类型 */
     const uint8_t *hash; /* hash值 */
     uint32_t hashLen;    /* hash长度 */
     const uint8_t *sig;  /* 签名 */
@@ -73,7 +73,7 @@ typedef struct {
  * @return NULL失败，非NULL为RSA上下文指针
  * @attention 返回的上下文使用完毕后应该使用AdapterRsaFree释放
  */
-AdapterRsaContext *AdapterRsaInit(AdapterRsaPkcs1Mode padding, AdapterMdType md);
+AdapterRsaContext *AdapterRsaInit(AdapterRsaPkcs1Mode padding, IotcMdType md);
 
 /**
  * @brief RSA上下文释放

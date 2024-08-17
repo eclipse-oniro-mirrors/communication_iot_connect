@@ -173,15 +173,15 @@ int32_t BleSessKeyGen(const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, u
         return IOTC_CORE_BLE_INVALID_AUTHCODE_ID;
     }
 
-    AdapterPbkdf2HmacParam param = {
-        .md = ADAPTER_MD_SHA256,
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
         .password = authInfo.authCode,
         .passwordLen = sizeof(authInfo.authCode),
         .salt = sessInfo->salt,
         .saltLen = SALT_LEN,
         .iterCount = ITER_TIMES
     };
-    ret = AdapterPkcs5Pbkdf2Hmac(&param, sessInfo->key, SESSION_KEY_LEN);
+    ret = IotcPkcs5Pbkdf2Hmac(&param, sessInfo->key, SESSION_KEY_LEN);
     (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "ble sess key gen err:%d", ret);
     g_sessParam.negoFinish = true;
@@ -288,25 +288,25 @@ static int32_t BleSessCalHmac(const uint8_t *data, uint32_t dataLen, uint8_t *ca
 
     BleSessKeyInfo *sessInfo = &g_sessParam.sessInfo;
     uint8_t hmacKey[SESS_HMAC_LEN] = { 0 };
-    AdapterPbkdf2HmacParam param = {
-        .md = ADAPTER_MD_SHA256,
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
         .password = sessInfo->key,
         .passwordLen = SESSION_KEY_LEN,
         .salt = sessInfo->salt,
         .saltLen = SALT_LEN,
         .iterCount = ITER_TIMES
     };
-    int32_t ret = AdapterPkcs5Pbkdf2Hmac(&param, hmacKey, SESS_HMAC_LEN);
+    int32_t ret = IotcPkcs5Pbkdf2Hmac(&param, hmacKey, SESS_HMAC_LEN);
     CHECK_RETURN(ret == IOTC_OK, ret);
 
-    AdapterHmacParam hmacParam = {
-        .md = ADAPTER_MD_SHA256,
+    IotcHmacParam hmacParam = {
+        .md = IOTC_MD_SHA256,
         .key = hmacKey,
         .keyLen = SESS_HMAC_LEN,
         .data = data,
         .dataLen = dataLen
     };
-    ret = AdapterHmacCalc(&hmacParam, calHmac, SESS_HMAC_LEN);
+    ret = IotcHmacCalc(&hmacParam, calHmac, SESS_HMAC_LEN);
     (void)memset_s(hmacKey, SESS_HMAC_LEN, 0, SESS_HMAC_LEN);
     return ret;
 }

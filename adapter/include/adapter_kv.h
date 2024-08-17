@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ADAPTER_KV_H
-#define ADAPTER_KV_H
+#ifndef IOTC_KV_H
+#define IOTC_KV_H
 
 
 #include <stdint.h>
@@ -22,23 +22,23 @@
 extern "C" {
 #endif
 
-#define ADAPTER_KV_MAX_KEY_LEN 32
-#define ADAPTER_KV_MAX_TAG_LEN 128
+#define IOTC_KV_MAX_KEY_LEN 32
+#define IOTC_KV_MAX_TAG_LEN 128
 
-int32_t AdapterKvInit(const char *tag);
+int32_t IotcKvInit(const char *tag);
 
-int32_t AdapterKvDeInit(void);
+int32_t IotcKvDeInit(void);
 
-int32_t AdapterKvSetValue(const char *key, const uint8_t *value, uint32_t len);
+int32_t IotcKvSetValue(const char *key, const uint8_t *value, uint32_t len);
 
-int32_t AdapterKvGetValue(const char *key, uint8_t *buf, uint32_t *len);
+int32_t IotcKvGetValue(const char *key, uint8_t *buf, uint32_t *len);
 
-int32_t AdapterKvGetLen(const char *key, uint32_t *len);
+int32_t IotcKvGetLen(const char *key, uint32_t *len);
 
-int32_t AdapterKvDelValue(const char *key);
+int32_t IotcKvDelValue(const char *key);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* ADAPTER_KV_H */
+#endif /* IOTC_KV_H */

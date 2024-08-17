@@ -24,8 +24,8 @@ extern "C" {
 #endif
 
 #define SECURITY_PSK_LEN 16
-#define SECURITY_HKDF_LOCAL_KEY_LEN ADAPTER_MD_SHA256_BYTE_LEN
-#define SECURITY_UDID_LEN (ADAPTER_MD_SHA256_BYTE_LEN * 2)
+#define SECURITY_HKDF_LOCAL_KEY_LEN IOTC_MD_SHA256_BYTE_LEN
+#define SECURITY_UDID_LEN (IOTC_MD_SHA256_BYTE_LEN * 2)
 
 typedef int32_t (*SecurityGetPskCallback)(uint8_t *buf, uint32_t len);
 

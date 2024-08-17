@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ADAPTER_MPI_H
-#define ADAPTER_MPI_H
+#ifndef IOTC_MPI_H
+#define IOTC_MPI_H
 
 #include <stdint.h>
 
@@ -129,4 +129,4 @@ int32_t AdapterMpiWriteBinary(AdapterMpi *mpi, uint8_t *buf, uint32_t bufLen);
 }
 #endif
 
-#endif /* ADAPTER_MPI_H */
+#endif /* IOTC_MPI_H */

@@ -37,7 +37,7 @@
 static char g_tag[MAX_TAG_LEN + 1] = {0};
 static bool g_isInit = false;
 
-int32_t AdapterKvInit(const char *tag)
+int32_t IotcKvInit(const char *tag)
 {
     if (tag == NULL) {
         ADAPTER_LOGE("invalid param");
@@ -106,7 +106,7 @@ static int32_t KvSetValue(const char *filePath, const uint8_t *buf, uint32_t len
     return IOTC_OK;
 }
 
-int32_t AdapterKvSetValue(const char *key, const uint8_t *value, uint32_t len)
+int32_t IotcKvSetValue(const char *key, const uint8_t *value, uint32_t len)
 {
     if ((key == NULL) || (value == NULL) || (len == 0)) {
         ADAPTER_LOGE("invalid param");
@@ -160,7 +160,7 @@ static int32_t KvGetValue(const char *filePath, uint8_t *buf, uint32_t *len)
     return IOTC_OK;
 }
 
-int32_t AdapterKvGetValue(const char *key, uint8_t *buf, uint32_t *len)
+int32_t IotcKvGetValue(const char *key, uint8_t *buf, uint32_t *len)
 {
     if ((key == NULL) || (key[0] == '\0') || (buf == NULL) || len == NULL || (*len == 0)) {
         ADAPTER_LOGE("invalid param");
@@ -195,7 +195,7 @@ static uint32_t GetFileLenByName(const char *filePath, uint32_t *len)
     return IOTC_OK;
 }
 
-int32_t AdapterKvGetLen(const char *key, uint32_t *len)
+int32_t IotcKvGetLen(const char *key, uint32_t *len)
 {
     if ((key == NULL) || (key[0] == '\0')) {
         ADAPTER_LOGE("invalid param");
@@ -226,7 +226,7 @@ static int32_t KvDelValue(const char *filePath)
     return IOTC_OK;
 }
 
-int32_t AdapterKvDelValue(const char *key)
+int32_t IotcKvDelValue(const char *key)
 {
     if ((key == NULL) || (key[0] == '\0')) {
         ADAPTER_LOGE("invalid param");
@@ -246,7 +246,7 @@ int32_t AdapterKvDelValue(const char *key)
     return KvDelValue((const char *)filePath);
 }
 
-int32_t AdapterKvDeInit(void)
+int32_t IotcKvDeInit(void)
 {
     CHECK_IS_INIT;
     (void)memset_s(g_tag, sizeof(g_tag), 0, sizeof(g_tag));
