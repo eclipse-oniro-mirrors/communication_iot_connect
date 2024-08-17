@@ -16,7 +16,7 @@
 #include "utils_bit_map.h"
 #include "utils_common.h"
 #include "utils_assert.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 
 static bool SeqNumCheckWithoutOverflow(uint32_t curSeq, uint32_t recvSeq,
     uint32_t window, bool *isSmall, uint32_t *delta)

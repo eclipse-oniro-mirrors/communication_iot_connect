@@ -18,7 +18,7 @@
 #include "utils_mutex_global.h"
 #include "securec.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
 #include "utils_common.h"

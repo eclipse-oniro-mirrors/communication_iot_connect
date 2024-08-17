@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -21,9 +21,9 @@
 #include <netdb.h>
 #include "securec.h"
 #include "iotc_errcode.h"
-#include "adapter_network.h"
-#include "adapter_mem.h"
-#include "adapter_log.h"
+#include "iotc_network.h"
+#include "iotc_mem.h"
+#include "iotc_log.h"
 
 #if !IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
 #include <sys/time.h>
@@ -153,7 +153,7 @@ static void GetIotcAddrInfo(IotcAddrInfo *out, struct addrinfo *in,
     if (in->ai_next != NULL) {
         out->aiNext = (IotcAddrInfo *)IotcMalloc(sizeof(IotcAddrInfo));
         if (out->aiNext == NULL) {
-            ADAPTER_LOGE("malloc error");
+            IOTC_LOGE("malloc error");
         } else {
             (void)memset_s(out->aiNext, sizeof(IotcAddrInfo), 0, sizeof(IotcAddrInfo));
             GetIotcAddrInfo(out->aiNext, in->ai_next, level + 1, maxLevel);
@@ -187,7 +187,7 @@ static IotcAddrInfo *GetAddrInfoInner(struct addrinfo *addr)
     }
     AddrInfoInner *addrInner = (AddrInfoInner *)IotcMalloc(sizeof(AddrInfoInner));
     if (addrInner == NULL) {
-        ADAPTER_LOGE("malloc error");
+        IOTC_LOGE("malloc error");
         freeaddrinfo(addr);
         return NULL;
     }
@@ -201,17 +201,17 @@ int32_t IotcGetAddrInfo(const char *nodename, const char *servname,
     const IotcAddrInfo *hints, IotcAddrInfo **result)
 {
     if ((nodename == NULL) || (result == NULL)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     struct addrinfo *resInfo = NULL;
     struct addrinfo *hintsInfoP = NULL;
     struct addrinfo hintsInfo;
-    ADAPTER_LOGD("get addinfo %s", nodename);
+    IOTC_LOGD("get addinfo %s", nodename);
     if (hints != NULL) {
         if (memcpy_s(&hintsInfo, sizeof(struct addrinfo), hints, sizeof(IotcAddrInfo)) != EOK) {
-            ADAPTER_LOGE("memcpy error");
+            IOTC_LOGE("memcpy error");
             return IOTC_ERR_SECUREC_MEMCPY;
         }
         hintsInfo.ai_family = AiFamily2Socket(hintsInfo.ai_family);
@@ -222,7 +222,7 @@ int32_t IotcGetAddrInfo(const char *nodename, const char *servname,
 
     int32_t ret = getaddrinfo(nodename, servname, hintsInfoP, &resInfo);
     if ((ret != 0) || (resInfo == NULL)) {
-        ADAPTER_LOGD("getaddrinfo failed, ret %d", ret);
+        IOTC_LOGD("getaddrinfo failed, ret %d", ret);
         return IOTC_ADAPTER_SOCKET_ERR_DNS;
     }
 
@@ -233,7 +233,7 @@ int32_t IotcGetAddrInfo(const char *nodename, const char *servname,
 void IotcFreeAddrInfo(IotcAddrInfo *addrInfo)
 {
     if (addrInfo == NULL) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return;
     }
     FreeAddrInfoInner((AddrInfoInner *)addrInfo);
@@ -259,7 +259,7 @@ static int32_t SetFcntl(int32_t fd, bool isBlock)
 {
     int32_t flags = fcntl(fd, F_GETFL, 0);
     if (flags < 0) {
-        ADAPTER_LOGE("fcntl get failed, ret %d", flags);
+        IOTC_LOGE("fcntl get failed, ret %d", flags);
         return IOTC_ADAPTER_SOCKET_ERR_FCNTL;
     }
     if (isBlock) {
@@ -268,7 +268,7 @@ static int32_t SetFcntl(int32_t fd, bool isBlock)
         flags |= O_NONBLOCK;
     }
     if (fcntl(fd, F_SETFL, flags) < 0) {
-        ADAPTER_LOGE("fcntl set failed");
+        IOTC_LOGE("fcntl set failed");
         return IOTC_ADAPTER_SOCKET_ERR_FCNTL;
     }
     return IOTC_OK;
@@ -298,7 +298,7 @@ static int32_t SetSocketTimeout(int32_t fd, uint32_t timeout, bool isRead)
     tv.tv_sec = timeout / MS_PER_SEC;
     tv.tv_usec = timeout % MS_PER_SEC * US_PER_MS;
     if (setsockopt(fd, SOL_SOCKET, flag, &tv, sizeof(struct timeval)) != 0) {
-        ADAPTER_LOGE("set [%d][%u] failed", flag, timeout);
+        IOTC_LOGE("set [%d][%u] failed", flag, timeout);
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -307,7 +307,7 @@ static int32_t SetSocketTimeout(int32_t fd, uint32_t timeout, bool isRead)
 static int32_t SetSocketOptionReadTimeout(int32_t fd, const void *value, uint32_t len)
 {
     if (len < sizeof(uint32_t)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     uint32_t timeout = *(const uint32_t *)value;
@@ -318,7 +318,7 @@ static int32_t SetSocketOptionReadTimeout(int32_t fd, const void *value, uint32_
 static int32_t SetSocketOptionSendTimeout(int32_t fd, const void *value, uint32_t len)
 {
     if (len < sizeof(uint32_t)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     uint32_t timeout = *(const uint32_t *)value;
@@ -332,7 +332,7 @@ static int32_t SetSocketOptionEnableReuseAddr(int32_t fd, const void *value, uin
     (void)len;
     int32_t opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) != 0) {
-        ADAPTER_LOGE("set reuse addr failed");
+        IOTC_LOGE("set reuse addr failed");
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -344,7 +344,7 @@ static int32_t SetSocketOptionDisableReuseAddr(int32_t fd, const void *value, ui
     (void)len;
     int32_t opt = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) != 0) {
-        ADAPTER_LOGE("close reuse addr failed");
+        IOTC_LOGE("close reuse addr failed");
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -353,12 +353,12 @@ static int32_t SetSocketOptionDisableReuseAddr(int32_t fd, const void *value, ui
 static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, bool isAdd)
 {
     if (value == NULL || len < sizeof(IotcSocketMultiAddr)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     IotcSocketMultiAddr *addr = (IotcSocketMultiAddr *)value;
     if (addr->local == NULL || addr->multi == NULL) {
-        ADAPTER_LOGE("invalid ip");
+        IOTC_LOGE("invalid ip");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -370,7 +370,7 @@ static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, 
     int32_t flag = isAdd ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP;
     int32_t ret = setsockopt(fd, IPPROTO_IP, flag, (void *)&group, sizeof(group));
     if (ret != 0) {
-        ADAPTER_LOGE("set opt %d failed %d %d", flag, ret, IotcGetSocketErrno(fd));
+        IOTC_LOGE("set opt %d failed %d %d", flag, ret, IotcGetSocketErrno(fd));
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -392,7 +392,7 @@ static int32_t SetSocketOptionEnableBroadcast(int32_t fd, const void *value, uin
     (void)len;
     int32_t opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (const char *)&opt, sizeof(opt)) != 0) {
-        ADAPTER_LOGE("set broadcast failed");
+        IOTC_LOGE("set broadcast failed");
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -404,7 +404,7 @@ static int32_t SetSocketOptionDisableBroadcast(int32_t fd, const void *value, ui
     (void)len;
     int32_t opt = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (const char *)&opt, sizeof(opt)) != 0) {
-        ADAPTER_LOGE("close broadcast failed");
+        IOTC_LOGE("close broadcast failed");
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -416,7 +416,7 @@ static int32_t SetSocketOptionEnableMultiLoop(int32_t fd, const void *value, uin
     (void)len;
     int32_t opt = 1;
     if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, (const char *)&opt, sizeof(opt)) != 0) {
-        ADAPTER_LOGE("set loop failed");
+        IOTC_LOGE("set loop failed");
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -428,7 +428,7 @@ static int32_t SetSocketOptionDisableMultiLoop(int32_t fd, const void *value, ui
     (void)len;
     int32_t opt = 0;
     if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, (const char *)&opt, sizeof(opt)) != 0) {
-        ADAPTER_LOGE("set loop failed");
+        IOTC_LOGE("set loop failed");
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -437,12 +437,12 @@ static int32_t SetSocketOptionDisableMultiLoop(int32_t fd, const void *value, ui
 static int32_t SetSocketOptionSendBuffer(int32_t fd, const void *value, uint32_t len)
 {
     if (len < sizeof(uint32_t)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     uint32_t bufferLen = *(uint32_t *)value;
     if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&bufferLen, sizeof(bufferLen)) != 0) {
-        ADAPTER_LOGE("set sendbuf %u failed", bufferLen);
+        IOTC_LOGE("set sendbuf %u failed", bufferLen);
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -451,12 +451,12 @@ static int32_t SetSocketOptionSendBuffer(int32_t fd, const void *value, uint32_t
 static int32_t SetSocketOptionReadBuffer(int32_t fd, const void *value, uint32_t len)
 {
     if (len < sizeof(uint32_t)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     uint32_t bufferLen = *(uint32_t *)value;
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (void *)&bufferLen, sizeof(bufferLen)) != 0) {
-        ADAPTER_LOGE("set recvbuf %u failed", bufferLen);
+        IOTC_LOGE("set recvbuf %u failed", bufferLen);
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
@@ -485,7 +485,7 @@ int32_t IotcSetSocketOpt(int32_t fd, IotcSocketOption option, const void *value,
             return optionList[i].setOptionFunc(fd, value, len);
         }
     }
-    ADAPTER_LOGW("unsupport option %d", option);
+    IOTC_LOGW("unsupport option %d", option);
     return IOTC_ERR_NOT_SUPPORT;
 }
 
@@ -493,13 +493,13 @@ int32_t IotcBind(int32_t fd, const IotcSockaddr *addr, uint32_t addrLen)
 {
     (void)addrLen;
     if (addr == NULL) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     struct sockaddr addrIn;
     addrIn.sa_family = AiFamily2Socket(addr->saFamily);
     if (memcpy_s(addrIn.sa_data, sizeof(addrIn.sa_data), addr->saData, sizeof(addr->saData)) != EOK) {
-        ADAPTER_LOGE("memcpy error");
+        IOTC_LOGE("memcpy error");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     return bind(fd, &addrIn, sizeof(struct sockaddr));
@@ -509,13 +509,13 @@ int32_t IotcConnect(int32_t fd, const IotcSockaddr *addr, uint32_t addrLen)
 {
     (void)addrLen;
     if (addr == NULL) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     struct sockaddr addrIn;
     addrIn.sa_family = AiFamily2Socket(addr->saFamily);
     if (memcpy_s(addrIn.sa_data, sizeof(addrIn.sa_data), addr->saData, sizeof(addr->saData)) != EOK) {
-        ADAPTER_LOGE("memcpy error");
+        IOTC_LOGE("memcpy error");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     return connect(fd, &addrIn, sizeof(struct sockaddr));
@@ -534,7 +534,7 @@ int32_t IotcSend(int32_t fd, const uint8_t *buf, uint32_t len)
 int32_t IotcRecvFrom(int32_t fd, uint8_t *buf, uint32_t len, IotcSockaddr *from, uint32_t *fromLen)
 {
     if ((from == NULL) || (fromLen == NULL) || (buf == NULL)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     struct sockaddr addr;
@@ -542,7 +542,7 @@ int32_t IotcRecvFrom(int32_t fd, uint8_t *buf, uint32_t len, IotcSockaddr *from,
     int32_t ret = recvfrom(fd, buf, len, 0, &addr, (socklen_t *)fromLen);
     from->saFamily = addr.sa_family;
     if (memcpy_s(from->saData, sizeof(from->saData), addr.sa_data, sizeof(addr.sa_data)) != EOK) {
-        ADAPTER_LOGE("memcpy error");
+        IOTC_LOGE("memcpy error");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     return ret;
@@ -551,14 +551,14 @@ int32_t IotcRecvFrom(int32_t fd, uint8_t *buf, uint32_t len, IotcSockaddr *from,
 int32_t IotcSendTo(int32_t fd, const uint8_t *buf, uint32_t len, const IotcSockaddr *to, uint32_t toLen)
 {
     if ((to == NULL) || (buf == NULL)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     struct sockaddr addr;
     (void)memset_s(&addr, sizeof(struct sockaddr), 0, sizeof(struct sockaddr));
     addr.sa_family = AiFamily2Socket(to->saFamily);
     if (memcpy_s(addr.sa_data, sizeof(addr.sa_data), to->saData, sizeof(to->saData)) != EOK) {
-        ADAPTER_LOGE("memcpy error");
+        IOTC_LOGE("memcpy error");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     return sendto(fd, buf, len, 0, &addr, toLen);
@@ -626,7 +626,7 @@ int32_t IotcGetSocketErrno(int32_t fd)
     int32_t socketErr;
     uint32_t len = sizeof(socklen_t);
     if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &socketErr, (socklen_t *)&len) != 0) {
-        ADAPTER_LOGE("get socket errno error");
+        IOTC_LOGE("get socket errno error");
         return IOTC_ADAPTER_SOCKET_ERR_GET_OPT;
     }
 

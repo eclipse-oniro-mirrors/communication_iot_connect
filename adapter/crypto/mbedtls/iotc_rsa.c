@@ -15,11 +15,11 @@
 #include <stddef.h>
 #include "iotc_errcode.h"
 #include "crypto_mbedtls_common.h"
-#include "adapter_rsa.h"
+#include "iotc_rsa.h"
 #include "mbedtls/rsa.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 
 #define MBEDTLS_RADIX_NUM_BASE 16
 
@@ -34,7 +34,7 @@ IotcRsaContext *IotcRsaInit(IotcRsaPkcs1Mode padding, IotcMdType md)
 {
     RsaContext *ctx = (RsaContext *)IotcMalloc(sizeof(RsaContext));
     if (ctx == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return NULL;
     }
     (void)memset_s(ctx, sizeof(RsaContext), 0, sizeof(RsaContext));
@@ -52,7 +52,7 @@ IotcRsaContext *IotcRsaInit(IotcRsaPkcs1Mode padding, IotcMdType md)
 void IotcRsaFree(IotcRsaContext *ctx)
 {
     if (ctx == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
     mbedtls_rsa_free(&((RsaContext *)ctx)->rsa);
@@ -62,14 +62,14 @@ void IotcRsaFree(IotcRsaContext *ctx)
 int IotcRsaParamImport(IotcRsaContext *ctx, const IotcRsaParam *param)
 {
     if ((ctx == NULL) || (param == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_rsa_import(&((RsaContext *)ctx)->rsa,
         GetMbedtlsMpi(param->n), GetMbedtlsMpi(param->p),
         GetMbedtlsMpi(param->q), GetMbedtlsMpi(param->d), GetMbedtlsMpi(param->e));
     if (ret != 0) {
-        ADAPTER_LOGW("import error[-0x%04x]", -ret);
+        IOTC_LOGW("import error[-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_PARAM_IMPORT;
     }
     return IOTC_OK;
@@ -80,13 +80,13 @@ int IotcRsaPkcs1Verify(IotcRsaContext *ctx, const IotcRsaVerifyParam *param)
     if (ctx == NULL || param == NULL || param->hash == NULL || param->hashLen == 0 ||
         param->sig == NULL || param->sigLen != mbedtls_rsa_get_len(&((RsaContext *)ctx)->rsa) ||
         (param->md != IOTC_MD_NONE && !IsMdLenValid(param->md, param->hashLen))) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     mbedtls_rsa_context *rsa = &((RsaContext *)ctx)->rsa;
     int32_t ret = mbedtls_rsa_check_pubkey(rsa);
     if (ret != 0) {
-        ADAPTER_LOGW("check error [-0x%04x]", -ret);
+        IOTC_LOGW("check error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_VERIFY;
     }
 
@@ -96,7 +96,7 @@ int IotcRsaPkcs1Verify(IotcRsaContext *ctx, const IotcRsaVerifyParam *param)
 #endif
         GetMbedtlsMdType(param->md), param->hashLen, param->hash, param->sig);
     if (ret != 0) {
-        ADAPTER_LOGW("verify error [-0x%04x]", -ret);
+        IOTC_LOGW("verify error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_VERIFY;
     }
 
@@ -116,7 +116,7 @@ int IotcRsaPkcs1Decrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t *
 {
     if (param == NULL || param->ctx == NULL || param->input == NULL || buf == NULL ||
         param->inLen != mbedtls_rsa_get_len(&(((RsaContext *)(param->ctx))->rsa)) || len == NULL || *len == 0) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -124,7 +124,7 @@ int IotcRsaPkcs1Decrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t *
     int32_t ret;
     if (param->mode == ADAPTER_RSA_OP_PRIVATE) {
         if (param->rng == NULL) {
-            ADAPTER_LOGW("invalid rng");
+            IOTC_LOGW("invalid rng");
             return IOTC_ERR_PARAM_INVALID;
         }
         ctx->rng = param->rng;
@@ -133,12 +133,12 @@ int IotcRsaPkcs1Decrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t *
 #if IOTC_CONF_ADAPTER_MBEDTLS_MAJOR_VERSION == 2
         ret = mbedtls_rsa_check_pubkey(&ctx->rsa);
 #else
-        ADAPTER_LOGW("mode not support public key");
+        IOTC_LOGW("mode not support public key");
         return IOTC_ERR_NOT_SUPPORT;
 #endif
     }
     if (ret != 0) {
-        ADAPTER_LOGW("check error [-0x%04x]", -ret);
+        IOTC_LOGW("check error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_DEC;
     }
 
@@ -149,7 +149,7 @@ int IotcRsaPkcs1Decrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t *
 #endif
         &oLen, param->input, buf, *len);
     if (ret != 0) {
-        ADAPTER_LOGW("decrypt error [-0x%04x]", -ret);
+        IOTC_LOGW("decrypt error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_DEC;
     }
     *len = oLen;
@@ -160,7 +160,7 @@ int IotcRsaPkcs1Encrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t l
 {
     if (param == NULL || param->ctx == NULL || param->input == NULL || buf == NULL ||
         len < mbedtls_rsa_get_len(&(((RsaContext *)(param->ctx))->rsa))) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -170,20 +170,20 @@ int IotcRsaPkcs1Encrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t l
 #if IOTC_CONF_ADAPTER_MBEDTLS_MAJOR_VERSION == 2
         ret = mbedtls_rsa_check_privkey(&ctx->rsa);
 #else
-        ADAPTER_LOGW("mode not support private key");
+        IOTC_LOGW("mode not support private key");
         return IOTC_ERR_NOT_SUPPORT;
 #endif
     } else {
         ret = mbedtls_rsa_check_pubkey(&ctx->rsa);
     }
     if (ret != 0) {
-        ADAPTER_LOGW("check error [-0x%04x]", -ret);
+        IOTC_LOGW("check error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_ENC;
     }
     bool isNeedRng = false;
     if ((param->mode == ADAPTER_RSA_OP_PUBLIC) || (ctx->padding == ADAPTER_RSA_PKCS1_V21)) {
         if (param->rng == NULL) {
-            ADAPTER_LOGW("invalid rng");
+            IOTC_LOGW("invalid rng");
             return IOTC_ERR_PARAM_INVALID;
         }
         ctx->rng = param->rng;
@@ -196,7 +196,7 @@ int IotcRsaPkcs1Encrypt(const IotcRsaCryptParam *param, uint8_t *buf, uint32_t l
 #endif
         param->inLen, param->input, buf);
     if (ret != 0) {
-        ADAPTER_LOGW("encrypt error [-0x%04x]", -ret);
+        IOTC_LOGW("encrypt error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RSA_ENC;
     }
     return IOTC_OK;

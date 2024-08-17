@@ -14,7 +14,7 @@
  */
 #include "event_source.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "utils_common.h"

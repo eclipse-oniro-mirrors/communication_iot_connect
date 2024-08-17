@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "securec.h"
 #include "iotc_log.h"
 #include "utils_assert.h"

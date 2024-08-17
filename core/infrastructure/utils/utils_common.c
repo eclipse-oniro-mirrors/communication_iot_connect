@@ -14,7 +14,7 @@
  */
 #include "utils_common.h"
 #include <limits.h>
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"

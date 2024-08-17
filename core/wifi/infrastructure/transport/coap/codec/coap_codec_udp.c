@@ -15,7 +15,7 @@
 #include "coap_codec_udp.h"
 #include "comm_def.h"
 #include "utils_assert.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "securec.h"
 #include "coap_codec_comm.h"
 #include "iotc_errcode.h"

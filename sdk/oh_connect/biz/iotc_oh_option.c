@@ -17,7 +17,7 @@
 #include "utils_mutex_global.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 
 typedef struct {

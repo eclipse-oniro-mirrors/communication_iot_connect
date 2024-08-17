@@ -16,7 +16,7 @@
 #define BLE_ADV_DATA_OHOS_H
 
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 
 #ifdef __cplusplus
 extern "C" {

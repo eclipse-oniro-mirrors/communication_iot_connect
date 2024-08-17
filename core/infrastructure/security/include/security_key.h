@@ -16,7 +16,7 @@
 #define SECURITY_KEY_H
 
 #include <stdint.h>
-#include "adapter_md.h"
+#include "iotc_md.h"
 #include "comm_def.h"
 
 #ifdef __cplusplus

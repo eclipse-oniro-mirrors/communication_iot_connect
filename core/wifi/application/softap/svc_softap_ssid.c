@@ -17,7 +17,7 @@
 #include "comm_def.h"
 #include "securec.h"
 #include "utils_common.h"
-#include "adapter_wifi_def.h"
+#include "iotc_wifi_def.h"
 #include "iotc_svc_dev.h"
 #include "iotc_svc.h"
 #include "service_proxy.h"

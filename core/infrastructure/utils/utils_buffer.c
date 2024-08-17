@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 #include "utils_buffer.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "securec.h"

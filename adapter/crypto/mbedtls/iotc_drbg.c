@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 #include <stdlib.h>
-#include "adapter_drbg.h"
-#include "adapter_mem.h"
+#include "iotc_drbg.h"
+#include "iotc_mem.h"
 #include "iotc_errcode.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/entropy.h"
@@ -32,19 +32,19 @@ typedef struct {
 static int32_t MbedtlsEntropySourceCallback(void *data, unsigned char *output, size_t len, size_t *outLen)
 {
     if (output == NULL || outLen == NULL || data == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
     DrbgContext *ctx = (DrbgContext *)data;
     if (ctx->trng == NULL) {
-        ADAPTER_LOGW("no trng");
+        IOTC_LOGW("no trng");
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
     int32_t ret = ctx->trng(output, len);
     if (ret != 0) {
-        ADAPTER_LOGW("trng error %d", ret);
+        IOTC_LOGW("trng error %d", ret);
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
     *outLen = len;
@@ -56,7 +56,7 @@ IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
     /* 入参可以为空 */
     DrbgContext *ctx = (DrbgContext *)IotcMalloc(sizeof(DrbgContext));
     if (ctx == NULL) {
-        ADAPTER_LOGW("malloc err");
+        IOTC_LOGW("malloc err");
         return NULL;
     }
     (void)memset_s(ctx, sizeof(DrbgContext), 0, sizeof(DrbgContext));
@@ -72,7 +72,7 @@ IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
                 /* at least get 4 byte random epr invoke */
                 ctx, 4, MBEDTLS_ENTROPY_SOURCE_STRONG);
             if (ret != 0) {
-                ADAPTER_LOGW("add entropy source error [-0x%04x]", -ret);
+                IOTC_LOGW("add entropy source error [-0x%04x]", -ret);
                 break;
             }
         }
@@ -80,7 +80,7 @@ IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
         ret = mbedtls_ctr_drbg_seed(&ctx->drbg, mbedtls_entropy_func, &ctx->entropy,
             (const unsigned char *)custom, custom == NULL ? 0 : strlen(custom));
         if (ret != 0) {
-            ADAPTER_LOGW("seed error [-0x%04x]", -ret);
+            IOTC_LOGW("seed error [-0x%04x]", -ret);
             break;
         }
 
@@ -106,13 +106,13 @@ void IotcDrbgDeinit(IotcDrbgContext *ctx)
 int32_t IotcDrbgRandom(IotcDrbgContext *ctx, uint8_t *out, uint32_t outLen)
 {
     if ((ctx == NULL) || (out == NULL) || (outLen == 0)) {
-        ADAPTER_LOGW("invalid param\r\n");
+        IOTC_LOGW("invalid param\r\n");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     int32_t ret = mbedtls_ctr_drbg_random((void *)&((DrbgContext *)ctx)->drbg, out, outLen);
     if (ret != 0) {
-        ADAPTER_LOGW("get mbedtls random error [-0x%04x]", -ret);
+        IOTC_LOGW("get mbedtls random error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_RANDOM;
     }
 

@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 #include "security_sess_key.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
 #include "utils_bit_map.h"
-#include "adapter_kdf.h"
+#include "iotc_kdf.h"
 
 typedef enum {
     SESS_KEY_BIT_TRANS_KEY_CREATED = 0,

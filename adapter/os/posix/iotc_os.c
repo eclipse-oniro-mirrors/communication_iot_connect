@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include <stddef.h>
 #include <stdbool.h>
 #include <pthread.h>
@@ -24,8 +24,8 @@
 #include <sys/time.h>
 #include <sys/select.h>
 #include "iotc_errcode.h"
-#include "adapter_log.h"
-#include "adapter_mem.h"
+#include "iotc_log.h"
+#include "iotc_mem.h"
 #include "iotc_conf.h"
 #if IOTC_CONF_MEM_DEBUG
 #include <stdlib.h>
@@ -48,7 +48,7 @@
 IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
 {
     if ((param == NULL) || (param->func == NULL) || (param->stackSize == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return NULL;
     }
 
@@ -59,31 +59,31 @@ IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
 
     int32_t ret = pthread_attr_init(&attr);
     if (ret != 0) {
-        ADAPTER_LOGW("pthread init attr error %d", ret);
+        IOTC_LOGW("pthread init attr error %d", ret);
         return NULL;
     }
 
     do {
         ret = pthread_attr_setstacksize(&attr, stackSize);
         if (ret != 0) {
-            ADAPTER_LOGW("pthread set stack size %u error %d", stackSize, ret);
+            IOTC_LOGW("pthread set stack size %u error %d", stackSize, ret);
             break;
         }
 
         ret = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
         if (ret != 0) {
-            ADAPTER_LOGW("pthread set detach error %d", ret);
+            IOTC_LOGW("pthread set detach error %d", ret);
             break;
         }
 
         ret = pthread_attr_setschedpolicy(&attr, SCHED_RR);
         if (ret != 0) {
-            ADAPTER_LOGW("pthread set sched error %d", ret);
+            IOTC_LOGW("pthread set sched error %d", ret);
         }
 
         ret = pthread_create(&tid, &attr, (void *)param->func, param->arg);
         if (ret != 0) {
-            ADAPTER_LOGW("pthread create error %d", ret);
+            IOTC_LOGW("pthread create error %d", ret);
             break;
         }
     } while (false);
@@ -127,14 +127,14 @@ IotcMutexId *IotcMutexCreate(void)
     pthread_mutex_t *mutex = IotcMalloc(sizeof(pthread_mutex_t));
 #endif
     if (mutex == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return NULL;
     }
 
     int32_t ret = pthread_mutex_init(mutex, NULL);
     if (ret != 0) {
         IotcFree(mutex);
-        ADAPTER_LOGW("pthread mutex init error %d", ret);
+        IOTC_LOGW("pthread mutex init error %d", ret);
         return NULL;
     }
 
@@ -144,14 +144,14 @@ IotcMutexId *IotcMutexCreate(void)
 int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret;
     if (ms == IOTC_WAIT_FOREVER) {
         ret = pthread_mutex_lock((pthread_mutex_t *)id);
         if (ret != 0) {
-            ADAPTER_LOGW("mutex lock error %d", ret);
+            IOTC_LOGW("mutex lock error %d", ret);
             return IOTC_ADAPTER_OS_ERR_MUTEX_LOCK;
         } else {
             return IOTC_OK;
@@ -161,7 +161,7 @@ int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
     struct timespec ts;
     ret = clock_gettime(CLOCK_REALTIME, &ts);
     if (ret != 0) {
-        ADAPTER_LOGW("get time error %d", ret);
+        IOTC_LOGW("get time error %d", ret);
         return IOTC_ADAPTER_OS_ERR_MUTEX_LOCK;
     }
 
@@ -177,10 +177,10 @@ int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
     ret = pthread_mutex_timedlock((pthread_mutex_t *)id, &ts);
     if (ret != 0) {
         if (ret == ETIMEDOUT) {
-            ADAPTER_LOGN("wait mutex timeout %u ms", ms);
+            IOTC_LOGN("wait mutex timeout %u ms", ms);
             return IOTC_ERR_TIMEOUT;
         }
-        ADAPTER_LOGW("mutex lock timeout %u error %d", ms, ret);
+        IOTC_LOGW("mutex lock timeout %u error %d", ms, ret);
         return IOTC_ADAPTER_OS_ERR_MUTEX_LOCK;
     }
     return IOTC_OK;
@@ -189,13 +189,13 @@ int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
 int32_t IotcMutexUnlock(IotcMutexId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     int32_t ret = pthread_mutex_unlock((pthread_mutex_t *)id);
     if (ret != 0) {
-        ADAPTER_LOGW("mutex unlock error %d", ret);
+        IOTC_LOGW("mutex unlock error %d", ret);
         return IOTC_ADAPTER_OS_ERR_MUTEX_UNLOCK;
     }
 
@@ -205,13 +205,13 @@ int32_t IotcMutexUnlock(IotcMutexId *id)
 void IotcMutexDestroy(IotcMutexId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
 
     int32_t ret = pthread_mutex_destroy((pthread_mutex_t *)id);
     if (ret != 0) {
-        ADAPTER_LOGW("mutex release error %d", ret);
+        IOTC_LOGW("mutex release error %d", ret);
     }
 #if IOTC_CONF_MEM_DEBUG
     free(id);
@@ -225,14 +225,14 @@ IotcSemId *IotcSemCreate(uint32_t count)
 {
     sem_t *sem = IotcMalloc(sizeof(sem_t));
     if (sem == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return NULL;
     }
 
     int32_t ret = sem_init(sem, 0, count);
     if (ret != 0) {
         IotcFree(sem);
-        ADAPTER_LOGW("sem init error %d count %u", ret, count);
+        IOTC_LOGW("sem init error %d count %u", ret, count);
         return NULL;
     }
 
@@ -242,14 +242,14 @@ IotcSemId *IotcSemCreate(uint32_t count)
 int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     struct timespec ts;
     int32_t ret = clock_gettime(CLOCK_REALTIME, &ts);
     if (ret != 0) {
-        ADAPTER_LOGW("get time error %d", ret);
+        IOTC_LOGW("get time error %d", ret);
         return IOTC_ADAPTER_OS_ERR_WAIT_SEM;
     }
 
@@ -267,7 +267,7 @@ int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
         if (errno == ETIMEDOUT) {
             return IOTC_ERR_TIMEOUT;
         }
-        ADAPTER_LOGW("sem wait error %d/%d/%u", ret, errno, ms);
+        IOTC_LOGW("sem wait error %d/%d/%u", ret, errno, ms);
         return IOTC_ADAPTER_OS_ERR_WAIT_SEM;
     }
     return IOTC_OK;
@@ -276,13 +276,13 @@ int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
 int32_t IotcSemPost(IotcSemId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     int32_t ret = sem_post((sem_t *)id);
     if (ret != 0) {
-        ADAPTER_LOGW("sem post error %d", ret);
+        IOTC_LOGW("sem post error %d", ret);
         return IOTC_ADAPTER_OS_ERR_POST_SEM;
     }
 
@@ -292,13 +292,13 @@ int32_t IotcSemPost(IotcSemId *id)
 uint32_t IotcSemGetCount(IotcSemId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return 0;
     }
     uint32_t count = 0;
     int32_t ret = sem_getvalue((sem_t *)id, (int32_t *)&count);
     if (ret != 0) {
-        ADAPTER_LOGW("get sem count error %d", ret);
+        IOTC_LOGW("get sem count error %d", ret);
         return 0;
     }
     return count;
@@ -307,13 +307,13 @@ uint32_t IotcSemGetCount(IotcSemId *id)
 void IotcSemDestroy(IotcSemId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
 
     int32_t ret = sem_destroy((sem_t *)id);
     if (ret != 0) {
-        ADAPTER_LOGW("sem release error %d", ret);
+        IOTC_LOGW("sem release error %d", ret);
     }
     IotcFree(id);
     return;
@@ -347,7 +347,7 @@ uint32_t IotcGetSysTimeMs(void)
     struct timespec ts;
     int32_t ret = clock_gettime(CLOCK_MONOTONIC, &ts);
     if (ret != 0) {
-        ADAPTER_LOGW("get time error %d", ret);
+        IOTC_LOGW("get time error %d", ret);
         return 0;
     }
 

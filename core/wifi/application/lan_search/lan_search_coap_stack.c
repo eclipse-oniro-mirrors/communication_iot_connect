@@ -18,7 +18,7 @@
 #include "utils_bit_map.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "adapter_network.h"
+#include "iotc_network.h"
 #include "trans_socket_udp.h"
 #include "coap_codec_udp.h"
 #include "coap_endpoint_server.h"
@@ -96,8 +96,8 @@ static int32_t LanSearchCoapEndpointSetup(LanSearchContext *ctx)
 
 static int32_t LanSearchCoapStackCreate(LanSearchContext *ctx)
 {
-    char local[ADAPTER_IP_STR_MAX_LEN + 1] = {0};
-    int32_t ret = AdapterGetLocalIp(local, ADAPTER_IP_STR_MAX_LEN);
+    char local[IOTC_IP_STR_MAX_LEN + 1] = {0};
+    int32_t ret = IotcGetLocalIp(local, IOTC_IP_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get local ip error %d", ret);
         return ret;

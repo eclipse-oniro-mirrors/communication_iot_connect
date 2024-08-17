@@ -16,7 +16,7 @@
 #define EVENT_LOOP_H
 
 #include "event_source.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 
 #ifdef __cplusplus
 extern "C" {

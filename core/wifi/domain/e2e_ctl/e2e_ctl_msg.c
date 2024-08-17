@@ -20,7 +20,7 @@
 #include "iotc_svc_dev.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 #include "sched_executor.h"
 
@@ -132,7 +132,7 @@ int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd repor
         return ret;
     }
 
-    bool isCtrl = IotcJsonHasObj(AdapterJsonGetArrayItem(dataJsonArray, 0), STR_JSON_DATA);
+    bool isCtrl = IotcJsonHasObj(IotcJsonGetArrayItem(dataJsonArray, 0), STR_JSON_DATA);
     if (isCtrl) {
         return E2eCtrlMsgPutProcess(dataJsonArray);
     } else {

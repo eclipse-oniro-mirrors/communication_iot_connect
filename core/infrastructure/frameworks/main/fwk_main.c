@@ -14,7 +14,7 @@
  */
 #include "fwk_main.h"
 #include "utils_mutex_global.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "iotc_log.h"
 #include "utils_common.h"
 #include "main_loop.h"

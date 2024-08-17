@@ -18,7 +18,7 @@
 #include "svc_conn_ctx.h"
 #include "sched_timer.h"
 #include "svc_conn_conf.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "event_bus.h"
 #include "utils_bit_map.h"
 #include "utils_common.h"

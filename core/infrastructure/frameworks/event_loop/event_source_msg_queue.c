@@ -15,7 +15,7 @@
 #include "event_source_msg_queue.h"
 #include "utils_msg_queue.h"
 #include "comm_def.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_buffer.h"
 #include "utils_common.h"

@@ -16,7 +16,7 @@
 #define ADAPTER_WIFI_H
 
 #include <stdint.h>
-#include "adapter_wifi_def.h"
+#include "iotc_wifi_def.h"
 
 #ifdef __cplusplus
 extern "C" {

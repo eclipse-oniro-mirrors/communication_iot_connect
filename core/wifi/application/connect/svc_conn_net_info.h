@@ -16,7 +16,7 @@
 #ifndef SERVICE_CONNECT_NET_INFO_H
 #define SERVICE_CONNECT_NET_INFO_H
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {

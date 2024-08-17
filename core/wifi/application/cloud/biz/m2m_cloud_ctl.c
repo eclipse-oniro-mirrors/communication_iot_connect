@@ -17,7 +17,7 @@
 #include "iotc_errcode.h"
 #include "utils_assert.h"
 #include "utils_json.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "coap_codec_utils.h"
 #include "coap_endpoint_server.h"
 #include "e2e_ctl_msg.h"

@@ -17,7 +17,7 @@
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 
 static uint32_t g_svcNum = 0;

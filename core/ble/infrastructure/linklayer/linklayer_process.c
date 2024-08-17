@@ -18,7 +18,7 @@
 #include "linklayer_send.h"
 #include "linklayer_service.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 

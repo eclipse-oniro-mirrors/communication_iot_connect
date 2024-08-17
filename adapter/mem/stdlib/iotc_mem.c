@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include <string.h>
 #include <stdlib.h>
 
 #if IOTC_CONF_MEM_DEBUG
 #include <stdbool.h>
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_list.h"
 #include "securec.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 typedef struct {
     ListEntry node;
     uint8_t magic;
@@ -75,7 +75,7 @@ static void *IotcDebugMallocInsert(uint32_t size, const char *func, uint32_t lin
 {
     MemNode *newNode = (MemNode *)malloc(size + sizeof(MemNode));
     if (newNode == NULL) {
-        ADAPTER_LOGD("malloc error %u", size);
+        IOTC_LOGD("malloc error %u", size);
         return NULL;
     }
 
@@ -90,7 +90,7 @@ static void *IotcDebugMallocInsert(uint32_t size, const char *func, uint32_t lin
         /* 用与内存测试，malloc时不对用户使用的空间做初始化 */
         (void)memset_s(newNode->mem, size, 0, size);
     }
-    ADAPTER_LOGD("malloc %p/%u/%s/%u/", newNode->mem, size, func, line);
+    IOTC_LOGD("malloc %p/%u/%s/%u/", newNode->mem, size, func, line);
     MemLock();
     LIST_INSERT(&newNode->node, &g_memList);
     MemUnlock();
@@ -100,7 +100,7 @@ static void *IotcDebugMallocInsert(uint32_t size, const char *func, uint32_t lin
 void *IotcDebugMalloc(uint32_t size, const char *func, uint32_t line)
 {
     if (size == 0) {
-        ADAPTER_LOGF("malloc zero %s/%u!!", NON_NULL_STR(func), line);
+        IOTC_LOGF("malloc zero %s/%u!!", NON_NULL_STR(func), line);
         return NULL;
     }
 
@@ -110,7 +110,7 @@ void *IotcDebugMalloc(uint32_t size, const char *func, uint32_t line)
 void *IotcDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t line)
 {
     if ((size == 0) || (num == 0)) {
-        ADAPTER_LOGF("calloc zero %s/%u!!", NON_NULL_STR(func), line);
+        IOTC_LOGF("calloc zero %s/%u!!", NON_NULL_STR(func), line);
         return NULL;
     }
 
@@ -120,16 +120,16 @@ void *IotcDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t li
 void IotcDebugFree(void *pt, const char *func, uint32_t line)
 {
     if (pt == NULL) {
-        ADAPTER_LOGF("free null %s/%u!!", NON_NULL_STR(func), line);
+        IOTC_LOGF("free null %s/%u!!", NON_NULL_STR(func), line);
         return;
     }
     MemNode *node = CONTAINER_OF(pt, MemNode, mem);
     if (node->magic != MEM_NODE_MAGIC) {
-        ADAPTER_LOGF("free invalid mem %p/%s/%u!!", pt, NON_NULL_STR(func), line);
+        IOTC_LOGF("free invalid mem %p/%s/%u!!", pt, NON_NULL_STR(func), line);
         return;
     }
     if (node->flag != MEM_FLAG_USED) {
-        ADAPTER_LOGF("may double free %p/%s/%u!!", pt, NON_NULL_STR(func), line);
+        IOTC_LOGF("may double free %p/%s/%u!!", pt, NON_NULL_STR(func), line);
         return;
     }
     node->flag = 0;
@@ -145,13 +145,13 @@ void IotcDebugFree(void *pt, const char *func, uint32_t line)
         }
         LIST_REMOVE(item);
         find = true;
-        ADAPTER_LOGD("free %p/%u/%s/%u/%s/%u", curNode->mem, curNode->size, NON_NULL_STR(func), line,
+        IOTC_LOGD("free %p/%u/%s/%u/%s/%u", curNode->mem, curNode->size, NON_NULL_STR(func), line,
             NON_NULL_STR(curNode->func), curNode->line);
         break;
     }
     MemUnlock();
     if (!find) {
-        ADAPTER_LOGF("may double free %s/%u!!", NON_NULL_STR(func), line);
+        IOTC_LOGF("may double free %s/%u!!", NON_NULL_STR(func), line);
         return;
     }
 #if IOTC_CONF_MEM_DEBUG_NO_FREE
@@ -168,7 +168,7 @@ void IotcMemDump(void)
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM_REV(item, &g_memList) {
         MemNode *curNode = CONTAINER_OF(item, MemNode, node);
-        ADAPTER_LOGD("mem node %p/%u/%u/%s/%u", curNode->mem, curNode->size, DeltaTime(cur, curNode->time),
+        IOTC_LOGD("mem node %p/%u/%u/%s/%u", curNode->mem, curNode->size, DeltaTime(cur, curNode->time),
             NON_NULL_STR(curNode->func), curNode->line);
     }
     MemUnlock();

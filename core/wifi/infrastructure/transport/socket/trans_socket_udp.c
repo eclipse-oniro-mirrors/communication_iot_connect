@@ -16,9 +16,9 @@
 #include "utils_assert.h"
 #include "comm_def.h"
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "iotc_errcode.h"
 #include "dfx_anonymize.h"
 

@@ -15,7 +15,7 @@
 #ifndef LOCAL_CONTROL_REPORT_H
 #define LOCAL_CONTROL_REPORT_H
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "local_ctl_ctx.h"
 
 #ifdef __cplusplus

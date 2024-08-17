@@ -19,9 +19,9 @@
 #include "security_speke_server.h"
 #include "security_speke_client.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
-#include "adapter_aes.h"
+#include "iotc_aes.h"
 #include "security_random.h"
 #include "iotc_errcode.h"
 

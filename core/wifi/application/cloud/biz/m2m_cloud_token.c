@@ -21,7 +21,7 @@
 #include "utils_bit_map.h"
 #include "utils_time.h"
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "sched_timer.h"
 #include "event_bus.h"
 #include "iotc_errcode.h"

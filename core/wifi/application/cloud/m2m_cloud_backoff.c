@@ -15,7 +15,7 @@
 #include "m2m_cloud_backoff.h"
 #include "securec.h"
 #include "utils_assert.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "config_login_info.h"
 #include "security_random.h"

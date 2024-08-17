@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "utils_bit_map.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "comm_def.h"
 #include "iotc_log.h"
 #include "securec.h"

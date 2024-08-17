@@ -21,7 +21,7 @@
 #include "iotc_errcode.h"
 #include "utils_bit_map.h"
 #include "utils_assert.h"
-#include "adapter_base64.h"
+#include "iotc_base64.h"
 #include "coap_codec_utils.h"
 
 typedef enum {

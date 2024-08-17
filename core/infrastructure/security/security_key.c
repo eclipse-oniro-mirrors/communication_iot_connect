@@ -16,8 +16,8 @@
 #include <stddef.h>
 #include "iotc_log.h"
 #include "utils_mutex_global.h"
-#include "adapter_aes.h"
-#include "adapter_kdf.h"
+#include "iotc_aes.h"
+#include "iotc_kdf.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"

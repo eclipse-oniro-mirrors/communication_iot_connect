@@ -18,7 +18,7 @@
 #include "utils_assert.h"
 #include "securec.h"
 #include "utils_common.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_errcode.h"
 #include "dfx_anonymize.h"
 

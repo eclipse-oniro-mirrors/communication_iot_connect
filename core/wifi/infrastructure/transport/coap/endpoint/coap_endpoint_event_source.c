@@ -16,7 +16,7 @@
 #include "utils_list.h"
 #include "utils_assert.h"
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 
 #define COAP_ENDPOINT_EVENT_SOURCE_NAME "ENDPOINT"
 

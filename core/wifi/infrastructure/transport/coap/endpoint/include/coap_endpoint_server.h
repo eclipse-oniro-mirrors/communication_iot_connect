@@ -17,7 +17,7 @@
 #include <stdbool.h>
 #include "coap_endpoint.h"
 #include "utils_bit_map.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {

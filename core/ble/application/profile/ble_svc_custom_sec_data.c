@@ -14,7 +14,7 @@
  */
 #include <string.h>
 #include "ble_svc_custom_sec_data.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "utils_json.h"

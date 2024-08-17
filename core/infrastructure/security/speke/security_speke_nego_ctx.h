@@ -15,7 +15,7 @@
 #ifndef SECURITY_SPEKE_NEGO_CTX_H
 #define SECURITY_SPEKE_NEGO_CTX_H
 
-#include "adapter_mpi.h"
+#include "iotc_mpi.h"
 
 #ifdef __cplusplus
 extern "C" {

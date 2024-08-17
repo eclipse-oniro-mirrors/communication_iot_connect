@@ -14,9 +14,9 @@
  */
 #include <stdbool.h>
 #include "crypto_mbedtls_common.h"
-#include "adapter_aes.h"
+#include "iotc_aes.h"
 #include "iotc_errcode.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 #include "securec.h"
 #include "mbedtls/gcm.h"
 #include "mbedtls/aes.h"
@@ -28,12 +28,12 @@
 static bool IsAesGcmParamValid(const IotcAesGcmParam *param)
 {
     if (param == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return false;
     }
 
     if ((param->iv == NULL) || (param->ivLen == 0)) {
-        ADAPTER_LOGW("invalid iv %u", param->ivLen);
+        IOTC_LOGW("invalid iv %u", param->ivLen);
         return false;
     }
 
@@ -41,17 +41,17 @@ static bool IsAesGcmParamValid(const IotcAesGcmParam *param)
         ((param->keyLen != IOTC_AES_128_KEY_BYTE_LEN) &&
         (param->keyLen != IOTC_AES_192_KEY_BYTE_LEN) &&
         (param->keyLen != IOTC_AES_256_KEY_BYTE_LEN))) {
-        ADAPTER_LOGW("invalid key %u", param->keyLen);
+        IOTC_LOGW("invalid key %u", param->keyLen);
         return false;
     }
 
     if ((param->data == NULL) || (param->dataLen == 0)) {
-        ADAPTER_LOGW("invalid data");
+        IOTC_LOGW("invalid data");
         return false;
     }
 
     if ((param->addLen != 0) && (param->add == NULL)) {
-        ADAPTER_LOGW("invalid add");
+        IOTC_LOGW("invalid add");
         return false;
     }
 
@@ -71,7 +71,7 @@ int32_t IotcAesGcmEncrypt(const IotcAesGcmParam *param, uint8_t *tag, uint32_t t
         ret = mbedtls_gcm_setkey(&context, MBEDTLS_CIPHER_ID_AES,
             param->key, param->keyLen * BITS_PER_BYTES);
         if (ret != 0) {
-            ADAPTER_LOGW("set key err %d", ret);
+            IOTC_LOGW("set key err %d", ret);
             break;
         }
 
@@ -79,7 +79,7 @@ int32_t IotcAesGcmEncrypt(const IotcAesGcmParam *param, uint8_t *tag, uint32_t t
             param->iv, param->ivLen, param->add, param->addLen, param->data,
             buf, tagLen, tag);
         if (ret != 0) {
-            ADAPTER_LOGW("encrypt err %d", ret);
+            IOTC_LOGW("encrypt err %d", ret);
         }
     } while (false);
 
@@ -100,7 +100,7 @@ int32_t IotcAesGcmDecrypt(const IotcAesGcmParam *param, const uint8_t *tag, uint
         ret = mbedtls_gcm_setkey(&context, MBEDTLS_CIPHER_ID_AES,
             param->key, param->keyLen * BITS_PER_BYTES);
         if (ret != 0) {
-            ADAPTER_LOGW("set key err %d", ret);
+            IOTC_LOGW("set key err %d", ret);
             break;
         }
 
@@ -108,7 +108,7 @@ int32_t IotcAesGcmDecrypt(const IotcAesGcmParam *param, const uint8_t *tag, uint
             param->add, param->addLen, tag, tagLen,
             param->data, buf);
         if (ret != 0) {
-            ADAPTER_LOGW("decrypt err %d", ret);
+            IOTC_LOGW("decrypt err %d", ret);
             break;
         }
     } while (false);
@@ -136,12 +136,12 @@ static mbedtls_cipher_padding_t GetMbedtlsPaddingMode(IotcPaddingMode mode)
 static bool IsAesCbcParamValid(const IotcAesCbcParam *param)
 {
     if (param == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return false;
     }
 
     if (param->iv == NULL) {
-        ADAPTER_LOGW("invalid iv");
+        IOTC_LOGW("invalid iv");
         return false;
     }
 
@@ -149,14 +149,14 @@ static bool IsAesCbcParamValid(const IotcAesCbcParam *param)
         ((param->keyLen != IOTC_AES_128_KEY_BYTE_LEN) &&
         (param->keyLen != IOTC_AES_192_KEY_BYTE_LEN) &&
         (param->keyLen != IOTC_AES_256_KEY_BYTE_LEN))) {
-        ADAPTER_LOGW("invalid key %u", param->keyLen);
+        IOTC_LOGW("invalid key %u", param->keyLen);
         return false;
     }
 
     if ((param->data == NULL) || (param->dataLen == 0) ||
         /* cbc加解密要求数据长度为16的倍数 */
         ((param->mode == ADAPTER_PADDING_NONE) && (param->dataLen % 16 != 0))) {
-        ADAPTER_LOGW("invalid data %u", param->dataLen);
+        IOTC_LOGW("invalid data %u", param->dataLen);
         return false;
     }
 
@@ -184,7 +184,7 @@ static int32_t AesCbcCrypt(const IotcAesCbcParam *param, int32_t mode, uint8_t *
 
     int32_t ret = mbedtls_cipher_setup(&ctx, mbedtls_cipher_info_from_type(GetMbedtlsCbcCipherType(param->keyLen)));
     if (ret != 0) {
-        ADAPTER_LOGW("cipher setup error [-0x%04x]", -ret);
+        IOTC_LOGW("cipher setup error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_SETUP;
     }
 
@@ -194,20 +194,20 @@ static int32_t AesCbcCrypt(const IotcAesCbcParam *param, int32_t mode, uint8_t *
         ret = mbedtls_cipher_setkey(&ctx, param->key, param->keyLen * BITS_PER_BYTES, MBEDTLS_ENCRYPT);
     }
     if (ret != 0) {
-        ADAPTER_LOGW("set key err [-0x%04x]", -ret);
+        IOTC_LOGW("set key err [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_SETUP;
     }
 
     ret = mbedtls_cipher_set_padding_mode(&ctx, GetMbedtlsPaddingMode(param->mode));
     if (ret != 0) {
-        ADAPTER_LOGW("set padding mode err [-0x%04x]", -ret);
+        IOTC_LOGW("set padding mode err [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_SETUP;
     }
 
     size_t bufLenTmp = *bufLen;
     ret = mbedtls_cipher_crypt(&ctx, param->iv, IOTC_AES_CBC_IV_LEN, param->data, param->dataLen, buf, &bufLenTmp);
     if (ret != 0) {
-        ADAPTER_LOGW("crypt err [-0x%04x]", -ret);
+        IOTC_LOGW("crypt err [-0x%04x]", -ret);
         return (mode == MBEDTLS_DECRYPT) ? IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_ENC : IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_DEC;
     }
     *bufLen = bufLenTmp;
@@ -234,12 +234,12 @@ int32_t IotcAesCbcDecrypt(const IotcAesCbcParam *param, uint8_t *buf, uint32_t *
 static bool IsAesCcmParamValid(const IotcAesCcmParam *param)
 {
     if (param == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return false;
     }
 
     if ((param->iv == NULL) || (param->ivLen == 0)) {
-        ADAPTER_LOGW("invalid iv");
+        IOTC_LOGW("invalid iv");
         return false;
     }
 
@@ -247,17 +247,17 @@ static bool IsAesCcmParamValid(const IotcAesCcmParam *param)
         ((param->keyLen != IOTC_AES_128_KEY_BYTE_LEN) &&
         (param->keyLen != IOTC_AES_192_KEY_BYTE_LEN) &&
         (param->keyLen != IOTC_AES_256_KEY_BYTE_LEN))) {
-        ADAPTER_LOGW("invalid key %u", param->keyLen);
+        IOTC_LOGW("invalid key %u", param->keyLen);
         return false;
     }
 
     if ((param->data == NULL) || (param->dataLen == 0)) {
-        ADAPTER_LOGW("invalid data");
+        IOTC_LOGW("invalid data");
         return false;
     }
 
     if ((param->addLen != 0) && (param->add == NULL)) {
-        ADAPTER_LOGW("invalid add");
+        IOTC_LOGW("invalid add");
         return false;
     }
 
@@ -278,7 +278,7 @@ int32_t IotcAesCcmDecrypt(const IotcAesCcmParam *param, const uint8_t *tag, uint
         ret = mbedtls_ccm_setkey(&context, MBEDTLS_CIPHER_ID_AES,
             param->key, param->keyLen * BITS_PER_BYTES);
         if (ret != 0) {
-            ADAPTER_LOGW("set key err [-0x%04x]", -ret);
+            IOTC_LOGW("set key err [-0x%04x]", -ret);
             break;
         }
 
@@ -286,7 +286,7 @@ int32_t IotcAesCcmDecrypt(const IotcAesCcmParam *param, const uint8_t *tag, uint
             param->add, param->addLen, param->data, buf,
             tag, tagLen);
         if (ret != 0) {
-            ADAPTER_LOGW("decrypt err [-0x%04x]", -ret);
+            IOTC_LOGW("decrypt err [-0x%04x]", -ret);
             break;
         }
     } while (0);
@@ -310,7 +310,7 @@ int32_t IotcAesCcmEncrypt(const IotcAesCcmParam *param, uint8_t *tag, uint32_t t
         ret = mbedtls_ccm_setkey(&context, MBEDTLS_CIPHER_ID_AES,
             param->key, param->keyLen * BITS_PER_BYTES);
         if (ret != 0) {
-            ADAPTER_LOGW("set key err [-0x%04x]", -ret);
+            IOTC_LOGW("set key err [-0x%04x]", -ret);
             break;
         }
 
@@ -320,7 +320,7 @@ int32_t IotcAesCcmEncrypt(const IotcAesCcmParam *param, uint8_t *tag, uint32_t t
             param->data, buf,
             tag, tagLen);
         if (ret != 0) {
-            ADAPTER_LOGW("encrypt err [-0x%04x]", -ret);
+            IOTC_LOGW("encrypt err [-0x%04x]", -ret);
             break;
         }
     } while (0);

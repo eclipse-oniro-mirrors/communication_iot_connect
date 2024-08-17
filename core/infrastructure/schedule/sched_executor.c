@@ -15,7 +15,7 @@
 #include "sched_executor.h"
 #include "sched_event_loop.h"
 #include "sched_msg_queue.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_assert.h"
 #include "comm_def.h"
 #include "securec.h"

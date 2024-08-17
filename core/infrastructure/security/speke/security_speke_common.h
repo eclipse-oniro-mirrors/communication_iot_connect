@@ -16,7 +16,7 @@
 #define SECURITY_SPEKE_COMMON_H
 
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "security_speke.h"
 
 #ifdef __cplusplus

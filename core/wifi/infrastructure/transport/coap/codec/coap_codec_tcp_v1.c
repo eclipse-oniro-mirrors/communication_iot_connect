@@ -15,7 +15,7 @@
 #include "coap_codec_tcp_v1.h"
 #include "utils_assert.h"
 #include "coap_codec_comm.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "iotc_errcode.h"
 
 #define COAP_TCP_V1_GET_REMAIN_SIZE_FINISH 1

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "m2m_cloud_link.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "trans_buffer_inner.h"

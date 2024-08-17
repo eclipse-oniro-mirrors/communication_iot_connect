@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "trans_socket.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "comm_def.h"
 #include "iotc_errcode.h"

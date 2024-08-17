@@ -16,7 +16,7 @@
 #include "char_state_mdl.h"
 #include "utils_assert.h"
 #include "sched_executor.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "iotc_errcode.h"
 #include "dev_mngr_ctx.h"

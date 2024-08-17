@@ -17,8 +17,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "adapter_md.h"
-#include "adapter_mpi.h"
+#include "iotc_md.h"
+#include "iotc_mpi.h"
 #include "mbedtls/md.h"
 #include "mbedtls/bignum.h"
 

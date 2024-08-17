@@ -20,7 +20,7 @@
 #include "securec.h"
 #include "iotc_log.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 
 #define HASHMAP_NAME_LEN 20
 

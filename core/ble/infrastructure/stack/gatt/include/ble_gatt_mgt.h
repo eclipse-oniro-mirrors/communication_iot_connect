@@ -16,7 +16,7 @@
 #define BLE_GATT_MGT_H
 
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "iotc_ble_def.h"
 
 #ifdef __cplusplus

@@ -18,7 +18,7 @@
 #include "utils_assert.h"
 #include "sched_timer.h"
 #include "utils_common.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "dfx_anonymize.h"
 #include "securec.h"
 #include "security_random.h"

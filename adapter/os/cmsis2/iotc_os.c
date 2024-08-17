@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include "cmsis_os2.h"
 #include "securec.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 #include "iotc_errcode.h"
 
 #ifndef MS_PER_SECOND
@@ -32,7 +32,7 @@ IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
 {
     if ((param == NULL) || (param->func == NULL) || (param->prio > IOTC_TASK_PRIORITY_MAX) ||
         (param->stackSize == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return NULL;
     }
 
@@ -56,13 +56,13 @@ IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
 int32_t IotcTaskSuspend(IotcTaskId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     osStatus_t status = osThreadSuspend((osThreadId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("suspend error %d", status);
+        IOTC_LOGW("suspend error %d", status);
         return IOTC_ADAPTER_OS_ERR_SUSPEND_TASK;
     }
     return IOTC_OK;
@@ -71,13 +71,13 @@ int32_t IotcTaskSuspend(IotcTaskId *id)
 int32_t IotcTaskResume(IotcTaskId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     osStatus_t status = osThreadResume((osThreadId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("resume error %d", status);
+        IOTC_LOGW("resume error %d", status);
         return IOTC_ADAPTER_OS_ERR_RESUME_TASK;
     }
     return IOTC_OK;
@@ -91,7 +91,7 @@ void IotcTaskDelete(IotcTaskId *id)
 
     osStatus_t status = osThreadTerminate((osThreadId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("delete task error %d", status);
+        IOTC_LOGW("delete task error %d", status);
     }
 }
 
@@ -117,7 +117,7 @@ static inline uint32_t MsToTick(uint32_t ms)
 int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -126,7 +126,7 @@ int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
         if (status == osErrorTimeout) {
             return IOTC_ERR_TIMEOUT;
         }
-        ADAPTER_LOGW("mutex lock error %d", status);
+        IOTC_LOGW("mutex lock error %d", status);
         return IOTC_ADAPTER_OS_ERR_MUTEX_LOCK;
     }
 
@@ -136,13 +136,13 @@ int32_t IotcMutexLock(IotcMutexId *id, uint32_t ms)
 int32_t IotcMutexUnlock(IotcMutexId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     osStatus_t status = osMutexRelease((osMutexId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("mutex unlock error %d", status);
+        IOTC_LOGW("mutex unlock error %d", status);
         return IOTC_ADAPTER_OS_ERR_MUTEX_UNLOCK;
     }
     return IOTC_OK;
@@ -151,13 +151,13 @@ int32_t IotcMutexUnlock(IotcMutexId *id)
 void IotcMutexDestroy(IotcMutexId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
 
     osStatus_t status = osMutexDelete((osMutexId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("mutex delete error %d", status);
+        IOTC_LOGW("mutex delete error %d", status);
     }
 }
 
@@ -170,7 +170,7 @@ IotcSemId *IotcSemCreate(uint32_t count)
 int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -181,7 +181,7 @@ int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
     if (status == osErrorTimeout) {
         return IOTC_ERR_TIMEOUT;
     }
-    ADAPTER_LOGW("wait sem error %d", status);
+    IOTC_LOGW("wait sem error %d", status);
 
     return IOTC_ADAPTER_OS_ERR_WAIT_SEM;
 }
@@ -189,13 +189,13 @@ int32_t IotcSemWait(IotcSemId *id, uint32_t ms)
 int32_t IotcSemPost(IotcSemId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     osStatus_t status = osSemaphoreRelease((osSemaphoreId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("post sem error %d", status);
+        IOTC_LOGW("post sem error %d", status);
         return IOTC_ADAPTER_OS_ERR_POST_SEM;
     }
 
@@ -205,7 +205,7 @@ int32_t IotcSemPost(IotcSemId *id)
 uint32_t IotcSemGetCount(IotcSemId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return 0;
     }
     return osSemaphoreGetCount((osSemaphoreId_t)id);
@@ -214,13 +214,13 @@ uint32_t IotcSemGetCount(IotcSemId *id)
 void IotcSemDestroy(IotcSemId *id)
 {
     if (id == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
 
     osStatus_t status = osSemaphoreDelete((osSemaphoreId_t)id);
     if (status != osOK) {
-        ADAPTER_LOGW("sem delete error %d", status);
+        IOTC_LOGW("sem delete error %d", status);
     }
 }
 
@@ -238,7 +238,7 @@ void IotcSchedYield(void)
 uint32_t IotcGetSysTimeMs(void)
 {
     if (osKernelGetTickFreq() == 0) {
-        ADAPTER_LOGW("invalid tick freq");
+        IOTC_LOGW("invalid tick freq");
         return 0;
     }
     return ((uint32_t)osKernelGetTickCount() * MS_PER_SECOND / osKernelGetTickFreq());

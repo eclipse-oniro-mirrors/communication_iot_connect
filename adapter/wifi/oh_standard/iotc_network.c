@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_network.h"
+#include "iotc_network.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include "securec.h"
@@ -20,16 +20,16 @@
 #include "wifi_event.h"
 #include "wifi_device_config.h"
 #include "iotc_errcode.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "iotc_conf.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 #include "wifi_hotspot_config.h"
 #include "wifi_hotspot.h"
 
 int32_t IotcGetSoftApIp(char *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -37,31 +37,31 @@ int32_t IotcGetSoftApIp(char *buf, uint32_t len)
     (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
     int32_t ret = GetHotspotConfig(&result);
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGE("Get wifi info fail %d", ret);
+        IOTC_LOGE("Get wifi info fail %d", ret);
         return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
     }
 
     if (result.ipAddress[0] == '\0') {
-        ADAPTER_LOGE("wifi ip empty");
+        IOTC_LOGE("wifi ip empty");
         (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
         return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
     }
 
     if (strcpy_s(buf, len, result.ipAddress) != EOK) {
-        ADAPTER_LOGE("strcpy fail");
+        IOTC_LOGE("strcpy fail");
         (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
         return IOTC_ERR_SECUREC_STRCPY;
     }
     (void)memset_s(&result, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
 
-    ADAPTER_LOGD("Get Hotspot Config success");
+    IOTC_LOGD("Get Hotspot Config success");
     return IOTC_OK;
 }
 
 int32_t IotcGetLocalIp(char *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     static bool isPrint = false;
@@ -71,7 +71,7 @@ int32_t IotcGetLocalIp(char *buf, uint32_t len)
     if (ret != WIFI_SUCCESS) {
         /* 该接口高频调用，避免日志过多 */
         if (!isPrint) {
-            ADAPTER_LOGE("Get wifi linked info fail %d", ret);
+            IOTC_LOGE("Get wifi linked info fail %d", ret);
             isPrint = true;
         }
         return IOTC_ADAPTER_NETWORK_ERR_GET_IP;
@@ -88,13 +88,13 @@ int32_t IotcGetLocalIp(char *buf, uint32_t len)
 int32_t IotcGetMacAddr(uint8_t *buf, uint32_t len)
 {
     if ((buf == NULL) || (len < IOTC_MAC_ADDRESS_LEN)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     int32_t ret = GetDeviceMacAddress(buf);
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGE("get mac error %d", ret);
+        IOTC_LOGE("get mac error %d", ret);
         return IOTC_ADAPTER_NETWORK_ERR_GET_MAC;
     }
     return IOTC_OK;
@@ -116,14 +116,14 @@ IotcNetworkState IotcGetNetworkState(void)
 int32_t IotcGetBroadcastAddr(char *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 #if IOTC_CONF_BROAD_CAST_SUPPORT
     IpInfo ipInfo = {0};
     WifiErrorCode ret = GetIpInfo(&ipInfo);
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGE("get ip info error %d", ret);
+        IOTC_LOGE("get ip info error %d", ret);
         return IOTC_IOTC_NETWORK_ERR_GET_BROADCAST_IP;
     }
     uint32_t broadcastIp = (ipInfo.ipAddress & ipInfo.netMask) | (~ipInfo.netMask);

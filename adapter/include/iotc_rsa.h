@@ -16,8 +16,8 @@
 #define IOTC_RSA_H
 
 #include <stdint.h>
-#include "adapter_md.h"
-#include "adapter_mpi.h"
+#include "iotc_md.h"
+#include "iotc_mpi.h"
 
 #ifdef __cplusplus
 extern "C" {

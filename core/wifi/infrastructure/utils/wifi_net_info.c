@@ -15,12 +15,12 @@
 #include <stdint.h>
 #include <string.h>
 #include "wifi_net_info.h"
-#include "adapter_wifi.h"
-#include "adapter_network.h"
+#include "iotc_wifi.h"
+#include "iotc_network.h"
 #include "utils_common.h"
 #include "securec.h"
 #include "iotc_errcode.h"
-#include "adapter_wifi_def.h"
+#include "iotc_wifi_def.h"
 #include "utils_assert.h"
 
 #define INADDR_IP_STR "0.0.0.0"

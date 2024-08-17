@@ -16,7 +16,7 @@
 #define IOTC_SERVICE_CONNECT_H
 #include <stdint.h>
 #include <stdbool.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {

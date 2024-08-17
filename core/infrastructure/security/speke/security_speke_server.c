@@ -18,7 +18,7 @@
 #include "security_speke_common.h"
 #include "security_speke_session.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "security_random.h"
 #include "iotc_errcode.h"
 

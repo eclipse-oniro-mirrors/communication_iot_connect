@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "iotc_errcode.h"
 #include "utils_list.h"
 #include "utils_mutex_ex.h"

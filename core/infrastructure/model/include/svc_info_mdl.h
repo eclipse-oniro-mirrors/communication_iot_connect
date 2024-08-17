@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_prof_def.h"
 
 #ifdef __cplusplus

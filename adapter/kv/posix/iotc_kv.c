@@ -12,111 +12,133 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_kv.h"
+#include "iotc_kv.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
 #include "securec.h"
-#include "utils_file.h"
 #include "iotc_errcode.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 
 #define MAX_KEY_LEN 128
 #define MAX_TAG_LEN 128
 #define MAX_FILE_NUMS 64
 #define MAX_FILE_PATH_LEN 512
-#define FILE_LEN_INVALID 0
-
-#define CHECK_IS_INIT \
-    do { \
-        if (!g_isInit) { \
-            ADAPTER_LOGE("kv not init"); \
-            return IOTC_ADAPTER_KV_ERR_INIT; \
-        } \
-    } while (0)
 
 static char g_tag[MAX_TAG_LEN + 1] = {0};
-static bool g_isInit = false;
+
+static int32_t CreateConfigPath(const char *dir)
+{
+    /* 创建目录，0660表示创建目录的权限 */
+    int32_t ret = mkdir(dir, 0660);
+    if (ret != 0) {
+        struct stat state;
+        (void)memset_s(&state, sizeof(struct stat), 0, sizeof(struct stat));
+        ret = stat(dir, &state);
+        if ((ret != 0) || ((state.st_mode & S_IFDIR) == 0)) {
+            IOTC_LOGE("create %s err %d", dir, ret);
+            return IOTC_ADAPTER_KV_ERR_CREATE_DIR;
+        }
+    }
+    return IOTC_OK;
+}
 
 int32_t IotcKvInit(const char *tag)
 {
     if (tag == NULL) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
-    }
-
-    if (g_isInit) {
-        ADAPTER_LOGE("kv reinit");
-        return IOTC_ADAPTER_KV_ERR_INIT;
     }
 
     uint32_t tagLen = strlen(tag);
     if (tagLen > MAX_TAG_LEN) {
-        ADAPTER_LOGE("tagLen[%u] out of range", tagLen);
+        IOTC_LOGE("tagLen[%u] out of range", tagLen);
         return IOTC_ERR_PARAM_INVALID;
     }
 
+    int32_t ret = CreateConfigPath(tag);
+    if (ret != IOTC_OK) {
+        return ret;
+    }
+
     if (strcpy_s(g_tag, MAX_TAG_LEN, tag) != EOK) {
-        ADAPTER_LOGE("strcpy tag err");
+        IOTC_LOGE("strcpy tag err");
         return IOTC_ERR_SECUREC_STRCPY;
     }
-    g_isInit = true;
 
     return IOTC_OK;
 }
 
 static int32_t CreateFile(const char *filePath)
 {
-    ADAPTER_LOGD("create %s", filePath);
-    int32_t fd = UtilsFileOpen(filePath, O_RDWR_FS | O_CREAT_FS, 0);
-    if (fd < 0) {
-        ADAPTER_LOGE("open or create error");
+    IOTC_LOGD("create %s", filePath);
+
+    FILE *fp = fopen(filePath, "ab+");
+    if (fp == NULL) {
+        IOTC_LOGE("open or create %s error, errno: %d", filePath, errno);
         return IOTC_ADAPTER_KV_ERR_CREATE_FILE;
     }
-    UtilsFileClose(fd);
+
+    (void)fclose(fp);
+    fp = NULL;
+    if (chmod(filePath, S_IRUSR | S_IWUSR) != 0) {
+        IOTC_LOGE("chmod error, errno:%d", errno);
+        return IOTC_ADAPTER_KV_ERR_CREATE_FILE;
+    }
+
     return IOTC_OK;
 }
 
 static bool CheckFileIsExisit(const char *filePath)
 {
-    int32_t fd = UtilsFileOpen(filePath, O_RDONLY_FS, 0);
-    if (fd < 0) {
+    FILE *fp = fopen(filePath, "r");
+    if (fp == NULL) {
         return false;
-    } else {
-        UtilsFileClose(fd);
-        return true;
     }
+    (void)fclose(fp);
+    return true;
 }
 
 static int32_t KvSetValue(const char *filePath, const uint8_t *buf, uint32_t len)
 {
-    ADAPTER_LOGD("write %s", filePath);
-    int32_t fd = UtilsFileOpen(filePath, O_RDWR_FS | O_CREAT_FS, 0);
-    if (fd < 0) {
-        ADAPTER_LOGE("open file[%s] error", filePath);
+    IOTC_LOGD("write %s", filePath);
+    FILE *fp = fopen(filePath, "wb+");
+    if (fp == NULL) {
+        IOTC_LOGE("open file[%s] error, errno:%d", filePath, errno);
         return IOTC_ADAPTER_KV_ERR_SET_ITEM;
     }
 
-    int32_t ret = UtilsFileWrite(fd, (uint8_t *)buf, len);
-    if (ret < 0) {
-        ADAPTER_LOGE("write file[%s] error", filePath);
-        UtilsFileClose(fd);
+    /* 写入1块，长度为len的数据 */
+    if (fwrite(buf, 1, len, fp) != len) {
+        IOTC_LOGE("write file[%s] error", filePath);
+        (void)fclose(fp);
         return IOTC_ADAPTER_KV_ERR_SET_ITEM;
     }
-    UtilsFileClose(fd);
+
+    /* 数据从用户空间刷入内核缓冲区，不关心返回值 */
+    (void)fflush(fp);
+    int32_t fd = fileno(fp);
+    if (fd != -1) {
+        (void)fsync(fd);
+    }
+
+    (void)fclose(fp);
     return IOTC_OK;
 }
 
 int32_t IotcKvSetValue(const char *key, const uint8_t *value, uint32_t len)
 {
     if ((key == NULL) || (value == NULL) || (len == 0)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
-    CHECK_IS_INIT;
 
     char filePath[MAX_FILE_PATH_LEN] = {0};
     if (sprintf_s(filePath, MAX_FILE_PATH_LEN, "%s/%s", g_tag, key) < 0) {
-        ADAPTER_LOGW("sprintf err");
+        IOTC_LOGW("sprintf err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
@@ -130,47 +152,48 @@ int32_t IotcKvSetValue(const char *key, const uint8_t *value, uint32_t len)
 
 static int32_t KvGetValue(const char *filePath, uint8_t *buf, uint32_t *len)
 {
-    ADAPTER_LOGD("read %s", filePath);
-    int32_t fd = UtilsFileOpen(filePath, O_RDWR_FS | O_CREAT_FS, 0);
-    if (fd < 0) {
-        ADAPTER_LOGE("open file[%s] error", filePath);
+    IOTC_LOGD("read %s", filePath);
+    FILE *fp = fopen(filePath, "rb+");
+    if (fp == NULL) {
+        IOTC_LOGE("open file[%s] error, errno:%d", filePath, errno);
         return IOTC_ADAPTER_KV_ERR_GET_ITEM;
     }
 
     uint32_t fileLen = 0;
-    int32_t ret = UtilsFileStat(filePath, &fileLen);
+    struct stat st;
+    int32_t ret = stat(filePath, &st);
     if (ret != 0) {
-        ADAPTER_LOGE("stat file[%s] error", filePath);
-        UtilsFileClose(fd);
+        IOTC_LOGE("stat file[%s] error, errno:%d, ret:%d", filePath, errno, ret);
+        (void)fclose(fp);
         return IOTC_ADAPTER_KV_ERR_GET_ITEM;
     }
+    fileLen = (uint32_t)st.st_size;
     if (fileLen > *len) {
-        ADAPTER_LOGW("buffer not enough %u/%u", fileLen, *len);
-        UtilsFileClose(fd);
+        IOTC_LOGW("buffer not enough %u/%u", fileLen, *len);
+        (void)fclose(fp);
         return IOTC_ADAPTER_KV_ERR_GET_ITEM;
     }
     *len = fileLen;
-    ret = UtilsFileRead(fd, buf, *len);
-    if (ret < 0) {
-        ADAPTER_LOGE("read file[%s] error", filePath);
-        UtilsFileClose(fd);
+    if (fread(buf, 1, *len, fp) != *len) {
+        IOTC_LOGE("read file[%s] error", filePath);
+        (void)fclose(fp);
         return IOTC_ADAPTER_KV_ERR_GET_ITEM;
     }
-    UtilsFileClose(fd);
+
+    (void)fclose(fp);
     return IOTC_OK;
 }
 
 int32_t IotcKvGetValue(const char *key, uint8_t *buf, uint32_t *len)
 {
     if ((key == NULL) || (key[0] == '\0') || (buf == NULL) || len == NULL || (*len == 0)) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
-    CHECK_IS_INIT;
 
     char filePath[MAX_FILE_PATH_LEN] = {0};
     if (sprintf_s(filePath, MAX_FILE_PATH_LEN, "%s/%s", g_tag, key) < 0) {
-        ADAPTER_LOGW("sprintf err");
+        IOTC_LOGW("sprintf err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
     return KvGetValue((const char *)filePath, buf, len);
@@ -178,49 +201,38 @@ int32_t IotcKvGetValue(const char *key, uint8_t *buf, uint32_t *len)
 
 static uint32_t GetFileLenByName(const char *filePath, uint32_t *len)
 {
-    int32_t fd = UtilsFileOpen(filePath, O_RDWR_FS | O_CREAT_FS, 0);
-    if (fd < 0) {
-        ADAPTER_LOGE("open file[%s] error", filePath);
-        return IOTC_ADAPTER_KV_ERR_OPEN_FILE;
-    }
-
-    int32_t ret = UtilsFileStat(filePath, len);
+    struct stat st;
+    int32_t ret = stat(filePath, &st);
     if (ret != 0) {
-        ADAPTER_LOGE("stat file[%s] error", filePath);
-        UtilsFileClose(fd);
+        IOTC_LOGD("stat file[%s] error, errno:%d, ret:%d", filePath, errno, ret);
         *len = 0;
-        return IOTC_ADAPTER_KV_ERR_STAT_FILE;
+        return (errno == ENOENT) ? IOTC_OK : IOTC_ADAPTER_KV_ERR_STAT_FILE;
     }
-    UtilsFileClose(fd);
+    *len = (uint32_t)st.st_size;
     return IOTC_OK;
 }
 
 int32_t IotcKvGetLen(const char *key, uint32_t *len)
 {
-    if ((key == NULL) || (key[0] == '\0')) {
-        ADAPTER_LOGE("invalid param");
+    if ((key == NULL) || (key[0] == '\0') || (len == NULL)) {
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
-    CHECK_IS_INIT;
 
     char filePath[MAX_FILE_PATH_LEN] = {0};
     if (sprintf_s(filePath, MAX_FILE_PATH_LEN, "%s/%s", g_tag, key) < 0) {
-        ADAPTER_LOGW("sprintf err");
+        IOTC_LOGW("sprintf err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
-    int32_t ret = GetFileLenByName((const char *)filePath, len);
-    if (ret != IOTC_OK) {
-        ADAPTER_LOGW("get fileLen err");
-    }
-    return IOTC_OK;
+    return GetFileLenByName((const char *)filePath, len);
 }
 
 static int32_t KvDelValue(const char *filePath)
 {
-    ADAPTER_LOGD("delete %s", filePath);
-    int32_t ret = UtilsFileDelete(filePath);
+    IOTC_LOGD("delete %s", filePath);
+    int32_t ret = remove(filePath);
     if (ret != 0) {
-        ADAPTER_LOGE("delete error %d", ret);
+        IOTC_LOGE("delete error %d", ret);
         return IOTC_ADAPTER_KV_ERR_DEL_FILE;
     }
     return IOTC_OK;
@@ -229,17 +241,13 @@ static int32_t KvDelValue(const char *filePath)
 int32_t IotcKvDelValue(const char *key)
 {
     if ((key == NULL) || (key[0] == '\0')) {
-        ADAPTER_LOGE("invalid param");
+        IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
-    }
-    if (!g_isInit) {
-        ADAPTER_LOGE("kv not init");
-        return IOTC_ADAPTER_KV_ERR_INIT;
     }
 
     char filePath[MAX_FILE_PATH_LEN] = {0};
     if (sprintf_s(filePath, MAX_FILE_PATH_LEN, "%s/%s", g_tag, key) < 0) {
-        ADAPTER_LOGW("sprintf err");
+        IOTC_LOGW("sprintf err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
@@ -248,8 +256,6 @@ int32_t IotcKvDelValue(const char *key)
 
 int32_t IotcKvDeInit(void)
 {
-    CHECK_IS_INIT;
     (void)memset_s(g_tag, sizeof(g_tag), 0, sizeof(g_tag));
-    g_isInit = false;
     return IOTC_OK;
 }

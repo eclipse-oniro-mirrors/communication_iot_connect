@@ -19,7 +19,7 @@
 #include "iotc_errcode.h"
 #include "utils_assert.h"
 #include "utils_bit_map.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 static IotcJson *GenReportJson(const IotcJson *dataArray, const M2mCloudContext *ctx)
 {

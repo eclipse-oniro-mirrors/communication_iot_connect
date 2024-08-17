@@ -18,7 +18,7 @@
 #include "utils_list.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_mutex_ex.h"
 #include "utils_common.h"
 

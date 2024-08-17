@@ -20,7 +20,7 @@
 #include "trans_buffer.h"
 #include "security_speke.h"
 #include "iotc_conf.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "service_manager.h"
 #include "iotc_svc_softap.h"
 #include "coap_net_stack.h"

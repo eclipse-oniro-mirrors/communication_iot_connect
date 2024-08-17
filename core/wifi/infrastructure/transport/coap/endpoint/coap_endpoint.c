@@ -14,7 +14,7 @@
  */
 #include "coap_endpoint_priv.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "coap_codec_utils.h"
 #include "coap_codec_udp.h"

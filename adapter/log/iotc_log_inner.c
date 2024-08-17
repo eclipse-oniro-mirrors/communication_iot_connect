@@ -12,36 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "iotc_log.h"
 #include <stddef.h>
-#include "adapter_log.h"
+#include "iotc_log.h"
 
 static uint8_t g_logLevel = IOT_CONF_LOG_DEFAULT_LEVEL;
 
-void AdapterLogOutputInner(uint8_t level, const char *fileName,
-    const char *funcName, uint32_t line, const char *fmt, ...)
+void IotcSetLogLevel(uint8_t level)
 {
-    if (level > g_logLevel || fmt == NULL) {
+    if (level >  IOTC_LOG_LEVEL_MAX) {
+        IOTC_LOGW("invalid log level %u", level);
         return;
     }
-
-    AdapterLogInfo info = {
-        .level = level,
-        .fileName = fileName,
-        .funcName = funcName,
-        .line = line,
-        .fmt = fmt,
-    };
-    va_start(info.args, fmt);
-    AdapterLogOutput(&info);
-    va_end(info.args);
+    IOTC_LOGI("set log level to %u", level);
+    g_logLevel = level;
 }
 
-void AdapterSetLogLevel(uint8_t level)
+uint8_t IotcGetLogLevel(void)
 {
-    if (level > IOTC_LOG_LEVEL_MAX) {
-        ADAPTER_LOGW("invalid log level %u", level);
-        return;
-    }
-    ADAPTER_LOGN("set log level to %u", level);
-    g_logLevel = level;
+    return g_logLevel;
 }

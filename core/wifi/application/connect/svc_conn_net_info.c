@@ -16,7 +16,7 @@
  */
 #include "svc_conn_net_info.h"
 #include "utils_json.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "iotc_errcode.h"
 #include "comm_def.h"
 #include "utils_assert.h"

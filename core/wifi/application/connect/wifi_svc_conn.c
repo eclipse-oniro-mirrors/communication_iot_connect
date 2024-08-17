@@ -28,7 +28,7 @@
 #include "iotc_errcode.h"
 #include "event_bus.h"
 #include "iotc_event.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "fwk_main.h"
 
 static const char *NET_CONNECT_SERVICE_NAME = "CONNECT";

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include "securec.h"
@@ -20,11 +20,11 @@
 #include "wifi_event.h"
 #include "wifi_device_config.h"
 #include "iotc_errcode.h"
-#include "adapter_network.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_network.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "wifi_hotspot.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 
 #define WIFI_SCANNING 1
 #define MAX_SCAN_TIMES 4
@@ -45,7 +45,7 @@ int32_t IotcGetWifiInfo(uint8_t *ssidBuf, uint32_t *ssidBufLen, uint8_t *pwdBuf,
     }
     if ((*ssidBufLen == 0) || (*ssidBufLen > IOTC_WIFI_SSID_MAX_LEN) ||
         (*pwdBufLen == 0) || (*pwdBufLen > IOTC_WIFI_PWD_MAX_LEN)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -54,16 +54,16 @@ int32_t IotcGetWifiInfo(uint8_t *ssidBuf, uint32_t *ssidBufLen, uint8_t *pwdBuf,
     (void)memset_s(wifiConfig, sizeof(wifiConfig), 0, sizeof(wifiConfig));
 
     if (GetDeviceConfigs(wifiConfig, &size) != WIFI_SUCCESS) {
-        ADAPTER_LOGI("get device config fail");
+        IOTC_LOGI("get device config fail");
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
     if (wifiConfig[0].ssid[0] == '\0') {
-        ADAPTER_LOGW("GetDeviceConfigs fail, no ssid");
+        IOTC_LOGW("GetDeviceConfigs fail, no ssid");
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
 
     if (strcpy_s((char *)ssidBuf, *ssidBufLen, (char *)wifiConfig[0].ssid) != EOK) {
-        ADAPTER_LOGW("strcpy fail");
+        IOTC_LOGW("strcpy fail");
         (void)memset_s(wifiConfig, sizeof(wifiConfig), 0, sizeof(wifiConfig));
         return IOTC_ERR_SECUREC_STRCPY;
     }
@@ -75,7 +75,7 @@ int32_t IotcGetWifiInfo(uint8_t *ssidBuf, uint32_t *ssidBufLen, uint8_t *pwdBuf,
         return IOTC_OK;
     }
     if (strcpy_s((char *)pwdBuf, *pwdBufLen, (char *)wifiConfig[0].preSharedKey) != EOK) {
-        ADAPTER_LOGW("strcpy fail");
+        IOTC_LOGW("strcpy fail");
         (void)memset_s(wifiConfig, sizeof(wifiConfig), 0, sizeof(wifiConfig));
         return IOTC_ERR_SECUREC_STRCPY;
     }
@@ -95,7 +95,7 @@ static int32_t GetWifiConfigFromOhos(WifiDeviceConfig *config)
     }
 
     if (memcpy_s(config, sizeof(WifiDeviceConfig), &wifiConfig[0], sizeof(WifiDeviceConfig)) != EOK) {
-        ADAPTER_LOGW("memcpy error");
+        IOTC_LOGW("memcpy error");
         (void)memset_s(wifiConfig, sizeof(wifiConfig), 0, sizeof(wifiConfig));
         return IOTC_ERR_SECUREC_MEMCPY;
     }
@@ -122,7 +122,7 @@ static void ClearWifiConfig(void)
     (void)GetWifiNetworkIdFromOhos(&netId);
 
     if (RemoveDevice(netId) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("remove wifi config error, netId [%d]", netId);
+        IOTC_LOGW("remove wifi config error, netId [%d]", netId);
     }
 }
 
@@ -135,17 +135,17 @@ int32_t IotcSetWifiInfo(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
 
     if ((ssidLen != 0) && (ssid != NULL)) {
         if (memcpy_s(config.ssid, sizeof(config.ssid), ssid, ssidLen) != EOK) {
-            ADAPTER_LOGW("memcpy error");
+            IOTC_LOGW("memcpy error");
             return IOTC_ERR_SECUREC_MEMCPY;
         }
     } else {
-        ADAPTER_LOGW("clear wifi info");
+        IOTC_LOGW("clear wifi info");
         return IOTC_OK;
     }
 
     if ((pwdLen != 0) && (pwd != NULL)) {
         if (memcpy_s(config.preSharedKey, sizeof(config.preSharedKey), pwd, pwdLen) != EOK) {
-            ADAPTER_LOGW("memcpy error");
+            IOTC_LOGW("memcpy error");
             return IOTC_ERR_SECUREC_MEMCPY;
         }
         config.securityType = IOTC_WIFI_SEC_TYPE_PSK;
@@ -158,7 +158,7 @@ int32_t IotcSetWifiInfo(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
     int32_t ret = AddDeviceConfig(&config, &netId);
     (void)memset_s(&config, sizeof(WifiDeviceConfig), 0, sizeof(WifiDeviceConfig));
     if (ret != IOTC_OK) {
-        ADAPTER_LOGW("add device config error %d", ret);
+        IOTC_LOGW("add device config error %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
     }
     return IOTC_OK;
@@ -170,14 +170,14 @@ int32_t IotcRestartWifi(void)
     if (IsWifiActive() != WIFI_STATE_NOT_AVAILABLE) {
         ret = DisableWifi();
         if ((ret != IOTC_OK) && (ret != ERROR_WIFI_NOT_AVAILABLE)) {
-            ADAPTER_LOGW("disable wifi error %d", ret);
+            IOTC_LOGW("disable wifi error %d", ret);
             return IOTC_ADAPTER_WIFI_ERR_DISABLE;
         }
     }
 
     ret = EnableWifi();
     if (ret != IOTC_OK) {
-        ADAPTER_LOGW("enable wifi error %d", ret);
+        IOTC_LOGW("enable wifi error %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_ENABLE;
     }
 
@@ -186,7 +186,7 @@ int32_t IotcRestartWifi(void)
 
 static void OnWifiScanStateChangedCallback(int32_t state, int32_t size)
 {
-    ADAPTER_LOGI("scan state change %d/%u", state, size);
+    IOTC_LOGI("scan state change %d/%u", state, size);
     g_isStaScanSuccess = true;
     int32_t iotcState = state == WIFI_STATE_AVAILABLE ? IOTC_WIFI_EVENT_STATE_OK :
         IOTC_WIFI_EVENT_STATE_ERROR;
@@ -199,10 +199,10 @@ static void OnWifiScanStateChangedCallback(int32_t state, int32_t size)
 static void OnWifiConnectionChangedCallback(int32_t state, WifiLinkedInfo *info)
 {
     if (info == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
-    ADAPTER_LOGI("state: %d, disconnectedReason %u", state, info->disconnectedReason);
+    IOTC_LOGI("state: %d, disconnectedReason %u", state, info->disconnectedReason);
     g_disconnectReason = info->disconnectedReason;
     g_isReasonRefresh = true;
     int32_t iotcState = state == WIFI_STATE_AVAILABLE ? IOTC_WIFI_EVENT_STATE_OK :
@@ -215,15 +215,15 @@ static void OnWifiConnectionChangedCallback(int32_t state, WifiLinkedInfo *info)
 static void OnHotspotStaJoinCallback(StationInfo *info)
 {
     if (info == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
-    ADAPTER_LOGI("hotspot station join");
+    IOTC_LOGI("hotspot station join");
     IotcStationInfo iotcInfo = {0};
     iotcInfo.ip = info->ipAddress;
     int32_t ret = memcpy_s(iotcInfo.mac, sizeof(iotcInfo.mac), info->macAddress, sizeof(info->macAddress));
     if (ret != EOK) {
-        ADAPTER_LOGW("memcpy error %u/%u", sizeof(iotcInfo.mac), sizeof(info->macAddress));
+        IOTC_LOGW("memcpy error %u/%u", sizeof(iotcInfo.mac), sizeof(info->macAddress));
         return;
     }
     if (g_adapterEventHandler.onSoftapStationChanged != NULL) {
@@ -234,15 +234,15 @@ static void OnHotspotStaJoinCallback(StationInfo *info)
 static void OnHotspotStaLeaveCallback(StationInfo *info)
 {
     if (info == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return;
     }
-    ADAPTER_LOGI("hotspot station leave");
+    IOTC_LOGI("hotspot station leave");
     IotcStationInfo iotcInfo = {0};
     iotcInfo.ip = info->ipAddress;
     int32_t ret = memcpy_s(iotcInfo.mac, sizeof(iotcInfo.mac), info->macAddress, sizeof(info->macAddress));
     if (ret != EOK) {
-        ADAPTER_LOGW("memcpy error %u/%u", sizeof(iotcInfo.mac), sizeof(info->macAddress));
+        IOTC_LOGW("memcpy error %u/%u", sizeof(iotcInfo.mac), sizeof(info->macAddress));
         return;
     }
     if (g_adapterEventHandler.onSoftapStationChanged != NULL) {
@@ -274,7 +274,7 @@ static int32_t RegisterWifiEventToOhos(void)
 
     int32_t ret = RegisterWifiEvent(&g_eventHandler);
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGW("Register wifi event fail %d", ret);
+        IOTC_LOGW("Register wifi event fail %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_REGISTER_WIFI_EVENT;
     }
     g_isRegisterWifiEvent = true;
@@ -289,13 +289,13 @@ static int32_t AddBssidTiWifiConfig(IotcWifiSecurityType type, const uint8_t *bs
     (void)memset_s(&config, sizeof(config), 0, sizeof(config));
     do {
         if ((GetWifiConfigFromOhos(&config) != IOTC_OK) || (config.ssid[0] == '\0')) {
-            ADAPTER_LOGW("get wifi config fail");
+            IOTC_LOGW("get wifi config fail");
             ret = IOTC_ADAPTER_WIFI_ERR_GET_INFO;
             break;
         }
 
         if (memcpy_s(config.ssid, sizeof(config.ssid), bssid, len) != EOK) {
-            ADAPTER_LOGW("memcpy bssid failed");
+            IOTC_LOGW("memcpy bssid failed");
             ret = IOTC_ERR_SECUREC_MEMCPY;
             break;
         }
@@ -305,13 +305,13 @@ static int32_t AddBssidTiWifiConfig(IotcWifiSecurityType type, const uint8_t *bs
         }
 
         if (RemoveDevice(config.netId) != WIFI_SUCCESS) {
-            ADAPTER_LOGW("remove config erro");
+            IOTC_LOGW("remove config erro");
             ret = IOTC_ADAPTER_WIFI_ERR_REMOVE;
             break;
         }
 
         if (AddDeviceConfig(&config, netId) != WIFI_SUCCESS) {
-            ADAPTER_LOGW("add config erro");
+            IOTC_LOGW("add config erro");
             ret = IOTC_ADAPTER_WIFI_ERR_ADD;
             break;
         }
@@ -327,7 +327,7 @@ static int32_t RemoveBssidFromWifiConfig(void)
     (void)memset_s(&config, sizeof(config), 0, sizeof(config));
     do {
         if ((GetWifiConfigFromOhos(&config) != IOTC_OK) || (config.ssid[0] == '\0')) {
-            ADAPTER_LOGW("get wifi config fail");
+            IOTC_LOGW("get wifi config fail");
             ret = IOTC_ADAPTER_WIFI_ERR_GET_INFO;
             break;
         }
@@ -335,14 +335,14 @@ static int32_t RemoveBssidFromWifiConfig(void)
         (void)memset_s(config.bssid, sizeof(config.bssid), 0, sizeof(config.bssid));
 
         if (RemoveDevice(config.netId) != WIFI_SUCCESS) {
-            ADAPTER_LOGW("remove config error");
+            IOTC_LOGW("remove config error");
             ret = IOTC_ADAPTER_WIFI_ERR_REMOVE;
             break;
         }
 
         int32_t netId = -1;
         if (AddDeviceConfig(&config, &netId) != WIFI_SUCCESS) {
-            ADAPTER_LOGW("add config error");
+            IOTC_LOGW("add config error");
             ret = IOTC_ADAPTER_WIFI_ERR_ADD;
             break;
         }
@@ -354,44 +354,44 @@ static int32_t RemoveBssidFromWifiConfig(void)
 int32_t IotcConnectWifiByBssid(int32_t type, const uint8_t *bssid, uint32_t bssidLen)
 {
     if ((bssid == NULL) || (bssidLen == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     if (IsWifiActive() != WIFI_STATE_AVAILABLE) {
         if (EnableWifi() != WIFI_SUCCESS) {
-            ADAPTER_LOGW("enable wifi fail");
+            IOTC_LOGW("enable wifi fail");
             return IOTC_ADAPTER_WIFI_ERR_ENABLE;
         }
     }
 
     if (RegisterWifiEventToOhos() != IOTC_OK) {
-        ADAPTER_LOGW("register wifi event fail");
+        IOTC_LOGW("register wifi event fail");
         return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
     }
     g_isReasonRefresh = false;
 
     int32_t netId;
     if (AddBssidTiWifiConfig(type, bssid, bssidLen, &netId) != IOTC_OK) {
-        ADAPTER_LOGW("add bssid to config error");
+        IOTC_LOGW("add bssid to config error");
         return IOTC_ADAPTER_WIFI_ERR_ADD;
     }
 
     if (IotcGetNetworkState() == IOTC_NETWORK_CONNECTED) {
         if (Disconnect() != WIFI_SUCCESS) {
-            ADAPTER_LOGW("disconnect wifi error");
+            IOTC_LOGW("disconnect wifi error");
             return IOTC_ADAPTER_WIFI_ERR_DISCONNECT;
         }
     }
 
     int32_t ret = ConnectTo(netId);
     if (ret != IOTC_OK) {
-        ADAPTER_LOGW("connect wifi fail, ret:%d", ret);
+        IOTC_LOGW("connect wifi fail, ret:%d", ret);
         return IOTC_ADAPTER_WIFI_ERR_CONNECT;
     }
 
     if (RemoveBssidFromWifiConfig() != IOTC_OK) {
-        ADAPTER_LOGW("remove bssid to config failed");
+        IOTC_LOGW("remove bssid to config failed");
         return IOTC_ADAPTER_WIFI_ERR_REMOVE;
     }
     return IOTC_OK;
@@ -410,17 +410,17 @@ int32_t IotcGetLastConnectResult(void)
 static int32_t BuildScanParam(const IotcWifiScanParam *param, WifiScanParams *scanParams)
 {
     IotcWifiScanType scanType = param->scanType;
-    ADAPTER_LOGD("scan type: %d", scanType);
+    IOTC_LOGD("scan type: %d", scanType);
 
     switch (scanType) {
         case IOTC_WIFI_SCAN_TYPE_SSID: {
             uint32_t ssidLen = strlen(param->ssid);
             if ((param->ssid[0] == '\0') || (ssidLen != param->ssidLen)) {
-                ADAPTER_LOGW("invalied ssid param, len:%u, strlen:%u", param->ssidLen, ssidLen);
+                IOTC_LOGW("invalied ssid param, len:%u, strlen:%u", param->ssidLen, ssidLen);
                 return IOTC_ERR_PARAM_INVALID;
             }
             if (memcpy_s(scanParams->ssid, sizeof(scanParams->ssid), param->ssid, param->ssidLen) != EOK) {
-                ADAPTER_LOGW("memcpy error");
+                IOTC_LOGW("memcpy error");
                 return IOTC_ERR_SECUREC_MEMCPY;
             }
             scanParams->scanType = WIFI_SSID_SCAN;
@@ -429,7 +429,7 @@ static int32_t BuildScanParam(const IotcWifiScanParam *param, WifiScanParams *sc
         }
         case IOTC_WIFI_SCAN_TYPE_BSSID: {
             if (memcpy_s(scanParams->bssid, sizeof(scanParams->bssid), param->bssid, sizeof(param->bssid)) != EOK) {
-                ADAPTER_LOGW("memcpy error");
+                IOTC_LOGW("memcpy error");
                 return IOTC_ERR_SECUREC_MEMCPY;
             }
             break;
@@ -440,7 +440,7 @@ static int32_t BuildScanParam(const IotcWifiScanParam *param, WifiScanParams *sc
             break;
         }
         default:
-            ADAPTER_LOGW("not support scan type, type:%d", scanType);
+            IOTC_LOGW("not support scan type, type:%d", scanType);
     }
     return IOTC_OK;
 }
@@ -448,19 +448,19 @@ static int32_t BuildScanParam(const IotcWifiScanParam *param, WifiScanParams *sc
 int32_t IotcScanWifi(const IotcWifiScanParam *param)
 {
     if (param == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     if (IsWifiActive() != WIFI_STATE_AVAILABLE) {
         if (EnableWifi() != WIFI_SUCCESS) {
-            ADAPTER_LOGW("enable wifi fail");
+            IOTC_LOGW("enable wifi fail");
             return IOTC_ADAPTER_WIFI_ERR_ENABLE;
         }
     }
 
     if (RegisterWifiEventToOhos() != IOTC_OK) {
-        ADAPTER_LOGW("register wifi event fail");
+        IOTC_LOGW("register wifi event fail");
         return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
     }
 
@@ -470,11 +470,11 @@ int32_t IotcScanWifi(const IotcWifiScanParam *param)
     (void)memset_s(&scanParams, sizeof(scanParams), 0, sizeof(scanParams));
     int32_t ret = BuildScanParam(param, &scanParams);
     if (ret != IOTC_OK) {
-        ADAPTER_LOGW("build scan param fail");
+        IOTC_LOGW("build scan param fail");
         return ret;
     }
     if (AdvanceScan(&scanParams) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("wifi advance param fail");
+        IOTC_LOGW("wifi advance param fail");
         return IOTC_ADAPTER_WIFI_ERR_SCAN;
     }
     (void)memset_s(&scanParams, sizeof(scanParams), 0, sizeof(scanParams));
@@ -486,12 +486,12 @@ static int32_t GetScanWifiResultList(WifiScanInfo **list, uint32_t *listSize)
     uint32_t size = WIFI_SCAN_HOTSPOT_LIMIT;
     WifiScanInfo *result = (WifiScanInfo *)IotcMalloc(sizeof(WifiScanInfo) * size);
     if (result == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(result, sizeof(WifiScanInfo) * size, 0, sizeof(WifiScanInfo) * size);
     if (GetScanInfoList(result, &size) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("get wifi scan info fail");
+        IOTC_LOGW("get wifi scan info fail");
         IotcFree(result);
         return IOTC_ADAPTER_WIFI_ERR_SCAN;
     }
@@ -505,7 +505,7 @@ static int32_t CopyScanWifiResultList(IotcWifiList **scanList, const WifiScanInf
     uint32_t size = sizeof(IotcWifiInfo) * resSize + sizeof(IotcWifiList);
     *scanList = (IotcWifiList *)IotcMalloc(size);
     if (*scanList == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(*scanList, size, 0, size);
@@ -528,12 +528,12 @@ static int32_t CopyScanWifiResultList(IotcWifiList **scanList, const WifiScanInf
 int32_t IotcGetWifiScanResult(IotcWifiList **scanList)
 {
     if (scanList == NULL || *scanList != NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     if (!g_isStaScanSuccess) {
-        ADAPTER_LOGW("AP scanning is not complete");
+        IOTC_LOGW("AP scanning is not complete");
         return IOTC_ADAPTER_WIFI_ERR_SCAN;
     }
 
@@ -543,11 +543,11 @@ int32_t IotcGetWifiScanResult(IotcWifiList **scanList)
         uint32_t size = 0;
         ret = GetScanWifiResultList(&scanInfo, &size);
         if (ret != IOTC_OK) {
-            ADAPTER_LOGW("get scan wifi list fail, ret: %d", ret);
+            IOTC_LOGW("get scan wifi list fail, ret: %d", ret);
             ret = IOTC_ADAPTER_WIFI_ERR_SCAN;
             break;
         }
-        ADAPTER_LOGN("scan result size: %u", size);
+        IOTC_LOGN("scan result size: %u", size);
         if (size == 0) {
             IotcFree(scanInfo);
             return IOTC_OK;
@@ -555,7 +555,7 @@ int32_t IotcGetWifiScanResult(IotcWifiList **scanList)
 
         ret = CopyScanWifiResultList(scanList, scanInfo, size);
         if (ret != IOTC_OK) {
-            ADAPTER_LOGW("copy wifi list fail, ret: %d", ret);
+            IOTC_LOGW("copy wifi list fail, ret: %d", ret);
             ret = IOTC_ADAPTER_WIFI_ERR_SCAN;
             break;
         }
@@ -573,7 +573,7 @@ int32_t IotcGetWifiScanResult(IotcWifiList **scanList)
 int32_t IotcFreeWifiScanResult(IotcWifiList *scanList)
 {
     if (scanList == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -589,13 +589,13 @@ static int32_t AdvanceScanWifiByOhos(const WifiDeviceConfig *config)
     WifiScanParams scanParams;
     (void)memset_s(&scanParams, sizeof(scanParams), 0, sizeof(scanParams));
     if (memcpy_s(scanParams.ssid, sizeof(scanParams.ssid), config->ssid, strlen(config->ssid)) != EOK) {
-        ADAPTER_LOGW("memcpy error");
+        IOTC_LOGW("memcpy error");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     scanParams.scanType = WIFI_SSID_SCAN;
     scanParams.ssidLen = (int8_t)strlen(config->ssid);
     if (AdvanceScan(&scanParams) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("wifi advance scan fail");
+        IOTC_LOGW("wifi advance scan fail");
         return IOTC_ADAPTER_WIFI_ERR_SCAN;
     }
 
@@ -607,7 +607,7 @@ static int32_t AdvanceScanWifiByOhos(const WifiDeviceConfig *config)
         }
     }
     if (scanTimeout == 0) {
-        ADAPTER_LOGW("wifi advance scan timeout");
+        IOTC_LOGW("wifi advance scan timeout");
         return IOTC_ADAPTER_WIFI_ERR_SCAN;
     }
     return IOTC_OK;
@@ -621,11 +621,11 @@ static bool CopyWifiResultFromOhos(const WifiDeviceConfig *config, WifiScanInfo 
             ((config->securityType != WIFI_SEC_TYPE_OPEN && result[i].securityType != WIFI_SEC_TYPE_OPEN) ||
             (config->securityType == WIFI_SEC_TYPE_OPEN && result[i].securityType == WIFI_SEC_TYPE_OPEN));
         if (isValidSsid && (memcpy_s(info, sizeof(WifiScanInfo), &result[i], sizeof(WifiScanInfo)) == EOK)) {
-            ADAPTER_LOGN("copy target ssid success");
+            IOTC_LOGN("copy target ssid success");
             return true;
         }
     }
-    ADAPTER_LOGW("copy target ssid failed");
+    IOTC_LOGW("copy target ssid failed");
     return false;
 }
 
@@ -635,18 +635,18 @@ static bool GetScanWifiResultFromOhos(const WifiDeviceConfig *config, WifiScanIn
     uint32_t size = WIFI_SCAN_HOTSPOT_LIMIT;
     WifiScanInfo *result = (WifiScanInfo *)IotcMalloc(sizeof(WifiScanInfo) * size);
     if (result == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return false;
     }
     (void)memset_s(result, sizeof(WifiScanInfo) * size, 0, sizeof(WifiScanInfo) * size);
     if (GetScanInfoList(result, &size) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         IotcFree(result);
         return false;
     }
 
     if ((size == 0) || (size > WIFI_SCAN_HOTSPOT_LIMIT)) {
-        ADAPTER_LOGW("can not scan any wifi or scan size over limit, size: %u", size);
+        IOTC_LOGW("can not scan any wifi or scan size over limit, size: %u", size);
     } else {
         ret = CopyWifiResultFromOhos(config, info, result, size);
     }
@@ -659,7 +659,7 @@ static void SetSecurityTypeByScanInfo(WifiDeviceConfig *config, const WifiScanIn
     WifiDeviceConfig tempConfig;
     (void)memset_s(&tempConfig, sizeof(WifiDeviceConfig), 0, sizeof(WifiDeviceConfig));
     if (memcpy_s(&tempConfig, sizeof(WifiDeviceConfig), config, sizeof(WifiDeviceConfig)) != EOK) {
-        ADAPTER_LOGW("memcpy error");
+        IOTC_LOGW("memcpy error");
         return;
     }
     (void)memset_s(config->bssid, sizeof(config->bssid), 0, sizeof(config->bssid));
@@ -693,14 +693,14 @@ static void SetSecurityTypeByScanInfo(WifiDeviceConfig *config, const WifiScanIn
     }
     int32_t netId;
     if (memcmp(config, &tempConfig, sizeof(WifiDeviceConfig)) != 0) {
-        ADAPTER_LOGN("ohos config need refresh");
+        IOTC_LOGN("ohos config need refresh");
         if (RemoveDevice(tempConfig.netId) != WIFI_SUCCESS) {
-            ADAPTER_LOGW("remove config error");
+            IOTC_LOGW("remove config error");
             (void)memset_s(&tempConfig, sizeof(WifiDeviceConfig), 0, sizeof(WifiDeviceConfig));
             return;
         }
         if (AddDeviceConfig(config, &netId) != WIFI_SUCCESS) {
-            ADAPTER_LOGW("add config fail");
+            IOTC_LOGW("add config fail");
             (void)memset_s(&tempConfig, sizeof(WifiDeviceConfig), 0, sizeof(WifiDeviceConfig));
             return;
         }
@@ -720,27 +720,27 @@ int32_t IotcConnectWifi(void)
 
     if (IsWifiActive() != WIFI_STATE_AVAILABLE) {
         if (EnableWifi() != WIFI_SUCCESS) {
-            ADAPTER_LOGW("enable wifi fail");
+            IOTC_LOGW("enable wifi fail");
             return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
         }
     }
     if (RegisterWifiEventToOhos() != IOTC_OK) {
-        ADAPTER_LOGW("register wifi event fail");
+        IOTC_LOGW("register wifi event fail");
         return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
     }
     if (GetWifiConfigFromOhos(&config) != IOTC_OK) {
-        ADAPTER_LOGW("get wifi config fail");
+        IOTC_LOGW("get wifi config fail");
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
 
     if (config.ssid[0] == '\0') {
-        ADAPTER_LOGW("ssid null");
+        IOTC_LOGW("ssid null");
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
 
     for (uint32_t i = 0; i < MAX_SCAN_TIMES; ++i) {
         if (AdvanceScanWifiByOhos(&config) != IOTC_OK) {
-            ADAPTER_LOGW("advance scan wifi fail");
+            IOTC_LOGW("advance scan wifi fail");
             (void)memset_s(&config, sizeof(config), 0, sizeof(config));
             return IOTC_ADAPTER_WIFI_ERR_SCAN;
         }
@@ -748,12 +748,12 @@ int32_t IotcConnectWifi(void)
             SetSecurityTypeByScanInfo(&config, &info);
             break;
         }
-        ADAPTER_LOGN("not find target wifi, tyr again");
+        IOTC_LOGN("not find target wifi, tyr again");
     }
     ret = ConnectTo(config.netId);
     (void)memset_s(&config, sizeof(config), 0, sizeof(config));
     if (ret != IOTC_OK) {
-        ADAPTER_LOGW("connect to wifi fail, ret: %d", ret);
+        IOTC_LOGW("connect to wifi fail, ret: %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_CONNECT;
     }
     return IOTC_OK;
@@ -763,7 +763,7 @@ int32_t IotcReconnectWifi(void)
 {
     (void)Disconnect();
     if (IotcConnectWifi() != IOTC_OK) {
-        ADAPTER_LOGW("connect wifi error");
+        IOTC_LOGW("connect wifi error");
         return IOTC_ADAPTER_WIFI_ERR_CONNECT;
     }
     return IOTC_OK;
@@ -772,7 +772,7 @@ int32_t IotcReconnectWifi(void)
 int32_t IotcGetWifiBssid(uint8_t *buf, uint32_t len)
 {
     if ((buf == NULL) || (len == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -780,12 +780,12 @@ int32_t IotcGetWifiBssid(uint8_t *buf, uint32_t len)
     (void)memset_s(&info, sizeof(info), 0, sizeof(info));
 
     if (GetLinkedInfo(&info) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("get wifi linked info fail");
+        IOTC_LOGW("get wifi linked info fail");
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
 
     if (memcpy_s(buf, len, info.bssid, sizeof(info.bssid)) != EOK) {
-        ADAPTER_LOGW("memcpy error");
+        IOTC_LOGW("memcpy error");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     return IOTC_OK;
@@ -794,14 +794,14 @@ int32_t IotcGetWifiBssid(uint8_t *buf, uint32_t len)
 int32_t IotcGetWifiRssi(int8_t *rssi)
 {
     if (rssi == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     WifiLinkedInfo info;
     (void)memset_s(&info, sizeof(info), 0, sizeof(info));
     if (GetLinkedInfo(&info) != WIFI_SUCCESS) {
-        ADAPTER_LOGW("get wifi linked info fail");
+        IOTC_LOGW("get wifi linked info fail");
         return IOTC_ADAPTER_WIFI_ERR_GET_INFO;
     }
 
@@ -836,7 +836,7 @@ int32_t IotcDisconnectWifi(void)
 {
     int32_t ret = Disconnect();
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGW("disconnect wifi error %d", ret);
+        IOTC_LOGW("disconnect wifi error %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_DISCONNECT;
     }
     return IOTC_OK;
@@ -846,18 +846,18 @@ static void CheckWifiStateBeforeStartSoftap(void)
 {
     int32_t ret;
     if (IsWifiActive() == WIFI_STATE_AVAILABLE) {
-        ADAPTER_LOGI("sta active, try stop!");
+        IOTC_LOGI("sta active, try stop!");
         ret = DisableWifi();
         if (ret != WIFI_SUCCESS) {
-            ADAPTER_LOGW("stop sta fail %d", ret);
+            IOTC_LOGW("stop sta fail %d", ret);
         }
     }
 
     if (IsHotspotActive() == WIFI_HOTSPOT_ACTIVE) {
-        ADAPTER_LOGI("ap active, try stop!");
+        IOTC_LOGI("ap active, try stop!");
         ret = DisableHotspot();
         if (ret != WIFI_SUCCESS) {
-            ADAPTER_LOGW("stop ap fail %d", ret);
+            IOTC_LOGW("stop ap fail %d", ret);
         }
     }
 }
@@ -867,7 +867,7 @@ int32_t IotcStartSoftAp(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
     (void)pwd;
     (void)pwdLen;
     if ((ssid == NULL) || (ssidLen == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -878,14 +878,14 @@ int32_t IotcStartSoftAp(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
 
     int32_t ret = strncpy_s(config.ssid, sizeof(config.ssid), (const char *)ssid, ssidLen);
     if (ret != EOK) {
-        ADAPTER_LOGW("strcpy error %u", ssidLen);
+        IOTC_LOGW("strcpy error %u", ssidLen);
         return IOTC_ERR_SECUREC_STRCPY;
     }
 
     if (pwd != NULL && pwdLen != 0) {
         ret = strncpy_s(config.preSharedKey, sizeof(config.preSharedKey), (const char *)pwd, pwdLen);
         if (ret != EOK) {
-            ADAPTER_LOGW("strcpy error %u", pwdLen);
+            IOTC_LOGW("strcpy error %u", pwdLen);
             return IOTC_ERR_SECUREC_STRCPY;
         }
         config.securityType = WIFI_SEC_TYPE_PSK;
@@ -896,14 +896,14 @@ int32_t IotcStartSoftAp(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
     ret = SetHotspotConfig(&config);
     (void)memset_s(&config, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGW("set hotspot config fail %d", ret);
+        IOTC_LOGW("set hotspot config fail %d", ret);
         return IOTC_ADAPTER_SOFTAP_ERR_START;
     }
 
-    ADAPTER_LOGI("start softap");
+    IOTC_LOGI("start softap");
     ret = EnableHotspot();
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGW("enable hotspot fail %d", ret);
+        IOTC_LOGW("enable hotspot fail %d", ret);
         return IOTC_ADAPTER_SOFTAP_ERR_START;
     }
 
@@ -913,9 +913,9 @@ int32_t IotcStartSoftAp(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
 int32_t IotcStopSoftAp(void)
 {
     if (IsHotspotActive() == WIFI_HOTSPOT_ACTIVE) {
-        ADAPTER_LOGI("stop softap");
+        IOTC_LOGI("stop softap");
         if (DisableHotspot() != WIFI_SUCCESS) {
-            ADAPTER_LOGW("stop ap fail");
+            IOTC_LOGW("stop ap fail");
             return IOTC_ADAPTER_SOFTAP_ERR_STOP;
         }
     }
@@ -930,7 +930,7 @@ void IotcUnregEventCallback(void)
 int32_t IotcGetSoftapStationInfo(IotcStationList **staList)
 {
     if (staList == NULL || *staList != NULL) {
-        ADAPTER_LOGW("param invalid");
+        IOTC_LOGW("param invalid");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -938,14 +938,14 @@ int32_t IotcGetSoftapStationInfo(IotcStationList **staList)
     uint32_t size = WIFI_MAX_STA_NUM;
     int32_t ret = GetStationList(infos, &size);
     if (ret != WIFI_SUCCESS || size > WIFI_MAX_STA_NUM) {
-        ADAPTER_LOGW("get station list error %d/%u", ret, size);
+        IOTC_LOGW("get station list error %d/%u", ret, size);
         return IOTC_ADAPTER_WIFI_ERR_SOFTAP_GET_STA_LIST;
     }
 
     uint32_t len = sizeof(IotcStationList) + sizeof(IotcStationInfo) * size;
     *staList = (IotcStationList *)IotcMalloc(len);
     if (*staList == NULL) {
-        ADAPTER_LOGW("malloc error %u", len);
+        IOTC_LOGW("malloc error %u", len);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     IotcStationInfo *staInfo = (*staList)->stationList;
@@ -965,7 +965,7 @@ int32_t IotcGetSoftapStationInfo(IotcStationList **staList)
 void IotcFreeSoftapStationInfo(IotcStationList *staList)
 {
     if (staList == NULL) {
-        ADAPTER_LOGW("param invalid");
+        IOTC_LOGW("param invalid");
         return;
     }
     IotcFree(staList);
@@ -975,13 +975,13 @@ void IotcFreeSoftapStationInfo(IotcStationList *staList)
 int32_t IotcSoftapDisassociateSta(uint8_t *mac, uint32_t len)
 {
     if (mac == NULL || len != IOTC_MAC_ADDRESS_LEN) {
-        ADAPTER_LOGW("param invalid");
+        IOTC_LOGW("param invalid");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     int32_t ret = DisassociateSta(mac, len);
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGW("disassociate sta error %d", ret);
+        IOTC_LOGW("disassociate sta error %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_SOFTAP_DISASSOCIATE_STA;
     }
     return IOTC_OK;
@@ -991,7 +991,7 @@ int32_t IotcSoftapAddTxPower(int power)
 {
     int32_t ret = AddTxPowerInfo(power);
     if (ret != WIFI_SUCCESS) {
-        ADAPTER_LOGW("add tx power error %d", ret);
+        IOTC_LOGW("add tx power error %d", ret);
         return IOTC_ADAPTER_WIFI_ERR_SOFTAP_ADD_TX_POWER;
     }
     return IOTC_OK;

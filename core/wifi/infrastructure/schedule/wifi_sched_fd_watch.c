@@ -14,8 +14,8 @@
  */
 #include "wifi_sched_fd_watch.h"
 #include "sched_event_loop.h"
-#include "adapter_socket.h"
-#include "adapter_os.h"
+#include "iotc_socket.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "comm_def.h"
 #include "event_loop.h"

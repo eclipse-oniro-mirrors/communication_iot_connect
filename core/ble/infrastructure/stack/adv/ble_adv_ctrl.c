@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 #include "ble_adv_ctrl.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 #include "sched_timer.h"
 #include "utils_assert.h"
 #include "utils_mutex_global.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 
 static int32_t g_advTimerId = EVENT_SOURCE_INVALID_TIMER_FD;

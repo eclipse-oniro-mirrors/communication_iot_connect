@@ -14,7 +14,8 @@
  */
 #include <stddef.h>
 #include <stdio.h>
-#include "adapter_log.h"
+#include <stdarg.h>
+#include "iotc_log.h"
 #include "iotc_errcode.h"
 
 static void IotcPrintf(const char *fmt, ...)
@@ -29,19 +30,23 @@ static void IotcPrintf(const char *fmt, ...)
     return;
 }
 
-void AdapterLogOutput(AdapterLogInfo *info)
+void IotcLogOutputImpl(uint8_t level, const char *fileName,
+    const char *funcName, uint32_t line, const char *fmt, ...)
 {
-    if (info == NULL || info->fmt == NULL || info->level >= IOTC_LOG_LEVEL_MAX ||
-        info->level <= IOTC_LOG_LEVEL_MIN) {
+    if (level > IotcGetLogLevel() || level > IOTC_LOG_LEVEL_DEBUG || level == 0 || fmt == NULL) {
         return;
     }
 
     const char *tag[IOTC_LOG_LEVEL_DEBUG] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
-    if (info->funcName != NULL) {
-        IotcPrintf("%s:%s:%u, ", tag[info->level - 1], info->funcName, info->line);
+    if (funcName != NULL) {
+        IotcPrintf("%s:%s:%u, ", tag[level - 1], funcName, line);
     } else {
-        IotcPrintf("%s:%s:%u, ", tag[info->level - 1], info->fileName != NULL ? info->fileName : "NULL", info->line);
+        IotcPrintf("%s:%s:%u, ", tag[level - 1], fileName != NULL ? fileName : "NULL", line);
     }
-    vprintf(info->fmt, info->args);
+
+    va_list ap;
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
     IotcPrintf("\n");
 }

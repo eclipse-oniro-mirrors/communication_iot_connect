@@ -18,7 +18,7 @@
 #include "security_speke_defs.h"
 #include "iotc_log.h"
 #include "securec.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 #include "utils_json.h"
 #include "iotc_errcode.h"

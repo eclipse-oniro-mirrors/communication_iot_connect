@@ -16,11 +16,11 @@
 #include "securec.h"
 #include "iotc_log.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 #include "security_key.h"
 #include "utils_assert.h"
-#include "adapter_md.h"
+#include "iotc_md.h"
 
 #define DEFAULT_SUB_PRO_ID "00"
 #define NON_NULL_EMPTY_STR(_str) (((_str) != NULL) ? (_str) : ('\0'))

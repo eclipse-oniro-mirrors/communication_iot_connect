@@ -17,7 +17,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 
 #ifdef __cplusplus

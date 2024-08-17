@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_errcode.h"
 #include "cJSON.h"
 #include "securec.h"

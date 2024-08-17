@@ -15,7 +15,7 @@
 #ifndef IOTC_SERVICE_BLE_H
 #define IOTC_SERVICE_BLE_H
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "iotc_ble_def.h"
 
 #ifdef __cplusplus

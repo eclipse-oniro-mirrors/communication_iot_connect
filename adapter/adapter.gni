@@ -22,17 +22,17 @@ iotc_adapter_inc = [
 ]
 
 iotc_adapter_src = [
-  "$iotc_adapter_path/crypto/mbedtls/adapter_aes.c",
-  "$iotc_adapter_path/crypto/mbedtls/adapter_base64.c",
-  "$iotc_adapter_path/crypto/mbedtls/adapter_drbg.c",
-  "$iotc_adapter_path/crypto/mbedtls/adapter_kdf.c",
-  "$iotc_adapter_path/crypto/mbedtls/adapter_md.c",
-  "$iotc_adapter_path/crypto/mbedtls/adapter_mpi.c",
-  "$iotc_adapter_path/crypto/mbedtls/adapter_rsa.c",
-  "$iotc_adapter_path/json/cjson/adapter_json.c",
-  "$iotc_adapter_path/log/adapter_log_inner.c",
-  "$iotc_adapter_path/mem/stdlib/adapter_mem.c",
-  "$iotc_adapter_path/tls/mbedtls/adapter_tls.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_aes.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_base64.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_drbg.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_kdf.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_md.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_mpi.c",
+  "$iotc_adapter_path/crypto/mbedtls/iotc_rsa.c",
+  "$iotc_adapter_path/json/cjson/iotc_json.c",
+  "$iotc_adapter_path/log/iotc_log_inner.c",
+  "$iotc_adapter_path/mem/stdlib/iotc_mem.c",
+  "$iotc_adapter_path/tls/mbedtls/iotc_tls.c",
 ]
 
 iotc_adapter_def = []
@@ -40,9 +40,9 @@ iotc_adapter_dep = []
 
 if (iotc_ble_support) {
   if (defined(ohos_lite)) {
-    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/adapter_ble.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/iotc_ble.c"]
   } else {
-    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_standard/adapter_ble.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_standard/iotc_ble.c"]
   }
   iotc_adapter_def += ["IOTC_CONF_BLE_SUPPORT=1"]
   if (board_name == "rtl8720") {
@@ -54,16 +54,16 @@ if (iotc_ble_support) {
 }
 
 if (iotc_wifi_support) {
-  iotc_adapter_src += ["$iotc_adapter_path/socket/adapter_socket.c"]
+  iotc_adapter_src += ["$iotc_adapter_path/socket/iotc_socket.c"]
   if (ohos_kernel_type == "liteos_m") {
     iotc_adapter_src += [
-      "$iotc_adapter_path/wifi/oh_lite/adapter_network.c",
-      "$iotc_adapter_path/wifi/oh_lite/adapter_wifi.c",
+      "$iotc_adapter_path/wifi/oh_lite/iotc_network.c",
+      "$iotc_adapter_path/wifi/oh_lite/iotc_wifi.c",
     ]
   } else {
     iotc_adapter_src += [
-      "$iotc_adapter_path/wifi/oh_standard/adapter_network.c",
-      "$iotc_adapter_path/wifi/oh_standard/adapter_wifi.c",
+      "$iotc_adapter_path/wifi/oh_standard/iotc_network.c",
+      "$iotc_adapter_path/wifi/oh_standard/iotc_wifi.c",
     ]
   }
   iotc_adapter_def += ["IOTC_CONF_WIFI_SUPPORT=1"]
@@ -77,9 +77,9 @@ if (iotc_wifi_support) {
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     iotc_adapter_inc += ["//kernel/liteos_m/kal/cmsis"]
-    iotc_adapter_src += ["$iotc_adapter_path/os/cmsis2/adapter_os.c"]
-    iotc_adapter_src += ["$iotc_adapter_path/kv/oh_lite/adapter_kv.c"]
-    iotc_adapter_src += ["$iotc_adapter_path/log/printf/adapter_log.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/os/cmsis2/iotc_os.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/kv/oh_lite/iotc_kv.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/log/printf/iotc_log.c"]
     if (board_name == "rtl8720") {
       iotc_adapter_inc += [
         "//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/network/ssl/mbedtls-2.16.4/include",
@@ -93,8 +93,8 @@ if (defined(ohos_lite)) {
       iotc_adapter_inc += ["//third_party/mbedtls/include"]
     }
   } else {
-    iotc_adapter_src += ["$iotc_adapter_path/os/posix/adapter_os.c"]
-    iotc_adapter_src += ["$iotc_adapter_path/kv/posix/adapter_kv.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/os/posix/iotc_os.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]
     iotc_adapter_dep += [
       "//third_party/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
@@ -103,12 +103,12 @@ if (defined(ohos_lite)) {
     iotc_adapter_inc += ["//third_party/mbedtls/include"]
   }
 } else {
-  iotc_adapter_src += ["$iotc_adapter_path/os/posix/adapter_os.c"]
-  iotc_adapter_src += ["$iotc_adapter_path/kv/posix/adapter_kv.c"]
+  iotc_adapter_src += ["$iotc_adapter_path/os/posix/iotc_os.c"]
+  iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]
   if (iotc_hilog_support) {
-    iotc_adapter_src += ["$iotc_adapter_path/log/hilog/adapter_log.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/log/hilog/iotc_log.c"]
   } else {
-    iotc_adapter_src += ["$iotc_adapter_path/log/printf/adapter_log.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/log/printf/iotc_log.c"]
   }
 }
 

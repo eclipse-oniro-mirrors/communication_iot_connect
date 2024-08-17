@@ -19,7 +19,7 @@
 #include "securec.h"
 #include "iotc_log.h"
 #include "iotc_errcode.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_mutex_ex.h"
 
 typedef struct {

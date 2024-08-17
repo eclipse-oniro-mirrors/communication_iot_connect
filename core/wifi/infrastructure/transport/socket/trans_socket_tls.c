@@ -16,7 +16,7 @@
 #include "comm_def.h"
 #include "securec.h"
 #include "security_random.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "utils_time.h"
 #include "iotc_errcode.h"

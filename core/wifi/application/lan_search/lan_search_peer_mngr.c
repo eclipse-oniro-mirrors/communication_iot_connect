@@ -18,7 +18,7 @@
 #include "securec.h"
 #include "sched_timer.h"
 #include "utils_common.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "dfx_anonymize.h"
 #include "iotc_svc_dev.h"
 #include "utils_bit_map.h"

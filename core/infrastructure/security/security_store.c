@@ -21,9 +21,9 @@
 #include "utils_common.h"
 #include "utils_mutex_ex.h"
 #include "securec.h"
-#include "adapter_md.h"
+#include "iotc_md.h"
 #include "security_key.h"
-#include "adapter_aes.h"
+#include "iotc_aes.h"
 #include "security_random.h"
 #include "iotc_errcode.h"
 

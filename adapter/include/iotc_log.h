@@ -27,10 +27,10 @@ extern "C" {
 #define IOTC_FILE_NAME (__builtin_strrchr("/" __FILE__, '/') + 1)
 #endif
 #ifndef IOTC_FUNC_NAME
-#define IOTC_FUNC_NAME NULL
+#define IOTC_FUNC_NAME (NULL)
 #endif
 
-void IotcLogOutputInner(uint8_t level, const char *fileName,
+void IotcLogOutputImpl(uint8_t level, const char *fileName,
     const char *funcName, uint32_t line, const char *fmt, ...);
 
 void IotcSetLogLevel(uint8_t level);
@@ -38,37 +38,37 @@ void IotcSetLogLevel(uint8_t level);
 uint8_t IotcGetLogLevel(void);
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_DEBUG
-#define IOTC_LOGD(...) IotcLogOutputInner(IOTC_LOG_LEVEL_DEBUG, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
+#define IOTC_LOGD(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_DEBUG, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #else
 #define IOTC_LOGD(...)
 #endif
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_INFO
-#define IOTC_LOGI(...) IotcLogOutputInner(IOTC_LOG_LEVEL_INFO, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
+#define IOTC_LOGI(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_INFO, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #else
 #define IOTC_LOGI(...)
 #endif
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_NOTICE
-#define IOTC_LOGN(...) IotcLogOutputInner(IOTC_LOG_LEVEL_NOTICE, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
+#define IOTC_LOGN(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_NOTICE, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #else
 #define IOTC_LOGN(...)
 #endif
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_WARN
-#define IOTC_LOGW(...) IotcLogOutputInner(IOTC_LOG_LEVEL_WARN, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
+#define IOTC_LOGW(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_WARN, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #else
 #define IOTC_LOGW(...)
 #endif
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_ERROR
-#define IOTC_LOGE(...) IotcLogOutputInner(IOTC_LOG_LEVEL_ERROR, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
+#define IOTC_LOGE(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_ERROR, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #else
 #define IOTC_LOGE(...)
 #endif
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_FATAL
-#define IOTC_LOGF(...) IotcLogOutputInner(IOTC_LOG_LEVEL_FATAL, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
+#define IOTC_LOGF(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_FATAL, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #else
 #define IOTC_LOGF(...)
 #endif

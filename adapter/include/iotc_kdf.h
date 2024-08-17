@@ -15,7 +15,7 @@
 #ifndef IOTC_KDF_H
 #define IOTC_KDF_H
 
-#include "adapter_md.h"
+#include "iotc_md.h"
 
 #ifdef __cplusplus
 extern "C" {

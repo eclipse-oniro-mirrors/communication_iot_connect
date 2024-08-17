@@ -17,8 +17,8 @@
 #include "utils_assert.h"
 #include "utils_list.h"
 #include "utils_common.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 

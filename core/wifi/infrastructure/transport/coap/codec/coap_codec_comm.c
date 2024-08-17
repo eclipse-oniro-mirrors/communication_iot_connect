@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "coap_codec_comm.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "utils_assert.h"
 #include "securec.h"
 #include "iotc_errcode.h"

@@ -17,7 +17,7 @@
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "ble_common.h"
 #include "iotc_def.h"
 #include "iotc_svc_dev.h"

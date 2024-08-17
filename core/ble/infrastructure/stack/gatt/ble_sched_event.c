@@ -17,7 +17,7 @@
 #include "ble_gatt_mgt.h"
 #include "ble_adv_ctrl.h"
 #include "securec.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "comm_def.h"
 #include "iotc_log.h"
 #include "utils_assert.h"

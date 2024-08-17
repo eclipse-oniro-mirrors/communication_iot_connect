@@ -14,13 +14,13 @@
  */
 #include "ble_gatt_event.h"
 #include "ble_gatt_mgt.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "ble_sched_event.h"
 #include "sched_msg_queue.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_common.h"
 

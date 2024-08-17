@@ -19,7 +19,7 @@
 #include "coap_codec_tcp_v1.h"
 #include "wifi_sched_fd_watch.h"
 #include "utils_assert.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "coap_codec_utils.h"
 #include "iotc_errcode.h"
 #include "comm_def.h"

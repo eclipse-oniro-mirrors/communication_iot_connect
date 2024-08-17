@@ -14,11 +14,11 @@
  */
 #include "trans_link.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_common.h"
 #include "utils_bit_map.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
 

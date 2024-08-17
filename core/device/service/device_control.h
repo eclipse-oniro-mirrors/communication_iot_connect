@@ -17,7 +17,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_svc_dev.h"
 
 #ifdef __cplusplus

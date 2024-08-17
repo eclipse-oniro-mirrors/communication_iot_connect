@@ -16,7 +16,7 @@
 #include "coap_endpoint_priv.h"
 #include "comm_def.h"
 #include "utils_assert.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "security_random.h"
 #include "securec.h"
 #include "iotc_errcode.h"

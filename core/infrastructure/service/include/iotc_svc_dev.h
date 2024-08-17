@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "iotc_prof_def.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_def.h"
 #include "comm_def.h"
 

@@ -28,7 +28,7 @@
 #include "ble_svc_report.h"
 #include "utils_assert.h"
 #include "ble_gatt_mgt.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "ble_adv_ctrl.h"
 #include "ble_linklayer.h"
 #include "ble_common.h"

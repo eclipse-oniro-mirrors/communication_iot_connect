@@ -15,15 +15,15 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "securec.h"
-#include "adapter_tls.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_tls.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/platform_time.h"
 #include "mbedtls/net_sockets.h"
 #include "iotc_errcode.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 
 #ifndef MS_PER_SECOND
 #define MS_PER_SECOND 1000
@@ -57,7 +57,7 @@ static IotcGetTimeCallback g_getTimeCb = NULL;
 static void MbedtlsTlsDebug(void *context, int32_t level, const char *file, int32_t line, const char *str)
 {
     TlsClient *cli = (TlsClient *)(context);
-    ADAPTER_LOGD("[%s:%d]%s:%d %s", ctx->custom, level, file, line, str);
+    IOTC_LOGD("[%s:%d]%s:%d %s", ctx->custom, level, file, line, str);
 }
 #endif /* HILINK_TLS_DEBUG */
 
@@ -66,7 +66,7 @@ static int32_t MbedtlsSslRng(void *param, unsigned char *output, size_t len)
 {
     TlsClient *cli = (TlsClient *)param;
     if ((cli == NULL) || (cli->rngCb == NULL) || (output == NULL) || (len == 0)) {
-        ADAPTER_LOGW("param invalid");
+        IOTC_LOGW("param invalid");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -80,14 +80,14 @@ static mbedtls_time_t MbedtlsPlatformGetTime(mbedtls_time_t *timeNow)
     mbedtls_time_t rawSeconds = 0;
     uint64_t timeMs = 0;
     if (g_getTimeCb == NULL) {
-        ADAPTER_LOGN("no cb");
+        IOTC_LOGN("no cb");
         return rawSeconds;
     }
     int32_t ret = g_getTimeCb(&timeMs);
     if (ret == IOTC_OK) {
         rawSeconds = (mbedtls_time_t)(timeMs / MS_PER_SECOND);
     } else {
-        ADAPTER_LOGI("get local time failed, set rawSeconds=0");
+        IOTC_LOGI("get local time failed, set rawSeconds=0");
     }
 
     return (mbedtls_time_t)rawSeconds;
@@ -109,7 +109,7 @@ static int32_t SetTlsConfigBase(TlsClient *cli)
     int32_t ret = mbedtls_ssl_config_defaults(&cli->conf, MBEDTLS_SSL_IS_CLIENT,
         MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
     if (ret != 0) {
-        ADAPTER_LOGW("ssl conf error [-0x%04x]", -ret);
+        IOTC_LOGW("ssl conf error [-0x%04x]", -ret);
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
     mbedtls_ssl_conf_rng(&cli->conf, MbedtlsSslRng, cli);
@@ -122,18 +122,18 @@ static int32_t SetTlsConfigBase(TlsClient *cli)
 IotcTlsClient *IotcCreateTlsClient(const char *custom)
 {
     if (custom == NULL) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return NULL;
     }
     uint32_t customLen = strlen(custom);
     if (customLen > IOTC_TLS_CUSTOM_MAX_STR_LEN) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return NULL;
     }
-    ADAPTER_LOGN("custom=[%s] start tls create", custom);
+    IOTC_LOGN("custom=[%s] start tls create", custom);
     TlsClient *cli = (TlsClient *)IotcMalloc(sizeof(TlsClient));
     if (cli == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return NULL;
     }
     (void)memset_s(cli, sizeof(TlsClient), 0, sizeof(TlsClient));
@@ -142,13 +142,13 @@ IotcTlsClient *IotcCreateTlsClient(const char *custom)
     do {
         cli->custom = (char *)IotcMalloc(customLen + 1);
         if (cli->custom == NULL) {
-            ADAPTER_LOGW("malloc error");
+            IOTC_LOGW("malloc error");
             break;
         }
         cli->handshakeTimeoutMs = TLS_HANDSHAKE_TIMEOUT;
         ret = strcpy_s(cli->custom, customLen + 1, custom);
         if (ret != EOK) {
-            ADAPTER_LOGW("strcpy error %d", ret);
+            IOTC_LOGW("strcpy error %d", ret);
             break;
         }
 
@@ -168,7 +168,7 @@ IotcTlsClient *IotcCreateTlsClient(const char *custom)
 void IotcFreeTlsClient(IotcTlsClient *cli)
 {
     if (cli == NULL) {
-        ADAPTER_LOGN("param invaild");
+        IOTC_LOGN("param invaild");
         return;
     }
     TlsClient *cliCtx = (TlsClient *)cli;
@@ -180,7 +180,7 @@ void IotcFreeTlsClient(IotcTlsClient *cli)
     IotcFree(cliCtx->supportedCiphersuites);
     cliCtx->supportedCiphersuites = NULL;
     if (cliCtx->custom != NULL) {
-        ADAPTER_LOGN("custom=[%s] free resource", cliCtx->custom);
+        IOTC_LOGN("custom=[%s] free resource", cliCtx->custom);
         IotcFree(cliCtx->custom);
         cliCtx->custom = NULL;
     }
@@ -199,16 +199,16 @@ static int32_t InitTlsSocket(TlsClient *cli)
 #define MAX_PORT_STR_LEN 20
             char portStr[MAX_PORT_STR_LEN];
             if (sprintf_s(portStr, sizeof(portStr), "%u", cli->port) <= 0) {
-                ADAPTER_LOGW("sprintf error");
+                IOTC_LOGW("sprintf error");
                 return IOTC_ERR_SECUREC_SPRINTF;
             }
             ret = mbedtls_net_connect(&cli->fd, cli->hostName, portStr, MBEDTLS_NET_PROTO_TCP);
             if (ret != 0) {
-                ADAPTER_LOGW("connect error [-0x%04x/%d]", -ret, IotcGetErrno());
+                IOTC_LOGW("connect error [-0x%04x/%d]", -ret, IotcGetErrno());
                 return IOTC_ADAPTER_TLS_ERR_CONNECT;
             }
         } else {
-            ADAPTER_LOGW("no hostname");
+            IOTC_LOGW("no hostname");
             return IOTC_ERR_PARAM_INVALID;
         }
     }
@@ -243,7 +243,7 @@ static int32_t TlsHandshake(TlsClient *cli)
     } while (((ret == MBEDTLS_ERR_SSL_WANT_READ) || (ret == MBEDTLS_ERR_SSL_WANT_WRITE) ||
         (ret == MBEDTLS_ERR_SSL_TIMEOUT)) && (DeltaTime(curTime, startTime) < cli->handshakeTimeoutMs));
     if (ret != 0) {
-        ADAPTER_LOGW("handshake error [-0x%04x/%d]", -ret, IotcGetErrno());
+        IOTC_LOGW("handshake error [-0x%04x/%d]", -ret, IotcGetErrno());
         return IOTC_ADAPTER_TLS_ERR_CONNECT;
     }
 
@@ -253,20 +253,20 @@ static int32_t TlsHandshake(TlsClient *cli)
 int32_t IotcTlsClientConnect(IotcTlsClient *cli)
 {
     if (cli == NULL) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return IOTC_ERR_PARAM_INVALID;
     }
     TlsClient *cliCtx = (TlsClient *)cli;
 
     int32_t ret = InitTlsSocket(cliCtx);
     if (ret != IOTC_OK) {
-        ADAPTER_LOGW("init socket error");
+        IOTC_LOGW("init socket error");
         return ret;
     }
 
     ret = mbedtls_ssl_setup(&cliCtx->ssl, &cliCtx->conf);
     if (ret != 0) {
-        ADAPTER_LOGW("ssl setup error [-0x%04x]", -ret);
+        IOTC_LOGW("ssl setup error [-0x%04x]", -ret);
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
 
@@ -281,7 +281,7 @@ int32_t IotcTlsClientConnect(IotcTlsClient *cli)
 int32_t IotcTlsClientGetFd(IotcTlsClient *cli)
 {
     if (cli == NULL) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return -1;
     }
 
@@ -291,63 +291,63 @@ int32_t IotcTlsClientGetFd(IotcTlsClient *cli)
 int32_t IotcTlsClientRecv(IotcTlsClient *cli, uint8_t *buf, uint32_t len)
 {
     if ((cli == NULL) || (buf == NULL) || (len == 0)) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return IOTC_ERR_PARAM_INVALID;
     }
     TlsClient *cliCtx = (TlsClient *)cli;
 
     if (cliCtx->fd.fd < 0) {
-        ADAPTER_LOGW("context invaild");
+        IOTC_LOGW("context invaild");
         return IOTC_ADAPTER_TLS_ERR_CLIENT_INVALID;
     }
 
     int32_t ret = mbedtls_ssl_read(&cliCtx->ssl, buf, len);
     if (ret > 0) {
-        ADAPTER_LOGD("read exit [%s/%d]", cliCtx->custom, ret);
+        IOTC_LOGD("read exit [%s/%d]", cliCtx->custom, ret);
         return ret;
     } else if ((ret == MBEDTLS_ERR_SSL_TIMEOUT) || (ret == MBEDTLS_ERR_SSL_WANT_READ)) {
         return IOTC_OK;
     }
 
-    ADAPTER_LOGW("read error [%s/-0x%04x/%d]", cliCtx->custom, -ret, IotcGetErrno());
+    IOTC_LOGW("read error [%s/-0x%04x/%d]", cliCtx->custom, -ret, IotcGetErrno());
     return IOTC_ADAPTER_TLS_ERR_RECV;
 }
 
 int32_t IotcTlsClientSend(IotcTlsClient *cli, const uint8_t *buf, uint32_t len)
 {
     if ((cli == NULL) || (buf == NULL) || (len == 0)) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return IOTC_ERR_PARAM_INVALID;
     }
     TlsClient *cliCtx = (TlsClient *)cli;
 
     if (cliCtx->fd.fd < 0) {
-        ADAPTER_LOGW("context invaild");
+        IOTC_LOGW("context invaild");
         return IOTC_ADAPTER_TLS_ERR_CLIENT_INVALID;
     }
 
     int32_t ret = mbedtls_ssl_write(&cliCtx->ssl, buf, len);
     if (ret > 0) {
-        ADAPTER_LOGD("send exit [%s/%d]", cliCtx->custom, ret);
+        IOTC_LOGD("send exit [%s/%d]", cliCtx->custom, ret);
         return ret;
     } else if ((ret == MBEDTLS_ERR_SSL_TIMEOUT) || (ret == MBEDTLS_ERR_SSL_WANT_WRITE)) {
         return IOTC_OK;
     }
         
-    ADAPTER_LOGW("send error [%s/-0x%04x/%d]", cliCtx->custom, -ret, IotcGetErrno());
+    IOTC_LOGW("send error [%s/-0x%04x/%d]", cliCtx->custom, -ret, IotcGetErrno());
     return IOTC_ADAPTER_TLS_ERR_RECV;
 }
 
 static int32_t SetTlsClientOptionFd(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(int32_t) || (value == NULL))) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     int32_t fd = *(const int32_t *)value;
     if (fd < 0) {
-        ADAPTER_LOGW("invalid fd %d", fd);
+        IOTC_LOGW("invalid fd %d", fd);
         return IOTC_ERR_PARAM_INVALID;
     }
     cli->fd.fd = fd;
@@ -358,24 +358,24 @@ static int32_t SetTlsClientOptionFd(TlsClient *cli, const void *value, uint32_t 
 static int32_t SetTlsClientOptionHost(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(IotcTlsHost) || (value == NULL))) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     const IotcTlsHost *host = (const IotcTlsHost *)value;
     cli->port = host->port;
     if (host->hostname == NULL) {
-        ADAPTER_LOGI("no host name for [%s]", cli->custom);
+        IOTC_LOGI("no host name for [%s]", cli->custom);
         return IOTC_OK;
     }
 
     uint32_t hostNameLen = strlen(host->hostname);
     if (hostNameLen > IOTC_TLS_HOSTNAME_MAX_STR_LEN) {
-        ADAPTER_LOGW("host name too long [%u]", hostNameLen);
+        IOTC_LOGW("host name too long [%u]", hostNameLen);
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_ssl_set_hostname(&cli->ssl, host->hostname);
     if (ret != 0) {
-        ADAPTER_LOGW("set host name error [-0x%04x]", -ret);
+        IOTC_LOGW("set host name error [-0x%04x]", -ret);
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
     if (cli->hostName != NULL) {
@@ -384,12 +384,12 @@ static int32_t SetTlsClientOptionHost(TlsClient *cli, const void *value, uint32_
     }
     cli->hostName = (char *)IotcMalloc(hostNameLen + 1);
     if (cli->hostName == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
     ret = strcpy_s(cli->hostName, hostNameLen + 1, host->hostname);
     if (ret != EOK) {
-        ADAPTER_LOGW("strcpy error %d", ret);
+        IOTC_LOGW("strcpy error %d", ret);
         IotcFree(cli->hostName);
         cli->hostName = NULL;
         return IOTC_ADAPTER_TLS_ERR_SETUP;
@@ -402,7 +402,7 @@ static int32_t SetTlsClientOptiontTimeCallback(TlsClient *cli, const void *value
 {
     (void)cli;
     if ((len != sizeof(IotcGetTimeCallback)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -414,13 +414,13 @@ static int32_t SetTlsClientOptiontTimeCallback(TlsClient *cli, const void *value
 static int32_t SetTlsClientOptiontCiphersuite(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(IotcTlsCiphersuites)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     const IotcTlsCiphersuites *suites = (const IotcTlsCiphersuites *)value;
     if ((suites->ciphersuites == NULL) || (suites->num == 0) || (suites->num > IOTC_TLS_CIPHERSUITE_MAX_NUM)) {
-        ADAPTER_LOGW("invalid suites %u", suites->num);
+        IOTC_LOGW("invalid suites %u", suites->num);
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -444,7 +444,7 @@ static int32_t SetTlsClientOptiontCiphersuite(TlsClient *cli, const void *value,
     /* ciphersuites数组以0为结尾，需预留1 */
     int32_t *suitesInt = (int32_t *)IotcCalloc(suites->num + 1, sizeof(int32_t));
     if (suitesInt == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
     int32_t *cur = suitesInt;
@@ -454,7 +454,7 @@ static int32_t SetTlsClientOptiontCiphersuite(TlsClient *cli, const void *value,
                 mbedtls_ssl_ciphersuite_from_id(mapList[j].mbedtls) == NULL) {
                 continue;
             }
-            ADAPTER_LOGD("use ciphersuite [0x%04x]", mapList[j].mbedtls);
+            IOTC_LOGD("use ciphersuite [0x%04x]", mapList[j].mbedtls);
             *cur = mapList[j].mbedtls;
             ++cur;
             break;
@@ -462,7 +462,7 @@ static int32_t SetTlsClientOptiontCiphersuite(TlsClient *cli, const void *value,
     }
     cli->supportedCiphersuites = suitesInt;
     mbedtls_ssl_conf_ciphersuites(&cli->conf, cli->supportedCiphersuites);
-    ADAPTER_LOGI("use cipher num %u", cur - suitesInt);
+    IOTC_LOGI("use cipher num %u", cur - suitesInt);
     return IOTC_OK;
 }
 
@@ -504,10 +504,10 @@ static bool X509CheckTime(const mbedtls_x509_time *before, const mbedtls_x509_ti
 
 static bool RecordValidCertTime(TlsClient *cli, mbedtls_x509_crt *crt)
 {
-    ADAPTER_LOGD("vaild cert validFrom=%04d/%02d/%02d %02d:%02d:%02d",
+    IOTC_LOGD("vaild cert validFrom=%04d/%02d/%02d %02d:%02d:%02d",
         crt->valid_from.year, crt->valid_from.mon, crt->valid_from.day,
         crt->valid_from.hour, crt->valid_from.min, crt->valid_from.sec);
-    ADAPTER_LOGD("vaild cert validTo=%04d/%02d/%02d %02d:%02d:%02d",
+    IOTC_LOGD("vaild cert validTo=%04d/%02d/%02d %02d:%02d:%02d",
         crt->valid_to.year, crt->valid_to.mon, crt->valid_to.day,
         crt->valid_to.hour, crt->valid_to.min, crt->valid_to.sec);
     /* 取证书验证通过里面最大的有效时间 */
@@ -519,10 +519,10 @@ static bool RecordValidCertTime(TlsClient *cli, mbedtls_x509_crt *crt)
             return false;
         }
     }
-    ADAPTER_LOGD("record cert validFrom=%04d/%02d/%02d %02d:%02d:%02d",
+    IOTC_LOGD("record cert validFrom=%04d/%02d/%02d %02d:%02d:%02d",
         cli->validFrom.year, cli->validFrom.mon, cli->validFrom.day,
         cli->validFrom.hour, cli->validFrom.min, cli->validFrom.sec);
-    ADAPTER_LOGD("record cert validTo=%04d/%02d/%02d %02d:%02d:%02d",
+    IOTC_LOGD("record cert validTo=%04d/%02d/%02d %02d:%02d:%02d",
         cli->validTo.year, cli->validTo.mon, cli->validTo.day,
         cli->validTo.hour, cli->validTo.min, cli->validTo.sec);
 
@@ -537,21 +537,21 @@ static int32_t VerifyOneCert(TlsClient *cli, uint32_t index, const char *rootCa,
     int32_t ret = mbedtls_x509_crt_parse(&caCert, (const unsigned char *)rootCa, strlen(rootCa) + 1);
     if (ret != 0) {
         mbedtls_x509_crt_free(&caCert);
-        ADAPTER_LOGW("cert parse error [%u/-0x%04x]", index, -ret);
+        IOTC_LOGW("cert parse error [%u/-0x%04x]", index, -ret);
         return ret;
     }
 
     ret = mbedtls_x509_crt_verify(crt, &caCert, NULL, NULL, flags, NULL, NULL);
     mbedtls_x509_crt_free(&caCert);
-    ADAPTER_LOGD("i=%u,flags=%08x,ret=[-0x%04x]", index, *flags, -ret);
+    IOTC_LOGD("i=%u,flags=%08x,ret=[-0x%04x]", index, *flags, -ret);
     if (ret == 0 && (*flags) == 0) {
         cli->verifyResult = IOTC_TLS_CERT_VERIFY_VALID;
-        ADAPTER_LOGD("verify cert okay");
+        IOTC_LOGD("verify cert okay");
         return IOTC_OK;
     }
 
     if (ret != MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
-        ADAPTER_LOGW("verify cert error i=%u,flags=%08x,ret=[-0x%04x]", index, *flags, -ret);
+        IOTC_LOGW("verify cert error i=%u,flags=%08x,ret=[-0x%04x]", index, *flags, -ret);
         return IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
     }
 
@@ -562,13 +562,13 @@ static int32_t VerifyOneCert(TlsClient *cli, uint32_t index, const char *rootCa,
             if (!RecordValidCertTime(cli, crt)) {
                 return IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
             }
-            ADAPTER_LOGN("delay verify cert time");
+            IOTC_LOGN("delay verify cert time");
             *flags &= ~(MBEDTLS_X509_BADCERT_EXPIRED | MBEDTLS_X509_BADCERT_FUTURE);
         }
     }
     if (cli->hostVerify) {
         if (((*flags) & MBEDTLS_X509_BADCERT_CN_MISMATCH) != 0) {
-            ADAPTER_LOGN("not verify cert cn");
+            IOTC_LOGN("not verify cert cn");
             *flags &= ~(MBEDTLS_X509_BADCERT_CN_MISMATCH);
         }
     }
@@ -578,7 +578,7 @@ static int32_t VerifyOneCert(TlsClient *cli, uint32_t index, const char *rootCa,
 static int32_t VerifyCertProc(void *data, mbedtls_x509_crt *crt, uint32_t *flags)
 {
     if (data == NULL) {
-        ADAPTER_LOGW("invaild context");
+        IOTC_LOGW("invaild context");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -586,7 +586,7 @@ static int32_t VerifyCertProc(void *data, mbedtls_x509_crt *crt, uint32_t *flags
     TlsClient *cli = (TlsClient *)data;
     for (uint32_t i = 0; i < cli->certsNum; i++) {
         if (cli->certs[i] == NULL) {
-            ADAPTER_LOGW("invaild cert");
+            IOTC_LOGW("invaild cert");
             continue;
         }
 
@@ -604,25 +604,25 @@ static int32_t VerifyCertCb(void *data, mbedtls_x509_crt *crt, int32_t depth, ui
 {
     (void)depth;
     if ((data == NULL) || (crt == NULL) || (flags == NULL)) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return IOTC_ERR_PARAM_INVALID;
     }
 
 #if IOTC_CONF_ADAPTER_MBEDTLS_TLS_DEBUG
     char buf[64] = {0}; /* 64为缓冲buf大小 */
-    ADAPTER_LOGD("Verify requested for (Depth %d):", depth);
+    IOTC_LOGD("Verify requested for (Depth %d):", depth);
     mbedtls_x509_crt_info(buf, sizeof(buf) - 1, "", crt);
-    ADAPTER_LOGD("%s", buf);
+    IOTC_LOGD("%s", buf);
     if ((*flags) == 0) {
-        ADAPTER_LOGD("This certificate has no flags");
+        IOTC_LOGD("This certificate has no flags");
     } else {
         mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", *flags);
-        ADAPTER_LOGD("%s", buf);
+        IOTC_LOGD("%s", buf);
     }
 #endif /* HILINK_TLS_DEBUG */
 
     if (VerifyCertProc(data, crt, flags) != IOTC_OK) {
-        ADAPTER_LOGE("verify cert");
+        IOTC_LOGE("verify cert");
     }
     return IOTC_OK;
 }
@@ -631,13 +631,13 @@ static int32_t VerifyCertCb(void *data, mbedtls_x509_crt *crt, int32_t depth, ui
 static int32_t SetTlsClientOptiontCert(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(IotcTlsCerts)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     const IotcTlsCerts *certs = (const IotcTlsCerts *)value;
     if ((certs->certs == NULL) || (certs->num == 0)) {
-        ADAPTER_LOGW("invalid certs");
+        IOTC_LOGW("invalid certs");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -645,7 +645,7 @@ static int32_t SetTlsClientOptiontCert(TlsClient *cli, const void *value, uint32
     int32_t ret = IOTC_ADAPTER_TLS_ERR_CERT_VERIFY;
     for (uint32_t i = 0; i < certs->num; ++i) {
         if (certs->certs[i] == NULL) {
-            ADAPTER_LOGW("invalid certs %u", i);
+            IOTC_LOGW("invalid certs %u", i);
             return IOTC_ERR_PARAM_INVALID;
         }
         ret = mbedtls_x509_crt_parse(&cli->caCert, (const unsigned char *)certs->certs[i],
@@ -657,7 +657,7 @@ static int32_t SetTlsClientOptiontCert(TlsClient *cli, const void *value, uint32
         mbedtls_x509_crt_init(&cli->caCert);
     }
     if (ret != 0) {
-        ADAPTER_LOGW("cert parse error [-0x%04x]", -ret);
+        IOTC_LOGW("cert parse error [-0x%04x]", -ret);
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
     mbedtls_ssl_conf_ca_chain(&cli->conf, &cli->caCert, NULL);
@@ -674,20 +674,20 @@ static int32_t SetTlsClientOptiontCert(TlsClient *cli, const void *value, uint32
 static int32_t SetTlsClientOptiontPsk(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(IotcTlsPsk)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
     const IotcTlsPsk *psk = (const IotcTlsPsk *)value;
     if ((psk->psk == NULL) || (psk->pskLen == 0) || (psk->pskIdentity == NULL) ||
         (psk->pskIdentityLen == 0)) {
-        ADAPTER_LOGW("invalid psk");
+        IOTC_LOGW("invalid psk");
         return IOTC_ERR_PARAM_INVALID;
     }
 #if IOTC_CONF_ADAPTER_MBEDTLS_TLS_PSK_SUPPORT
     int32_t ret = mbedtls_ssl_conf_psk(&cli->conf, psk->psk, psk->pskLen, psk->pskIdentity, psk->pskIdentityLen);
     if (ret < 0) {
-        ADAPTER_LOGW("psk set error [-0x%04x]", -ret);
+        IOTC_LOGW("psk set error [-0x%04x]", -ret);
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
     return IOTC_OK;
@@ -699,7 +699,7 @@ static int32_t SetTlsClientOptiontPsk(TlsClient *cli, const void *value, uint32_
 static int32_t SetTlsClientOptiontMaxFragLen(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(uint8_t)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -710,7 +710,7 @@ static int32_t SetTlsClientOptiontMaxFragLen(TlsClient *cli, const void *value, 
 
     int32_t ret = mbedtls_ssl_conf_max_frag_len(&cli->conf, fragLenType);
     if (ret != 0) {
-        ADAPTER_LOGW("set max frag error [%u/-0x%04x]", fragLenType, -ret);
+        IOTC_LOGW("set max frag error [%u/-0x%04x]", fragLenType, -ret);
         return IOTC_ADAPTER_TLS_ERR_SETUP;
     }
 
@@ -720,7 +720,7 @@ static int32_t SetTlsClientOptiontMaxFragLen(TlsClient *cli, const void *value, 
 static int32_t SetTlsClientOptiontRandomCallback(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(IotcGetRandom)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -732,7 +732,7 @@ static int32_t SetTlsClientOptiontRandomCallback(TlsClient *cli, const void *val
 static int32_t SetTlsClientOptiontHandshakeTimeout(TlsClient *cli, const void *value, uint32_t len)
 {
     if ((len != sizeof(uint32_t)) || (value == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -743,7 +743,7 @@ static int32_t SetTlsClientOptiontHandshakeTimeout(TlsClient *cli, const void *v
 int32_t IotcSetTlsClientOption(IotcTlsClient *cli, IotcTlsOption option, const void *value, uint32_t len)
 {
     if (cli == NULL) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -766,14 +766,14 @@ int32_t IotcSetTlsClientOption(IotcTlsClient *cli, IotcTlsOption option, const v
             return optionList[i].opFunc(cli, value, len);
         }
     }
-    ADAPTER_LOGW("unsupport option %d", option);
+    IOTC_LOGW("unsupport option %d", option);
     return IOTC_ERR_NOT_SUPPORT;
 }
 
 IotcTlsCertVerify IotcTlsClientVerifyCert(IotcTlsClient *cli)
 {
     if (cli == NULL) {
-        ADAPTER_LOGW("param invaild");
+        IOTC_LOGW("param invaild");
         return IOTC_TLS_CERT_VERIFY_INVALID;
     }
     TlsClient *cliCtx = (TlsClient *)cli;
@@ -784,20 +784,20 @@ IotcTlsCertVerify IotcTlsClientVerifyCert(IotcTlsClient *cli)
     int32_t ret;
     ret = mbedtls_x509_time_is_future(&cliCtx->validFrom);
     if (ret != 0) {
-        ADAPTER_LOGW("ca time is future [-0x%04x %04d/%02d/%02d %02d:%02d:%02d]", -ret,
+        IOTC_LOGW("ca time is future [-0x%04x %04d/%02d/%02d %02d:%02d:%02d]", -ret,
             cliCtx->validFrom.year, cliCtx->validFrom.mon, cliCtx->validFrom.day,
             cliCtx->validFrom.hour, cliCtx->validFrom.min, cliCtx->validFrom.sec);
         return IOTC_TLS_CERT_VERIFY_INVALID;
     }
     ret = mbedtls_x509_time_is_past(&cliCtx->validTo);
     if (ret != 0) {
-        ADAPTER_LOGW("ca time is past [-0x%04x %04d/%02d/%02d %02d:%02d:%02d]", -ret,
+        IOTC_LOGW("ca time is past [-0x%04x %04d/%02d/%02d %02d:%02d:%02d]", -ret,
             cliCtx->validFrom.year, cliCtx->validFrom.mon, cliCtx->validFrom.day,
             cliCtx->validFrom.hour, cliCtx->validFrom.min, cliCtx->validFrom.sec);
         return IOTC_TLS_CERT_VERIFY_INVALID;
     }
 
-    ADAPTER_LOGI("ca time verify ok");
+    IOTC_LOGI("ca time verify ok");
     cliCtx->verifyResult = IOTC_TLS_CERT_VERIFY_VALID;
     return IOTC_TLS_CERT_VERIFY_VALID;
 }

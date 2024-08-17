@@ -23,7 +23,7 @@
 #include "ble_svc_custom_sec_data.h"
 #include "securec.h"
 #include "utils_assert.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "utils_common.h"
 #include "ble_linklayer.h"
 #include "iotc_errcode.h"

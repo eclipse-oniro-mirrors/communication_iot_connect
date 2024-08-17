@@ -14,8 +14,9 @@
  */
 #include <stddef.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "securec.h"
-#include "adapter_log.h"
+#include "iotc_log.h"
 #include "hilog/log.h"
 
 #define IOTC_LOG_LINE_MAX_LENGTH   512
@@ -47,6 +48,41 @@ void AdapterLogOutput(AdapterLogInfo *info)
     }
     next += ret;
     ret = vsprintf_s(&line[next], sizeof(line) - next, info->fmt, info->args);
+    if (ret <= 0) {
+        HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
+        return;
+    }
+    (void)HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", line);
+}
+
+void IotcLogOutputImpl(uint8_t level, const char *fileName,
+    const char *funcName, uint32_t line, const char *fmt, ...)
+{
+    if (level > IotcGetLogLevel() || level > IOTC_LOG_LEVEL_DEBUG || level == 0 || fmt == NULL) {
+        return;
+    }
+
+    const LogLevel level[IOTC_LOG_LEVEL_DEBUG] = {LOG_FATAL, LOG_ERROR, LOG_WARN, LOG_INFO, LOG_INFO, LOG_DEBUG};
+    const char *tag[IOTC_LOG_LEVEL_DEBUG] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
+
+    char line[IOTC_LOG_LINE_MAX_LENGTH + 1] = { 0 };
+    int32_t ret = 0;
+    uint32_t next = 0;
+    if (funcName != NULL) {
+        ret = sprintf_s(&line[next], sizeof(line) - next, "%s:%s:%u, ", tag[level - 1], funcName, line);
+    } else {
+        ret = sprintf_s(&line[next], sizeof(line) - next, "%s:%s:%u, ", tag[level - 1],
+            fileName != NULL ? fileName : "NULL", line);
+    }
+    if (ret <= 0) {
+        HiLogPrint(LOG_CORE, level[level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
+        return;
+    }
+    next += ret;
+    va_list ap;
+    va_start(ap, fmt);
+    ret = vsprintf_s(&line[next], sizeof(line) - next, fmt, ap);
+    va_end(ap);
     if (ret <= 0) {
         HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
         return;

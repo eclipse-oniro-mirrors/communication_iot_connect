@@ -14,7 +14,7 @@
  */
 #include "ble_svc_device_info.h"
 #include "securec.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "ble_common.h"

@@ -21,7 +21,7 @@
 #include "utils_assert.h"
 #include "securec.h"
 #include "svc_softap_ssid.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "svc_softap_sess.h"
 #include "utils_common.h"
 #include "svc_softap_ctx.h"

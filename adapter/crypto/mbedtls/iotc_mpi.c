@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 #include <stddef.h>
+#include "iotc_mpi.h"
 #include "iotc_errcode.h"
-#include "adapter_mpi.h"
 #include "mbedtls/bignum.h"
-#include "adapter_mem.h"
-#include "adapter_log.h"
+#include "iotc_mem.h"
+#include "iotc_log.h"
 
 IotcMpi *IotcMpiInit(void)
 {
     mbedtls_mpi *mpi = (mbedtls_mpi *)IotcMalloc(sizeof(mbedtls_mpi));
     if (mpi == NULL) {
-        ADAPTER_LOGW("malloc error");
+        IOTC_LOGW("malloc error");
         return NULL;
     }
     mbedtls_mpi_init(mpi);
@@ -47,12 +47,12 @@ void IotcMpiFree(IotcMpi *mpi)
 int32_t IotcMpiExpMod(IotcMpi *x, IotcMpi *a, IotcMpi *e, IotcMpi *n)
 {
     if ((x == NULL) || (a == NULL) || (e == NULL) || (n == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_mpi_exp_mod(GetMbedtlsMpi(x), GetMbedtlsMpi(a), GetMbedtlsMpi(e), GetMbedtlsMpi(n), NULL);
     if (ret != 0) {
-        ADAPTER_LOGW("exp mod error [-0x%04x]", -ret);
+        IOTC_LOGW("exp mod error [-0x%04x]", -ret);
         return  IOTC_ADAPTER_CRYPTO_ERR_MPI_EXP_MOD;
     }
     return IOTC_OK;
@@ -61,7 +61,7 @@ int32_t IotcMpiExpMod(IotcMpi *x, IotcMpi *a, IotcMpi *e, IotcMpi *n)
 int32_t IotcMpiCmpInt(IotcMpi *x, int64_t z)
 {
     if (x == NULL) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -71,12 +71,12 @@ int32_t IotcMpiCmpInt(IotcMpi *x, int64_t z)
 int32_t IotcMpiSubInt(IotcMpi *x, IotcMpi *a, int64_t b)
 {
     if ((x == NULL) || (a == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_mpi_sub_int(GetMbedtlsMpi(x), GetMbedtlsMpi(a), b);
     if (ret != 0) {
-        ADAPTER_LOGW("sub int error [-0x%04x]", -ret);
+        IOTC_LOGW("sub int error [-0x%04x]", -ret);
         return  IOTC_ADAPTER_CRYPTO_ERR_MPI_SUB_INT;
     }
     return IOTC_OK;
@@ -85,7 +85,7 @@ int32_t IotcMpiSubInt(IotcMpi *x, IotcMpi *a, int64_t b)
 int32_t IotcMpiCmpMpi(IotcMpi *x, IotcMpi *y)
 {
     if ((x == NULL) || (y == NULL)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     return mbedtls_mpi_cmp_mpi(GetMbedtlsMpi(x), GetMbedtlsMpi(y));
@@ -95,12 +95,12 @@ int32_t IotcMpiReadString(IotcMpi *mpi, uint8_t radix, const char *s)
 {
     /* 2和16代表进制 */
     if ((mpi == NULL) || (s == NULL) || (radix < 2) || (radix > 16)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_mpi_read_string(GetMbedtlsMpi(mpi), radix, s);
     if (ret != 0) {
-        ADAPTER_LOGW("read string error [-0x%04x]", -ret);
+        IOTC_LOGW("read string error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_READ_STRING;
     }
     return IOTC_OK;
@@ -111,13 +111,13 @@ int32_t IotcMpiWriteString(IotcMpi *mpi, uint8_t radix, char *buf, uint32_t *buf
     /* 2和16代表进制*/
     if ((mpi == NULL) || (buf == NULL) || (radix < 2) || (radix > 16) || (bufLen == NULL) ||
         (*bufLen == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     size_t oLen = 0;
     int32_t ret = mbedtls_mpi_write_string(GetMbedtlsMpi(mpi), radix, buf, *bufLen, &oLen);
     if (ret != 0) {
-        ADAPTER_LOGW("write string error [-0x%04x]", -ret);
+        IOTC_LOGW("write string error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_WRITE_STRING;
     }
     *bufLen = oLen;
@@ -127,12 +127,12 @@ int32_t IotcMpiWriteString(IotcMpi *mpi, uint8_t radix, char *buf, uint32_t *buf
 int32_t IotcMpiReadBinary(IotcMpi *mpi, const uint8_t *buf, uint32_t bufLen)
 {
     if ((mpi == NULL) || (buf == NULL) || (bufLen == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_mpi_read_binary(GetMbedtlsMpi(mpi), buf, bufLen);
     if (ret != 0) {
-        ADAPTER_LOGW("read binary error [-0x%04x]", -ret);
+        IOTC_LOGW("read binary error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_READ_BINARY;
     }
     return IOTC_OK;
@@ -141,12 +141,12 @@ int32_t IotcMpiReadBinary(IotcMpi *mpi, const uint8_t *buf, uint32_t bufLen)
 int32_t IotcMpiWriteBinary(IotcMpi *mpi, uint8_t *buf, uint32_t bufLen)
 {
     if ((mpi == NULL) || (buf == NULL) || (bufLen == 0)) {
-        ADAPTER_LOGW("invalid param");
+        IOTC_LOGW("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     int32_t ret = mbedtls_mpi_write_binary(GetMbedtlsMpi(mpi), buf, bufLen);
     if (ret != 0) {
-        ADAPTER_LOGW("write binary error [-0x%04x]", -ret);
+        IOTC_LOGW("write binary error [-0x%04x]", -ret);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_WRITE_BINARY;
     }
     return IOTC_OK;

@@ -29,13 +29,11 @@ iotc_core_infrastructure_inc = [
   "$iotc_core_path/infrastructure/security/include",
   "$iotc_core_path/infrastructure/utils/include",
   "$iotc_core_path/infrastructure/schedule/include",
-  "$iotc_core_path/infrastructure/log/include",
   "$iotc_core_path/infrastructure/model/include",
   "$iotc_core_path/infrastructure/product/include",
 ]
 
 iotc_core_infrastructure_src = [
-  "$iotc_core_path/infrastructure/log/iotc_log.c",
   "$iotc_core_path/infrastructure/DFx/dfx_anonymize.c",
   "$iotc_core_path/infrastructure/DFx/dfx_watch_dog.c",
   "$iotc_core_path/infrastructure/service/iotc_svc_dev.c",

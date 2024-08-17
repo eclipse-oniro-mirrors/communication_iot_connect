@@ -19,7 +19,7 @@
 #include "securec.h"
 #include "config_revoke_flag.h"
 #include "utils_mutex_global.h"
-#include "adapter_kv.h"
+#include "iotc_kv.h"
 #include "utils_common.h"
 #include "iotc_errcode.h"
 

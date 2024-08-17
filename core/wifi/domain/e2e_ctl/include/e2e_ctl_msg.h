@@ -16,7 +16,7 @@
 #define E2E_CONTROL_MSG_H
 #include <stdbool.h>
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {

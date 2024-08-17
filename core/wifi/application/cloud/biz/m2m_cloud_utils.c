@@ -17,7 +17,7 @@
 #include "iotc_errcode.h"
 #include "comm_def.h"
 #include "iotc_log.h"
-#include "adapter_network.h"
+#include "iotc_network.h"
 #include "utils_json.h"
 #include "dev_info.h"
 #include "svc_info.h"

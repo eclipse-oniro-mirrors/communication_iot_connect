@@ -16,7 +16,7 @@
 #include <string.h>
 #include "utils_assert.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 #include "utils_json.h"
 #include "comm_def.h"

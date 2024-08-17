@@ -16,7 +16,7 @@
 #define NETCFG_SOFTAP_REPORT_H
 
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -18,7 +18,7 @@
 #include "linklayer_encrypt.h"
 #include "utils_list.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 

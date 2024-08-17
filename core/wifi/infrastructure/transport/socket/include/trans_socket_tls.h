@@ -16,7 +16,7 @@
 #define TRANS_SOCKET_TLS_H
 
 #include "trans_socket.h"
-#include "adapter_tls.h"
+#include "iotc_tls.h"
 
 #ifdef __cplusplus
 extern "C" {

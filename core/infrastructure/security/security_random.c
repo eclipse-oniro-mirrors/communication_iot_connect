@@ -15,7 +15,7 @@
 #include "security_random.h"
 #include <stddef.h>
 #include "comm_def.h"
-#include "adapter_drbg.h"
+#include "iotc_drbg.h"
 #include "iotc_log.h"
 #include "utils_mutex_local.h"
 #include "utils_mutex_global.h"
