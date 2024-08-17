@@ -62,17 +62,17 @@ typedef struct {
 
 typedef int32_t (*DevProfReportCharState)(const IotcCharState state[], uint32_t num);
 typedef int32_t (*DevCtlReportAll)(DevReportType type);
-typedef int32_t (*DevCtlGetCharStates)(const AdapterJson *inArray, AdapterJson **outArray);
-typedef int32_t (*DevCtlPutCharStates)(const AdapterJson *inArray, AdapterJson **outArray);
+typedef int32_t (*DevCtlGetCharStates)(const IotcJson *inArray, IotcJson **outArray);
+typedef int32_t (*DevCtlPutCharStates)(const IotcJson *inArray, IotcJson **outArray);
 typedef const IotcDeviceInfo *(*DevMdlGetDevInfo)(void);
 typedef const IotcServiceInfo *(*DevMdlGetSvcInfo)(uint32_t *num);
 typedef DevBindStatus (*DevGetBindStatus)(void);
 typedef int32_t (*DevGetLoginInfo)(bool *isExist, DevLoginInfo *info);
 typedef int32_t (*DevGetRegisterInfo)(bool *isExist, DevRegInfo *info);
 typedef int32_t (*DevGetAuthInfo)(bool *isExist, DevAuthInfo *info);
-typedef int32_t (*DevRecvBindInfo)(const AdapterJson *json);
-typedef int32_t (*DevRecvAuthInfo)(const AdapterJson *json);
-typedef int32_t (*DevRecvLoginInfo)(const AdapterJson *json);
+typedef int32_t (*DevRecvBindInfo)(const IotcJson *json);
+typedef int32_t (*DevRecvAuthInfo)(const IotcJson *json);
+typedef int32_t (*DevRecvLoginInfo)(const IotcJson *json);
 typedef int32_t (*DevCleanLoginInfo)(void);
 typedef int32_t (*DevCleanRevokeFlag)(void);
 typedef bool (*DevGetOnlineStatus)(void);
@@ -101,17 +101,17 @@ typedef enum {
     DEVICE_SERVICE_MSG_ID_MAX,
 } DevSvcMsgId;
 
-int32_t DevSvcProxyRecvBindInfo(const AdapterJson *json);
-int32_t DevSvcProxyCtlGetCharStates(const AdapterJson *inArray, AdapterJson **outArray);
+int32_t DevSvcProxyRecvBindInfo(const IotcJson *json);
+int32_t DevSvcProxyCtlGetCharStates(const IotcJson *inArray, IotcJson **outArray);
 int32_t DevSvcProxyCtlReportAll(DevReportType type);
-int32_t DevSvcProxyCtlPutCharStates(const AdapterJson *inArray, AdapterJson **outArray);
+int32_t DevSvcProxyCtlPutCharStates(const IotcJson *inArray, IotcJson **outArray);
 DevBindStatus DevSvcProxyGetBindStatus(void);
 int32_t DevSvcProxyProfReportCharState(const IotcCharState state[], uint32_t num);
 int32_t DevSvcProxyGetAuthInfo(bool *isExist, DevAuthInfo *info);
 int32_t DevSvcProxyGetRegisterInfo(bool *isExist, DevRegInfo *info);
 int32_t DevSvcProxyGetLoginInfo(bool *isExist, DevLoginInfo *info);
-int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json);
-int32_t DevSvcProxyRecvLoginInfo(const AdapterJson *json);
+int32_t DevSvcProxyRecvAuthInfo(const IotcJson *json);
+int32_t DevSvcProxyRecvLoginInfo(const IotcJson *json);
 int32_t DevSvcProxyCleanLoginInfo(void);
 int32_t DevSvcProxyCleanRevokeFlag(void);
 bool DevSvcProxyGetOnlineStatus(void);

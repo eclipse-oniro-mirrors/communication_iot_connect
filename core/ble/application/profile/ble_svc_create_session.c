@@ -24,12 +24,12 @@
 #include "iotc_svc.h"
 #include "iotc_errcode.h"
 
-static int32_t InitRecvSeq(const AdapterJson *req, uint32_t *recvSeq)
+static int32_t InitRecvSeq(const IotcJson *req, uint32_t *recvSeq)
 {
-    AdapterJson *seqObj = AdapterJsonGetObj(req, STR_JSON_SEQ_NUM);
+    IotcJson *seqObj = IotcJsonGetObj(req, STR_JSON_SEQ_NUM);
     CHECK_RETURN_LOGE(seqObj != NULL, IOTC_ADAPTER_JSON_ERR_GET_OBJ, "get seq json err");
     int64_t seq = 0;
-    int32_t ret = AdapterJsonGetNum(seqObj, &seq);
+    int32_t ret = IotcJsonGetNum(seqObj, &seq);
     CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_GET_NUM, "get seq num err");
     CHECK_RETURN_LOGE(seq >= 0 && seq <= UINT32_MAX, IOTC_CORE_BLE_INVALID_SEQ, "get seq num:%ld overflow", seq);
 
@@ -38,7 +38,7 @@ static int32_t InitRecvSeq(const AdapterJson *req, uint32_t *recvSeq)
     return IOTC_OK;
 }
 
-static int32_t CheckUidHash(const AdapterJson *req)
+static int32_t CheckUidHash(const IotcJson *req)
 {
     char uidHash[BLE_UID_HASH_LEN + 1] = { 0 };
     int32_t ret = UtilsJsonGetString(req, STR_JSON_UIDHASH, uidHash, sizeof(uidHash));
@@ -60,7 +60,7 @@ static int32_t CheckUidHash(const AdapterJson *req)
     return IOTC_OK;
 }
 
-static int32_t GetSn1Hex(const AdapterJson *req, uint8_t *out, uint32_t outLen)
+static int32_t GetSn1Hex(const IotcJson *req, uint8_t *out, uint32_t outLen)
 {
     char sn1Str[HEXIFY_LEN(RAND_SN_LEN) + 1] = { 0 };
     int32_t ret = UtilsJsonGetString(req, STR_JSON_SN1, sn1Str, sizeof(sn1Str));
@@ -71,7 +71,7 @@ static int32_t GetSn1Hex(const AdapterJson *req, uint8_t *out, uint32_t outLen)
     return IOTC_OK;
 }
 
-static int32_t OwnerAuth(const AdapterJson *req, AdapterJson *rsp)
+static int32_t OwnerAuth(const IotcJson *req, IotcJson *rsp)
 {
     uint8_t sn1[RAND_SN_LEN] = { 0 };
     int32_t ret = GetSn1Hex(req, sn1, sizeof(sn1));
@@ -106,28 +106,28 @@ static int32_t OwnerAuth(const AdapterJson *req, AdapterJson *rsp)
         return IOTC_CORE_BLE_INVALID_AUTHCODE_ID;
     }
 
-    ret = AdapterJsonAddStr2Obj(rsp, STR_JSON_AUTHCODE_ID, authInfo.authCodeId);
+    ret = IotcJsonAddStr2Obj(rsp, STR_JSON_AUTHCODE_ID, authInfo.authCodeId);
     (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "add authcode id err:%d", ret);
     return IOTC_OK;
 }
 
-static int32_t AddSessionItem(const AdapterJson *req, AdapterJson *rsp)
+static int32_t AddSessionItem(const IotcJson *req, IotcJson *rsp)
 {
-    int32_t ret = AdapterJsonAddNum2Obj(rsp, STR_JSON_SEQ_NUM, BleSessSendSeqGet());
+    int32_t ret = IotcJsonAddNum2Obj(rsp, STR_JSON_SEQ_NUM, BleSessSendSeqGet());
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "add seq err:%d", ret);
 
-    AdapterJson *uuidJson = AdapterJsonGetObj(req, STR_JSON_UUID);
+    IotcJson *uuidJson = IotcJsonGetObj(req, STR_JSON_UUID);
     CHECK_RETURN_LOGE(uuidJson != NULL, IOTC_ADAPTER_JSON_ERR_GET_OBJ, "get uuid obj err");
-    const char *uuid = AdapterJsonGetStr(uuidJson);
+    const char *uuid = IotcJsonGetStr(uuidJson);
     CHECK_RETURN_LOGE(uuid != NULL, IOTC_ADAPTER_JSON_ERR_GET_STRING, "get uuid str err");
-    ret = AdapterJsonAddStr2Obj(rsp, STR_JSON_UUID, uuid);
+    ret = IotcJsonAddStr2Obj(rsp, STR_JSON_UUID, uuid);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "add uuid err:%d", ret);
 
     return IOTC_OK;
 }
 
-static int32_t ProcessCreateSessionCmd(const AdapterJson *req, AdapterJson *rsp)
+static int32_t ProcessCreateSessionCmd(const IotcJson *req, IotcJson *rsp)
 {
     uint32_t recvSeq = 0;
     int32_t ret = InitRecvSeq(req, &recvSeq);
@@ -148,25 +148,25 @@ static int32_t ProcessCreateSessionCmd(const AdapterJson *req, AdapterJson *rsp)
 
 static int32_t BleCreateSession(const uint8_t *in, uint8_t **out, uint32_t *outLen)
 {
-    AdapterJson *req = AdapterJsonParse((const char *)in);
+    IotcJson *req = IotcJsonParse((const char *)in);
     CHECK_RETURN_LOGE(req != NULL, IOTC_ADAPTER_JSON_ERR_PARSE, "parse json err");
 
-    AdapterJson *rsp = AdapterCreateJson();
+    IotcJson *rsp = IotcJsonCreate();
     if (rsp == NULL) {
         IOTC_LOGE("create");
-        AdapterJsonDelete(req);
+        IotcJsonDelete(req);
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
     int32_t ret = ProcessCreateSessionCmd(req, rsp);
-    AdapterJsonDelete(req);
+    IotcJsonDelete(req);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(rsp);
+        IotcJsonDelete(rsp);
         return ret;
     }
 
     char *outStr = UtilsJsonPrintByMalloc(rsp);
-    AdapterJsonDelete(rsp);
+    IotcJsonDelete(rsp);
     if (outStr == NULL) {
         IOTC_LOGE("json print err");
         return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;

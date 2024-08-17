@@ -60,7 +60,7 @@ void CoapServerRemoveResource(CoapEndpoint *endpoint, const CoapResource *res);
 int32_t CoapServerSendResp(CoapEndpoint *endpoint, const CoapServerRespParam *param, const SocketAddr *addr,
     CoapPacket *packetBuf);
 
-int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, AdapterJson *respJson);
+int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, IotcJson *respJson);
 
 #ifdef __cplusplus
 }

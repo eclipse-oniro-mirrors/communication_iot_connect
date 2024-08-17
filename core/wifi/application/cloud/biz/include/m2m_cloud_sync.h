@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-AdapterJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx);
+IotcJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx);
 
 int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode);
 

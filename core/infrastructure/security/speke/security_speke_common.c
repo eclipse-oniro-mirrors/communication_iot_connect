@@ -23,50 +23,50 @@
 #include "utils_json.h"
 #include "iotc_errcode.h"
 
-int32_t SpekeCommonAddVerInfoToJson(AdapterJson *secDataPayload)
+int32_t SpekeCommonAddVerInfoToJson(IotcJson *secDataPayload)
 {
     if (secDataPayload == NULL) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    AdapterJson *version = AdapterCreateJson();
+    IotcJson *version = IotcJsonCreate();
     if (version == NULL) {
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
-    int32_t ret = AdapterJsonAddStr2Obj(version, SPEKE_SEC_DATA_CUR_VER_JSON, SPEKE_VERSION);
+    int32_t ret = IotcJsonAddStr2Obj(version, SPEKE_SEC_DATA_CUR_VER_JSON, SPEKE_VERSION);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(version);
+        IotcJsonDelete(version);
         return ret;
     }
-    ret = AdapterJsonAddStr2Obj(version, SPEKE_SEC_DATA_MIN_VER_JSON, SPEKE_VERSION);
+    ret = IotcJsonAddStr2Obj(version, SPEKE_SEC_DATA_MIN_VER_JSON, SPEKE_VERSION);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(version);
+        IotcJsonDelete(version);
         return ret;
     }
-    ret = AdapterJsonAddItem2Obj(secDataPayload, SPEKE_SEC_DATA_VER_JSON, version);
+    ret = IotcJsonAddItem2Obj(secDataPayload, SPEKE_SEC_DATA_VER_JSON, version);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(version);
+        IotcJsonDelete(version);
         return ret;
     }
 
     return IOTC_OK;
 }
 
-int32_t SpekeCommonVerifyVersion(const AdapterJson *secDataPayload)
+int32_t SpekeCommonVerifyVersion(const IotcJson *secDataPayload)
 {
     if (secDataPayload == NULL) {
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    AdapterJson *verObj = AdapterJsonGetObj(secDataPayload, SPEKE_SEC_DATA_VER_JSON);
+    IotcJson *verObj = IotcJsonGetObj(secDataPayload, SPEKE_SEC_DATA_VER_JSON);
     if (verObj == NULL) {
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    AdapterJson *curVerObj = AdapterJsonGetObj(verObj, SPEKE_SEC_DATA_CUR_VER_JSON);
+    IotcJson *curVerObj = IotcJsonGetObj(verObj, SPEKE_SEC_DATA_CUR_VER_JSON);
     if (curVerObj == NULL) {
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    const char *curVerStr = AdapterJsonGetStr(curVerObj);
+    const char *curVerStr = IotcJsonGetStr(curVerObj);
     if (curVerStr == NULL) {
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
@@ -77,81 +77,81 @@ int32_t SpekeCommonVerifyVersion(const AdapterJson *secDataPayload)
     return IOTC_OK;
 }
 
-static AdapterJson *CreateSecDataObj(int32_t msgType, const AdapterJson *secDataPayload)
+static IotcJson *CreateSecDataObj(int32_t msgType, const IotcJson *secDataPayload)
 {
-    AdapterJson *secData = AdapterCreateJson();
+    IotcJson *secData = IotcJsonCreate();
     if (secData == NULL) {
         IOTC_LOGE("Speke create secData JSON err");
         return NULL;
     }
-    int32_t ret = AdapterJsonAddNum2Obj(secData, SPEKE_SEC_DATA_MESSAGE_JSON, msgType);
+    int32_t ret = IotcJsonAddNum2Obj(secData, SPEKE_SEC_DATA_MESSAGE_JSON, msgType);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke add msgType to secData err:%d", ret);
-        AdapterJsonDelete(secData);
+        IotcJsonDelete(secData);
         return NULL;
     }
-    AdapterJson *duplicatePayload = AdapterDuplicateJson(secDataPayload, true);
+    IotcJson *duplicatePayload = IotcDuplicateJson(secDataPayload, true);
     if (duplicatePayload == NULL) {
         IOTC_LOGE("Speke duplicate payload err");
-        AdapterJsonDelete(secData);
+        IotcJsonDelete(secData);
         return NULL;
     }
-    ret = AdapterJsonAddItem2Obj(secData, SPEKE_SEC_DATA_PAYLOAD_JSON, duplicatePayload);
+    ret = IotcJsonAddItem2Obj(secData, SPEKE_SEC_DATA_PAYLOAD_JSON, duplicatePayload);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke add payload to secData err:%d", ret);
-        AdapterJsonDelete(secData);
-        AdapterJsonDelete(duplicatePayload);
+        IotcJsonDelete(secData);
+        IotcJsonDelete(duplicatePayload);
         return NULL;
     }
 
     return secData;
 }
 
-static AdapterJson *CreateNegoMsgObj(const char *sessionId, AdapterJson *secData)
+static IotcJson *CreateNegoMsgObj(const char *sessionId, IotcJson *secData)
 {
-    AdapterJson *root = AdapterCreateJson();
+    IotcJson *root = IotcJsonCreate();
     if (root == NULL) {
         IOTC_LOGE("Speke create nego msg root JSON err");
         return NULL;
     }
-    int32_t ret = AdapterJsonAddStr2Obj(root, SPEKE_SESSION_ID_JSON, sessionId);
+    int32_t ret = IotcJsonAddStr2Obj(root, SPEKE_SESSION_ID_JSON, sessionId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke create nego msg add sessionId err:%d", ret);
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return NULL;
     }
-    ret = AdapterJsonAddItem2Obj(root, SPEKE_SEC_DATA_JSON, secData);
+    ret = IotcJsonAddItem2Obj(root, SPEKE_SEC_DATA_JSON, secData);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke create nego msg add secData err:%d", ret);
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return NULL;
     }
 
     return root;
 }
 
-int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const AdapterJson *secDataPayload,
+int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const IotcJson *secDataPayload,
     uint8_t **msg, uint32_t *len)
 {
     if ((sessionId == NULL) || (secDataPayload == NULL) || (msg == NULL) || (len == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    AdapterJson *secData = CreateSecDataObj(msgType, secDataPayload);
+    IotcJson *secData = CreateSecDataObj(msgType, secDataPayload);
     if (secData == NULL) {
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
-    AdapterJson *root = CreateNegoMsgObj(sessionId, secData);
+    IotcJson *root = CreateNegoMsgObj(sessionId, secData);
     if (root == NULL) {
-        AdapterJsonDelete(secData);
+        IotcJsonDelete(secData);
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
     char *outMsg = UtilsJsonPrintByMalloc(root);
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
     if (outMsg == NULL) {
         IOTC_LOGE("Speke create nego msg print JSON err");
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
     }
 
@@ -160,7 +160,7 @@ int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const A
     return IOTC_OK;
 }
 
-int32_t SpekeCommonAddDataToJson(AdapterJson *target, const char *name, const uint8_t *input, uint32_t inputLen)
+int32_t SpekeCommonAddDataToJson(IotcJson *target, const char *name, const uint8_t *input, uint32_t inputLen)
 {
     if ((target == NULL) || (name == NULL) || (input == NULL) || (inputLen == 0)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -178,7 +178,7 @@ int32_t SpekeCommonAddDataToJson(AdapterJson *target, const char *name, const ui
         return IOTC_CORE_COMM_UTILS_ERR_HEXIFY;
     }
 
-    int32_t ret = AdapterJsonAddStr2Obj(target, name, data);
+    int32_t ret = IotcJsonAddStr2Obj(target, name, data);
     if (ret != IOTC_OK) {
         AdapterFree(data);
         return ret;
@@ -188,17 +188,17 @@ int32_t SpekeCommonAddDataToJson(AdapterJson *target, const char *name, const ui
     return IOTC_OK;
 }
 
-int32_t SpekeCommonParseDataFromJson(const AdapterJson *src, const char *name, uint8_t **output, uint32_t *outputLen)
+int32_t SpekeCommonParseDataFromJson(const IotcJson *src, const char *name, uint8_t **output, uint32_t *outputLen)
 {
     if ((src == NULL) || (name == NULL) || (output == NULL) || (outputLen == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    AdapterJson *obj = AdapterJsonGetObj(src, name);
+    IotcJson *obj = IotcJsonGetObj(src, name);
     if (obj == NULL) {
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    const char *srcStr = AdapterJsonGetStr(obj);
+    const char *srcStr = IotcJsonGetStr(obj);
     if (srcStr == NULL) {
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }

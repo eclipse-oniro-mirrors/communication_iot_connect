@@ -35,17 +35,17 @@ static const CloudOption *M2mCloudGetHeartbeatOption(void)
     return &HB_OPTION;
 }
 
-static AdapterJson *M2mCloudBuildHeartbeatRequest(M2mCloudContext *ctx)
+static IotcJson *M2mCloudBuildHeartbeatRequest(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
 
-    AdapterJson *rootObj = AdapterCreateJson();
+    IotcJson *rootObj = IotcJsonCreate();
     CHECK_RETURN_LOGW(rootObj != NULL, NULL, "param invalid");
 
-    int32_t ret = AdapterJsonAddNum2Obj(rootObj, STR_JSON_HB_CNT, ctx->heartbeatInfo.sentCnt);
+    int32_t ret = IotcJsonAddNum2Obj(rootObj, STR_JSON_HB_CNT, ctx->heartbeatInfo.sentCnt);
     if (ret != IOTC_OK) {
         IOTC_LOGW("Json Add sentCnt error, ret=%d", ret);
-        AdapterJsonDelete(rootObj);
+        IotcJsonDelete(rootObj);
         return NULL;
     }
     ctx->heartbeatInfo.sentCnt++;
@@ -54,10 +54,10 @@ static AdapterJson *M2mCloudBuildHeartbeatRequest(M2mCloudContext *ctx)
     return rootObj;
 }
 
-static int32_t ParseHeartbeatInfo(M2mCloudContext *ctx, const AdapterJson *jsonObj)
+static int32_t ParseHeartbeatInfo(M2mCloudContext *ctx, const IotcJson *jsonObj)
 {
-    const char *timestamp = AdapterJsonGetStr(AdapterJsonGetObj(jsonObj, STR_JSON_TIMESTAMP));
-    const char *timezone = AdapterJsonGetStr(AdapterJsonGetObj(jsonObj, STR_JSON_TIMEZONE));
+    const char *timestamp = IotcJsonGetStr(IotcJsonGetObj(jsonObj, STR_JSON_TIMESTAMP));
+    const char *timezone = IotcJsonGetStr(IotcJsonGetObj(jsonObj, STR_JSON_TIMEZONE));
     IOTC_LOGI("get time info %s/%s", NON_NULL_STR(timestamp), NON_NULL_STR(timezone));
 
     if (timestamp != NULL && timezone != NULL) {
@@ -94,14 +94,14 @@ static void M2mCloudHeartbbeatRespHandler(const CoapPacket *resp, const SocketAd
 
     CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
 
-    AdapterJson *jsonObj = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
+    IotcJson *jsonObj = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
     if (jsonObj == NULL) {
         IOTC_LOGE("json parse error %u", resp->payload.len);
         return;
     }
 
-    int32_t ret = ParseHeartbeatInfo(ctx, (const AdapterJson *)jsonObj);
-    AdapterJsonDelete(jsonObj);
+    int32_t ret = ParseHeartbeatInfo(ctx, (const IotcJson *)jsonObj);
+    IotcJsonDelete(jsonObj);
     CHECK_V_RETURN_LOGW(ret == IOTC_OK, "parse hb Info error");
     ctx->heartbeatInfo.sentCnt = 0;
     IOTC_LOGN("rcv heartbeat clean sentCnt");

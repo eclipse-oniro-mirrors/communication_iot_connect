@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int32_t SvcConnSetNetInfo(const AdapterJson *json);
+int32_t SvcConnSetNetInfo(const IotcJson *json);
 
 #ifdef __cplusplus
 }

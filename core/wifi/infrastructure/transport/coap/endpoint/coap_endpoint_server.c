@@ -219,7 +219,7 @@ int32_t CoapEndpointServerRecvReqPacket(CoapEndpoint *endpoint, const CoapPacket
     return IOTC_OK;
 }
 
-int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, AdapterJson *respJson)
+int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, IotcJson *respJson)
 {
     CHECK_RETURN_LOGW(param != NULL && respJson != NULL && reqPkt != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 

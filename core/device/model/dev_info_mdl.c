@@ -19,10 +19,10 @@
 #include "comm_def.h"
 #include "iotc_errcode.h"
 
-AdapterJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
+IotcJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
 {
     CHECK_RETURN_LOGE(devInfo != NULL, NULL, "param invalid");
-    AdapterJson *devInfoObj = AdapterCreateJson();
+    IotcJson *devInfoObj = IotcJsonCreate();
     UtilsJsonStrItem strItem[] = {
         {STR_JSON_SN, devInfo->sn},
         {STR_JSON_MODEL, devInfo->model},
@@ -39,14 +39,14 @@ AdapterJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
     int32_t ret = UtilsJsonAddStrTable(devInfoObj, strItem, ARRAY_SIZE(strItem));
     if (ret != IOTC_OK) {
         IOTC_LOGE("add dev info err %d", ret);
-        AdapterJsonDelete(devInfoObj);
+        IotcJsonDelete(devInfoObj);
         return NULL;
     }
 
-    ret = AdapterJsonAddNum2Obj(devInfoObj, STR_JSON_PROT_TYPE, devInfo->protType);
+    ret = IotcJsonAddNum2Obj(devInfoObj, STR_JSON_PROT_TYPE, devInfo->protType);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add prot err %d", ret);
-        AdapterJsonDelete(devInfoObj);
+        IotcJsonDelete(devInfoObj);
         return NULL;
     }
     

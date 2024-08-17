@@ -37,7 +37,7 @@ const CloudOption *M2mCloudGetRegisterOption(void)
     return &REG_OPTION;
 }
 
-static int32_t ParseRegRespSenseInfo(M2mCloudContext *ctx, AdapterJson *jsonObj)
+static int32_t ParseRegRespSenseInfo(M2mCloudContext *ctx, IotcJson *jsonObj)
 {
     char pskHex[HEXIFY_LEN(sizeof(ctx->authInfo.regInfo.psk)) + 1] = {0};
     if (!UtilsHexify(ctx->authInfo.regInfo.psk, sizeof(ctx->authInfo.regInfo.psk), pskHex, sizeof(pskHex))) {
@@ -66,11 +66,11 @@ static int32_t ParseRegRespSenseInfo(M2mCloudContext *ctx, AdapterJson *jsonObj)
     return IOTC_OK;
 }
 
-AdapterJson *M2mCloudBuildRegisterRequest(M2mCloudContext *ctx)
+IotcJson *M2mCloudBuildRegisterRequest(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
 
-    AdapterJson *rootJson = AdapterCreateJson();
+    IotcJson *rootJson = IotcJsonCreate();
     if (rootJson == NULL) {
         IOTC_LOGW("create json error");
         return NULL;
@@ -78,7 +78,7 @@ AdapterJson *M2mCloudBuildRegisterRequest(M2mCloudContext *ctx)
 
     int32_t ret;
     do {
-        ret = AdapterJsonAddStr2Obj(rootJson, STR_JSON_CODE, ctx->authInfo.regInfo.code);
+        ret = IotcJsonAddStr2Obj(rootJson, STR_JSON_CODE, ctx->authInfo.regInfo.code);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add code error %d", ret);
             break;
@@ -95,7 +95,7 @@ AdapterJson *M2mCloudBuildRegisterRequest(M2mCloudContext *ctx)
         return rootJson;
     }
 
-    AdapterJsonDelete(rootJson);
+    IotcJsonDelete(rootJson);
     return NULL;
 }
 
@@ -104,7 +104,7 @@ int32_t M2mCloudParseRegisterResponse(M2mCloudContext *ctx, const CoapPacket *re
     CHECK_RETURN_LOGW(ctx != NULL && resp != NULL && errcode != NULL && resp->payload.data != NULL &&
         resp->payload.len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    AdapterJson *respJson = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
+    IotcJson *respJson = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
     if (respJson == NULL) {
         IOTC_LOGW("create json error");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -113,13 +113,13 @@ int32_t M2mCloudParseRegisterResponse(M2mCloudContext *ctx, const CoapPacket *re
     int32_t ret = UtilsJsonGetNum(respJson, STR_ERRCODE, errcode);
     if (ret != IOTC_OK) {
         IOTC_LOGE("json get errcode error %d", ret);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return ret;
     }
 
     if (*errcode != CLOUD_ERRCODE_OK) {
         IOTC_LOGE("reg to cloud error %d", *errcode);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return IOTC_OK;
     }
 

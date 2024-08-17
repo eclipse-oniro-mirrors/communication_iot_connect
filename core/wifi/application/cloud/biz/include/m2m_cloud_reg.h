@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-AdapterJson *M2mCloudBuildRegisterRequest(M2mCloudContext *ctx);
+IotcJson *M2mCloudBuildRegisterRequest(M2mCloudContext *ctx);
 
 int32_t M2mCloudParseRegisterResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode);
 

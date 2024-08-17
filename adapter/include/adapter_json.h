@@ -22,84 +22,84 @@
 extern "C" {
 #endif
 
-typedef void AdapterJson;
+typedef void IotcJson;
 
 /* 创建json */
-AdapterJson *AdapterCreateJson(void);
+IotcJson *IotcJsonCreate(void);
 
-AdapterJson *AdapterDuplicateJson(const AdapterJson *json, bool recurse);
+IotcJson *IotcDuplicateJson(const IotcJson *json, bool recurse);
 
-AdapterJson *AdapterJsonCreateArray(void);
+IotcJson *IotcJsonCreateArray(void);
 
-AdapterJson *AdapterJsonCreateStr(const char *val);
+IotcJson *IotcJsonCreateStr(const char *val);
 
-AdapterJson *AdapterJsonCreateNum(int64_t val);
+IotcJson *IotcJsonCreateNum(int64_t val);
 
-AdapterJson *AdapterJsonCreateFloat(double val);
+IotcJson *IotcJsonCreateFloat(double val);
 
-AdapterJson *AdapterJsonCreateBool(bool val);
+IotcJson *IotcJsonCreateBool(bool val);
 
-AdapterJson *AdapterJsonParse(const char *str);
+IotcJson *IotcJsonParse(const char *str);
 
-AdapterJson *AdapterJsonParseWithLen(const char *str, uint32_t len);
+IotcJson *IotcJsonParseWithLen(const char *str, uint32_t len);
 
 /* 释放json */
-void AdapterJsonDelete(AdapterJson *json);
+void IotcJsonDelete(IotcJson *json);
 
-/* json打印，返回的指针必须通过AdapterJsonFreePrint释放 */
-char *AdapterJsonPrint(const AdapterJson *json);
+/* json打印，返回的指针必须通过IotcJsonFreePrint释放 */
+char *IotcJsonPrint(const IotcJson *json);
 
-void AdapterJsonFreePrint(char *print);
+void IotcJsonFreePrint(char *print);
 
-int32_t AdapterJsonPrint2Buffer(AdapterJson *json, char *buffer, uint32_t *len);
+int32_t IotcJsonPrint2Buffer(IotcJson *json, char *buffer, uint32_t *len);
 
 /* json获取成员 */
-AdapterJson *AdapterJsonGetObj(const AdapterJson *json, const char *name);
+IotcJson *IotcJsonGetObj(const IotcJson *json, const char *name);
 
-AdapterJson *AdapterJsonGetArrayItem(const AdapterJson *json, uint32_t index);
+IotcJson *IotcJsonGetArrayItem(const IotcJson *json, uint32_t index);
 
 /* json组合 */
-int32_t AdapterJsonAddItem2Array(AdapterJson *array, AdapterJson *item);
+int32_t IotcJsonAddItem2Array(IotcJson *array, IotcJson *item);
 
-int32_t AdapterJsonAddItem2Obj(AdapterJson *json, const char *name, AdapterJson *item);
+int32_t IotcJsonAddItem2Obj(IotcJson *json, const char *name, IotcJson *item);
 
-int32_t AdapterJsonAddNum2Obj(AdapterJson *json, const char *name, int64_t number);
+int32_t IotcJsonAddNum2Obj(IotcJson *json, const char *name, int64_t number);
 
-int32_t AdapterJsonAddFloat2Obj(AdapterJson *json, const char *name, double number);
+int32_t IotcJsonAddFloat2Obj(IotcJson *json, const char *name, double number);
 
-int32_t AdapterJsonAddBool2Obj(AdapterJson *json, const char *name, bool val);
+int32_t IotcJsonAddBool2Obj(IotcJson *json, const char *name, bool val);
 
-int32_t AdapterJsonAddStr2Obj(AdapterJson *json, const char *name, const char *string);
+int32_t IotcJsonAddStr2Obj(IotcJson *json, const char *name, const char *string);
 
 /* json获取值 */
-const char *AdapterJsonGetStr(const AdapterJson *json);
+const char *IotcJsonGetStr(const IotcJson *json);
 
-int32_t AdapterJsonGetNum(const AdapterJson *json, int64_t *val);
+int32_t IotcJsonGetNum(const IotcJson *json, int64_t *val);
 
-int32_t AdapterJsonGetFloat(const AdapterJson *json, double *val);
+int32_t IotcJsonGetFloat(const IotcJson *json, double *val);
 
-int32_t AdapterJsonGetBool(const AdapterJson *json, bool *val);
+int32_t IotcJsonGetBool(const IotcJson *json, bool *val);
 
 /* json判断 */
-bool AdapterJsonIsStr(const AdapterJson *json);
+bool IotcJsonIsStr(const IotcJson *json);
 
-bool AdapterJsonIsNum(const AdapterJson *json);
+bool IotcJsonIsNum(const IotcJson *json);
 
-bool AdapterJsonIsFloat(const AdapterJson *json);
+bool IotcJsonIsFloat(const IotcJson *json);
 
-bool AdapterJsonIsBool(const AdapterJson *json);
+bool IotcJsonIsBool(const IotcJson *json);
 
-bool AdapterJsonIsArray(const AdapterJson *json);
+bool IotcJsonIsArray(const IotcJson *json);
 
-bool AdapterJsonHasObj(const AdapterJson *json, const char *name);
+bool IotcJsonHasObj(const IotcJson *json, const char *name);
 
 /* json数组 */
-int32_t AdapterJsonGetArraySize(const AdapterJson *json, uint32_t *size);
+int32_t IotcJsonGetArraySize(const IotcJson *json, uint32_t *size);
 
 /* 删除 */
-void AdapterDeleteItemFromJson(AdapterJson *json, const char *name);
+void IotcJsonDeleteItem(IotcJson *json, const char *name);
 
-void AdapterDeleteItemFromJsonArray(AdapterJson *json, uint32_t index);
+void IotcJsonArrayDeleteItem(IotcJson *json, uint32_t index);
 
 #ifdef __cplusplus
 }

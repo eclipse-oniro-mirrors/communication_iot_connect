@@ -27,11 +27,11 @@
 typedef struct {
     void *userData;
     uint32_t userDataLen;
-    AdapterJson *dataArray;
+    IotcJson *dataArray;
     E2eCtrlMsgReportAfterGetCmd func;
 } E2eCtlAsyncReportParam;
 
-static int32_t E2eCtrlMsgPutProcess(const AdapterJson *dataJsonArray)
+static int32_t E2eCtrlMsgPutProcess(const IotcJson *dataJsonArray)
 {
     int32_t ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
     if (ret != IOTC_OK) {
@@ -51,7 +51,7 @@ static void ReportAfterGetCmdExecutorCallback(void *userData)
         IOTC_LOGW("report func null");
     }
     if (param->dataArray != NULL) {
-        AdapterJsonDelete(param->dataArray);
+        IotcJsonDelete(param->dataArray);
     }
     if (param->userData != NULL) {
         AdapterFree(param->userData);
@@ -59,10 +59,10 @@ static void ReportAfterGetCmdExecutorCallback(void *userData)
     AdapterFree(param);
 }
 
-static int32_t E2eCtrlMsgGetProcess(const AdapterJson *dataJsonArray,
+static int32_t E2eCtrlMsgGetProcess(const IotcJson *dataJsonArray,
     E2eCtrlMsgReportAfterGetCmd reportFunc, const void *userData, uint32_t userDataLen)
 {
-    AdapterJson *reportJsonArray = NULL;
+    IotcJson *reportJsonArray = NULL;
     int32_t ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &reportJsonArray);
     if (ret != IOTC_OK) {
         IOTC_LOGW("e2e get char error %d", ret);
@@ -76,7 +76,7 @@ static int32_t E2eCtrlMsgGetProcess(const AdapterJson *dataJsonArray,
     E2eCtlAsyncReportParam *asyncParam = (E2eCtlAsyncReportParam *)AdapterMalloc(sizeof(E2eCtlAsyncReportParam));
     if (asyncParam == NULL) {
         IOTC_LOGW("malloc error");
-        AdapterJsonDelete(reportJsonArray);
+        IotcJsonDelete(reportJsonArray);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(asyncParam, sizeof(E2eCtlAsyncReportParam), 0, sizeof(E2eCtlAsyncReportParam));
@@ -87,7 +87,7 @@ static int32_t E2eCtrlMsgGetProcess(const AdapterJson *dataJsonArray,
         asyncParam->userData = (void *)UtilsMallocCopy(userData, userDataLen);
         if (asyncParam->userData == NULL) {
             IOTC_LOGW("clone error %u", userDataLen);
-            AdapterJsonDelete(reportJsonArray);
+            IotcJsonDelete(reportJsonArray);
             AdapterFree(asyncParam);
             return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
         }
@@ -96,7 +96,7 @@ static int32_t E2eCtrlMsgGetProcess(const AdapterJson *dataJsonArray,
     ret = SchedAsyncExecutor(ReportAfterGetCmdExecutorCallback, asyncParam);
     if (ret != IOTC_OK) {
         IOTC_LOGW("async report exec error %d", ret);
-        AdapterJsonDelete(reportJsonArray);
+        IotcJsonDelete(reportJsonArray);
         if (asyncParam->userData != NULL) {
             AdapterFree(asyncParam->userData);
         }
@@ -106,17 +106,17 @@ static int32_t E2eCtrlMsgGetProcess(const AdapterJson *dataJsonArray,
     return IOTC_OK;
 }
 
-int32_t E2eCtrlMsgProcess(const AdapterJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
+int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
     const void *userData, uint32_t userDataLen)
 {
     CHECK_RETURN_LOGW(req != NULL && reportFunc != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    const AdapterJson *dataJsonArray = AdapterJsonGetObj(req, STR_JSON_DATA);
+    const IotcJson *dataJsonArray = IotcJsonGetObj(req, STR_JSON_DATA);
     if (dataJsonArray == NULL) {
         IOTC_LOGW("no data array");
         return IOTC_CORE_WIFI_NETCFG_ERR_E2E_CTRL_NO_DATA;
     }
     uint32_t dataJsonArraySize = 0;
-    int32_t ret = AdapterJsonGetArraySize(dataJsonArray, &dataJsonArraySize);
+    int32_t ret = IotcJsonGetArraySize(dataJsonArray, &dataJsonArraySize);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get data size error %d", ret);
         return ret;
@@ -132,7 +132,7 @@ int32_t E2eCtrlMsgProcess(const AdapterJson *req, E2eCtrlMsgReportAfterGetCmd re
         return ret;
     }
 
-    bool isCtrl = AdapterJsonHasObj(AdapterJsonGetArrayItem(dataJsonArray, 0), STR_JSON_DATA);
+    bool isCtrl = IotcJsonHasObj(AdapterJsonGetArrayItem(dataJsonArray, 0), STR_JSON_DATA);
     if (isCtrl) {
         return E2eCtrlMsgPutProcess(dataJsonArray);
     } else {

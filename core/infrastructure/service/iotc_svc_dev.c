@@ -30,7 +30,7 @@ static const DevSvcApi *GetDevSvcApi(void)
     return devApi;
 }
 
-int32_t DevSvcProxyRecvBindInfo(const AdapterJson *json)
+int32_t DevSvcProxyRecvBindInfo(const IotcJson *json)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
     if (devApi == NULL || devApi->onRecvBindInfo == NULL) {
@@ -40,7 +40,7 @@ int32_t DevSvcProxyRecvBindInfo(const AdapterJson *json)
     return devApi->onRecvBindInfo(json);
 }
 
-int32_t DevSvcProxyCtlGetCharStates(const AdapterJson *inArray, AdapterJson **outArray)
+int32_t DevSvcProxyCtlGetCharStates(const IotcJson *inArray, IotcJson **outArray)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
     if (devApi == NULL || devApi->onGetChar == NULL) {
@@ -60,7 +60,7 @@ int32_t DevSvcProxyCtlReportAll(DevReportType type)
     return devApi->onReportAll(type);
 }
 
-int32_t DevSvcProxyCtlPutCharStates(const AdapterJson *inArray, AdapterJson **outArray)
+int32_t DevSvcProxyCtlPutCharStates(const IotcJson *inArray, IotcJson **outArray)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
     if (devApi == NULL || devApi->onPutChar == NULL) {
@@ -120,7 +120,7 @@ int32_t DevSvcProxyGetLoginInfo(bool *isExist, DevLoginInfo *info)
     return devApi->onGetLoginInfo(isExist, info);
 }
 
-int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json)
+int32_t DevSvcProxyRecvAuthInfo(const IotcJson *json)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
     if (devApi == NULL || devApi->onRecvAuthInfo == NULL) {
@@ -130,7 +130,7 @@ int32_t DevSvcProxyRecvAuthInfo(const AdapterJson *json)
     return devApi->onRecvAuthInfo(json);
 }
 
-int32_t DevSvcProxyRecvLoginInfo(const AdapterJson *json)
+int32_t DevSvcProxyRecvLoginInfo(const IotcJson *json)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
     if (devApi == NULL || devApi->onRecvLoginInfo == NULL) {

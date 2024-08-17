@@ -22,9 +22,9 @@
 extern "C" {
 #endif
 
-typedef void (*E2eCtrlMsgReportAfterGetCmd)(const AdapterJson *dataArray, const void *userData, uint32_t userDataLen);
+typedef void (*E2eCtrlMsgReportAfterGetCmd)(const IotcJson *dataArray, const void *userData, uint32_t userDataLen);
 
-int32_t E2eCtrlMsgProcess(const AdapterJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
+int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
     const void *userData, uint32_t userDataLen);
 
 #ifdef __cplusplus

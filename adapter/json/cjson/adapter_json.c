@@ -18,12 +18,12 @@
 #include "securec.h"
 
 /* 创建json */
-AdapterJson *AdapterCreateJson(void)
+IotcJson *IotcJsonCreate(void)
 {
     return cJSON_CreateObject();
 }
 
-AdapterJson *AdapterDuplicateJson(const AdapterJson *json, bool recurse)
+IotcJson *IotcDuplicateJson(const IotcJson *json, bool recurse)
 {
     if (json == NULL) {
         return NULL;
@@ -31,32 +31,32 @@ AdapterJson *AdapterDuplicateJson(const AdapterJson *json, bool recurse)
     return cJSON_Duplicate(json, recurse);
 }
 
-AdapterJson *AdapterJsonCreateArray(void)
+IotcJson *IotcJsonCreateArray(void)
 {
     return cJSON_CreateArray();
 }
 
-AdapterJson *AdapterJsonCreateStr(const char *val)
+IotcJson *IotcJsonCreateStr(const char *val)
 {
     return cJSON_CreateString(val);
 }
 
-AdapterJson *AdapterJsonCreateNum(int64_t val)
+IotcJson *IotcJsonCreateNum(int64_t val)
 {
     return cJSON_CreateNumber((double)val);
 }
 
-AdapterJson *AdapterJsonCreateFloat(double val)
+IotcJson *IotcJsonCreateFloat(double val)
 {
     return cJSON_CreateNumber(val);
 }
 
-AdapterJson *AdapterJsonCreateBool(bool val)
+IotcJson *IotcJsonCreateBool(bool val)
 {
     return cJSON_CreateBool(val);
 }
 
-AdapterJson *AdapterJsonParse(const char *str)
+IotcJson *IotcJsonParse(const char *str)
 {
     if (str == NULL) {
         return NULL;
@@ -64,7 +64,7 @@ AdapterJson *AdapterJsonParse(const char *str)
     return cJSON_Parse(str);
 }
 
-AdapterJson *AdapterJsonParseWithLen(const char *str, uint32_t len)
+IotcJson *IotcJsonParseWithLen(const char *str, uint32_t len)
 {
     if ((str == NULL) || (len == 0)) {
         return NULL;
@@ -72,7 +72,7 @@ AdapterJson *AdapterJsonParseWithLen(const char *str, uint32_t len)
     return cJSON_ParseWithLength(str, len);
 }
 
-void AdapterJsonDelete(AdapterJson *json)
+void IotcJsonDelete(IotcJson *json)
 {
     if (json == NULL) {
         return;
@@ -80,7 +80,7 @@ void AdapterJsonDelete(AdapterJson *json)
     cJSON_Delete(json);
 }
 
-char *AdapterJsonPrint(const AdapterJson *json)
+char *IotcJsonPrint(const IotcJson *json)
 {
     if (json == NULL) {
         return NULL;
@@ -88,7 +88,7 @@ char *AdapterJsonPrint(const AdapterJson *json)
     return cJSON_PrintUnformatted(json);
 }
 
-void AdapterJsonFreePrint(char *print)
+void IotcJsonFreePrint(char *print)
 {
     if (print == NULL) {
         return;
@@ -96,7 +96,7 @@ void AdapterJsonFreePrint(char *print)
     cJSON_free(print);
 }
 
-int32_t AdapterJsonPrint2Buffer(AdapterJson *json, char *buffer, uint32_t *len)
+int32_t IotcJsonPrint2Buffer(IotcJson *json, char *buffer, uint32_t *len)
 {
     if ((json == NULL) || (buffer == NULL) || (len == NULL) || (*len == 0)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -110,7 +110,7 @@ int32_t AdapterJsonPrint2Buffer(AdapterJson *json, char *buffer, uint32_t *len)
     return IOTC_OK;
 }
 
-AdapterJson *AdapterJsonGetObj(const AdapterJson *json, const char *name)
+IotcJson *IotcJsonGetObj(const IotcJson *json, const char *name)
 {
     if ((json == NULL) || (name == NULL)) {
         return NULL;
@@ -118,7 +118,7 @@ AdapterJson *AdapterJsonGetObj(const AdapterJson *json, const char *name)
     return cJSON_GetObjectItem(json, name);
 }
 
-AdapterJson *AdapterJsonGetArrayItem(const AdapterJson *json, uint32_t index)
+IotcJson *IotcJsonGetArrayItem(const IotcJson *json, uint32_t index)
 {
     if (json == NULL) {
         return NULL;
@@ -126,7 +126,7 @@ AdapterJson *AdapterJsonGetArrayItem(const AdapterJson *json, uint32_t index)
     return cJSON_GetArrayItem(json, index);
 }
 
-int32_t AdapterJsonAddItem2Array(AdapterJson *array, AdapterJson *item)
+int32_t IotcJsonAddItem2Array(IotcJson *array, IotcJson *item)
 {
     if ((array == NULL) || (item == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -137,7 +137,7 @@ int32_t AdapterJsonAddItem2Array(AdapterJson *array, AdapterJson *item)
     return IOTC_OK;
 }
 
-int32_t AdapterJsonAddItem2Obj(AdapterJson *json, const char *name, AdapterJson *item)
+int32_t IotcJsonAddItem2Obj(IotcJson *json, const char *name, IotcJson *item)
 {
     if ((json == NULL) || (name == NULL) || (item == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -148,12 +148,12 @@ int32_t AdapterJsonAddItem2Obj(AdapterJson *json, const char *name, AdapterJson 
     return IOTC_OK;
 }
 
-int32_t AdapterJsonAddNum2Obj(AdapterJson *json, const char *name, int64_t number)
+int32_t IotcJsonAddNum2Obj(IotcJson *json, const char *name, int64_t number)
 {
-    return AdapterJsonAddFloat2Obj(json, name, (double)number);
+    return IotcJsonAddFloat2Obj(json, name, (double)number);
 }
 
-int32_t AdapterJsonAddFloat2Obj(AdapterJson *json, const char *name, double number)
+int32_t IotcJsonAddFloat2Obj(IotcJson *json, const char *name, double number)
 {
     if ((json == NULL) || (name == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -164,7 +164,7 @@ int32_t AdapterJsonAddFloat2Obj(AdapterJson *json, const char *name, double numb
     return IOTC_OK;
 }
 
-int32_t AdapterJsonAddBool2Obj(AdapterJson *json, const char *name, bool val)
+int32_t IotcJsonAddBool2Obj(IotcJson *json, const char *name, bool val)
 {
     if ((json == NULL) || (name == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -175,7 +175,7 @@ int32_t AdapterJsonAddBool2Obj(AdapterJson *json, const char *name, bool val)
     return IOTC_OK;
 }
 
-int32_t AdapterJsonAddStr2Obj(AdapterJson *json, const char *name, const char *string)
+int32_t IotcJsonAddStr2Obj(IotcJson *json, const char *name, const char *string)
 {
     if ((json == NULL) || (name == NULL) || (string == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
@@ -186,7 +186,7 @@ int32_t AdapterJsonAddStr2Obj(AdapterJson *json, const char *name, const char *s
     return IOTC_OK;
 }
 
-const char *AdapterJsonGetStr(const AdapterJson *json)
+const char *IotcJsonGetStr(const IotcJson *json)
 {
     if (json == NULL) {
         return NULL;
@@ -194,12 +194,12 @@ const char *AdapterJsonGetStr(const AdapterJson *json)
     return cJSON_GetStringValue(json);
 }
 
-int32_t AdapterJsonGetNum(const AdapterJson *json, int64_t *val)
+int32_t IotcJsonGetNum(const IotcJson *json, int64_t *val)
 {
     if ((json == NULL) || (val == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    if (!AdapterJsonIsNum(json)) {
+    if (!IotcJsonIsNum(json)) {
         return IOTC_ADAPTER_JSON_ERR_TYPE;
     }
 
@@ -208,12 +208,12 @@ int32_t AdapterJsonGetNum(const AdapterJson *json, int64_t *val)
     return IOTC_OK;
 }
 
-int32_t AdapterJsonGetFloat(const AdapterJson *json, double *val)
+int32_t IotcJsonGetFloat(const IotcJson *json, double *val)
 {
     if ((json == NULL) || (val == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    if (!AdapterJsonIsNum(json)) {
+    if (!IotcJsonIsNum(json)) {
         return IOTC_ADAPTER_JSON_ERR_TYPE;
     }
 
@@ -222,19 +222,19 @@ int32_t AdapterJsonGetFloat(const AdapterJson *json, double *val)
     return IOTC_OK;
 }
 
-int32_t AdapterJsonGetBool(const AdapterJson *json, bool *val)
+int32_t IotcJsonGetBool(const IotcJson *json, bool *val)
 {
     if ((json == NULL) || (val == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    if (!AdapterJsonIsBool(json)) {
+    if (!IotcJsonIsBool(json)) {
         return IOTC_ADAPTER_JSON_ERR_TYPE;
     }
     *val = cJSON_IsTrue(json);
     return IOTC_OK;
 }
 
-bool AdapterJsonIsStr(const AdapterJson *json)
+bool IotcJsonIsStr(const IotcJson *json)
 {
     if (json == NULL) {
         return false;
@@ -242,7 +242,7 @@ bool AdapterJsonIsStr(const AdapterJson *json)
     return cJSON_IsString(json);
 }
 
-bool AdapterJsonIsNum(const AdapterJson *json)
+bool IotcJsonIsNum(const IotcJson *json)
 {
     if (json == NULL) {
         return false;
@@ -250,7 +250,7 @@ bool AdapterJsonIsNum(const AdapterJson *json)
     return cJSON_IsNumber(json);
 }
 
-bool AdapterJsonIsFloat(const AdapterJson *json)
+bool IotcJsonIsFloat(const IotcJson *json)
 {
     if (json == NULL) {
         return false;
@@ -259,7 +259,7 @@ bool AdapterJsonIsFloat(const AdapterJson *json)
     return cJSON_IsNumber(json);
 }
 
-bool AdapterJsonIsBool(const AdapterJson *json)
+bool IotcJsonIsBool(const IotcJson *json)
 {
     if (json == NULL) {
         return false;
@@ -267,7 +267,7 @@ bool AdapterJsonIsBool(const AdapterJson *json)
     return cJSON_IsBool(json);
 }
 
-bool AdapterJsonIsArray(const AdapterJson *json)
+bool IotcJsonIsArray(const IotcJson *json)
 {
     if (json == NULL) {
         return false;
@@ -275,7 +275,7 @@ bool AdapterJsonIsArray(const AdapterJson *json)
     return cJSON_IsArray(json);
 }
 
-bool AdapterJsonHasObj(const AdapterJson *json, const char *name)
+bool IotcJsonHasObj(const IotcJson *json, const char *name)
 {
     if (json == NULL || name == NULL) {
         return false;
@@ -283,12 +283,12 @@ bool AdapterJsonHasObj(const AdapterJson *json, const char *name)
     return cJSON_HasObjectItem(json, name);
 }
 
-int32_t AdapterJsonGetArraySize(const AdapterJson *json, uint32_t *size)
+int32_t IotcJsonGetArraySize(const IotcJson *json, uint32_t *size)
 {
     if ((json == NULL) || (size == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    if (!AdapterJsonIsArray(json)) {
+    if (!IotcJsonIsArray(json)) {
         return IOTC_ADAPTER_JSON_ERR_TYPE;
     }
     int32_t arrSize = cJSON_GetArraySize(json);
@@ -299,7 +299,7 @@ int32_t AdapterJsonGetArraySize(const AdapterJson *json, uint32_t *size)
     return IOTC_OK;
 }
 
-void AdapterDeleteItemFromJson(AdapterJson *json, const char *name)
+void IotcJsonDeleteItem(IotcJson *json, const char *name)
 {
     if ((json == NULL) || (name == NULL)) {
         return;
@@ -307,7 +307,7 @@ void AdapterDeleteItemFromJson(AdapterJson *json, const char *name)
     cJSON_DeleteItemFromObject(json, name);
 }
 
-void AdapterDeleteItemFromJsonArray(AdapterJson *json, uint32_t index)
+void IotcJsonArrayDeleteItem(IotcJson *json, uint32_t index)
 {
     if (json == NULL) {
         return;

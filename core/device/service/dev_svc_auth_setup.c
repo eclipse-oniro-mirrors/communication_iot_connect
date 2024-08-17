@@ -24,7 +24,7 @@
 #include "securec.h"
 #include "iotc_errcode.h"
 
-static int32_t GetAuthInfoFromJson(const AdapterJson *req, DevAuthInfo *info)
+static int32_t GetAuthInfoFromJson(const IotcJson *req, DevAuthInfo *info)
 {
     int32_t ret = UtilsJsonGetString(req, STR_JSON_DEVID, info->devId, sizeof(info->devId));
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "get devId err %d", ret);
@@ -47,7 +47,7 @@ static int32_t GetAuthInfoFromJson(const AdapterJson *req, DevAuthInfo *info)
     return IOTC_OK;
 }
 
-int32_t DeviceServiceRecvAuthInfo(const AdapterJson *jsonObj)
+int32_t DeviceServiceRecvAuthInfo(const IotcJson *jsonObj)
 {
     CHECK_RETURN_LOGW(jsonObj != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 

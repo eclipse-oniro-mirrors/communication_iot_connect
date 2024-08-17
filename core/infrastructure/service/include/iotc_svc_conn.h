@@ -24,7 +24,7 @@ extern "C" {
 
 typedef bool (*ConnIsNetConnected)(void);
 typedef bool (*ConnIsWifiInfoExits)(void);
-typedef int32_t (*ConnSetNetCfgInfo)(const AdapterJson *json);
+typedef int32_t (*ConnSetNetCfgInfo)(const IotcJson *json);
 
 typedef struct {
     ConnIsNetConnected isNetConnected;
@@ -34,7 +34,7 @@ typedef struct {
 
 bool ConnSvcProxyIsNetConnected(void);
 bool ConnSvcProxyIsWifiInfoExits(void);
-int32_t ConnSvcProxySetNetCfgInfo(const AdapterJson *json);
+int32_t ConnSvcProxySetNetCfgInfo(const IotcJson *json);
 
 #ifdef __cplusplus
 }

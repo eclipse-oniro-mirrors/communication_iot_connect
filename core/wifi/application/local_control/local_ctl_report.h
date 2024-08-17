@@ -22,9 +22,9 @@
 extern "C" {
 #endif
 
-int32_t LocalCtlReportToAllClient(const AdapterJson *json, LocalControlContext *ctx);
+int32_t LocalCtlReportToAllClient(const IotcJson *json, LocalControlContext *ctx);
 
-int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContext *ctx, LocalControlClient *cli);
+int32_t LocalCtlReportToTargetClient(const IotcJson *json, LocalControlContext *ctx, LocalControlClient *cli);
 
 #ifdef __cplusplus
 }

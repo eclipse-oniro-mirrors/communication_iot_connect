@@ -21,11 +21,11 @@
 
 static int32_t SaveAuthSetupInfo(char *in)
 {
-    AdapterJson *req = AdapterJsonParse((const char *)in);
+    IotcJson *req = IotcJsonParse((const char *)in);
     CHECK_RETURN_LOGE(req != NULL, IOTC_ADAPTER_JSON_ERR_PARSE, "parse json err");
 
     int32_t ret = DevSvcProxyRecvAuthInfo(req);
-    AdapterJsonDelete(req);
+    IotcJsonDelete(req);
     if (ret != IOTC_OK) {
         IOTC_LOGW("auth info process error %d", ret);
         return ret;

@@ -71,7 +71,7 @@ int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
         return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_BUILD_OPTION;
     }
 
-    AdapterJson *reqJson = build(ctx);
+    IotcJson *reqJson = build(ctx);
     if (reqJson == NULL) {
         AdapterFree(options);
         IOTC_LOGE("build req error");
@@ -93,7 +93,7 @@ int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
     CoapPacket packet;
     int32_t ret = CoapClientSendReq(ctx->linkInfo.endpoint, &param, NULL, &packet);
     AdapterFree(options);
-    AdapterJsonDelete(reqJson);
+    IotcJsonDelete(reqJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send req error %d", ret);
         return ret;

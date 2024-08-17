@@ -23,7 +23,7 @@
 #include "securec.h"
 
 typedef struct {
-    AdapterTrngCallback trng;
+    IotcTrngCallback trng;
     mbedtls_ctr_drbg_context drbg;
     mbedtls_entropy_context entropy;
 } DrbgContext;
@@ -51,7 +51,7 @@ static int32_t MbedtlsEntropySourceCallback(void *data, unsigned char *output, s
     return 0;
 }
 
-AdapterDrbgContext *AdapterDrbgInit(const char *custom, AdapterTrngCallback trng)
+IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
 {
     /* 入参可以为空 */
     DrbgContext *ctx = (DrbgContext *)AdapterMalloc(sizeof(DrbgContext));
@@ -88,11 +88,11 @@ AdapterDrbgContext *AdapterDrbgInit(const char *custom, AdapterTrngCallback trng
         return ctx;
     } while (0);
 
-    AdapterDrbgDeinit(ctx);
+    IotcDrbgDeinit(ctx);
     return NULL;
 }
 
-void AdapterDrbgDeinit(AdapterDrbgContext *ctx)
+void IotcDrbgDeinit(IotcDrbgContext *ctx)
 {
     if (ctx == NULL) {
         return;
@@ -103,7 +103,7 @@ void AdapterDrbgDeinit(AdapterDrbgContext *ctx)
     AdapterFree(ctx);
 }
 
-int32_t AdapterDrbgRandom(AdapterDrbgContext *ctx, uint8_t *out, uint32_t outLen)
+int32_t IotcDrbgRandom(IotcDrbgContext *ctx, uint8_t *out, uint32_t outLen)
 {
     if ((ctx == NULL) || (out == NULL) || (outLen == 0)) {
         ADAPTER_LOGW("invalid param\r\n");

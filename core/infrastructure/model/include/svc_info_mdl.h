@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-AdapterJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num);
+IotcJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num);
 
 #ifdef __cplusplus
 }

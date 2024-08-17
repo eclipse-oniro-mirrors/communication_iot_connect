@@ -31,7 +31,7 @@
 
 #define DELAY_CONNECT_WIFI_INTERVAL 10
 
-int32_t ParseAndSaveNetCfgWifiInfo(const AdapterJson *jsonObj)
+int32_t ParseAndSaveNetCfgWifiInfo(const IotcJson *jsonObj)
 {
     CHECK_RETURN_LOGW(jsonObj != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     char ssid[ADAPTER_WIFI_SSID_MAX_LEN + 1] = {0};
@@ -85,7 +85,7 @@ static void DelayConnetWifiCb(int32_t id, void *userData)
     IOTC_LOGN("delay connect Wifi timer cb finish");
 }
 
-int32_t SvcConnSetNetInfo(const AdapterJson *json)
+int32_t SvcConnSetNetInfo(const IotcJson *json)
 {
     CHECK_RETURN_LOGW(json != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 

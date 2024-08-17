@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int32_t DeviceServiceRecvBindingInfo(const AdapterJson *jsonObj);
+int32_t DeviceServiceRecvBindingInfo(const IotcJson *jsonObj);
 
 #ifdef __cplusplus
 }

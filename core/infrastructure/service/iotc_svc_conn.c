@@ -50,7 +50,7 @@ bool ConnSvcProxyIsWifiInfoExits(void)
     return connApi->isWifiExist();
 }
 
-int32_t ConnSvcProxySetNetCfgInfo(const AdapterJson *json)
+int32_t ConnSvcProxySetNetCfgInfo(const IotcJson *json)
 {
     const ConnSvcApi *connApi = GetConnSvcApi();
     if (connApi == NULL || connApi->onSetNetInfo == NULL) {

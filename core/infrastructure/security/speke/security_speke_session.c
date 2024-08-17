@@ -138,38 +138,38 @@ int32_t SpekeStartSession(const SpekeSession *session, uint8_t **msg, uint32_t *
     return SpekeClientStartReq(session, msg, len);
 }
 
-static int32_t ParseCommonData(const AdapterJson *root, SpekeProcessParam *param)
+static int32_t ParseCommonData(const IotcJson *root, SpekeProcessParam *param)
 {
-    AdapterJson *sessionIdObj = AdapterJsonGetObj(root, SPEKE_SESSION_ID_JSON);
+    IotcJson *sessionIdObj = IotcJsonGetObj(root, SPEKE_SESSION_ID_JSON);
     if (sessionIdObj == NULL) {
         IOTC_LOGE("Speke parse sessionId JSON err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    const char *sessionIdStr = AdapterJsonGetStr(sessionIdObj);
+    const char *sessionIdStr = IotcJsonGetStr(sessionIdObj);
     if (sessionIdStr == NULL) {
         IOTC_LOGE("Speke parse sessionId str err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
-    AdapterJson *secDataObj = AdapterJsonGetObj(root, SPEKE_SEC_DATA_JSON);
+    IotcJson *secDataObj = IotcJsonGetObj(root, SPEKE_SEC_DATA_JSON);
     if (secDataObj == NULL) {
         IOTC_LOGE("Speke parse secData JSON err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
-    AdapterJson *msgTypeObj = AdapterJsonGetObj(secDataObj, SPEKE_SEC_DATA_MESSAGE_JSON);
+    IotcJson *msgTypeObj = IotcJsonGetObj(secDataObj, SPEKE_SEC_DATA_MESSAGE_JSON);
     if (msgTypeObj == NULL) {
         IOTC_LOGE("Speke parse msgType JSON err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
     int64_t msgTypeInt = 0;
-    int32_t ret = AdapterJsonGetNum(msgTypeObj, &msgTypeInt);
+    int32_t ret = IotcJsonGetNum(msgTypeObj, &msgTypeInt);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke parse msgType err");
         return ret;
     }
 
-    AdapterJson *payloadObj = AdapterJsonGetObj(secDataObj, SPEKE_SEC_DATA_PAYLOAD_JSON);
+    IotcJson *payloadObj = IotcJsonGetObj(secDataObj, SPEKE_SEC_DATA_PAYLOAD_JSON);
     if (payloadObj == NULL) {
         IOTC_LOGE("Speke parse payload JSON err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -183,16 +183,16 @@ static int32_t ParseCommonData(const AdapterJson *root, SpekeProcessParam *param
 
 static void CreateErrCodeInformMsg(const char *sessionId, int32_t errCode, uint8_t **msg, uint32_t *len)
 {
-    AdapterJson *payload = AdapterCreateJson();
+    IotcJson *payload = IotcJsonCreate();
     if (payload == NULL) {
         IOTC_LOGE("Speke create err inform payload JSON err");
         return;
     }
 
-    int32_t ret = AdapterJsonAddFloat2Obj(payload, SPEKE_SEC_DATA_ERR_JSON, errCode);
+    int32_t ret = IotcJsonAddFloat2Obj(payload, SPEKE_SEC_DATA_ERR_JSON, errCode);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke err inform add errCode to JSON err:%d", ret);
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return;
     }
 
@@ -200,7 +200,7 @@ static void CreateErrCodeInformMsg(const char *sessionId, int32_t errCode, uint8
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke err inform create nego msg err:%d", ret);
     }
-    AdapterJsonDelete(payload);
+    IotcJsonDelete(payload);
 }
 
 int32_t SpekeProcessPacket(SpekeSession *session, const char *requestPayload, uint8_t **msg, uint32_t *len)
@@ -210,7 +210,7 @@ int32_t SpekeProcessPacket(SpekeSession *session, const char *requestPayload, ui
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    AdapterJson *root = AdapterJsonParse(requestPayload);
+    IotcJson *root = IotcJsonParse(requestPayload);
     if (root == NULL) {
         IOTC_LOGE("Speke proc reqPayload err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -221,7 +221,7 @@ int32_t SpekeProcessPacket(SpekeSession *session, const char *requestPayload, ui
 
     int32_t ret = ParseCommonData(root, &param);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return ret;
     }
 
@@ -249,7 +249,7 @@ int32_t SpekeProcessPacket(SpekeSession *session, const char *requestPayload, ui
         CreateErrCodeInformMsg(param.sessionId, ret, msg, len);
     }
 
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
     return ret;
 }
 

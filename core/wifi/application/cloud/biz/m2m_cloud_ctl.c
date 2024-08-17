@@ -39,7 +39,7 @@ static int32_t GetStrFromOption(const CoapPacket *req, char *data, uint32_t data
     return IOTC_OK;
 }
 
-static AdapterJson *ParseCloudCtlMsg(const CoapPacket *req)
+static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
 {
     char svcId[IOTC_SVC_ID_STR_MAX_LEN] = {0};
     int32_t ret = GetStrFromOption(req, svcId, sizeof(svcId), COAP_OPTION_TYPE_URI_PATH);
@@ -48,54 +48,54 @@ static AdapterJson *ParseCloudCtlMsg(const CoapPacket *req)
         return NULL;
     }
 
-    AdapterJson *array = AdapterJsonCreateArray();
+    IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
         IOTC_LOGW("create array error %d", ret);
         return NULL;
     }
 
     do {
-        AdapterJson *payloadObj = AdapterCreateJson();
+        IotcJson *payloadObj = IotcJsonCreate();
         if (payloadObj == NULL) {
             IOTC_LOGW("add data error");
             break;
         }
-        AdapterJson *dataObj = AdapterJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+        IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
         if (dataObj == NULL) {
             IOTC_LOGW("invalid ctl json");
-            AdapterJsonDelete(payloadObj);
+            IotcJsonDelete(payloadObj);
             break;
         }
-        ret = AdapterJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
+        ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add data error %d", ret);
-            AdapterJsonDelete(payloadObj);
-            AdapterJsonDelete(dataObj);
+            IotcJsonDelete(payloadObj);
+            IotcJsonDelete(dataObj);
             break;
         }
-        ret = AdapterJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
+        ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add sid error %d", ret);
-            AdapterJsonDelete(payloadObj);
+            IotcJsonDelete(payloadObj);
             break;
         }
-        ret = AdapterJsonAddItem2Array(array, payloadObj);
+        ret = IotcJsonAddItem2Array(array, payloadObj);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add payload error %d", ret);
-            AdapterJsonDelete(payloadObj);
+            IotcJsonDelete(payloadObj);
             break;
         }
         return array;
     } while (false);
 
-    AdapterJsonDelete(array);
+    IotcJsonDelete(array);
     return NULL;
 }
 
 static int32_t SendCloudCtlMsgResp(int32_t errcode, CoapEndpoint *endpoint, const CoapPacket *req,
     const SocketAddr *addr, const M2mCloudContext *ctx)
 {
-    AdapterJson *respJson = UtilsJsonCreateErrcode(errcode);
+    IotcJson *respJson = UtilsJsonCreateErrcode(errcode);
     if (respJson == NULL) {
         IOTC_LOGW("create resp json error %d", errcode);
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -144,7 +144,7 @@ static int32_t SendCloudCtlMsgResp(int32_t errcode, CoapEndpoint *endpoint, cons
         }
     } while (false);
 
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     return ret;
 }
 
@@ -153,14 +153,14 @@ static void M2mCloudCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket 
 {
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
 
-    AdapterJson *dataJsonArray = ParseCloudCtlMsg(req);
+    IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
     if (dataJsonArray == NULL) {
         IOTC_LOGW("Parse Cloud Ctl Msg error");
         return;
     }
 
     int32_t ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
-    AdapterJsonDelete(dataJsonArray);
+    IotcJsonDelete(dataJsonArray);
     dataJsonArray = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGE("ctrl error %d", ret);

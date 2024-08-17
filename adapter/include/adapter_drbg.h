@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 /** 随机数生成器上下文 */
-typedef void AdapterDrbgContext;
+typedef void IotcDrbgContext;
 
 /**
  * @brief 真随机数种子获取函数
@@ -31,7 +31,7 @@ typedef void AdapterDrbgContext;
  * @param len [IN] 缓冲区长度
  * @return 0成功非0失败
  */
-typedef int32_t (*AdapterTrngCallback)(uint8_t *buf, uint32_t len);
+typedef int32_t (*IotcTrngCallback)(uint8_t *buf, uint32_t len);
 
 /**
  * @brief 安全用途伪随机数发生器初始化
@@ -41,7 +41,7 @@ typedef int32_t (*AdapterTrngCallback)(uint8_t *buf, uint32_t len);
  * @return 随机数发生器上下文
  * @warning 需外部做多线程保护
  */
-AdapterDrbgContext *AdapterDrbgInit(const char *custom, AdapterTrngCallback trng);
+IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng);
 
 /**
  * @brief 安全用途伪随机数获取
@@ -51,17 +51,17 @@ AdapterDrbgContext *AdapterDrbgInit(const char *custom, AdapterTrngCallback trng
  * @param outLen [IN] 随机数缓冲区长度
  * @return 0成功，其他失败
  */
-int32_t AdapterDrbgRandom(AdapterDrbgContext *ctx, uint8_t *out, uint32_t outLen);
+int32_t IotcDrbgRandom(IotcDrbgContext *ctx, uint8_t *out, uint32_t outLen);
 
 /**
  * @brief 安全用途伪随机数去初始化
  *
  * @param ctx [IN] 随机数发生器上下文
  */
-void AdapterDrbgDeinit(AdapterDrbgContext *ctx);
+void IotcDrbgDeinit(IotcDrbgContext *ctx);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* HILINK_RANDOM_ADAPTER_H */
+#endif /* ADAPTER_DRBG_H */

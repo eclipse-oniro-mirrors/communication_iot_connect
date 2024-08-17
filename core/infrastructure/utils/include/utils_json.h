@@ -34,26 +34,26 @@ typedef struct {
     uint32_t size;
 } UtilsJsonStrBufItem;
 
-AdapterJson *UtilsJsonCreateErrcode(int32_t errcode);
+IotcJson *UtilsJsonCreateErrcode(int32_t errcode);
 
-int32_t UtilsJsonGetNum(const AdapterJson *json, const char *name, int32_t *num);
+int32_t UtilsJsonGetNum(const IotcJson *json, const char *name, int32_t *num);
 
-int32_t UtilsJsonGetUint(const AdapterJson *json, const char *name, uint32_t *num);
+int32_t UtilsJsonGetUint(const IotcJson *json, const char *name, uint32_t *num);
 
-int32_t UtilsJsonGetString(const AdapterJson *json, const char *key, char *buf, uint32_t len);
+int32_t UtilsJsonGetString(const IotcJson *json, const char *key, char *buf, uint32_t len);
 
 int32_t UtilsGenErrcodeJsonStr(int32_t errcode, char **out, uint32_t *outLen);
 
-int32_t UtilsJsonAddHexify(AdapterJson *json, const char *name, const uint8_t *input, uint32_t inputLen);
+int32_t UtilsJsonAddHexify(IotcJson *json, const char *name, const uint8_t *input, uint32_t inputLen);
 
-int32_t UtilsJsonAddStrTable(AdapterJson *json, const UtilsJsonStrItem *tbl, uint32_t size);
+int32_t UtilsJsonAddStrTable(IotcJson *json, const UtilsJsonStrItem *tbl, uint32_t size);
 
-int32_t UtilsJsonParseStrTable(AdapterJson *json, UtilsJsonStrBufItem *tbl, uint32_t size);
+int32_t UtilsJsonParseStrTable(IotcJson *json, UtilsJsonStrBufItem *tbl, uint32_t size);
 
 /* json使用AdapterMalloc分配内存打印，返回的指针必须使用AdapterFree释放 */
-char *UtilsJsonPrintByMalloc(const AdapterJson *json);
+char *UtilsJsonPrintByMalloc(const IotcJson *json);
 
-AdapterJson *UtilsJsonCreateKeyIntValue(const char *key, int32_t value);
+IotcJson *UtilsJsonCreateKeyIntValue(const char *key, int32_t value);
 
 int32_t UtilsGenKeyIntValueJsonStr(const char *key, int32_t value, char **out, uint32_t *outLen);
 

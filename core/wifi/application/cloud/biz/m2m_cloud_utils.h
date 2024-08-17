@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-int32_t M2mCloudAddDevInfoToJson(AdapterJson *rootObj);
+int32_t M2mCloudAddDevInfoToJson(IotcJson *rootObj);
 
 #ifdef __cplusplus
 }

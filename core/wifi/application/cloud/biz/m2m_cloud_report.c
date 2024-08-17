@@ -21,57 +21,57 @@
 #include "utils_bit_map.h"
 #include "adapter_json.h"
 
-static AdapterJson *GenReportJson(const AdapterJson *dataArray, const M2mCloudContext *ctx)
+static IotcJson *GenReportJson(const IotcJson *dataArray, const M2mCloudContext *ctx)
 {
-    AdapterJson *reportJson = AdapterCreateJson();
+    IotcJson *reportJson = IotcJsonCreate();
     if (reportJson == NULL) {
         IOTC_LOGW("json create error");
         return NULL;
     }
 
-    AdapterJson *dataArrayClone = AdapterDuplicateJson(dataArray, true);
+    IotcJson *dataArrayClone = IotcDuplicateJson(dataArray, true);
     if (dataArrayClone == NULL) {
-        AdapterJsonDelete(reportJson);
+        IotcJsonDelete(reportJson);
         IOTC_LOGW("json clone error");
         return NULL;
     }
-    int32_t ret = AdapterJsonAddItem2Obj(reportJson, STR_JSON_SERVICES, dataArrayClone);
+    int32_t ret = IotcJsonAddItem2Obj(reportJson, STR_JSON_SERVICES, dataArrayClone);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(reportJson);
-        AdapterJsonDelete(dataArrayClone);
+        IotcJsonDelete(reportJson);
+        IotcJsonDelete(dataArrayClone);
         IOTC_LOGW("json add item error %d", ret);
         return NULL;
     }
     dataArrayClone = NULL;
 
-    ret = AdapterJsonAddStr2Obj(reportJson, STR_JSON_DEVID, ctx->authInfo.loginInfo.devId);
+    ret = IotcJsonAddStr2Obj(reportJson, STR_JSON_DEVID, ctx->authInfo.loginInfo.devId);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(reportJson);
+        IotcJsonDelete(reportJson);
         IOTC_LOGW("json add item error %d", ret);
         return NULL;
     }
-    AdapterJson *array = AdapterJsonCreateArray();
+    IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
         IOTC_LOGW("json create error");
         return NULL;
     }
 
-    ret = AdapterJsonAddItem2Array(array, reportJson);
+    ret = IotcJsonAddItem2Array(array, reportJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add to array error %d", ret);
-        AdapterJsonDelete(reportJson);
-        AdapterJsonDelete(array);
+        IotcJsonDelete(reportJson);
+        IotcJsonDelete(array);
         return NULL;
     }
 
     return array;
 }
 
-int32_t M2mCloudReportMessage(const AdapterJson *dataArray, M2mCloudContext *ctx)
+int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(dataArray != NULL && ctx != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    AdapterJson *reportJson = GenReportJson(dataArray, (const M2mCloudContext *)ctx);
+    IotcJson *reportJson = GenReportJson(dataArray, (const M2mCloudContext *)ctx);
     CHECK_RETURN_LOGW(reportJson != NULL, IOTC_ERR_PARAM_INVALID, "gen report error");
     
     const CoapOption options[] = {
@@ -94,7 +94,7 @@ int32_t M2mCloudReportMessage(const AdapterJson *dataArray, M2mCloudContext *ctx
 
     CoapPacket packet;
     int32_t ret = CoapClientSendReq(ctx->linkInfo.endpoint, &param, NULL, &packet);
-    AdapterJsonDelete(reportJson);
+    IotcJsonDelete(reportJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send req error %d", ret);
         return ret;

@@ -26,10 +26,10 @@
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 
-AdapterJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx)
+IotcJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
-    AdapterJson *rootJson = AdapterCreateJson();
+    IotcJson *rootJson = IotcJsonCreate();
     if (rootJson == NULL) {
         IOTC_LOGW("create json error");
         return NULL;

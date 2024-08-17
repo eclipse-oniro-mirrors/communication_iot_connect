@@ -48,7 +48,7 @@ static int32_t DeviceReportCallback(const IotcCharState state[], uint32_t num)
 {
     CHECK_RETURN_LOGW(state != NULL && num != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    AdapterJson *array = NULL;
+    IotcJson *array = NULL;
     int32_t ret = MdlCharStatesToJson(state, num, &array);
     CHECK_RETURN_LOGW(ret == IOTC_OK, ret, "build report json array error %d", ret);
 
@@ -59,7 +59,7 @@ static int32_t DeviceReportCallback(const IotcCharState state[], uint32_t num)
         .req = array,
     };
     ret = ServiceProxySendMessage(&req, NULL, NULL);
-    AdapterJsonDelete(array);
+    IotcJsonDelete(array);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send report msg error %d", ret);
         return ret;

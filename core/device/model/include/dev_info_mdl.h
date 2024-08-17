@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-AdapterJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo);
+IotcJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo);
 
 #ifdef __cplusplus
 }

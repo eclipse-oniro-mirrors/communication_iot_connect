@@ -21,28 +21,28 @@
 #include "iotc_conf.h"
 #include "iotc_errcode.h"
 
-AdapterJson *UtilsJsonCreateErrcode(int32_t errcode)
+IotcJson *UtilsJsonCreateErrcode(int32_t errcode)
 {
-    AdapterJson *obj = AdapterCreateJson();
+    IotcJson *obj = IotcJsonCreate();
     if (obj == NULL) {
         return NULL;
     }
 
-    int32_t ret = AdapterJsonAddNum2Obj(obj, STR_ERRCODE, errcode);
+    int32_t ret = IotcJsonAddNum2Obj(obj, STR_ERRCODE, errcode);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add num to obj err %d", ret);
-        AdapterJsonDelete(obj);
+        IotcJsonDelete(obj);
         return NULL;
     }
     return obj;
 }
 
-int32_t UtilsJsonGetNum(const AdapterJson *json, const char *name, int32_t *num)
+int32_t UtilsJsonGetNum(const IotcJson *json, const char *name, int32_t *num)
 {
     CHECK_RETURN(json != NULL && name != NULL && num != NULL, IOTC_ERR_PARAM_INVALID);
 
     int64_t err;
-    int32_t ret = AdapterJsonGetNum(AdapterJsonGetObj(json, name), &err);
+    int32_t ret = IotcJsonGetNum(IotcJsonGetObj(json, name), &err);
     if (ret != IOTC_OK) {
         return ret;
     }
@@ -54,12 +54,12 @@ int32_t UtilsJsonGetNum(const AdapterJson *json, const char *name, int32_t *num)
     return IOTC_OK;
 }
 
-int32_t UtilsJsonGetUint(const AdapterJson *json, const char *name, uint32_t *num)
+int32_t UtilsJsonGetUint(const IotcJson *json, const char *name, uint32_t *num)
 {
     CHECK_RETURN(json != NULL && name != NULL && num != NULL, IOTC_ERR_PARAM_INVALID);
 
     int64_t jsonNum;
-    int32_t ret = AdapterJsonGetNum(AdapterJsonGetObj(json, name), &jsonNum);
+    int32_t ret = IotcJsonGetNum(IotcJsonGetObj(json, name), &jsonNum);
     if (ret != IOTC_OK) {
         return ret;
     }
@@ -71,11 +71,11 @@ int32_t UtilsJsonGetUint(const AdapterJson *json, const char *name, uint32_t *nu
     return IOTC_OK;
 }
 
-int32_t UtilsJsonGetString(const AdapterJson *json, const char *key, char *buf, uint32_t len)
+int32_t UtilsJsonGetString(const IotcJson *json, const char *key, char *buf, uint32_t len)
 {
     CHECK_RETURN(json != NULL && key != NULL && buf != NULL && len != 0, IOTC_ERR_PARAM_INVALID);
 
-    const char *str = AdapterJsonGetStr(AdapterJsonGetObj(json, key));
+    const char *str = IotcJsonGetStr(IotcJsonGetObj(json, key));
     if (str == NULL) {
         IOTC_LOGW("get json str error %s", key);
         return IOTC_ADAPTER_JSON_ERR_GET_STRING;
@@ -92,14 +92,14 @@ int32_t UtilsGenErrcodeJsonStr(int32_t errcode, char **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    AdapterJson *obj = UtilsJsonCreateErrcode(errcode);
+    IotcJson *obj = UtilsJsonCreateErrcode(errcode);
     if (obj == NULL) {
         IOTC_LOGW("create json error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
     *out = UtilsJsonPrintByMalloc(obj);
-    AdapterJsonDelete(obj);
+    IotcJsonDelete(obj);
     if (*out == NULL) {
         IOTC_LOGW("json print err");
         return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
@@ -109,7 +109,7 @@ int32_t UtilsGenErrcodeJsonStr(int32_t errcode, char **out, uint32_t *outLen)
     return IOTC_OK;
 }
 
-int32_t UtilsJsonAddHexify(AdapterJson *json, const char *name, const uint8_t *input, uint32_t inputLen)
+int32_t UtilsJsonAddHexify(IotcJson *json, const char *name, const uint8_t *input, uint32_t inputLen)
 {
     uint32_t dataLen = HEXIFY_LEN(inputLen) + 1;
     char *data = (char *)AdapterCalloc(dataLen, sizeof(char));
@@ -122,18 +122,18 @@ int32_t UtilsJsonAddHexify(AdapterJson *json, const char *name, const uint8_t *i
         return IOTC_CORE_COMM_UTILS_ERR_HEXIFY;
     }
 
-    int32_t ret = AdapterJsonAddStr2Obj(json, name, data);
+    int32_t ret = IotcJsonAddStr2Obj(json, name, data);
     AdapterFree(data);
     return ret;
 }
 
-int32_t UtilsJsonAddStrTable(AdapterJson *json, const UtilsJsonStrItem *tbl, uint32_t size)
+int32_t UtilsJsonAddStrTable(IotcJson *json, const UtilsJsonStrItem *tbl, uint32_t size)
 {
     CHECK_RETURN_LOGW((json != NULL) && (tbl != NULL) && (size != 0), IOTC_ERR_PARAM_INVALID, "invalid param");
 
     int32_t ret;
     for (uint32_t i = 0; i < size; ++i) {
-        ret = AdapterJsonAddStr2Obj(json, tbl[i].name, tbl[i].value);
+        ret = IotcJsonAddStr2Obj(json, tbl[i].name, tbl[i].value);
         if (ret != IOTC_OK) {
             IOTC_LOGW("json add %s error", NON_NULL_STR(tbl[i].name));
             return ret;
@@ -142,7 +142,7 @@ int32_t UtilsJsonAddStrTable(AdapterJson *json, const UtilsJsonStrItem *tbl, uin
     return IOTC_OK;
 }
 
-int32_t UtilsJsonParseStrTable(AdapterJson *json, UtilsJsonStrBufItem *tbl, uint32_t size)
+int32_t UtilsJsonParseStrTable(IotcJson *json, UtilsJsonStrBufItem *tbl, uint32_t size)
 {
     CHECK_RETURN_LOGW((json != NULL) && (tbl != NULL) && (size != 0), IOTC_ERR_PARAM_INVALID, "invalid param");
 
@@ -157,9 +157,9 @@ int32_t UtilsJsonParseStrTable(AdapterJson *json, UtilsJsonStrBufItem *tbl, uint
     return IOTC_OK;
 }
 
-char *UtilsJsonPrintByMalloc(const AdapterJson *json)
+char *UtilsJsonPrintByMalloc(const IotcJson *json)
 {
-    char *ret = AdapterJsonPrint(json);
+    char *ret = IotcJsonPrint(json);
     if (ret == NULL) {
         return NULL;
     }
@@ -168,22 +168,22 @@ char *UtilsJsonPrintByMalloc(const AdapterJson *json)
     return ret;
 #else
     char *copy = UtilsStrDup(ret);
-    AdapterJsonFreePrint(ret);
+    IotcJsonFreePrint(ret);
     return copy;
 #endif
 }
 
-AdapterJson *UtilsJsonCreateKeyIntValue(const char *key, int32_t value)
+IotcJson *UtilsJsonCreateKeyIntValue(const char *key, int32_t value)
 {
-    AdapterJson *obj = AdapterCreateJson();
+    IotcJson *obj = IotcJsonCreate();
     if (obj == NULL) {
         return NULL;
     }
 
-    int32_t ret = AdapterJsonAddNum2Obj(obj, key, value);
+    int32_t ret = IotcJsonAddNum2Obj(obj, key, value);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add num to obj err %d", ret);
-        AdapterJsonDelete(obj);
+        IotcJsonDelete(obj);
         return NULL;
     }
     return obj;
@@ -193,14 +193,14 @@ int32_t UtilsGenKeyIntValueJsonStr(const char *key, int32_t value, char **out, u
 {
     CHECK_RETURN_LOGW((key != NULL) && (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    AdapterJson *obj = UtilsJsonCreateKeyIntValue(key, value);
+    IotcJson *obj = UtilsJsonCreateKeyIntValue(key, value);
     if (obj == NULL) {
         IOTC_LOGW("create json error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
     *out = UtilsJsonPrintByMalloc(obj);
-    AdapterJsonDelete(obj);
+    IotcJsonDelete(obj);
     if (*out == NULL) {
         IOTC_LOGW("json print err");
         return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
