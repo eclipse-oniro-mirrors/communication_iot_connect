@@ -17,7 +17,7 @@
 #include "iotc_errcode.h"
 #include "adapter_log.h"
 
-int32_t AdapterBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen)
+int32_t IotcBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen)
 {
     if ((inData == NULL) || (inLen == 0) || (outLen == NULL)) {
         ADAPTER_LOGW("invalid param");
@@ -46,7 +46,7 @@ int32_t AdapterBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outD
     return IOTC_OK;
 }
 
-int AdapterBase64Decode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen)
+int IotcBase64Decode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen)
 {
     if ((inData == NULL) || (inLen == 0) || (outLen == NULL)) {
         ADAPTER_LOGW("invalid param");

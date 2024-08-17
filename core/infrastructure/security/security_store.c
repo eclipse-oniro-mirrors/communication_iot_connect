@@ -365,7 +365,7 @@ static int32_t CipherV1AesGcmDecrypt(SecurityStoreItem *storeItem, StoreCipherHe
 {
     IotcAesGcmParam aesParam = {key, STORE_CIPHER_GCM_KEY_LEN, key + STORE_CIPHER_GCM_KEY_LEN,
         STORE_CIPHER_GCM_IV_LEN, NULL, 0, cipher, cipLen};
-    int32_t ret = IotcAesGcmDecrypt(&aesParam, header->mac, ADAPTER_AES_GCM_TAG_MAX_LEN, storeItem->buffer);
+    int32_t ret = IotcAesGcmDecrypt(&aesParam, header->mac, IOTC_AES_GCM_TAG_MAX_LEN, storeItem->buffer);
     if (ret != IOTC_OK) {
         IOTC_LOGW("aes gcm dec error %d", ret);
         return ret;
@@ -513,7 +513,7 @@ static int32_t CipherV1Encrypt(SecurityStoreItem *storeItem, StoreCipherHeader *
     /* 前16byte作为秘钥 后16byte作为iv */
     IotcAesGcmParam aesParam = {key, STORE_CIPHER_GCM_KEY_LEN, key + STORE_CIPHER_GCM_KEY_LEN,
         STORE_CIPHER_GCM_IV_LEN, NULL, 0, storeItem->buffer, storeItem->len};
-    int32_t ret = IotcAesGcmEncrypt(&aesParam, header->mac, ADAPTER_AES_GCM_TAG_MAX_LEN, cipherBuf);
+    int32_t ret = IotcAesGcmEncrypt(&aesParam, header->mac, IOTC_AES_GCM_TAG_MAX_LEN, cipherBuf);
     if (ret != IOTC_OK) {
         IOTC_LOGW("aes gcm enc error %d", ret);
         return ret;

@@ -374,7 +374,7 @@ SessCode SoftapCoapMsgRecvBase64DecodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     }
 
     uint32_t len = 0;
-    int32_t ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &len);
+    int32_t ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &len);
     if (ret != IOTC_OK || len > pkt->payload.len) {
         IOTC_LOGW("get len error %d", ret);
         return SESS_CODE_ERR;
@@ -386,7 +386,7 @@ SessCode SoftapCoapMsgRecvBase64DecodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
         return SESS_CODE_ERR;
     }
 
-    ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, decodeData, &len);
+    ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, decodeData, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 decode error %d", ret);
         AdapterFree(decodeData);
@@ -420,7 +420,7 @@ SessCode SoftapCoapMsgSendBase64EncodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     }
 
     uint32_t len = 0;
-    int32_t ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &len);
+    int32_t ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get len error %d", ret);
         return SESS_CODE_ERR;
@@ -432,7 +432,7 @@ SessCode SoftapCoapMsgSendBase64EncodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
         return SESS_CODE_ERR;
     }
 
-    ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, encodeData, &len);
+    ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, encodeData, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 encode error %d", ret);
         AdapterFree(encodeData);

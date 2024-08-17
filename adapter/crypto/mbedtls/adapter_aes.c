@@ -38,9 +38,9 @@ static bool IsAesGcmParamValid(const IotcAesGcmParam *param)
     }
 
     if ((param->key == NULL) ||
-        ((param->keyLen != ADAPTER_AES_128_KEY_BYTE_LEN) &&
-        (param->keyLen != ADAPTER_AES_192_KEY_BYTE_LEN) &&
-        (param->keyLen != ADAPTER_AES_256_KEY_BYTE_LEN))) {
+        ((param->keyLen != IOTC_AES_128_KEY_BYTE_LEN) &&
+        (param->keyLen != IOTC_AES_192_KEY_BYTE_LEN) &&
+        (param->keyLen != IOTC_AES_256_KEY_BYTE_LEN))) {
         ADAPTER_LOGW("invalid key %u", param->keyLen);
         return false;
     }
@@ -146,9 +146,9 @@ static bool IsAesCbcParamValid(const IotcAesCbcParam *param)
     }
 
     if ((param->key == NULL) ||
-        ((param->keyLen != ADAPTER_AES_128_KEY_BYTE_LEN) &&
-        (param->keyLen != ADAPTER_AES_192_KEY_BYTE_LEN) &&
-        (param->keyLen != ADAPTER_AES_256_KEY_BYTE_LEN))) {
+        ((param->keyLen != IOTC_AES_128_KEY_BYTE_LEN) &&
+        (param->keyLen != IOTC_AES_192_KEY_BYTE_LEN) &&
+        (param->keyLen != IOTC_AES_256_KEY_BYTE_LEN))) {
         ADAPTER_LOGW("invalid key %u", param->keyLen);
         return false;
     }
@@ -166,11 +166,11 @@ static bool IsAesCbcParamValid(const IotcAesCbcParam *param)
 static mbedtls_cipher_type_t GetMbedtlsCbcCipherType(uint32_t keyLen)
 {
     switch (keyLen) {
-        case ADAPTER_AES_128_KEY_BYTE_LEN:
+        case IOTC_AES_128_KEY_BYTE_LEN:
             return MBEDTLS_CIPHER_AES_128_CBC;
-        case ADAPTER_AES_192_KEY_BYTE_LEN:
+        case IOTC_AES_192_KEY_BYTE_LEN:
             return MBEDTLS_CIPHER_AES_192_CBC;
-        case ADAPTER_AES_256_KEY_BYTE_LEN:
+        case IOTC_AES_256_KEY_BYTE_LEN:
             return MBEDTLS_CIPHER_AES_256_CBC;
         default:
             return MBEDTLS_CIPHER_NONE;
@@ -205,7 +205,7 @@ static int32_t AesCbcCrypt(const IotcAesCbcParam *param, int32_t mode, uint8_t *
     }
 
     size_t bufLenTmp = *bufLen;
-    ret = mbedtls_cipher_crypt(&ctx, param->iv, ADAPTER_AES_CBC_IV_LEN, param->data, param->dataLen, buf, &bufLenTmp);
+    ret = mbedtls_cipher_crypt(&ctx, param->iv, IOTC_AES_CBC_IV_LEN, param->data, param->dataLen, buf, &bufLenTmp);
     if (ret != 0) {
         ADAPTER_LOGW("crypt err [-0x%04x]", -ret);
         return (mode == MBEDTLS_DECRYPT) ? IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_ENC : IOTC_ADAPTER_CRYPTO_ERR_AES_CBC_DEC;
@@ -244,9 +244,9 @@ static bool IsAesCcmParamValid(const IotcAesCcmParam *param)
     }
 
     if ((param->key == NULL) ||
-        ((param->keyLen != ADAPTER_AES_128_KEY_BYTE_LEN) &&
-        (param->keyLen != ADAPTER_AES_192_KEY_BYTE_LEN) &&
-        (param->keyLen != ADAPTER_AES_256_KEY_BYTE_LEN))) {
+        ((param->keyLen != IOTC_AES_128_KEY_BYTE_LEN) &&
+        (param->keyLen != IOTC_AES_192_KEY_BYTE_LEN) &&
+        (param->keyLen != IOTC_AES_256_KEY_BYTE_LEN))) {
         ADAPTER_LOGW("invalid key %u", param->keyLen);
         return false;
     }

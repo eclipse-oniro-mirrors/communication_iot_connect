@@ -31,7 +31,7 @@ extern "C" {
  * @return 0成功，非0失败
  * @attention outData为NULL或者outLen为0时，不会实际输出编码数据，只输出编码数据后的长度
  */
-int32_t AdapterBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen);
+int32_t IotcBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen);
 
 /**
  * @brief base64解码
@@ -43,7 +43,7 @@ int32_t AdapterBase64Encode(const uint8_t *inData, uint32_t inLen, uint8_t *outD
  * @return 0成功，非0失败
  * @attention outData为NULL或者outLen为0时，不会实际输出解码数据，只输出解码数据后的长度
  */
-int AdapterBase64Decode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen);
+int IotcBase64Decode(const uint8_t *inData, uint32_t inLen, uint8_t *outData, uint32_t *outLen);
 
 #ifdef __cplusplus
 }

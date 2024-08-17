@@ -85,9 +85,9 @@ static bool LocalCtlSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     int32_t ret;
     /* 获取编解码后的大小 */
     if (type == LOCAL_CTL_BASE64_TYPE_DECODE) {
-        ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
+        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
     } else {
-        ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
+        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
     }
     if (ret != IOTC_OK || dataLen == 0 || dataLen > buf->size) {
         IOTC_LOGW("get len error %d/%d", ret, type);
@@ -101,9 +101,9 @@ static bool LocalCtlSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     }
 
     if (type == LOCAL_CTL_BASE64_TYPE_DECODE) {
-        ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
+        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
     } else {
-        ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
+        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
     }
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 error %d/%d", ret, type);
