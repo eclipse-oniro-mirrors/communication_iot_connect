@@ -64,7 +64,7 @@ int32_t IotcKvInit(const char *tag)
         return ret;
     }
 
-    if (strcpy_s(g_tag, MAX_TAG_LEN, tag) != EOK) {
+    if (strcpy_s(g_tag, sizeof(g_tag), tag) != EOK) {
         IOTC_LOGE("strcpy tag err");
         return IOTC_ERR_SECUREC_STRCPY;
     }

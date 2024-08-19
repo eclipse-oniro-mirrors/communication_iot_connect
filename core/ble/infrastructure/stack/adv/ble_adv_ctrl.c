@@ -102,7 +102,8 @@ static void StopBleAdvTimer(void)
     }
 }
 
-static int32_t BleAdapterAdvCtrlStart(const IotcAdptBleAdvParam *advPara, const IotcAdptBleAdvData *advData, uint32_t ms)
+static int32_t BleAdapterAdvCtrlStart(const IotcAdptBleAdvParam *advPara,
+    const IotcAdptBleAdvData *advData, uint32_t ms)
 {
     StopBleAdvTimer();
     int32_t ret = IotcBleStartAdv(advPara, advData);

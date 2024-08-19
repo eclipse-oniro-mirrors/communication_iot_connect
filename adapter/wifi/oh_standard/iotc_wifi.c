@@ -622,19 +622,34 @@ static int32_t AdvanceScanWifiByOhos(const WifiDeviceConfig *config)
     return IOTC_OK;
 }
 
-/* TODO 优化代码深度 */
+static bool CopyWifiResultFromOhos(const WifiDeviceConfig *config, WifiScanInfo *info,
+    WifiScanInfo *result, uint32_t size)
+{
+    for (uint32_t i = 0; i < size; i++) {
+        bool isValidSsid = (strcmp(result[i].ssid, config->ssid) == 0) &&
+            ((config->securityType != WIFI_SEC_TYPE_OPEN && result[i].securityType != WIFI_SEC_TYPE_OPEN) ||
+            (config->securityType == WIFI_SEC_TYPE_OPEN && result[i].securityType == WIFI_SEC_TYPE_OPEN));
+        if (isValidSsid && (memcpy_s(info, sizeof(WifiScanInfo), &result[i], sizeof(WifiScanInfo)) == EOK)) {
+            IOTC_LOGN("copy target ssid success");
+            return true;
+        }
+    }
+    IOTC_LOGW("copy target ssid failed");
+    return false;
+}
+
 static bool GetScanWifiResultFromOhos(const WifiDeviceConfig *config, WifiScanInfo *info)
 {
     bool ret = false;
     uint32_t size = WIFI_SCAN_HOTSPOT_LIMIT;
     WifiScanInfo *result = (WifiScanInfo *)IotcMalloc(sizeof(WifiScanInfo) * size);
     if (result == NULL) {
-        IOTC_LOGE("malloc error");
+        IOTC_LOGW("malloc error");
         return false;
     }
     (void)memset_s(result, sizeof(WifiScanInfo) * size, 0, sizeof(WifiScanInfo) * size);
     if (GetScanInfoList(result, &size) != WIFI_SUCCESS) {
-        IOTC_LOGE("malloc error");
+        IOTC_LOGW("malloc error");
         IotcFree(result);
         return false;
     }
@@ -642,19 +657,7 @@ static bool GetScanWifiResultFromOhos(const WifiDeviceConfig *config, WifiScanIn
     if ((size == 0) || (size > WIFI_SCAN_HOTSPOT_LIMIT)) {
         IOTC_LOGW("can not scan any wifi or scan size over limit, size: %u", size);
     } else {
-        for (uint32_t i = 0; i < size; i++) {
-            if ((strcmp(result[i].ssid, config->ssid) == 0) &&
-                ((config->securityType != WIFI_SEC_TYPE_OPEN && result[i].securityType != WIFI_SEC_TYPE_OPEN) ||
-                (config->securityType == WIFI_SEC_TYPE_OPEN && result[i].securityType == WIFI_SEC_TYPE_OPEN))) {
-                IOTC_LOGN("find target ssid success");
-                if (memcpy_s(info, sizeof(WifiScanInfo), &result[i], sizeof(WifiScanInfo)) != 0) {
-                    IOTC_LOGE("memcpy error");
-                    break;
-                }
-                ret = true;
-                break;
-            }
-        }
+        ret = CopyWifiResultFromOhos(config, info, result, size);
     }
     IotcFree(result);
     return ret;

@@ -23,38 +23,6 @@
 #define IOTC_LOG_DOMAIN 0xD000101 /* 此值需确认 */
 #define IOTC_LOG_TAG "iotc"
 
-void AdapterLogOutput(AdapterLogInfo *info)
-{
-    if (info == NULL || info->fmt == NULL || info->level >= IOTC_LOG_LEVEL_MAX ||
-        info->level <= IOTC_LOG_LEVEL_MIN) {
-        return;
-    }
-    const LogLevel level[IOTC_LOG_LEVEL_DEBUG] = {LOG_FATAL, LOG_ERROR, LOG_WARN, LOG_INFO, LOG_INFO, LOG_DEBUG};
-    const char *tag[IOTC_LOG_LEVEL_DEBUG] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
-
-    char line[IOTC_LOG_LINE_MAX_LENGTH + 1] = { 0 };
-    int32_t ret = 0;
-    uint32_t next = 0;
-    if (info->funcName != NULL) {
-        ret = sprintf_s(&line[next], sizeof(line) - next, "%s:%s:%u, ",
-            tag[info->level - 1], info->funcName, info->line);
-    } else {
-        ret = sprintf_s(&line[next], sizeof(line) - next, "%s:%s:%u, ",
-            tag[info->level - 1], info->fileName != NULL ? info->fileName : "NULL", info->line);
-    }
-    if (ret <= 0) {
-        HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
-        return;
-    }
-    next += ret;
-    ret = vsprintf_s(&line[next], sizeof(line) - next, info->fmt, info->args);
-    if (ret <= 0) {
-        HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
-        return;
-    }
-    (void)HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", line);
-}
-
 void IotcLogOutputImpl(uint8_t level, const char *fileName,
     const char *funcName, uint32_t line, const char *fmt, ...)
 {
@@ -62,30 +30,30 @@ void IotcLogOutputImpl(uint8_t level, const char *fileName,
         return;
     }
 
-    const LogLevel level[IOTC_LOG_LEVEL_DEBUG] = {LOG_FATAL, LOG_ERROR, LOG_WARN, LOG_INFO, LOG_INFO, LOG_DEBUG};
+    const LogLevel levelInfo[IOTC_LOG_LEVEL_DEBUG] = {LOG_FATAL, LOG_ERROR, LOG_WARN, LOG_INFO, LOG_INFO, LOG_DEBUG};
     const char *tag[IOTC_LOG_LEVEL_DEBUG] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
 
-    char line[IOTC_LOG_LINE_MAX_LENGTH + 1] = { 0 };
+    char buf[IOTC_LOG_LINE_MAX_LENGTH + 1] = { 0 };
     int32_t ret = 0;
     uint32_t next = 0;
     if (funcName != NULL) {
-        ret = sprintf_s(&line[next], sizeof(line) - next, "%s:%s:%u, ", tag[level - 1], funcName, line);
+        ret = sprintf_s(&buf[next], sizeof(buf) - next, "%s:%s:%u, ", tag[level - 1], funcName, line);
     } else {
-        ret = sprintf_s(&line[next], sizeof(line) - next, "%s:%s:%u, ", tag[level - 1],
+        ret = sprintf_s(&buf[next], sizeof(buf) - next, "%s:%s:%u, ", tag[level - 1],
             fileName != NULL ? fileName : "NULL", line);
     }
     if (ret <= 0) {
-        HiLogPrint(LOG_CORE, level[level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
+        HiLogPrint(LOG_CORE, levelInfo[level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
         return;
     }
     next += ret;
     va_list ap;
     va_start(ap, fmt);
-    ret = vsprintf_s(&line[next], sizeof(line) - next, fmt, ap);
+    ret = vsprintf_s(&buf[next], sizeof(buf) - next, fmt, ap);
     va_end(ap);
     if (ret <= 0) {
-        HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
+        HiLogPrint(LOG_CORE, levelInfo[level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", "too long");
         return;
     }
-    (void)HiLogPrint(LOG_CORE, level[info->level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", line);
+    (void)HiLogPrint(LOG_CORE, levelInfo[level - 1], IOTC_LOG_DOMAIN, IOTC_LOG_TAG, "%{public}s", buf);
 }
