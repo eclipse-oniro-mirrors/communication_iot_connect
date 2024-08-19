@@ -35,7 +35,7 @@ void CoapEndpointServerDeinit(CoapEndpointServer *server)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &server->resList) {
         CoapResourceNode *node = CONTAINER_OF(item, CoapResourceNode, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 
@@ -67,7 +67,7 @@ int32_t CoapServerAddResource(CoapEndpoint *endpoint, const CoapResource *res, u
 {
     CHECK_RETURN(endpoint != NULL && res != NULL && num != 0, IOTC_ERR_PARAM_INVALID);
 
-    CoapResourceNode *newNode = (CoapResourceNode *)AdapterMalloc(sizeof(CoapResourceNode));
+    CoapResourceNode *newNode = (CoapResourceNode *)IotcMalloc(sizeof(CoapResourceNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -75,7 +75,7 @@ int32_t CoapServerAddResource(CoapEndpoint *endpoint, const CoapResource *res, u
     (void)memset_s(newNode, sizeof(CoapResourceNode), 0, sizeof(CoapResourceNode));
 
     if (!UtilsExMutexLock(endpoint->mutex)) {
-        AdapterFree(newNode);
+        IotcFree(newNode);
         return IOTC_ERR_TIMEOUT;
     }
 
@@ -102,7 +102,7 @@ void CoapServerRemoveResource(CoapEndpoint *endpoint, const CoapResource *res)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 
     ENDPOINT_UNLOCK(endpoint);
@@ -219,7 +219,7 @@ int32_t CoapEndpointServerRecvReqPacket(CoapEndpoint *endpoint, const CoapPacket
     return IOTC_OK;
 }
 
-int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, AdapterJson *respJson)
+int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPacket *reqPkt, IotcJson *respJson)
 {
     CHECK_RETURN_LOGW(param != NULL && respJson != NULL && reqPkt != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 

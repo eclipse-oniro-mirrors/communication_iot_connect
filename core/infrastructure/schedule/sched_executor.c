@@ -15,7 +15,7 @@
 #include "sched_executor.h"
 #include "sched_event_loop.h"
 #include "sched_msg_queue.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_assert.h"
 #include "comm_def.h"
 #include "securec.h"
@@ -45,7 +45,7 @@ typedef struct {
 typedef struct {
     UtilsExMutex *taskLock;
     UtilsExMutex *apiLock;
-    AdapterSemId *waitSem;
+    IotcSemId *waitSem;
     ExecutorTaskInfo taskInfo;
 } SchedExecutorContext;
 
@@ -57,7 +57,7 @@ static SchedExecutorContext *GetSchedExecutorCtx(void)
 
 static void TimeoutUpdate(uint32_t *timeout, uint32_t begin)
 {
-    uint32_t delta = UtilsDeltaTime(AdapterGetSysTimeMs(), begin);
+    uint32_t delta = UtilsDeltaTime(IotcGetSysTimeMs(), begin);
     *timeout = delta > *timeout ? 0 : *timeout - delta;
 }
 
@@ -71,7 +71,7 @@ static void ExecutorMsgWaitHandler(const uint8_t *msg, uint32_t len)
         *taskInfo->errcode = taskInfo->cb(taskInfo->inData, taskInfo->outData);
         IOTC_LOGD("executor task ret %d", *taskInfo->errcode);
         UTILS_BIT_SET(taskInfo->bitMap, EXECUTOR_TASK_BIT_MAP_FINISH);
-        AdapterPostSem(GetSchedExecutorCtx()->waitSem);
+        IotcSemPost(GetSchedExecutorCtx()->waitSem);
     } else {
         IOTC_LOGW("invalid task");
     }
@@ -110,7 +110,7 @@ static int32_t GetTaskResult(int32_t waitRet)
     if (UTILS_IS_BIT_SET(GetSchedExecutorCtx()->taskInfo.bitMap, EXECUTOR_TASK_BIT_MAP_FINISH)) {
         ret = IOTC_OK;
         if (waitRet != IOTC_OK) {
-            (void)AdapterWaitSem(GetSchedExecutorCtx()->waitSem, 0);
+            (void)IotcSemWait(GetSchedExecutorCtx()->waitSem, 0);
         }
     }
     (void)memset_s(&GetSchedExecutorCtx()->taskInfo, sizeof(ExecutorTaskInfo), 0, sizeof(ExecutorTaskInfo));
@@ -122,14 +122,14 @@ int32_t SchedAsyncExecutorWait(SchedExecutorWaitCallback cb, void *inData, void 
     int32_t *errcode, uint32_t timeout)
 {
     CHECK_RETURN_LOGW(cb != NULL && errcode != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    if (GetSchedEventLoopTaskId() == AdapterGetCurrentTaskId()) {
+    if (GetSchedEventLoopTaskId() == IotcTaskGetCurrentTaskId()) {
         IOTC_LOGI("sched task invoke");
         *errcode = cb(inData, outData);
         return IOTC_OK;
     }
 
     uint32_t timeoutDynamic = timeout;
-    uint32_t begin = AdapterGetSysTimeMs();
+    uint32_t begin = IotcGetSysTimeMs();
     if (!UtilsExMutexLockTimeout(GetSchedExecutorCtx()->apiLock, timeoutDynamic)) {
         IOTC_LOGW("api lock timeout %u", timeoutDynamic);
         return IOTC_ERR_TIMEOUT;
@@ -153,7 +153,7 @@ int32_t SchedAsyncExecutorWait(SchedExecutorWaitCallback cb, void *inData, void 
 
     TimeoutUpdate(&timeoutDynamic, begin);
     IOTC_LOGD("executor wait %u", timeoutDynamic);
-    ret = AdapterWaitSem(GetSchedExecutorCtx()->waitSem, timeoutDynamic);
+    ret = IotcSemWait(GetSchedExecutorCtx()->waitSem, timeoutDynamic);
     if (ret != IOTC_OK) {
         IOTC_LOGW("wait sem error %d", ret);
     }
@@ -184,7 +184,7 @@ int32_t SchedAsyncExecutorInit(void)
             break;
         }
 
-        GetSchedExecutorCtx()->waitSem = AdapterCreateSem(0);
+        GetSchedExecutorCtx()->waitSem = IotcSemCreate(0);
         if (GetSchedExecutorCtx()->waitSem == NULL) {
             IOTC_LOGW("create sem error");
             ret = IOTC_ADAPTER_OS_ERR_CREATE_SEM;
@@ -211,7 +211,7 @@ void SchedAsyncExecutorDeinit(void)
         UtilsDestroyExMutex(&GetSchedExecutorCtx()->taskLock);
     }
     if (GetSchedExecutorCtx()->waitSem != NULL) {
-        AdapterDestroySem(GetSchedExecutorCtx()->waitSem);
+        IotcSemDestroy(GetSchedExecutorCtx()->waitSem);
         GetSchedExecutorCtx()->waitSem = NULL;
     }
 }

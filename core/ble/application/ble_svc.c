@@ -28,7 +28,7 @@
 #include "ble_svc_report.h"
 #include "utils_assert.h"
 #include "ble_gatt_mgt.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "ble_adv_ctrl.h"
 #include "ble_linklayer.h"
 #include "ble_common.h"
@@ -39,7 +39,7 @@ static const char *BLE_SERVICE_NAME = "BLE";
 static void BleStackDeinit(void)
 {
     BleGattDisconnectAll();
-    int32_t ret = AdapterBleDeInitStack();
+    int32_t ret = IotcBleDeInitStack();
     if (ret != IOTC_OK) {
         IOTC_LOGW("stack deinit error %d", ret);
     }
@@ -53,7 +53,7 @@ static int32_t BleStackInit(void)
         IOTC_LOGE("set connect param error %d", ret);
         return ret;
     }
-    ret = AdapterBleInitStack();
+    ret = IotcBleInitStack();
     if (ret != IOTC_OK) {
         IOTC_LOGE("init stack error %d", ret);
         return ret;

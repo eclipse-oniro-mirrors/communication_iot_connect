@@ -19,7 +19,7 @@
 #include "coap_codec_tcp_v1.h"
 #include "wifi_sched_fd_watch.h"
 #include "utils_assert.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "coap_codec_utils.h"
 #include "iotc_errcode.h"
 #include "comm_def.h"
@@ -41,9 +41,9 @@ static int32_t CloudTlsTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemai
     tlsParam.host.hostname = ctx->linkInfo.url[ctx->linkInfo.urlIndex];
 
     static int32_t CIPHERSUITE_LIST[] = {
-        ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-        ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-        ADAPTER_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+        IOTC_TLS_CIPHERSUITE_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+        IOTC_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+        IOTC_TLS_CIPHERSUITE_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
     };
     tlsParam.suites.ciphersuites = CIPHERSUITE_LIST;
     tlsParam.suites.num = ARRAY_SIZE(CIPHERSUITE_LIST);
@@ -115,7 +115,7 @@ SessCode CloudTlsSessSendUpdateSeqProcess(SessMsg *msg, UtilsBuffer *buf, SessAd
         IOTC_LOGW("get seq error");
         return SESS_CODE_ERR;
     }
-    *(uint32_t *)seqOption->value.data = AdapterHtonl(*seq);
+    *(uint32_t *)seqOption->value.data = IotcHtonl(*seq);
     (*seq)++;
     return SESS_CODE_CONTINUE;
 }
@@ -135,7 +135,7 @@ static int32_t CloudTlsSessInit(M2mCloudContext *ctx)
 static int32_t CloudTlsSessCustomDataInit(M2mCloudContext *ctx)
 {
     /* send seq */
-    ctx->linkInfo.sessData = (uint32_t *)AdapterMalloc(sizeof(uint32_t));
+    ctx->linkInfo.sessData = (uint32_t *)IotcMalloc(sizeof(uint32_t));
     if (ctx->linkInfo.sessData == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;

@@ -17,7 +17,7 @@
 #include "utils_mutex_global.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 
 typedef struct {
@@ -42,7 +42,7 @@ static bool CheckIfOptionExist(ListEntry *list, const OptionItem *items)
 
 static OptionNode *OptionNodeNew(const OptionItem *items, uint32_t len)
 {
-    OptionNode *newNode = (OptionNode *)AdapterMalloc(sizeof(OptionNode));
+    OptionNode *newNode = (OptionNode *)IotcMalloc(sizeof(OptionNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -92,7 +92,7 @@ void IotcOhOptionUnregister(const OptionItem *items)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
         break;
     }
     UtilsGlobalMutexUnlock();

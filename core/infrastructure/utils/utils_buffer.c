@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 #include "utils_buffer.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "securec.h"
@@ -24,7 +24,7 @@ struct UtilsBufferCtx {
     uint8_t exCnt;
     uint32_t allocSize;
     uint32_t maxSize;
-    AdapterSemId *sem;
+    IotcSemId *sem;
     UtilsBuffer buffer;
 };
 
@@ -34,7 +34,7 @@ UtilsBufferCtx *UtilsBufferCtxNew(uint32_t preAlloc, uint32_t max)
         IOTC_LOGW("param invalid");
         return NULL;
     }
-    UtilsBufferCtx *ctx = AdapterMalloc(sizeof(UtilsBufferCtx));
+    UtilsBufferCtx *ctx = IotcMalloc(sizeof(UtilsBufferCtx));
     if (ctx == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -44,14 +44,14 @@ UtilsBufferCtx *UtilsBufferCtxNew(uint32_t preAlloc, uint32_t max)
     do {
         ctx->allocSize = preAlloc;
         ctx->maxSize = max;
-        ctx->buffer.buffer = AdapterCalloc(sizeof(uint8_t), preAlloc);
+        ctx->buffer.buffer = IotcCalloc(sizeof(uint8_t), preAlloc);
         if (ctx->buffer.buffer == NULL) {
             IOTC_LOGW("calloc error %u", preAlloc);
             break;
         }
         ctx->buffer.size = preAlloc;
         /* 1表示初始资源数量 */
-        ctx->sem = AdapterCreateSem(1);
+        ctx->sem = IotcSemCreate(1);
         if (ctx->sem == NULL) {
             IOTC_LOGW("create sem error");
             break;
@@ -67,10 +67,10 @@ void UtilsBufferCtxFree(UtilsBufferCtx *ctx)
     CHECK_V_RETURN(ctx != NULL);
     UTILS_FREE_2_NULL(ctx->buffer.buffer);
     if (ctx->sem != NULL) {
-        AdapterDestroySem(ctx->sem);
+        IotcSemDestroy(ctx->sem);
         ctx->sem = NULL;
     }
-    AdapterFree(ctx);
+    IotcFree(ctx);
 }
 
 static int32_t BufferRealloc(UtilsBuffer *buf, int32_t size)
@@ -80,9 +80,9 @@ static int32_t BufferRealloc(UtilsBuffer *buf, int32_t size)
     }
     buf->size = size;
     if (buf->buffer != NULL) {
-        AdapterFree(buf->buffer);
+        IotcFree(buf->buffer);
     }
-    buf->buffer = AdapterCalloc(sizeof(uint8_t), size);
+    buf->buffer = IotcCalloc(sizeof(uint8_t), size);
     if (buf->buffer == NULL) {
         IOTC_LOGW("calloc error %u", size);
         buf->size = 0;
@@ -94,7 +94,7 @@ static int32_t BufferRealloc(UtilsBuffer *buf, int32_t size)
 UtilsBuffer *UtilsGetBuffer(UtilsBufferCtx *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "invalid param");
-    int32_t ret = AdapterWaitSem(ctx->sem, UTILS_BUFFER_MAX_WAIT_TIME_MS);
+    int32_t ret = IotcSemWait(ctx->sem, UTILS_BUFFER_MAX_WAIT_TIME_MS);
     if (ret != IOTC_OK) {
         IOTC_LOGW("wait sem error %d", ret);
         return NULL;
@@ -103,7 +103,7 @@ UtilsBuffer *UtilsGetBuffer(UtilsBufferCtx *ctx)
         ret = BufferRealloc(&ctx->buffer, ctx->allocSize);
         if (ret != IOTC_OK) {
             IOTC_LOGW("buf realloc error %d", ret);
-            (void)AdapterPostSem(ctx->sem);
+            (void)IotcSemPost(ctx->sem);
             return NULL;
         }
     }
@@ -132,7 +132,7 @@ void UtilsReleaseBuffer(UtilsBufferCtx *ctx, UtilsBuffer **buf)
         }
     }
 
-    ret = AdapterPostSem(ctx->sem);
+    ret = IotcSemPost(ctx->sem);
     if (ret != IOTC_OK) {
         IOTC_LOGW("post sem error %d", ret);
         return;
@@ -181,7 +181,7 @@ int32_t UtilsBufferAlloc(UtilsBuffer *buf, uint32_t size)
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    buf->buffer = (uint8_t *)AdapterCalloc(size, sizeof(uint8_t));
+    buf->buffer = (uint8_t *)IotcCalloc(size, sizeof(uint8_t));
     if (buf->buffer == NULL) {
         IOTC_LOGW("buffer alloc %u error", size);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -197,6 +197,6 @@ void UtilsBufferFree(UtilsBuffer *buf)
     if (buf == NULL || buf->buffer == NULL) {
         return;
     }
-    AdapterFree(buf->buffer);
+    IotcFree(buf->buffer);
     (void)memset_s(buf, sizeof(UtilsBuffer), 0, sizeof(UtilsBuffer));
 }

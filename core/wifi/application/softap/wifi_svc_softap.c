@@ -21,7 +21,7 @@
 #include "utils_assert.h"
 #include "securec.h"
 #include "svc_softap_ssid.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "svc_softap_sess.h"
 #include "utils_common.h"
 #include "svc_softap_ctx.h"
@@ -41,8 +41,8 @@ static const char *SOFTAP_SERVICE_NAME = "SOFTAP";
 
 static int32_t CreateWorkingSoftap(SoftapServiceContext *ctx)
 {
-    uint8_t ssid[ADAPTER_WIFI_SSID_MAX_LEN + 1] = {0};
-    uint32_t len = ADAPTER_WIFI_SSID_MAX_LEN;
+    uint8_t ssid[IOTC_WIFI_SSID_MAX_LEN + 1] = {0};
+    uint32_t len = IOTC_WIFI_SSID_MAX_LEN;
 
     int32_t ret;
     if (UTILS_IS_BIT_SET(ctx->initParam.bitMap, IOTC_WIFI_SERVICE_SOFTAP_CUSTOM_SSID)) {
@@ -61,7 +61,7 @@ static int32_t CreateWorkingSoftap(SoftapServiceContext *ctx)
         return ret;
     }
 
-    ret = AdapterStartSoftAp(ssid, len, NULL, 0);
+    ret = IotcStartSoftAp(ssid, len, NULL, 0);
     if (ret != IOTC_OK) {
         IOTC_LOGW("start softap error %d", ret);
         return ret;
@@ -88,7 +88,7 @@ static void SoftapServiceExit(void)
     DestroySoftapSess(&ctx->sess);
 
     if (UTILS_IS_BIT_SET(ctx->bitMap, SOFTAP_CTX_BIT_MAP_SOFTAP_STARTED)) {
-        int32_t ret = AdapterStopSoftAp();
+        int32_t ret = IotcStopSoftAp();
         IOTC_LOGI("stop softap ret %d", ret);
         EventBusPublishAsync(IOTC_CORE_WIFI_EVENT_SOFTAP_STOP, NULL, 0, NULL);
     }

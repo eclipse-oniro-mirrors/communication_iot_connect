@@ -14,6 +14,6 @@
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_tls.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_tls.c
     PARENT_SCOPE
 )

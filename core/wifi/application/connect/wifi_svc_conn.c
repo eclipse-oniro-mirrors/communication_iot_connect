@@ -28,7 +28,7 @@
 #include "iotc_errcode.h"
 #include "event_bus.h"
 #include "iotc_event.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "fwk_main.h"
 
 static const char *NET_CONNECT_SERVICE_NAME = "CONNECT";
@@ -43,12 +43,12 @@ static void RevokeEventWifiInfoCallback(uint32_t event, void *param, uint32_t le
         return;
     }
 
-    int32_t ret = AdapterDisconnectWifi();
+    int32_t ret = IotcDisconnectWifi();
     if (ret != IOTC_OK) {
         IOTC_LOGW("disconnect wifi error %d", ret);
     }
 
-    ret = AdapterDeleteWifiInfo();
+    ret = IotcDeleteWifiInfo();
     if (ret != IOTC_OK) {
         IOTC_LOGW("del wifi info error %d", ret);
     } else {

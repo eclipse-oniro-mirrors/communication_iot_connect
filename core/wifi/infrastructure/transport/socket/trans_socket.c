@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "trans_socket.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "comm_def.h"
 #include "iotc_errcode.h"
@@ -25,7 +25,7 @@ TransSocket *TransSocketNew(const SocketIf *socketIf, uint32_t size, const char 
     CHECK_RETURN_LOGW(socketIf != NULL && size >= sizeof(TransSocket) && socketIf->socketInit != NULL,
         NULL, "param invalid");
 
-    TransSocket *socket = (TransSocket *)AdapterMalloc(size);
+    TransSocket *socket = (TransSocket *)IotcMalloc(size);
     if (socket == NULL) {
         IOTC_LOGW("malloc error %u", size);
         return NULL;
@@ -119,5 +119,5 @@ void TransSocketFree(TransSocket *socket)
     if (socket->socketIf != NULL && socket->socketIf->socketFree != NULL) {
         socket->socketIf->socketFree(socket);
     }
-    AdapterFree(socket);
+    IotcFree(socket);
 }

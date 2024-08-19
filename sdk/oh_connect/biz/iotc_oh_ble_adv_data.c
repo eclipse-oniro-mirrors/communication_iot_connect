@@ -148,10 +148,10 @@ static int32_t RspAdvCopyToBuf(uint8_t *out, uint32_t outSize)
     return adv.len + 1;
 }
 
-int32_t IotcOhGetBleAdvData(AdapterBleAdvData *advData)
+int32_t IotcOhGetBleAdvData(IotcAdptBleAdvData *advData)
 {
     CHECK_RETURN_LOGW(advData != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    (void)memset_s(advData, sizeof(AdapterBleAdvData), 0, sizeof(AdapterBleAdvData));
+    (void)memset_s(advData, sizeof(IotcAdptBleAdvData), 0, sizeof(IotcAdptBleAdvData));
 
     int32_t len = 0;
     len = AdvFlagsCopyToBuf(&advData->advData[advData->advDataLen], sizeof(advData->advData) - advData->advDataLen);

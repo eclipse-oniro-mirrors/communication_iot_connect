@@ -17,7 +17,7 @@
 #include "ble_gatt_mgt.h"
 #include "ble_adv_ctrl.h"
 #include "securec.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "comm_def.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
@@ -51,7 +51,7 @@ static void BleEventConnectHandler(int32_t event, void *param)
         return;
     }
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     peerDevInfoList[GetBleGattMgtApp()->connNum].connId = eventParam->connSvc.connId;
     peerDevInfoList[GetBleGattMgtApp()->connNum].serverId = eventParam->connSvc.serverId;
     if (memcpy_s(peerDevInfoList[GetBleGattMgtApp()->connNum].peerAddr,
@@ -79,7 +79,7 @@ static void BleEventIndicateConftHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     IOTC_LOGN("indicate conf connId=%u, handle=%u, status=%u",
         eventParam->indicateConf.connId, eventParam->indicateConf.handle, eventParam->indicateConf.status);
 }
@@ -98,7 +98,7 @@ static void BleEventDisconnectHandler(int32_t event, void *param)
         return;
     }
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     for (uint8_t i = 0; i < GetBleGattMgtApp()->connNum; i++) {
         if (peerDevInfoList[i].connId != eventParam->disconnSvc.connId) {
             continue;
@@ -130,20 +130,20 @@ static void BleEventStartSvcResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattService *svcList = GetBleGattMgtApp()->svc;
+    IotcAdptBleGattService *svcList = GetBleGattMgtApp()->svc;
     uint8_t svcNum = GetBleGattMgtApp()->svcNum;
     if (svcList == NULL) {
         IOTC_LOGE("no init svc list");
         return;
     }
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
-    if (eventParam->startSvc.status != ADAPTER_BLE_STATUS_SUCCESS) {
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
+    if (eventParam->startSvc.status != IOTC_ADPT_BLE_STATUS_SUCCESS) {
         IOTC_LOGE("start svc fail");
         for (uint8_t i = 0; i < svcNum; i++) {
             if (svcList[i].svcHandle != eventParam->startSvc.svcHandle) {
                 continue;
             }
-            if (AdapterBleStartGattsService(&svcList[i], 1) != IOTC_OK) {
+            if (IotcBleStartGattsService(&svcList[i], 1) != IOTC_OK) {
                 IOTC_LOGE("start svc err");
             }
             return;
@@ -162,10 +162,10 @@ static void BleEventStopSvcResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
-    if (eventParam->stopSvc.status != ADAPTER_BLE_STATUS_SUCCESS) {
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
+    if (eventParam->stopSvc.status != IOTC_ADPT_BLE_STATUS_SUCCESS) {
         IOTC_LOGE("stop svc fail");
-        if (AdapterBleStopGattsService(eventParam->stopSvc.serverId, eventParam->stopSvc.svcHandle) != IOTC_OK) {
+        if (IotcBleStopGattsService(eventParam->stopSvc.serverId, eventParam->stopSvc.svcHandle) != IOTC_OK) {
             IOTC_LOGE("stop svc err");
         }
         return;
@@ -182,8 +182,8 @@ static void BleEventSetMtuResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
-    if (eventParam->setMtu.status != ADAPTER_BLE_STATUS_SUCCESS) {
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
+    if (eventParam->setMtu.status != IOTC_ADPT_BLE_STATUS_SUCCESS) {
         IOTC_LOGE("set mtu fail");
         return;
     }
@@ -194,8 +194,8 @@ static void BleEventStartAdvResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
-    if (eventParam->startAdv.status != ADAPTER_BLE_STATUS_SUCCESS) {
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
+    if (eventParam->startAdv.status != IOTC_ADPT_BLE_STATUS_SUCCESS) {
         IOTC_LOGE("start adv fail");
         return;
     }
@@ -206,7 +206,7 @@ static void BleEventReqReadHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     int32_t ret = BleGattReqRead(eventParam->reqRead.connId,
         eventParam->reqRead.attrHandle, eventParam->reqRead.transId);
     IOTC_LOGN("req read ret=%d", ret);
@@ -216,7 +216,7 @@ static void BleEventReqWriteHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     int32_t ret = BleGattReqWrite(eventParam->reqWrite.connId, eventParam->reqWrite.attrHandle,
         eventParam->reqWrite.transId, eventParam->reqWrite.value, eventParam->reqWrite.valueLen);
     IOTC_LOGN("req write ret=%d", ret);
@@ -226,8 +226,8 @@ static void BleEventStopAdvResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)param;
-    if (eventParam->stopAdv.status != ADAPTER_BLE_STATUS_SUCCESS) {
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
+    if (eventParam->stopAdv.status != IOTC_ADPT_BLE_STATUS_SUCCESS) {
         IOTC_LOGE("stop adv fail");
         return;
     }

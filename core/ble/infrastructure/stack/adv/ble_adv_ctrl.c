@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 #include "ble_adv_ctrl.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 #include "sched_timer.h"
 #include "utils_assert.h"
 #include "utils_mutex_global.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 
 static int32_t g_advTimerId = EVENT_SOURCE_INVALID_TIMER_FD;
@@ -40,7 +40,7 @@ static void AdvCtrlTimerCb(int32_t id, void *userData)
 
 static int32_t StartBleAdvTimer(uint32_t ms)
 {
-    g_advStartTime = AdapterGetSysTimeMs();
+    g_advStartTime = IotcGetSysTimeMs();
     g_advDuration = ms;
     if (ms == IOTC_BLE_ADV_ALWAYS) {
         return IOTC_OK;
@@ -56,12 +56,12 @@ static int32_t StartBleAdvTimer(uint32_t ms)
 }
 
 static int32_t CopyAdvInfo2Adapter(const IotcBleAdvParam *advPara, const IotcBleAdvData *advData,
-    AdapterBleAdvParam *adapterAdvParam, AdapterBleAdvData *adapterAdvData)
+    IotcAdptBleAdvParam *adapterAdvParam, IotcAdptBleAdvData *adapterAdvData)
 {
     CHECK_RETURN_LOGW(advData->advData != NULL && advData->advDataLen != 0 &&
         advData->rspData && advData->rspDataLen != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    adapterAdvParam->advType = (AdapterBleAdvType)advPara->advType;
+    adapterAdvParam->advType = (IotcAdptBleAdvType)advPara->advType;
     adapterAdvParam->advMinInt = advPara->minInterval;
     adapterAdvParam->advMaxInt = advPara->maxInterval;
     adapterAdvParam->channelMap = advPara->channelMap;
@@ -102,10 +102,11 @@ static void StopBleAdvTimer(void)
     }
 }
 
-static int32_t BleAdapterAdvCtrlStart(const AdapterBleAdvParam *advPara, const AdapterBleAdvData *advData, uint32_t ms)
+static int32_t BleAdapterAdvCtrlStart(const IotcAdptBleAdvParam *advPara,
+    const IotcAdptBleAdvData *advData, uint32_t ms)
 {
     StopBleAdvTimer();
-    int32_t ret = AdapterBleStartAdv(advPara, advData);
+    int32_t ret = IotcBleStartAdv(advPara, advData);
     if (ret != IOTC_OK) {
         IOTC_LOGE("start ble adv err %d", ret);
         return ret;
@@ -118,8 +119,8 @@ int32_t BleAdvCtrlStartSpecific(const IotcBleAdvParam *advPara, const IotcBleAdv
 {
     CHECK_RETURN_LOGW(advPara != NULL && advData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    AdapterBleAdvData adapterAdvData = {0};
-    AdapterBleAdvParam adapterAdvParam = {0};
+    IotcAdptBleAdvData adapterAdvData = {0};
+    IotcAdptBleAdvParam adapterAdvParam = {0};
     int32_t ret = CopyAdvInfo2Adapter(advPara, advData, &adapterAdvParam, &adapterAdvData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("copy adv date error %d", ret);
@@ -140,8 +141,8 @@ int32_t BleAdvCtrlStart(uint32_t ms)
         return IOTC_ERR_CALLBACK_NULL;
     }
 
-    AdapterBleAdvData advData = {0};
-    AdapterBleAdvParam advPara = {0};
+    IotcAdptBleAdvData advData = {0};
+    IotcAdptBleAdvParam advPara = {0};
 
     int32_t ret = advInfoCb(&advPara, &advData);
     if (ret != IOTC_OK) {
@@ -155,7 +156,7 @@ int32_t BleAdvCtrlStart(uint32_t ms)
 int32_t BleAdvCtrlStop(void)
 {
     StopBleAdvTimer();
-    int32_t ret = AdapterBleStopAdv();
+    int32_t ret = IotcBleStopAdv();
     if (ret != IOTC_OK) {
         IOTC_LOGW("stop adv error %d", ret);
         return ret;
@@ -172,7 +173,7 @@ int32_t BleAdvCtrlResume(void)
         return IOTC_OK;
     }
 
-    uint32_t delta = UtilsDeltaTime(AdapterGetSysTimeMs(), g_advStartTime);
+    uint32_t delta = UtilsDeltaTime(IotcGetSysTimeMs(), g_advStartTime);
     if (delta >= g_advDuration) {
         g_advDuration = 0;
         return IOTC_OK;
@@ -182,7 +183,7 @@ int32_t BleAdvCtrlResume(void)
 
 int32_t BleAdvCtrlUpdate(void)
 {
-    int32_t ret = AdapterBleStopAdv();
+    int32_t ret = IotcBleStopAdv();
     if (ret != IOTC_OK) {
         IOTC_LOGW("stop adv error %d", ret);
         return ret;

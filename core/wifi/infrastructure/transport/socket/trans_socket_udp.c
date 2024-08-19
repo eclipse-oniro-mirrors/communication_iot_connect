@@ -16,9 +16,9 @@
 #include "utils_assert.h"
 #include "comm_def.h"
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "iotc_errcode.h"
 #include "dfx_anonymize.h"
 
@@ -37,7 +37,7 @@ static void UdpSocketFree(TransSocket *socket)
     UTILS_FREE_2_NULL(udpSocket->initParam.localAddr);
     UTILS_FREE_2_NULL(udpSocket->initParam.multiAddr);
     if (udpSocket->fd >= 0) {
-        AdapterClose(udpSocket->fd);
+        IotcClose(udpSocket->fd);
         udpSocket->fd = TRANS_SOCKET_INVALID_FD;
     }
 }
@@ -84,28 +84,28 @@ static int32_t BindUdpSocket(int32_t fd, const SocketUdpInitParam *param)
 {
     int32_t ret;
     char anonyIpBuf[ANONYMIZE_IP_MIN_BUF_LEN + 1] = {0};
-    AdapterSockaddrIn addr;
-    (void)memset_s(&addr, sizeof(AdapterSockaddrIn), 0, sizeof(AdapterSockaddrIn));
-    addr.sinFamily = ADAPTER_SOCKET_DOMAIN_AF_INET;
-    addr.sinPort = AdapterHtons(param->port);
+    IotcSockaddrIn addr;
+    (void)memset_s(&addr, sizeof(IotcSockaddrIn), 0, sizeof(IotcSockaddrIn));
+    addr.sinFamily = IOTC_SOCKET_DOMAIN_AF_INET;
+    addr.sinPort = IotcHtons(param->port);
     /* 有广播地址则绑定广播地址，否则绑定本地ip */
     if (param->broadAddr != NULL) {
-        addr.sinAddr = AdapterInetAddr(param->broadAddr);
-        ret = AdapterSetSocketOpt(fd, ADAPTER_SOCKET_OPTION_ENABLE_BROADCAST, NULL, 0);
+        addr.sinAddr = IotcInetAddr(param->broadAddr);
+        ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_ENABLE_BROADCAST, NULL, 0);
         if (ret != IOTC_OK) {
             IOTC_LOGW("enable broadcast error %d", ret);
             return ret;
         }
         (void)DfxAnonymizeStrWithBuffer(param->broadAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
     } else if (param->localAddr != NULL) {
-        addr.sinAddr = AdapterInetAddr(param->localAddr);
+        addr.sinAddr = IotcInetAddr(param->localAddr);
         (void)DfxAnonymizeStrWithBuffer(param->localAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
     } else {
         IOTC_LOGW("invalid addr to bind");
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_ADDR;
     }
     IOTC_LOGD("udp socket[%d] bind to %s:%u", fd, anonyIpBuf, param->port);
-    ret = AdapterBind(fd, (AdapterSockaddr *)&addr, sizeof(AdapterSockaddrIn));
+    ret = IotcBind(fd, (IotcSockaddr *)&addr, sizeof(IotcSockaddrIn));
     if (ret != IOTC_OK) {
         IOTC_LOGW("udp bind to %s:%u error %d", anonyIpBuf, param->port, ret);
     }
@@ -118,16 +118,16 @@ static int32_t JoinMulticastGroup(int32_t fd, const SocketUdpInitParam *param)
         return IOTC_OK;
     }
 
-    int32_t ret = AdapterSetSocketOpt(fd, ADAPTER_SOCKET_OPTION_DISABLE_MULTI_LOOP, NULL, 0);
+    int32_t ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_DISABLE_MULTI_LOOP, NULL, 0);
     if (ret != IOTC_OK) {
         IOTC_LOGW("disable multi loop error %d", ret);
         return ret;
     }
 
     DFX_ANONYMIZE_IP_STR(anonyIp, param->multiAddr);
-    AdapterSocketMultiAddr multi = {
+    IotcSocketMultiAddr multi = {
             param->broadAddr != NULL ? param->broadAddr : param->localAddr, param->multiAddr };
-    ret = AdapterSetSocketOpt(fd, ADAPTER_SOCKET_OPTION_ADD_MULTI_GROUP, &multi, sizeof(multi));
+    ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_ADD_MULTI_GROUP, &multi, sizeof(multi));
     if (ret != IOTC_OK) {
         IOTC_LOGW("add multi group %s error %d", anonyIp, ret);
         return ret;
@@ -139,13 +139,13 @@ static int32_t JoinMulticastGroup(int32_t fd, const SocketUdpInitParam *param)
 
 static int32_t SetUdpOpt(int32_t fd, const SocketUdpInitParam *param)
 {
-    int32_t ret = AdapterSetSocketOpt(fd, ADAPTER_SOCKET_OPTION_SETFL_NONBLOCK, NULL, 0);
+    int32_t ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_SETFL_NONBLOCK, NULL, 0);
     if (ret != IOTC_OK) {
         IOTC_LOGW("set non block error %d", ret);
         return ret;
     }
 
-    ret = AdapterSetSocketOpt(fd, ADAPTER_SOCKET_OPTION_ENABLE_REUSEADDR, NULL, 0);
+    ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_ENABLE_REUSEADDR, NULL, 0);
     if (ret != IOTC_OK) {
         IOTC_LOGW("set reuse addr error %d", ret);
         return ret;
@@ -172,15 +172,15 @@ static int32_t UdpSocketConnect(TransSocket *socket)
     if (udpSocket->fd >= 0) {
         return udpSocket->fd;
     }
-    udpSocket->fd = AdapterSocket(ADAPTER_SOCKET_DOMAIN_AF_INET, ADAPTER_SOCKET_TYPE_DGRAM,
-        ADAPTER_SOCKET_PROTO_UDP);
+    udpSocket->fd = IotcSocket(IOTC_SOCKET_DOMAIN_AF_INET, IOTC_SOCKET_TYPE_DGRAM,
+        IOTC_SOCKET_PROTO_UDP);
     if (udpSocket->fd < 0) {
         return udpSocket->fd;
     }
 
     int32_t ret = SetUdpOpt(udpSocket->fd, &udpSocket->initParam);
     if (ret != IOTC_OK) {
-        AdapterClose(udpSocket->fd);
+        IotcClose(udpSocket->fd);
         udpSocket->fd = TRANS_SOCKET_INVALID_FD;
         return ret;
     }
@@ -198,22 +198,22 @@ static int32_t UdpSocketSend(TransSocket *socket, uint32_t tmo, const CommData *
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_NOT_CONNECT;
     }
 
-    AdapterSockaddrIn sendAddr;
-    (void)memset_s(&sendAddr, sizeof(AdapterSockaddrIn), 0, sizeof(AdapterSockaddrIn));
-    sendAddr.sinFamily = ADAPTER_SOCKET_DOMAIN_AF_INET;
-    sendAddr.sinPort = AdapterHtons(addr->port);
-    sendAddr.sinAddr = AdapterHtonl(addr->addr);
+    IotcSockaddrIn sendAddr;
+    (void)memset_s(&sendAddr, sizeof(IotcSockaddrIn), 0, sizeof(IotcSockaddrIn));
+    sendAddr.sinFamily = IOTC_SOCKET_DOMAIN_AF_INET;
+    sendAddr.sinPort = IotcHtons(addr->port);
+    sendAddr.sinAddr = IotcHtonl(addr->addr);
 
-    int32_t ret = AdapterSendTo(udpSocket->fd, data->data, data->len, (AdapterSockaddr *)&sendAddr, sizeof(sendAddr));
+    int32_t ret = IotcSendTo(udpSocket->fd, data->data, data->len, (IotcSockaddr *)&sendAddr, sizeof(sendAddr));
     DFX_ANONYMIZE_IP_ADDR(anonyIp, addr->addr);
     IOTC_LOGD("udp socket[%d] send to %s:%u len:%u ret:%d", udpSocket->fd, anonyIp, addr->port, data->len, ret);
     if (ret > 0) {
         return IOTC_OK;
     }
 
-    int32_t err = AdapterGetSocketErrno(udpSocket->fd);
-    if (err == ADAPTER_SOCKET_ERRNO_NO_ERR || err == ADAPTER_SOCKET_ERRNO_EAGAIN ||
-        err == ADAPTER_SOCKET_ERRNO_EWOULDBLOCK || err == ADAPTER_SOCKET_ERRNO_EINTR) {
+    int32_t err = IotcGetSocketErrno(udpSocket->fd);
+    if (err == IOTC_SOCKET_ERRNO_NO_ERR || err == IOTC_SOCKET_ERRNO_EAGAIN ||
+        err == IOTC_SOCKET_ERRNO_EWOULDBLOCK || err == IOTC_SOCKET_ERRNO_EINTR) {
         /* 链路无异常则不抛错 */
         IOTC_LOGD("udp socket[%d] send errno ok %d", udpSocket->fd, err);
         return IOTC_OK;
@@ -233,23 +233,23 @@ static int32_t UdpSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_NOT_CONNECT;
     }
 
-    AdapterSockaddrIn recvAddr;
-    (void)memset_s(&recvAddr, sizeof(AdapterSockaddrIn), 0, sizeof(AdapterSockaddrIn));
-    uint32_t addrLen = sizeof(AdapterSockaddrIn);
-    int32_t readLen = AdapterRecvFrom(udpSocket->fd, buf->buffer + buf->len, buf->size - buf->len,
-        (AdapterSockaddr *)&recvAddr, &addrLen);
+    IotcSockaddrIn recvAddr;
+    (void)memset_s(&recvAddr, sizeof(IotcSockaddrIn), 0, sizeof(IotcSockaddrIn));
+    uint32_t addrLen = sizeof(IotcSockaddrIn);
+    int32_t readLen = IotcRecvFrom(udpSocket->fd, buf->buffer + buf->len, buf->size - buf->len,
+        (IotcSockaddr *)&recvAddr, &addrLen);
     if (readLen > 0) {
         buf->len += readLen;
-        addr->port = AdapterNtohs(recvAddr.sinPort);
-        addr->addr = AdapterNtohl(recvAddr.sinAddr);
+        addr->port = IotcNtohs(recvAddr.sinPort);
+        addr->addr = IotcNtohl(recvAddr.sinAddr);
         DFX_ANONYMIZE_IP_ADDR(anonyIp, addr->addr);
         IOTC_LOGD("udp socket[%d] recv from %s:%u len:%d", udpSocket->fd, anonyIp, addr->port, readLen);
         return IOTC_OK;
     }
 
-    int32_t err = AdapterGetSocketErrno(udpSocket->fd);
-    if (err == ADAPTER_SOCKET_ERRNO_NO_ERR || err == ADAPTER_SOCKET_ERRNO_EAGAIN ||
-        err == ADAPTER_SOCKET_ERRNO_EWOULDBLOCK || err == ADAPTER_SOCKET_ERRNO_EINTR) {
+    int32_t err = IotcGetSocketErrno(udpSocket->fd);
+    if (err == IOTC_SOCKET_ERRNO_NO_ERR || err == IOTC_SOCKET_ERRNO_EAGAIN ||
+        err == IOTC_SOCKET_ERRNO_EWOULDBLOCK || err == IOTC_SOCKET_ERRNO_EINTR) {
         /* 链路无异常则不抛错 */
         IOTC_LOGD("udp socket[%d] recv errno ok %d", udpSocket->fd, err);
         return IOTC_OK;
@@ -265,7 +265,7 @@ static void UdpSocketClose(TransSocket *socket)
     UdpSocket *udpSocket = (UdpSocket *)socket;
 
     if (udpSocket->fd >= 0) {
-        AdapterClose(udpSocket->fd);
+        IotcClose(udpSocket->fd);
         IOTC_LOGD("udp socket[%d] close", udpSocket->fd);
         udpSocket->fd = TRANS_SOCKET_INVALID_FD;
     }
@@ -296,7 +296,7 @@ int32_t TransSocketUdpLeaveMultiGroup(TransSocket *socket)
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_INVALID;
     }
 
-    int32_t ret = AdapterSetSocketOpt(udpSocket->fd, ADAPTER_SOCKET_OPTION_DROP_MULTI_GROUP,
+    int32_t ret = IotcSetSocketOpt(udpSocket->fd, IOTC_SOCKET_OPTION_DROP_MULTI_GROUP,
         udpSocket->initParam.multiAddr, strlen(udpSocket->initParam.multiAddr));
     if (ret != IOTC_OK) {
         IOTC_LOGW("leave multi group error %d", ret);

@@ -27,7 +27,7 @@ typedef struct {
     uint32_t timeout;
 } CloudTokenInfo;
 
-int32_t ParseTokenInfo(M2mCloudContext *ctx, AdapterJson *jsonObj);
+int32_t ParseTokenInfo(M2mCloudContext *ctx, IotcJson *jsonObj);
 int32_t DealErrCodeRsp(int32_t errcode);
 
 #ifdef __cplusplus

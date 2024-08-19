@@ -16,7 +16,7 @@
 #define BLE_ADV_PARAM_H
 
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +28,7 @@ extern "C" {
  * @param advParam [OUT] 广播参数
  * @return 0 成功，非0 失败
  */
-int32_t GetBleAdvParam(AdapterBleAdvParam *advParam);
+int32_t GetBleAdvParam(IotcAdptBleAdvParam *advParam);
 
 #ifdef __cplusplus
 }

@@ -21,18 +21,18 @@
 #include "utils_bit_map.h"
 #include "local_ctl_cli_mngr.h"
 #include "seq_num_utils.h"
-#include "adapter_md.h"
-#include "adapter_aes.h"
-#include "adapter_base64.h"
+#include "iotc_md.h"
+#include "iotc_aes.h"
+#include "iotc_base64.h"
 #include "security_random.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "dfx_anonymize.h"
 #include "coap_codec_utils.h"
 #include "securec.h"
 
 /* 用作bitmap，不能大于32 */
 #define LOCAL_CONTROL_SEQ_WINDOW 30
-#define LOCAL_CTL_HMAC_LEN ADAPTER_MD_SHA256_BYTE_LEN
+#define LOCAL_CTL_HMAC_LEN IOTC_MD_SHA256_BYTE_LEN
 #define LOCAL_CTL_GCM_IV_LEN 12
 #define LOCAL_CTL_GCM_TAG_LEN 16
 
@@ -85,35 +85,35 @@ static bool LocalCtlSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     int32_t ret;
     /* 获取编解码后的大小 */
     if (type == LOCAL_CTL_BASE64_TYPE_DECODE) {
-        ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
+        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
     } else {
-        ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
+        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
     }
     if (ret != IOTC_OK || dataLen == 0 || dataLen > buf->size) {
         IOTC_LOGW("get len error %d/%d", ret, type);
         return false;
     }
 
-    uint8_t *data = (uint8_t *)AdapterCalloc(dataLen, sizeof(uint8_t));
+    uint8_t *data = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
     if (data == NULL) {
         IOTC_LOGW("calloc error %u", dataLen);
         return false;
     }
 
     if (type == LOCAL_CTL_BASE64_TYPE_DECODE) {
-        ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
+        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
     } else {
-        ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
+        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
     }
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 error %d/%d", ret, type);
-        AdapterFree(data);
+        IotcFree(data);
         return false;
     }
 
     CoapData newPayload = {data, dataLen};
     ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace payload error %d", ret);
         return false;
@@ -194,12 +194,12 @@ SessCode LocalCtlSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
     }
 
     uint32_t dataLen = sessMsg->packet.payload.len - LOCAL_CTL_GCM_IV_LEN - LOCAL_CTL_GCM_TAG_LEN;
-    uint8_t *decBuf = (uint8_t *)AdapterCalloc(dataLen, sizeof(uint8_t));
+    uint8_t *decBuf = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
     if (decBuf == NULL) {
         IOTC_LOGW("calloc error %u", dataLen);
         return SESS_CODE_ERR;
     }
-    AdapterAesGcmParam gcmParam = {
+    IotcAesGcmParam gcmParam = {
         .key = sessMsg->client->sessInfo.transKey,
         .keyLen = SESS_TRANS_KEY_LEN,
         .iv = sessMsg->packet.payload.data,
@@ -209,17 +209,17 @@ SessCode LocalCtlSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
         .data = sessMsg->packet.payload.data + LOCAL_CTL_GCM_IV_LEN,
         .dataLen = dataLen,
     };
-    int32_t ret = AdapterAesGcmDecrypt(&gcmParam, sessMsg->packet.payload.data + LOCAL_CTL_GCM_IV_LEN + dataLen,
+    int32_t ret = IotcAesGcmDecrypt(&gcmParam, sessMsg->packet.payload.data + LOCAL_CTL_GCM_IV_LEN + dataLen,
         LOCAL_CTL_GCM_TAG_LEN, decBuf);
     if (ret != IOTC_OK) {
-        AdapterFree(decBuf);
+        IotcFree(decBuf);
         IOTC_LOGW("gcm dec error %d", ret);
         return SESS_CODE_ERR;
     }
 
     CoapData decPayload = {decBuf, dataLen};
     ret = CoapUtilsReplacePayload(&sessMsg->packet, buf, &decPayload);
-    AdapterFree(decBuf);
+    IotcFree(decBuf);
     if (ret != IOTC_OK) {
         IOTC_LOGW("replace dec payload error %d", ret);
         return SESS_CODE_ERR;
@@ -250,7 +250,7 @@ SessCode LocalCtlSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
     }
 
     uint32_t dataLen = sessMsg->packet.payload.len + LOCAL_CTL_GCM_IV_LEN + LOCAL_CTL_GCM_TAG_LEN;
-    uint8_t *encBuf = (uint8_t *)AdapterCalloc(dataLen, sizeof(uint8_t));
+    uint8_t *encBuf = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
     if (encBuf == NULL) {
         IOTC_LOGW("calloc error %u", dataLen);
         return SESS_CODE_ERR;
@@ -258,7 +258,7 @@ SessCode LocalCtlSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
 
     /* 前12字节为随机IV */
     (void)SecurityRandom(encBuf, LOCAL_CTL_GCM_IV_LEN);
-    AdapterAesGcmParam gcmParam = {
+    IotcAesGcmParam gcmParam = {
         .key = sessMsg->client->sessInfo.transKey,
         .keyLen = SESS_TRANS_KEY_LEN,
         .iv = encBuf,
@@ -269,17 +269,17 @@ SessCode LocalCtlSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlIn
         .dataLen = sessMsg->packet.payload.len,
     };
 
-    int32_t ret = AdapterAesGcmEncrypt(&gcmParam, encBuf + sessMsg->packet.payload.len + LOCAL_CTL_GCM_IV_LEN,
+    int32_t ret = IotcAesGcmEncrypt(&gcmParam, encBuf + sessMsg->packet.payload.len + LOCAL_CTL_GCM_IV_LEN,
         LOCAL_CTL_GCM_TAG_LEN, encBuf + LOCAL_CTL_GCM_IV_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("enc error %d", ret);
-        AdapterFree(encBuf);
+        IotcFree(encBuf);
         return SESS_CODE_ERR;
     }
 
     CoapData decPayload = {encBuf, dataLen};
     ret = CoapUtilsReplacePayload(&sessMsg->packet, buf, &decPayload);
-    AdapterFree(encBuf);
+    IotcFree(encBuf);
     if (ret != IOTC_OK) {
         IOTC_LOGW("replace enc payload error %d", ret);
         return SESS_CODE_ERR;

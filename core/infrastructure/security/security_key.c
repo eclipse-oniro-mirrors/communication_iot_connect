@@ -16,8 +16,8 @@
 #include <stddef.h>
 #include "iotc_log.h"
 #include "utils_mutex_global.h"
-#include "adapter_aes.h"
-#include "adapter_kdf.h"
+#include "iotc_aes.h"
+#include "iotc_kdf.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
@@ -103,8 +103,8 @@ int32_t SecurityGenHkdfLocalKey(const uint8_t *salt, uint32_t saltLen, uint8_t o
         return IOTC_CORE_COMM_SEC_ERR_GET_AC_KEY;
     }
 
-    AdapterHkdfParam hkdf = {
-        .md = ADAPTER_MD_SHA256,
+    IotcHkdfParam hkdf = {
+        .md = IOTC_MD_SHA256,
         .salt = salt,
         .saltLen = saltLen,
         .info = udid,
@@ -112,7 +112,7 @@ int32_t SecurityGenHkdfLocalKey(const uint8_t *salt, uint32_t saltLen, uint8_t o
         .material = acKey,
         .materialLen = sizeof(acKey),
     };
-    ret = AdapterHkdf(&hkdf, out, SECURITY_HKDF_LOCAL_KEY_LEN);
+    ret = IotcHkdf(&hkdf, out, SECURITY_HKDF_LOCAL_KEY_LEN);
     (void)memset_s(acKey, sizeof(acKey), 0, sizeof(acKey));
     return ret;
 }

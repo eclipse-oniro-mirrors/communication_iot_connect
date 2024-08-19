@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "iotc_errcode.h"
 #include "utils_list.h"
 #include "utils_mutex_ex.h"
@@ -38,23 +38,23 @@ typedef struct {
     uint32_t runningMs;
     DfxWatchDogTimeoutHandler hdl;
     const char *name;
-    AdapterTaskId *id;
+    IotcTaskId *id;
     ListEntry list;
 } WatchdogNode;
 
 typedef struct {
     const char *name;
-    AdapterTaskId *id;
+    IotcTaskId *id;
     ListEntry list;
 } RecordNode;
 
 typedef struct {
-    AdapterTaskId *id;
+    IotcTaskId *id;
     bool isRunning;
     ListEntry watchDogList;
     ListEntry recordList;
     UtilsExMutex *mutex;
-    AdapterSemId *sem;
+    IotcSemId *sem;
 } WatchdogContext;
 
 static uint32_t g_taskSize = DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE;
@@ -116,18 +116,18 @@ static void WatchDogTaskBody(void *arg)
     GetWatchDogCtx()->isRunning = true;
     bool isRunning = true;
     do {
-        AdapterSleepMs(DFX_WATCH_DOG_SCHEDULE_INTERVAL);
+        IotcSleepMs(DFX_WATCH_DOG_SCHEDULE_INTERVAL);
         isRunning = WatchDogProc();
     } while (isRunning);
 
     WATCH_DOG_LOCK();
     if (GetWatchDogCtx()->sem != NULL) {
-        AdapterPostSem(GetWatchDogCtx()->sem);
+        IotcSemPost(GetWatchDogCtx()->sem);
     }
 
     WATCH_DOG_UNLOCK();
     IOTC_LOGN("Watch Dog task exit");
-    AdapterDeleteTask(NULL);
+    IotcTaskDelete(NULL);
 }
 
 int32_t DfxWatchDogInit(void)
@@ -140,14 +140,14 @@ int32_t DfxWatchDogInit(void)
         return IOTC_CORE_COMM_UTILS_ERR_EX_MUTEX_CREATE;
     }
 
-    AdapterTaskParam taskParam = {
+    IotcTaskParam taskParam = {
         .func = WatchDogTaskBody,
-        .prio = ADAPTER_TASK_PRIORITY_MID,
+        .prio = IOTC_TASK_PRIORITY_MID,
         .stackSize = g_taskSize,
         .arg = NULL,
         .name = DFX_WATCH_DOG_TASK_NAME,
     };
-    GetWatchDogCtx()->id = AdapterCreateTask(&taskParam);
+    GetWatchDogCtx()->id = IotcTaskCreate(&taskParam);
     if (GetWatchDogCtx()->id == NULL) {
         IOTC_LOGW("WatchDog task create fail %u", g_taskSize);
         UtilsDestroyExMutex(&GetWatchDogCtx()->mutex);
@@ -162,16 +162,16 @@ void DfxWatchDogDeinit(void)
     int32_t ret;
     if (GetWatchDogCtx()->isRunning) {
         WATCH_DOG_LOCK();
-        GetWatchDogCtx()->sem = AdapterCreateSem(0);
+        GetWatchDogCtx()->sem = IotcSemCreate(0);
         GetWatchDogCtx()->isRunning = false;
         WATCH_DOG_UNLOCK();
         if (GetWatchDogCtx()->sem != NULL) {
-            ret = AdapterWaitSem(GetWatchDogCtx()->sem, DFX_WATCH_DOG_API_WAIT_TIME);
+            ret = IotcSemWait(GetWatchDogCtx()->sem, DFX_WATCH_DOG_API_WAIT_TIME);
             if (ret != IOTC_OK) {
                 IOTC_LOGW("wait sem error %d", ret);
             }
             WATCH_DOG_LOCK();
-            AdapterDestroySem(GetWatchDogCtx()->sem);
+            IotcSemDestroy(GetWatchDogCtx()->sem);
             GetWatchDogCtx()->sem = NULL;
             WATCH_DOG_UNLOCK();
         } else {
@@ -184,13 +184,13 @@ void DfxWatchDogDeinit(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &GetWatchDogCtx()->recordList) {
         RecordNode *node = CONTAINER_OF(item, RecordNode, list);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 
     LIST_FOR_EACH_ITEM_SAFE(item, next, &GetWatchDogCtx()->watchDogList) {
         WatchdogNode *node = CONTAINER_OF(item, WatchdogNode, list);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 
     if (GetWatchDogCtx()->mutex != NULL) {
@@ -204,7 +204,7 @@ void DfxWatchDogDeinit(void)
 int32_t DfxAddWatchDog(uint32_t timeoutMs, DfxWatchDogTimeoutHandler hdl, const char *name)
 {
     CHECK_RETURN_LOGW(timeoutMs != 0 && name != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    WatchdogNode *newNode = (WatchdogNode *)AdapterMalloc(sizeof(WatchdogNode));
+    WatchdogNode *newNode = (WatchdogNode *)IotcMalloc(sizeof(WatchdogNode));
     if (newNode == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -214,7 +214,7 @@ int32_t DfxAddWatchDog(uint32_t timeoutMs, DfxWatchDogTimeoutHandler hdl, const 
     newNode->name = name;
     newNode->timeoutMs = timeoutMs;
     newNode->hdl = hdl;
-    AdapterTaskId *id = AdapterGetCurrentTaskId();
+    IotcTaskId *id = IotcTaskGetCurrentTaskId();
     newNode->id = id;
 
     WATCH_DOG_LOCK();
@@ -227,7 +227,7 @@ int32_t DfxAddWatchDog(uint32_t timeoutMs, DfxWatchDogTimeoutHandler hdl, const 
 
 int32_t DfxFeedWatchDog(void)
 {
-    AdapterTaskId *id = AdapterGetCurrentTaskId();
+    IotcTaskId *id = IotcTaskGetCurrentTaskId();
     int32_t ret = IOTC_CORE_COMM_DFX_WATCH_DOG_ERR_FEED;
     WATCH_DOG_LOCK();
     ListEntry *item = NULL;
@@ -252,7 +252,7 @@ int32_t DfxFeedWatchDog(void)
 
 void DfxDelWatchDog(void)
 {
-    AdapterTaskId *id = AdapterGetCurrentTaskId();
+    IotcTaskId *id = IotcTaskGetCurrentTaskId();
     WATCH_DOG_LOCK();
     ListEntry *item = NULL;
     ListEntry *next = NULL;
@@ -263,7 +263,7 @@ void DfxDelWatchDog(void)
         }
         IOTC_LOGN("WatchDog[%s/%u] del succ", NON_NULL_STR(node->name), UtilsGetTaskIdShort(node->id));
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
         break;
     }
     WATCH_DOG_UNLOCK();
@@ -272,14 +272,14 @@ void DfxDelWatchDog(void)
 void DfxRecordNoDogTask(const char *name)
 {
     CHECK_V_RETURN_LOGW(name != NULL, "param invalid");
-    RecordNode *newNode = (RecordNode *)AdapterMalloc(sizeof(RecordNode));
+    RecordNode *newNode = (RecordNode *)IotcMalloc(sizeof(RecordNode));
     if (newNode == NULL) {
         IOTC_LOGE("malloc");
         return;
     }
     (void)memset_s(newNode, sizeof(RecordNode), 0, sizeof(RecordNode));
     newNode->name = name;
-    newNode->id = AdapterGetCurrentTaskId();
+    newNode->id = IotcTaskGetCurrentTaskId();
     WATCH_DOG_LOCK();
     LIST_INSERT_BEFORE(&newNode->list, &GetWatchDogCtx()->recordList);
     WATCH_DOG_UNLOCK();
@@ -288,7 +288,7 @@ void DfxRecordNoDogTask(const char *name)
 
 void DfxDelNoDogTaskRecord(void)
 {
-    AdapterTaskId *id = AdapterGetCurrentTaskId();
+    IotcTaskId *id = IotcTaskGetCurrentTaskId();
 
     WATCH_DOG_LOCK();
     ListEntry *item = NULL;
@@ -298,7 +298,7 @@ void DfxDelNoDogTaskRecord(void)
         if (node->id == id) {
             IOTC_LOGN("NoDog[%s/%p] del succ", NON_NULL_STR(node->name), UtilsGetTaskIdShort(node->id));
             LIST_REMOVE(item);
-            AdapterFree(node);
+            IotcFree(node);
             return;
         }
     }

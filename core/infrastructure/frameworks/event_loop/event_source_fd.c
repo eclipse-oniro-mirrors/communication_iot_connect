@@ -15,8 +15,8 @@
 #include "event_source_fd.h"
 #include "utils_list.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "utils_bit_map.h"
 #include "utils_common.h"
 #include "securec.h"
@@ -226,7 +226,7 @@ static void FdSourceFinalize(EventSource *self)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &fdSource->watchList) {
         WatchNode *node = CONTAINER_OF(item, WatchNode, node);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 
@@ -255,7 +255,7 @@ EventSource *EventSourceFdNew(EventSourceFdPoll poll)
 
 static WatchNode *WatchNodeNew(const FdWatchParam *watch)
 {
-    WatchNode *newNode = (WatchNode *)AdapterMalloc(sizeof(WatchNode));
+    WatchNode *newNode = (WatchNode *)IotcMalloc(sizeof(WatchNode));
     if (newNode == NULL) {
         return NULL;
     }
@@ -263,7 +263,7 @@ static WatchNode *WatchNodeNew(const FdWatchParam *watch)
 
     int32_t ret = memcpy_s(&newNode->watch, sizeof(FdWatchParam), watch, sizeof(FdWatchParam));
     if (ret != EOK) {
-        AdapterFree(newNode);
+        IotcFree(newNode);
         return NULL;
     }
     newNode->curPrio = watch->prio;
@@ -307,7 +307,7 @@ bool EventSourceFdWatch(EventSource *source, const FdWatchParam *watch)
             return true;
         }
     }
-    AdapterFree(newNode);
+    IotcFree(newNode);
 
     return false;
 }
@@ -371,7 +371,7 @@ void EventSourceFdRemove(EventSource *source, int32_t fd)
         FdSourceEventUnset(fdSource, &node->bitMap, WATCH_NODE_BIT_MAP_WRITE_EVENT);
         FdSourceEventUnset(fdSource, &node->bitMap, WATCH_NODE_BIT_MAP_EXCEPT_EVENT);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
         fdSource->cnt--;
         break;
     }

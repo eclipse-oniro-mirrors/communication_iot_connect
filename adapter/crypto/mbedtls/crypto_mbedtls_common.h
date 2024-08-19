@@ -17,8 +17,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "adapter_md.h"
-#include "adapter_mpi.h"
+#include "iotc_md.h"
+#include "iotc_mpi.h"
 #include "mbedtls/md.h"
 #include "mbedtls/bignum.h"
 
@@ -26,11 +26,11 @@
 extern "C" {
 #endif
 
-mbedtls_md_type_t GetMbedtlsMdType(AdapterMdType type);
+mbedtls_md_type_t GetMbedtlsMdType(IotcMdType type);
 
-mbedtls_mpi *GetMbedtlsMpi(AdapterMpi *mpi);
+mbedtls_mpi *GetMbedtlsMpi(IotcMpi *mpi);
 
-bool IsMdLenValid(AdapterMdType type, uint32_t len);
+bool IsMdLenValid(IotcMdType type, uint32_t len);
 
 #ifdef __cplusplus
 }

@@ -27,7 +27,7 @@
 #include "dev_info.h"
 
 static void LanSearchSendJsonResp(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
-    AdapterJson *respJson, LanSearchSessMsg *sessMsg)
+    IotcJson *respJson, LanSearchSessMsg *sessMsg)
 {
     CoapServerRespParam respParam = {
         .req = req,
@@ -70,7 +70,7 @@ static void LanSearchSendDataResp(CoapEndpoint *endpoint, const CoapPacket *req,
     return;
 }
 
-static bool LanSearchAddDevid(AdapterJson *json)
+static bool LanSearchAddDevid(IotcJson *json)
 {
     DevAuthInfo authInfo = {0};
     bool isAuthExits = false;
@@ -80,9 +80,9 @@ static bool LanSearchAddDevid(AdapterJson *json)
         return false;
     }
     if (!isAuthExits) {
-        ret = AdapterJsonAddStr2Obj(json, STR_NETINFO_DEVICE_ID, "");
+        ret = IotcJsonAddStr2Obj(json, STR_NETINFO_DEVICE_ID, "");
     } else {
-        ret = AdapterJsonAddStr2Obj(json, STR_NETINFO_DEVICE_ID, authInfo.devId);
+        ret = IotcJsonAddStr2Obj(json, STR_NETINFO_DEVICE_ID, authInfo.devId);
         (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
     }
     if (ret != IOTC_OK) {
@@ -92,18 +92,18 @@ static bool LanSearchAddDevid(AdapterJson *json)
     return true;
 }
 
-static bool LanSearchAddDevInfo(AdapterJson *json)
+static bool LanSearchAddDevInfo(IotcJson *json)
 {
-    AdapterJson *devInfoJson = AdapterCreateJson();
+    IotcJson *devInfoJson = IotcJsonCreate();
     if (devInfoJson == NULL) {
         IOTC_LOGW("create json error");
         return false;
     }
 
-    int32_t ret = AdapterJsonAddItem2Obj(json, STR_JSON_DEV_INFO, devInfoJson);
+    int32_t ret = IotcJsonAddItem2Obj(json, STR_JSON_DEV_INFO, devInfoJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add dev info json error %d", ret);
-        AdapterJsonDelete(devInfoJson);
+        IotcJsonDelete(devInfoJson);
         return false;
     }
 
@@ -127,7 +127,7 @@ static bool LanSearchAddDevInfo(AdapterJson *json)
         return false;
     }
 
-    ret = AdapterJsonAddNum2Obj(devInfoJson, STR_JSON_PROT_TYPE, devInfo->protType);
+    ret = IotcJsonAddNum2Obj(devInfoJson, STR_JSON_PROT_TYPE, devInfo->protType);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add prot err %d", ret);
         return false;
@@ -135,7 +135,7 @@ static bool LanSearchAddDevInfo(AdapterJson *json)
 
     /* 高四bit预留，低四bit依次为softap coap sle ble */
     const uint8_t DISCOVERY_TYPE = 0b01100100;
-    ret = AdapterJsonAddNum2Obj(devInfoJson, STR_JSON_DISC_TYPE, DISCOVERY_TYPE);
+    ret = IotcJsonAddNum2Obj(devInfoJson, STR_JSON_DISC_TYPE, DISCOVERY_TYPE);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add disc err %d", ret);
         return false;
@@ -144,7 +144,7 @@ static bool LanSearchAddDevInfo(AdapterJson *json)
     return true;
 }
 
-static bool LanSearchAddSvcInfo(AdapterJson *json)
+static bool LanSearchAddSvcInfo(IotcJson *json)
 {
     uint32_t svcNum = 0;
     const IotcServiceInfo *svcInfo = ModelGetSvcInfo(&svcNum);
@@ -153,25 +153,25 @@ static bool LanSearchAddSvcInfo(AdapterJson *json)
         return false;
     }
 
-    AdapterJson *svcInfoJson = MdlBuildSvcJsonArray(svcInfo, svcNum);
+    IotcJson *svcInfoJson = MdlBuildSvcJsonArray(svcInfo, svcNum);
     if (svcInfoJson == NULL) {
         IOTC_LOGW("create svc json error");
         return false;
     }
 
-    int32_t ret = AdapterJsonAddItem2Obj(json, STR_JSON_SERVICES, svcInfoJson);
+    int32_t ret = IotcJsonAddItem2Obj(json, STR_JSON_SERVICES, svcInfoJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add svc info json error %d", ret);
-        AdapterJsonDelete(svcInfoJson);
+        IotcJsonDelete(svcInfoJson);
         return false;
     }
 
     return true;
 }
 
-static AdapterJson *CreateLanSearchRespJson(void)
+static IotcJson *CreateLanSearchRespJson(void)
 {
-    AdapterJson *json = UtilsJsonCreateErrcode(0);
+    IotcJson *json = UtilsJsonCreateErrcode(0);
     if (json == NULL) {
         IOTC_LOGW("create json error");
         return NULL;
@@ -191,7 +191,7 @@ static AdapterJson *CreateLanSearchRespJson(void)
         }
         return json;
     } while (0);
-    AdapterJsonDelete(json);
+    IotcJsonDelete(json);
     return NULL;
 }
 
@@ -199,7 +199,7 @@ void LanSearchCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
 {
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
 
-    AdapterJson *respJson = CreateLanSearchRespJson();
+    IotcJson *respJson = CreateLanSearchRespJson();
     if (respJson == NULL) {
         return;
     }
@@ -208,7 +208,7 @@ void LanSearchCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
     (void)memset_s(&respMsg, sizeof(LanSearchSessMsg), 0, sizeof(LanSearchSessMsg));
     UTILS_BIT_SET(respMsg.bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN);
     LanSearchSendJsonResp(endpoint, req, addr, respJson, &respMsg);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
 }
 
 void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
@@ -243,7 +243,7 @@ void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     if (ret != IOTC_OK || respMsg == NULL || respLen == 0) {
         IOTC_LOGW("speke process packet error %d/%u", ret, respLen);
         if (respMsg != NULL) {
-            AdapterFree(respMsg);
+            IotcFree(respMsg);
         }
         return;
     }
@@ -254,7 +254,7 @@ void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     UTILS_BIT_SET(sendMsg.bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN);
     sendMsg.peer = sessMsg->peer;
     LanSearchSendDataResp(endpoint, req, addr, &respPayload, &sendMsg);
-    AdapterFree(respMsg);
+    IotcFree(respMsg);
 }
 
 void LanSearchCoapCloudSetupHandler(CoapEndpoint *endpoint, const CoapPacket *req,
@@ -264,28 +264,28 @@ void LanSearchCoapCloudSetupHandler(CoapEndpoint *endpoint, const CoapPacket *re
         req->payload.data != NULL && req->payload.len != 0, "invalid param");
     LanSearchSessMsg *sessMsg = (LanSearchSessMsg *)req;
 
-    AdapterJson *reqJson = AdapterJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    IotcJson *reqJson = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (reqJson == NULL) {
         IOTC_LOGW("cloud setup json parse error");
         return;
     }
 
-    AdapterJson *dataJson = AdapterJsonGetObj(reqJson, STR_JSON_DATA);
+    IotcJson *dataJson = IotcJsonGetObj(reqJson, STR_JSON_DATA);
     if (dataJson == NULL) {
         IOTC_LOGW("cloud setup get data error");
-        AdapterJsonDelete(dataJson);
+        IotcJsonDelete(dataJson);
         return;
     }
 
     /* 当前端云未就绪，配网信息中只包含认证信息 */
     int32_t ret = DevSvcProxyRecvAuthInfo(dataJson);
-    AdapterJsonDelete(reqJson);
+    IotcJsonDelete(reqJson);
     reqJson = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGW("bind info process error %d", ret);
     }
 
-    AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
+    IotcJson *respJson = UtilsJsonCreateErrcode(ret);
     if (respJson == NULL) {
         IOTC_LOGW("create cloud setup resp error %d", ret);
         return;
@@ -295,5 +295,5 @@ void LanSearchCoapCloudSetupHandler(CoapEndpoint *endpoint, const CoapPacket *re
     (void)memset_s(&sendMsg, sizeof(LanSearchSessMsg), 0, sizeof(LanSearchSessMsg));
     sendMsg.peer = sessMsg->peer;
     LanSearchSendJsonResp(endpoint, req, addr, respJson, &sendMsg);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
 }

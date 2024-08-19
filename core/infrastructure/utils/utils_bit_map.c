@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "utils_bit_map.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "comm_def.h"
 #include "iotc_log.h"
 #include "securec.h"
@@ -34,7 +34,7 @@ BitMap *UtilsCreateBitMap(uint32_t size)
 
     uint32_t num = size / UINT8_BIT_NUM + 1;
     uint32_t memSize = sizeof(BitMap) + sizeof(uint8_t) * num;
-    BitMap *map = (BitMap *)AdapterMalloc(memSize);
+    BitMap *map = (BitMap *)IotcMalloc(memSize);
     if (map == NULL) {
         IOTC_LOGW("malloc error %u", memSize);
         return NULL;
@@ -49,7 +49,7 @@ void UtilsFreeBitMap(BitMap *map)
     if (map == NULL) {
         return;
     }
-    AdapterFree(map);
+    IotcFree(map);
 }
 
 void UtilsBitMapSet(BitMap *map, uint32_t bit)

@@ -16,7 +16,7 @@
 #include "utils_bit_map.h"
 #include "utils_common.h"
 #include "utils_assert.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 
 static bool SeqNumCheckWithoutOverflow(uint32_t curSeq, uint32_t recvSeq,
     uint32_t window, bool *isSmall, uint32_t *delta)
@@ -111,9 +111,9 @@ uint32_t CoapSeqToNum(const uint8_t *data, uint32_t len)
     if (len == sizeof(uint8_t)) {
         return data[0];
     } else if (len == sizeof(uint16_t)) {
-        return AdapterNtohs(*(uint16_t *)data);
+        return IotcNtohs(*(uint16_t *)data);
     } else if (len == sizeof(uint32_t)) {
-        return AdapterNtohl(*(uint32_t *)data);
+        return IotcNtohl(*(uint32_t *)data);
     } else {
         /* CI NOTE: 0字节左移16位得到高位，1字节左移8位得到中间位，2字节为低位 */
         return ((uint32_t)data[0] << 16) | ((uint32_t)data[1] << 8) | ((uint32_t)data[2]);

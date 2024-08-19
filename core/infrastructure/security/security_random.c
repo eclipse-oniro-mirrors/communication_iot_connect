@@ -15,7 +15,7 @@
 #include "security_random.h"
 #include <stddef.h>
 #include "comm_def.h"
-#include "adapter_drbg.h"
+#include "iotc_drbg.h"
 #include "iotc_log.h"
 #include "utils_mutex_local.h"
 #include "utils_mutex_global.h"
@@ -23,7 +23,7 @@
 #include "securec.h"
 #include "iotc_errcode.h"
 
-static AdapterDrbgContext *g_randomCtx = NULL;
+static IotcDrbgContext *g_randomCtx = NULL;
 static UtilsMutexLocal g_mutexLocal;
 static SecurityTrng g_trngCallback = NULL;
 static const char *RANDOM_CUSTOM_STR = "iotc_random";
@@ -43,14 +43,14 @@ int32_t SecurityRandomInit(void)
     }
     (void)memset_s(&g_mutexLocal, sizeof(UtilsMutexLocal), 0, sizeof(UtilsMutexLocal));
     (void)UtilsGlobalMutexLock();
-    AdapterTrngCallback trng = g_trngCallback;
+    IotcTrngCallback trng = g_trngCallback;
     UtilsGlobalMutexUnlock();
     if (trng != NULL) {
         IOTC_LOGI("use trng for random seed");
     } else {
         IOTC_LOGI("trng not use");
     }
-    g_randomCtx = AdapterDrbgInit(RANDOM_CUSTOM_STR, trng);
+    g_randomCtx = IotcDrbgInit(RANDOM_CUSTOM_STR, trng);
     if (g_randomCtx == NULL) {
         IOTC_LOGW("drbg init error");
         return IOTC_ADAPTER_CRYPTO_ERR_DRBG_INIT;
@@ -69,7 +69,7 @@ int32_t SecurityRandomInit(void)
 void SecurityRandomDeinit(void)
 {
     if (g_randomCtx != NULL) {
-        AdapterDrbgDeinit(g_randomCtx);
+        IotcDrbgDeinit(g_randomCtx);
         g_randomCtx = NULL;
     }
     UtilsDestroyMutexLocal(&g_mutexLocal);
@@ -92,7 +92,7 @@ int32_t SecurityRandom(uint8_t *buf, uint32_t bufLen)
         return IOTC_ERR_TIMEOUT;
     }
 
-    int32_t ret = AdapterDrbgRandom(g_randomCtx, buf, bufLen);
+    int32_t ret = IotcDrbgRandom(g_randomCtx, buf, bufLen);
     if (ret != IOTC_OK) {
         UtilsMutexLocalUnlock(&g_mutexLocal);
         return ret;

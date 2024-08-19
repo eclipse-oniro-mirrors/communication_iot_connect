@@ -18,7 +18,7 @@
 #include "securec.h"
 #include "sched_timer.h"
 #include "utils_common.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "dfx_anonymize.h"
 #include "iotc_svc_dev.h"
 #include "utils_bit_map.h"
@@ -33,7 +33,7 @@ static void LanSearchPeerInfoFree(LanSearchPeer *peer)
         SpekeFreeSession(peer->sessInfo.speke);
         peer->sessInfo.speke = NULL;
     }
-    AdapterFree(peer);
+    IotcFree(peer);
 }
 
 static void HashMapPeerFreeFunc(void *value)
@@ -69,7 +69,7 @@ static void PeerExpireCheckTimer(int32_t id, void *userData)
     CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
     LanSearchContext *ctx = (LanSearchContext *)userData;
 
-    uint32_t curTime = AdapterGetSysTimeMs();
+    uint32_t curTime = IotcGetSysTimeMs();
     (void)UtilsHashMapIterate(ctx->peerManager.peerMap, PeerMapExpireCheckTraversal, ctx, curTime);
     ctx->peerManager.curPeerNum = UtilsHashMapLength(ctx->peerManager.peerMap);
 }
@@ -177,13 +177,13 @@ static int32_t LanSearchSpekeNotifySpekeFinishedCallback(SpekeSession *session, 
 
 static LanSearchPeer *LanSearchPeerNew(uint32_t addr)
 {
-    LanSearchPeer *newPeer = (LanSearchPeer *)AdapterMalloc(sizeof(LanSearchPeer));
+    LanSearchPeer *newPeer = (LanSearchPeer *)IotcMalloc(sizeof(LanSearchPeer));
     if (newPeer == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
     }
     (void)memset_s(newPeer, sizeof(LanSearchPeer), 0, sizeof(LanSearchPeer));
-    newPeer->timeInfo.createTime = AdapterGetSysTimeMs();
+    newPeer->timeInfo.createTime = IotcGetSysTimeMs();
     newPeer->timeInfo.expireTime = LAN_SEARCH_NEW_PEER_SPEKE_TIMEOUT;
     newPeer->peerInfo.addr = addr;
     static const SpekeCallback SPEKE_CALL_BACK = {
@@ -193,7 +193,7 @@ static LanSearchPeer *LanSearchPeerNew(uint32_t addr)
     newPeer->sessInfo.speke = SpekeInitSession(SPEKE_TYPE_SERVER, &SPEKE_CALL_BACK, newPeer);
     if (newPeer->sessInfo.speke == NULL) {
         IOTC_LOGW("create speke error");
-        AdapterFree(newPeer);
+        IotcFree(newPeer);
         return NULL;
     }
     return newPeer;

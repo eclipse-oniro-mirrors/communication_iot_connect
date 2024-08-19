@@ -14,7 +14,7 @@
  */
 #include <string.h>
 #include "ble_svc_net_cfg_ver.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "utils_json.h"
@@ -30,14 +30,14 @@ int32_t GetBleSvcNetCfgVer(const BtCmdParam *param, uint8_t **out, uint32_t *out
 
     *out = NULL;
     *outLen = 0;
-    AdapterJson *root = AdapterCreateJson();
+    IotcJson *root = IotcJsonCreate();
     if (root == NULL) {
         IOTC_LOGE("create err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
     int32_t ret = IOTC_ERROR;
     do {
-        if (AdapterJsonAddNum2Obj(root, STR_JSON_VER, BLE_CFG_NET_VER) != IOTC_OK) {
+        if (IotcJsonAddNum2Obj(root, STR_JSON_VER, BLE_CFG_NET_VER) != IOTC_OK) {
             IOTC_LOGE("add ver err");
             ret = IOTC_ADAPTER_JSON_ERR_ADD;
             break;
@@ -52,7 +52,7 @@ int32_t GetBleSvcNetCfgVer(const BtCmdParam *param, uint8_t **out, uint32_t *out
         *outLen = strlen(outStr);
         ret = IOTC_OK;
     } while (false);
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
 
     return ret;
 }

@@ -25,14 +25,14 @@
 #include "utils_common.h"
 #include "wifi_sched_fd_watch.h"
 #include "securec.h"
-#include "adapter_network.h"
+#include "iotc_network.h"
 #include "svc_softap_coap.h"
 #include "svc_softap_retrans.h"
 #include "sched_event_loop.h"
 #include "sched_timer.h"
 #include "iotc_conf.h"
 #include "security_random.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "service_proxy.h"
 #include "iotc_svc.h"
 #include "iotc_svc_dev.h"
@@ -77,7 +77,7 @@ static int32_t SoftapGetPinCode(SpekeSession *sess, void *user, uint8_t *pinCode
 static void DestroyPeerSession(SoftapPeerSess *peerSess)
 {
     if (UTILS_IS_BIT_SET(peerSess->bitMap, SOFTAP_PEER_SESS_BIT_MAP_LINK_ACTIVE)) {
-        (void)AdapterSoftapDisassociateSta(peerSess->mac, sizeof(peerSess->mac));
+        (void)IotcSoftapDisassociateSta(peerSess->mac, sizeof(peerSess->mac));
     }
     if (peerSess->timer >= 0) {
         SchedTimerRemove(peerSess->timer);
@@ -148,8 +148,8 @@ static int32_t SoftapNotifySpekeFinished(SpekeSession *sess, void *user, int32_t
 static int32_t CreatePeerSession(SoftapPeerSess *peerSess, const SocketAddr *addrInfo)
 {
     DestroyPeerSession(peerSess);
-    AdapterStationList *staList = NULL;
-    int32_t ret = AdapterGetSoftapStationInfo(&staList);
+    IotcStationList *staList = NULL;
+    int32_t ret = IotcGetSoftapStationInfo(&staList);
     if (ret != IOTC_OK || staList == NULL || staList->num == 0) {
         IOTC_LOGW("get station list error %d", ret);
         return IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_STATION;
@@ -157,7 +157,7 @@ static int32_t CreatePeerSession(SoftapPeerSess *peerSess, const SocketAddr *add
 
     ret = IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_STATION;
     for (uint32_t i = 0; i < staList->num; ++i) {
-        AdapterStationInfo *staInfo = &staList->stationList[i];
+        IotcStationInfo *staInfo = &staList->stationList[i];
         if (staInfo->ip != addrInfo->addr) {
             continue;
         }
@@ -167,7 +167,7 @@ static int32_t CreatePeerSession(SoftapPeerSess *peerSess, const SocketAddr *add
         }
         break;
     }
-    AdapterFreeSoftapStationInfo(staList);
+    IotcFreeSoftapStationInfo(staList);
     staList = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGW("get sta mac error %d", ret);
@@ -241,8 +241,8 @@ SoftapPeerSess *SoftapGetPeerSessCreateIfNotExist(const SocketAddr *addrInfo, So
 
 static int32_t SoftapCoapStackCreate(SoftapSess *sess)
 {
-    char local[ADAPTER_IP_STR_MAX_LEN + 1] = {0};
-    int32_t ret = AdapterGetSoftApIp(local, ADAPTER_IP_STR_MAX_LEN);
+    char local[IOTC_IP_STR_MAX_LEN + 1] = {0};
+    int32_t ret = IotcGetSoftApIp(local, IOTC_IP_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get softap ip error %d", ret);
         return ret;
@@ -369,8 +369,8 @@ static void StationCheckTimerCallback(int32_t id, void *userData)
         return;
     }
 
-    AdapterStationList *staList = NULL;
-    int32_t ret = AdapterGetSoftapStationInfo(&staList);
+    IotcStationList *staList = NULL;
+    int32_t ret = IotcGetSoftapStationInfo(&staList);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get station list error %d", ret);
         return;
@@ -384,7 +384,7 @@ static void StationCheckTimerCallback(int32_t id, void *userData)
 
         bool isPeerExits = false;
         for (uint32_t j = 0; j < staList->num; ++j) {
-            AdapterStationInfo *staInfo = &staList->stationList[j];
+            IotcStationInfo *staInfo = &staList->stationList[j];
             if (peerSess->addrInfo.addr != staInfo->ip ||
                 memcmp(peerSess->mac, staInfo->mac, sizeof(peerSess->mac)) != 0) {
                 continue;
@@ -396,7 +396,7 @@ static void StationCheckTimerCallback(int32_t id, void *userData)
             DestroyPeerSession(peerSess);
         }
     }
-    AdapterFreeSoftapStationInfo(staList);
+    IotcFreeSoftapStationInfo(staList);
     return;
 }
 

@@ -22,7 +22,7 @@
 #include "utils_common.h"
 #include "securec.h"
 
-int32_t DeviceServiceRecvLoginInfo(const AdapterJson *jsonObj)
+int32_t DeviceServiceRecvLoginInfo(const IotcJson *jsonObj)
 {
     DevLoginInfo info = {0};
     char pskHex[HEXIFY_LEN(sizeof(info.psk)) + 1] = {0};

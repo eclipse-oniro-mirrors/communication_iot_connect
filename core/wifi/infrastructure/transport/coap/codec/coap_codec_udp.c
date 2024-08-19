@@ -15,7 +15,7 @@
 #include "coap_codec_udp.h"
 #include "comm_def.h"
 #include "utils_assert.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "securec.h"
 #include "coap_codec_comm.h"
 #include "iotc_errcode.h"
@@ -45,7 +45,7 @@ static int32_t CoapUdpParseHeader(CoapPacket *pkt, const CoapData *raw, uint32_t
     (*pos)++;
     pkt->header.code = raw->data[*pos];
     (*pos)++;
-    pkt->header.msgId = AdapterNtohs(*(uint16_t *)&raw->data[*pos]);
+    pkt->header.msgId = IotcNtohs(*(uint16_t *)&raw->data[*pos]);
     /* 2 byte for msgid */
     (*pos) += 2;
     return IOTC_OK;

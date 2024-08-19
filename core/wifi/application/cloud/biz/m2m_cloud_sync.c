@@ -31,7 +31,7 @@
 #include "event_bus_pub.h"
 #include "iotc_event.h"
 
-static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj, const M2mCloudContext *ctx)
+static int32_t BuildDevInfoSyncSvcInfo(IotcJson *rootObj, const M2mCloudContext *ctx)
 {
     uint32_t num = 0;
     const IotcServiceInfo *svcInfo = ModelGetSvcInfo(&num);
@@ -39,20 +39,20 @@ static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj, const M2mCloudConte
         IOTC_LOGW("get svc invalid %u", num);
         return IOTC_CORE_PROF_MDL_ERR_SVC_NUM_INVALID;
     }
-    AdapterJson *svcInfoArr = MdlBuildSvcJsonArray(svcInfo, num);
+    IotcJson *svcInfoArr = MdlBuildSvcJsonArray(svcInfo, num);
     if (svcInfoArr == NULL) {
         IOTC_LOGW("create json error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
-    int32_t ret = AdapterJsonAddItem2Obj(rootObj, STR_JSON_SERVICES, svcInfoArr);
+    int32_t ret = IotcJsonAddItem2Obj(rootObj, STR_JSON_SERVICES, svcInfoArr);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add svc info to root err %d", ret);
-        AdapterJsonDelete(svcInfoArr);
+        IotcJsonDelete(svcInfoArr);
         return ret;
     }
 
-    ret = AdapterJsonAddStr2Obj(rootObj, STR_JSON_DEVID, ctx->authInfo.loginInfo.devId);
+    ret = IotcJsonAddStr2Obj(rootObj, STR_JSON_DEVID, ctx->authInfo.loginInfo.devId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add svc info to root err %d", ret);
         return ret;
@@ -61,16 +61,16 @@ static int32_t BuildDevInfoSyncSvcInfo(AdapterJson *rootObj, const M2mCloudConte
     return IOTC_OK;
 }
 
-AdapterJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx)
+IotcJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
-    AdapterJson *devInfoArr = AdapterJsonCreateArray();
+    IotcJson *devInfoArr = IotcJsonCreateArray();
     CHECK_RETURN_LOGW(devInfoArr != NULL, NULL, "create json error");
 
-    AdapterJson *devinfoObj = NULL;
+    IotcJson *devinfoObj = NULL;
     int32_t ret;
     do {
-        devinfoObj = AdapterCreateJson();
+        devinfoObj = IotcJsonCreate();
         if (devinfoObj == NULL) {
             IOTC_LOGW("create json error");
             ret = IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -78,28 +78,28 @@ AdapterJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx)
         }
         ret = M2mCloudAddDevInfoToJson(devinfoObj);
         if (ret != IOTC_OK) {
-            AdapterJsonDelete(devinfoObj);
+            IotcJsonDelete(devinfoObj);
             IOTC_LOGW("add dev info error %d", ret);
             break;
         }
 
         ret = BuildDevInfoSyncSvcInfo(devinfoObj, (const M2mCloudContext *)ctx);
         if (ret != IOTC_OK) {
-            AdapterJsonDelete(devinfoObj);
+            IotcJsonDelete(devinfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }
 
-        ret = AdapterJsonAddItem2Array(devInfoArr, devinfoObj);
+        ret = IotcJsonAddItem2Array(devInfoArr, devinfoObj);
         if (ret != IOTC_OK) {
-            AdapterJsonDelete(devinfoObj);
+            IotcJsonDelete(devinfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }
         return devInfoArr;
     } while (0);
 
-    AdapterJsonDelete(devInfoArr);
+    IotcJsonDelete(devInfoArr);
     return NULL;
 }
 
@@ -108,7 +108,7 @@ int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket 
     CHECK_RETURN_LOGW(ctx != NULL && resp != NULL && errcode != NULL && resp->payload.data != NULL &&
         resp->payload.len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    AdapterJson *respJson = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
+    IotcJson *respJson = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
     if (respJson == NULL) {
         IOTC_LOGW("create json error");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -117,7 +117,7 @@ int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket 
     int32_t ret = UtilsJsonGetNum(respJson, STR_ERRCODE, errcode);
     if (ret != IOTC_OK) {
         IOTC_LOGE("json get errcode error %d", ret);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return ret;
     }
 

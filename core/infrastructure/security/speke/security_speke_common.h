@@ -16,7 +16,7 @@
 #define SECURITY_SPEKE_COMMON_H
 
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "security_speke.h"
 
 #ifdef __cplusplus
@@ -27,7 +27,7 @@ typedef struct {
     SpekeSession *session;
     int32_t msgType;
     const char *sessionId;
-    AdapterJson *secDataPayload;
+    IotcJson *secDataPayload;
 } SpekeProcessParam;
 
 /**
@@ -36,7 +36,7 @@ typedef struct {
  * @param secDataPayload [OUT] 目标 JSON，待发送报文中的 securityData 中的 payload
  * @return 0成功，非0失败
  */
-int32_t SpekeCommonAddVerInfoToJson(AdapterJson *secDataPayload);
+int32_t SpekeCommonAddVerInfoToJson(IotcJson *secDataPayload);
 
 /**
  * @brief 客户端或服务端校验对端 JSON 中的版本号信息
@@ -44,7 +44,7 @@ int32_t SpekeCommonAddVerInfoToJson(AdapterJson *secDataPayload);
  * @param secDataPayload [IN] 目标 JSON，对端报文中的 securityData 中的 payload
  * @return 0成功，非0失败
  */
-int32_t SpekeCommonVerifyVersion(const AdapterJson *secDataPayload);
+int32_t SpekeCommonVerifyVersion(const IotcJson *secDataPayload);
 
 /**
  * @brief 客户端或服务端用于生成发送给对端的消息
@@ -57,7 +57,7 @@ int32_t SpekeCommonVerifyVersion(const AdapterJson *secDataPayload);
  * @return 0成功，非0失败
  * @attention 调用方需要释放 msg
  */
-int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const AdapterJson *secDataPayload,
+int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const IotcJson *secDataPayload,
     uint8_t **msg, uint32_t *len);
 
 /**
@@ -69,7 +69,7 @@ int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const A
  * @param inputLen [IN] 输入长度
  * @return 0成功，非0失败
  */
-int32_t SpekeCommonAddDataToJson(AdapterJson *target, const char *name, const uint8_t *input, uint32_t inputLen);
+int32_t SpekeCommonAddDataToJson(IotcJson *target, const char *name, const uint8_t *input, uint32_t inputLen);
 
 /**
  * @brief 获取目标 JSON 中对应键中的字符串值，并转换为十六进制
@@ -81,7 +81,7 @@ int32_t SpekeCommonAddDataToJson(AdapterJson *target, const char *name, const ui
  * @return 0成功，非0失败
  * @attention 调用方需要释放 output
  */
-int32_t SpekeCommonParseDataFromJson(const AdapterJson *src, const char *name, uint8_t **output, uint32_t *outputLen);
+int32_t SpekeCommonParseDataFromJson(const IotcJson *src, const char *name, uint8_t **output, uint32_t *outputLen);
 
 #ifdef __cplusplus
 }

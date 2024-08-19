@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int32_t M2mCloudReportMessage(const AdapterJson *dataArray, M2mCloudContext *ctx);
+int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx);
 
 #ifdef __cplusplus
 }

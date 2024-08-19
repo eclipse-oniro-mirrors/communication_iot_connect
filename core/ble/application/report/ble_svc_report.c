@@ -28,29 +28,29 @@
 #include "iotc_errcode.h"
 #include "iotc_event.h"
 
-static int32_t BleReportCustomSecDataService(const AdapterJson *item)
+static int32_t BleReportCustomSecDataService(const IotcJson *item)
 {
-    AdapterJson *root = AdapterCreateJson();
+    IotcJson *root = IotcJsonCreate();
     CHECK_RETURN_LOGW(root != NULL, IOTC_ADAPTER_JSON_ERR_CREATE, "create json error");
 
-    AdapterJson *dupItem = AdapterDuplicateJson(item, true);
+    IotcJson *dupItem = IotcDuplicateJson(item, true);
     if (dupItem == NULL) {
         IOTC_LOGW("duplicate item err");
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
     }
 
-    int32_t ret = AdapterJsonAddItem2Obj(root, STR_JSON_VENDOR, dupItem);
+    int32_t ret = IotcJsonAddItem2Obj(root, STR_JSON_VENDOR, dupItem);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add item error %d", ret);
-        AdapterJsonDelete(root);
-        AdapterJsonDelete(dupItem);
+        IotcJsonDelete(root);
+        IotcJsonDelete(dupItem);
         return ret;
     }
 
     char *data = NULL;
     do {
-        ret = AdapterJsonAddNum2Obj(root, STR_JSON_SEQ, (int64_t)BleSessSendSeqGet());
+        ret = IotcJsonAddNum2Obj(root, STR_JSON_SEQ, (int64_t)BleSessSendSeqGet());
         if (ret != IOTC_OK) {
             IOTC_LOGW("add seq error %d", ret);
             break;
@@ -70,22 +70,22 @@ static int32_t BleReportCustomSecDataService(const AdapterJson *item)
         }
         BleSessSendSeqUpdate();
     } while (0);
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
     UTILS_FREE_2_NULL(data);
     return ret;
 }
 
-int32_t BleUplinkReportMethod(const AdapterJson *dataArray)
+int32_t BleUplinkReportMethod(const IotcJson *dataArray)
 {
     CHECK_RETURN_LOGE(dataArray != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     int32_t ret;
 #if IOTC_CONF_AILIFE_SUPPORT
     uint32_t size = 0;
-    ret = AdapterJsonGetArraySize(dataArray, &size);
+    ret = IotcJsonGetArraySize(dataArray, &size);
     CHECK_RETURN_LOGW(ret == IOTC_OK, ret, "get arr size err:%d", ret);
     for (uint32_t i = 0; i < size; i++) {
-        AdapterJson *item = AdapterJsonGetArrayItem(dataArray, i);
+        IotcJson *item = IotcJsonGetArrayItem(dataArray, i);
         if (item == NULL) {
             IOTC_LOGW("get svc[%u] err", i);
             continue;

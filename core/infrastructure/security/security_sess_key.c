@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 #include "security_sess_key.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
 #include "utils_bit_map.h"
-#include "adapter_kdf.h"
+#include "iotc_kdf.h"
 
 typedef enum {
     SESS_KEY_BIT_TRANS_KEY_CREATED = 0,
@@ -36,7 +36,7 @@ struct SessKeyContext {
 
 SessKeyContext *SecuritySessKeyInit(void)
 {
-    SessKeyContext *ctx = AdapterMalloc(sizeof(SessKeyContext));
+    SessKeyContext *ctx = IotcMalloc(sizeof(SessKeyContext));
     if (ctx == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -101,8 +101,8 @@ int32_t SecuritySessKeyGenTransKey(SessKeyContext *ctx, const uint8_t *pwd, uint
     }
     SessKeyParamUpdate(ctx);
 
-    AdapterPbkdf2HmacParam param = {
-        .md = ADAPTER_MD_SHA256,
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
         .password = pwd,
         .passwordLen = pwdLen,
         .salt = ctx->sn,
@@ -110,7 +110,7 @@ int32_t SecuritySessKeyGenTransKey(SessKeyContext *ctx, const uint8_t *pwd, uint
         /* 迭代次数为1依赖pwd的安全性 */
         .iterCount = 1,
     };
-    ret = AdapterPkcs5Pbkdf2Hmac(&param, transKey, SESS_TRANS_KEY_LEN);
+    ret = IotcPkcs5Pbkdf2Hmac(&param, transKey, SESS_TRANS_KEY_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("pkcs5pbkdf2hmac gen trans key error %d", ret);
         return ret;
@@ -145,8 +145,8 @@ int32_t SecuritySessKeyGenAuthKey(SessKeyContext *ctx, uint8_t authKey[SESS_AUTH
         return IOTC_CORE_COMM_SEC_ERR_SESS_KEY_NOT_READY;
     }
 
-    AdapterPbkdf2HmacParam param = {
-        .md = ADAPTER_MD_SHA256,
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
         .password = ctx->transKey,
         .passwordLen = SESS_TRANS_KEY_LEN,
         .salt = ctx->sn,
@@ -155,7 +155,7 @@ int32_t SecuritySessKeyGenAuthKey(SessKeyContext *ctx, uint8_t authKey[SESS_AUTH
         .iterCount = 1,
     };
 
-    ret = AdapterPkcs5Pbkdf2Hmac(&param, authKey, SESS_AUTH_KEY_LEN);
+    ret = IotcPkcs5Pbkdf2Hmac(&param, authKey, SESS_AUTH_KEY_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("pkcs5pbkdf2hmac gen auth key error %d", ret);
         return ret;
@@ -175,5 +175,5 @@ void SecuritySessDestroy(SessKeyContext *ctx)
     CHECK_V_RETURN(ctx != NULL);
 
     (void)memset_s(ctx, sizeof(SessKeyContext), 0, sizeof(SessKeyContext));
-    AdapterFree(ctx);
+    IotcFree(ctx);
 }

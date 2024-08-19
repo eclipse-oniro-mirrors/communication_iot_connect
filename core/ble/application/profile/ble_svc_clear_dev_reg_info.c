@@ -24,7 +24,7 @@
 
 static int32_t ClearRegInfo(char *in)
 {
-    AdapterJson *req = AdapterJsonParse((const char *)in);
+    IotcJson *req = IotcJsonParse((const char *)in);
     CHECK_RETURN_LOGE(req != NULL, IOTC_ADAPTER_JSON_ERR_PARSE, "parse json err");
 
     char reqDevId[DEVICE_ID_MAX_STR_LEN + 1];

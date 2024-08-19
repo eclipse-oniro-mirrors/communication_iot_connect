@@ -16,7 +16,7 @@
 #include "utils_list.h"
 #include "utils_assert.h"
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 
 #define COAP_ENDPOINT_EVENT_SOURCE_NAME "ENDPOINT"
 
@@ -44,7 +44,7 @@ static bool CoapEndpointSourceCheck(EventSource *self)
     CHECK_RETURN(self != NULL, false);
     CoapEndpointEventSource *coapSource = (CoapEndpointEventSource *)self;
     CoapEndpoint *endpoint = coapSource->endpoint;
-    uint32_t now = AdapterGetSysTimeMs();
+    uint32_t now = IotcGetSysTimeMs();
     if (CoapEndpointRetransCheck(endpoint, now)) {
         return true;
     }

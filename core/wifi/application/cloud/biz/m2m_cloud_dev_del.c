@@ -18,7 +18,7 @@
 #include "utils_assert.h"
 #include "utils_json.h"
 #include "event_bus.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "coap_codec_utils.h"
 #include "coap_endpoint_server.h"
 #include "iotc_event.h"
@@ -26,19 +26,19 @@
 
 static bool CheckIsValidDevId(const CoapPacket *req)
 {
-    AdapterJson *dataObj = AdapterJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (dataObj == NULL) {
         IOTC_LOGW("invalid data json");
         return false;
     }
 
-    const char *devId = AdapterJsonGetStr(AdapterJsonGetObj(dataObj, STR_JSON_DEVID));
+    const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
     if (devId == NULL || strcmp(devId, GetM2mCloudCtx()->authInfo.loginInfo.devId) != 0) {
-        AdapterJsonDelete(dataObj);
+        IotcJsonDelete(dataObj);
         return false;
     }
     IOTC_LOGI("Check devId ok");
-    AdapterJsonDelete(dataObj);
+    IotcJsonDelete(dataObj);
     return true;
 }
 
@@ -52,7 +52,7 @@ static void M2mCloudCoapDeviveDelHandler(CoapEndpoint *endpoint, const CoapPacke
         return;
     }
 
-    AdapterJson *respJson = UtilsJsonCreateErrcode(0);
+    IotcJson *respJson = UtilsJsonCreateErrcode(0);
     if (respJson == NULL) {
         IOTC_LOGW("create resp json error");
         return;
@@ -71,7 +71,7 @@ static void M2mCloudCoapDeviveDelHandler(CoapEndpoint *endpoint, const CoapPacke
     };
     CoapPacket packet;
     int32_t ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     respJson = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGW("send e2e ctrl resp msg error %d", ret);

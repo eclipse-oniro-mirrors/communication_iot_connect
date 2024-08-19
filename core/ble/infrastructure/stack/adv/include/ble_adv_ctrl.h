@@ -16,14 +16,14 @@
 #define BLE_ADV_CTRL_H
 
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "iotc_ble_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef int32_t (*BleGetAdvInfoCallback)(AdapterBleAdvParam *advPara, AdapterBleAdvData *advData);
+typedef int32_t (*BleGetAdvInfoCallback)(IotcAdptBleAdvParam *advPara, IotcAdptBleAdvData *advData);
 int32_t BleRegAdvAdvInfoCallback(BleGetAdvInfoCallback cb);
 int32_t BleAdvCtrlStartSpecific(const IotcBleAdvParam *advPara, const IotcBleAdvData *advData, uint32_t ms);
 int32_t BleAdvCtrlStart(uint32_t ms);

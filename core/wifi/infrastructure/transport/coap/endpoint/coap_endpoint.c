@@ -14,7 +14,7 @@
  */
 #include "coap_endpoint_priv.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "coap_codec_utils.h"
 #include "coap_codec_udp.h"
@@ -66,7 +66,7 @@ CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
 {
     CHECK_RETURN_LOGW(buf != NULL && encoder != NULL && sess != NULL, NULL, "param invalid");
 
-    CoapEndpoint *endpoint = (CoapEndpoint *)AdapterMalloc(sizeof(CoapEndpoint));
+    CoapEndpoint *endpoint = (CoapEndpoint *)IotcMalloc(sizeof(CoapEndpoint));
     if (endpoint == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -124,7 +124,7 @@ void CoapEndpointFree(CoapEndpoint *endpoint)
     if (endpoint->mutex != NULL) {
         UtilsDestroyExMutex(&endpoint->mutex);
     }
-    AdapterFree(endpoint);
+    IotcFree(endpoint);
 }
 
 static int32_t CoapEndpointRecvPacket(CoapEndpoint *endpoint, const CoapPacket *pkt, const SocketAddr *addr)

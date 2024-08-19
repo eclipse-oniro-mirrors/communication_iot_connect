@@ -16,7 +16,7 @@
 #include "char_state_mdl.h"
 #include "utils_assert.h"
 #include "sched_executor.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "iotc_errcode.h"
 #include "dev_mngr_ctx.h"
@@ -83,7 +83,7 @@ static int32_t UpdateCharStateByGetChar(IotcCharState *states, uint32_t size)
     return ret;
 }
 
-int32_t DeviceControlGetCharStates(const AdapterJson *inArray, AdapterJson **outArray)
+int32_t DeviceControlGetCharStates(const IotcJson *inArray, IotcJson **outArray)
 {
     CHECK_RETURN_LOGE(inArray != NULL && outArray != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     IotcCharState *states = NULL;
@@ -110,7 +110,7 @@ int32_t DeviceControlGetCharStates(const AdapterJson *inArray, AdapterJson **out
 
     MdlCharStatesFree(&states, statesNum);
     if (ret != IOTC_OK && *outArray != NULL) {
-        AdapterJsonDelete(*outArray);
+        IotcJsonDelete(*outArray);
         *outArray = NULL;
     }
     return ret;
@@ -120,7 +120,7 @@ static void ReportChangeServiceCallback(void *userData)
 {
     CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
 
-    AdapterJson *dataArray = (AdapterJson *)userData;
+    IotcJson *dataArray = (IotcJson *)userData;
     DeviceContext *ctx = GetDeviceManagerContext();
     ServiceRequestInfo req = {
         .instanceId = ctx->instanceId,
@@ -128,13 +128,13 @@ static void ReportChangeServiceCallback(void *userData)
         .req = dataArray,
     };
     int32_t ret = ServiceProxySendMessage(&req, NULL, NULL);
-    AdapterJsonDelete(dataArray);
+    IotcJsonDelete(dataArray);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send report msg error %d", ret);
     }
 }
 
-int32_t DeviceControlPutCharStates(const AdapterJson *inArray, AdapterJson **outArray)
+int32_t DeviceControlPutCharStates(const IotcJson *inArray, IotcJson **outArray)
 {
     CHECK_RETURN_LOGE(inArray != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     IotcCharState *states = NULL;
@@ -158,7 +158,7 @@ int32_t DeviceControlPutCharStates(const AdapterJson *inArray, AdapterJson **out
             break;
         }
 
-        AdapterJson *dataArray = NULL;
+        IotcJson *dataArray = NULL;
         ret = MdlCharStatesToJson(states, statesNum, &dataArray);
         if (ret != IOTC_OK) {
             IOTC_LOGW("build char json error %d", ret);
@@ -166,12 +166,12 @@ int32_t DeviceControlPutCharStates(const AdapterJson *inArray, AdapterJson **out
         }
 
         if (outArray != NULL) {
-            *outArray = AdapterDuplicateJson(dataArray, true);
+            *outArray = IotcDuplicateJson(dataArray, true);
         }
 
         ret = SchedAsyncExecutor(ReportChangeServiceCallback, dataArray);
         if (ret != IOTC_OK) {
-            AdapterJsonDelete(dataArray);
+            IotcJsonDelete(dataArray);
             IOTC_LOGW("add executor error %d", ret);
             break;
         }
@@ -185,7 +185,7 @@ int32_t DeviceControlPutCharStates(const AdapterJson *inArray, AdapterJson **out
 
     MdlCharStatesFree(&states, statesNum);
     if (ret != IOTC_OK && outArray != NULL && *outArray != NULL) {
-        AdapterJsonDelete(*outArray);
+        IotcJsonDelete(*outArray);
         *outArray = NULL;
     }
     return ret;

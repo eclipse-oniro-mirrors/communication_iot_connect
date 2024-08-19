@@ -16,7 +16,7 @@
 #define BLE_GATT_MGT_H
 
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "iotc_ble_def.h"
 
 #ifdef __cplusplus
@@ -30,14 +30,14 @@ extern "C" {
 typedef struct {
     uint32_t connId;
     uint32_t serverId;
-    uint8_t peerAddr[ADAPTER_BLE_ADDR_LEN];
+    uint8_t peerAddr[IOTC_ADPT_BLE_ADDR_LEN];
 } BlePeerDevInfo;
 
 typedef struct {
     BlePeerDevInfo *peerDevInfo;
     uint8_t connNum;
     uint8_t svcNum;
-    AdapterBleGattService *svc;
+    IotcAdptBleGattService *svc;
     uint8_t startedSvcNum;
 } BleGattMgtApp;
 
@@ -55,7 +55,7 @@ BleGattMgtApp *GetBleGattMgtApp(void);
 bool BleIsPair(void);
 void BleSetPair(bool isBlePair);
 int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
-void PrintBleGattServiceList(AdapterBleGattService *svc, uint8_t num);
+void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint8_t num);
 int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 int32_t BleScheduleEventInit(void);

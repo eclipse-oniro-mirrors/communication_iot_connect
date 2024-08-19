@@ -20,7 +20,7 @@
 #include "trans_buffer.h"
 #include "security_speke.h"
 #include "iotc_conf.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "service_manager.h"
 #include "iotc_svc_softap.h"
 #include "coap_net_stack.h"
@@ -48,7 +48,7 @@ typedef enum {
 
 typedef struct {
     SocketAddr addrInfo;
-    uint8_t mac[ADAPTER_MAC_ADDRESS_LEN];
+    uint8_t mac[IOTC_MAC_ADDRESS_LEN];
     uint8_t bitMap;
     uint8_t sendBitMap;
     uint8_t recvBitMap;

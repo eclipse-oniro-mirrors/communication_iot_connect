@@ -17,7 +17,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_svc_dev.h"
 
 #ifdef __cplusplus
@@ -26,10 +26,10 @@ extern "C" {
 
 int32_t DeviceControlReportAll(DevReportType type);
 
-int32_t DeviceControlGetCharStates(const AdapterJson *inArray, AdapterJson **outArray);
+int32_t DeviceControlGetCharStates(const IotcJson *inArray, IotcJson **outArray);
 
 /* outArray为空则不会返回属性修改结果，无论是否为空，都会一次触发异步上报 */
-int32_t DeviceControlPutCharStates(const AdapterJson *inArray, AdapterJson **outArray);
+int32_t DeviceControlPutCharStates(const IotcJson *inArray, IotcJson **outArray);
 
 #ifdef __cplusplus
 }

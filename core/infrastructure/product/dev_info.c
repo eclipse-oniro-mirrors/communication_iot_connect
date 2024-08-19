@@ -16,11 +16,11 @@
 #include "securec.h"
 #include "iotc_log.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 #include "security_key.h"
 #include "utils_assert.h"
-#include "adapter_md.h"
+#include "iotc_md.h"
 
 #define DEFAULT_SUB_PRO_ID "00"
 #define NON_NULL_EMPTY_STR(_str) (((_str) != NULL) ? (_str) : ('\0'))
@@ -159,8 +159,8 @@ int32_t ModelGetUdid(uint8_t *buf, uint32_t len)
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
-    uint8_t sha256Buf[ADAPTER_MD_SHA256_BYTE_LEN] = {0};
-    ret = AdapterMdCalc(ADAPTER_MD_SHA256, (uint8_t *)strBuf, strlen(strBuf), sha256Buf, sizeof(sha256Buf));
+    uint8_t sha256Buf[IOTC_MD_SHA256_BYTE_LEN] = {0};
+    ret = IotcMdCalc(IOTC_MD_SHA256, (uint8_t *)strBuf, strlen(strBuf), sha256Buf, sizeof(sha256Buf));
     if (ret != IOTC_OK) {
         IOTC_LOGW("calc sha256 error %d", ret);
         return ret;

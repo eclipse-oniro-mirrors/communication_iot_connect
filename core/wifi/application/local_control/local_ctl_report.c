@@ -21,16 +21,16 @@
 #include "coap_codec_utils.h"
 #include "dfx_anonymize.h"
 
-static int32_t ReportToTargetClient(AdapterJson *json, LocalControlContext *ctx, LocalControlClient *cli)
+static int32_t ReportToTargetClient(IotcJson *json, LocalControlContext *ctx, LocalControlClient *cli)
 {
     const CoapOption options[] = {
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_E2E_DATA_CHANGE, strlen(STR_E2E_DATA_CHANGE)}},
         {COAP_OPTION_TYPE_SESSION_ID, {(const uint8_t *)cli->sessInfo.sessId, LOCAL_CONTROL_SESS_ID_STR_LEN}},
     };
-    if (AdapterJsonHasObj(json, STR_JSON_SEQ_NUM)) {
-        AdapterDeleteItemFromJson(json, STR_JSON_SEQ_NUM);
+    if (IotcJsonHasObj(json, STR_JSON_SEQ_NUM)) {
+        IotcJsonDeleteItem(json, STR_JSON_SEQ_NUM);
     }
-    int32_t ret = AdapterJsonAddNum2Obj(json, STR_JSON_SEQ_NUM, cli->sessInfo.sendSeq);
+    int32_t ret = IotcJsonAddNum2Obj(json, STR_JSON_SEQ_NUM, cli->sessInfo.sendSeq);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add seqNum error %d", ret);
         return ret;
@@ -74,7 +74,7 @@ static HashMapTravCode ClientMapTraversalReport(const void *value, va_list argp)
     }
 
     LocalControlContext *ctx = va_arg(argp, LocalControlContext *);
-    AdapterJson *reportJson = va_arg(argp, AdapterJson *);
+    IotcJson *reportJson = va_arg(argp, IotcJson *);
     uint32_t *succNum = va_arg(argp, uint32_t *);
     uint32_t *failNum = va_arg(argp, uint32_t *);
     if (reportJson == NULL || succNum == NULL || ctx == NULL || failNum == NULL) {
@@ -91,25 +91,25 @@ static HashMapTravCode ClientMapTraversalReport(const void *value, va_list argp)
     return HASH_MAP_TRAVE_CONTINUE;
 }
 
-static int32_t CreateLocalCtlReportJson(const AdapterJson *dataArray, AdapterJson **root)
+static int32_t CreateLocalCtlReportJson(const IotcJson *dataArray, IotcJson **root)
 {
-    AdapterJson *reportJson = AdapterCreateJson();
+    IotcJson *reportJson = IotcJsonCreate();
     if (reportJson == NULL) {
         IOTC_LOGW("json create error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
-    AdapterJson *dataArrayClone = AdapterDuplicateJson(dataArray, true);
+    IotcJson *dataArrayClone = IotcDuplicateJson(dataArray, true);
     if (dataArrayClone == NULL) {
-        AdapterJsonDelete(reportJson);
+        IotcJsonDelete(reportJson);
         IOTC_LOGW("json clone error");
         return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
     }
 
-    int32_t ret = AdapterJsonAddItem2Obj(reportJson, STR_JSON_SERVICES, dataArrayClone);
+    int32_t ret = IotcJsonAddItem2Obj(reportJson, STR_JSON_SERVICES, dataArrayClone);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(reportJson);
-        AdapterJsonDelete(dataArrayClone);
+        IotcJsonDelete(reportJson);
+        IotcJsonDelete(dataArrayClone);
         IOTC_LOGW("json add item error %d", ret);
         return ret;
     }
@@ -118,7 +118,7 @@ static int32_t CreateLocalCtlReportJson(const AdapterJson *dataArray, AdapterJso
     return IOTC_OK;
 }
 
-int32_t LocalCtlReportToAllClient(const AdapterJson *dataArray, LocalControlContext *ctx)
+int32_t LocalCtlReportToAllClient(const IotcJson *dataArray, LocalControlContext *ctx)
 {
     CHECK_RETURN_LOGW(dataArray != NULL && ctx != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
@@ -127,7 +127,7 @@ int32_t LocalCtlReportToAllClient(const AdapterJson *dataArray, LocalControlCont
         return IOTC_OK;
     }
 
-    AdapterJson *reportJson = NULL;
+    IotcJson *reportJson = NULL;
     int32_t ret = CreateLocalCtlReportJson(dataArray, &reportJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("create report all json error %d", ret);
@@ -138,12 +138,12 @@ int32_t LocalCtlReportToAllClient(const AdapterJson *dataArray, LocalControlCont
     uint32_t failNum = 0;
     (void)UtilsHashMapIterate(ctx->clientManager.clientMap, ClientMapTraversalReport, ctx, reportJson,
         &succNum, &failNum);
-    AdapterJsonDelete(reportJson);
+    IotcJsonDelete(reportJson);
     IOTC_LOGI("send local report %u/%u/%u", succNum, failNum, ctx->clientManager.curClientNum);
     return IOTC_OK;
 }
 
-int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContext *ctx, LocalControlClient *cli)
+int32_t LocalCtlReportToTargetClient(const IotcJson *json, LocalControlContext *ctx, LocalControlClient *cli)
 {
     CHECK_RETURN_LOGW(json != NULL && ctx != NULL && cli != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
@@ -152,7 +152,7 @@ int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContex
         return IOTC_CORE_WIFI_LOCAL_CTL_ERR_INVALID_CLIENT;
     }
 
-    AdapterJson *reportJson = NULL;
+    IotcJson *reportJson = NULL;
     int32_t ret = CreateLocalCtlReportJson(json, &reportJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("create report target json error %d", ret);
@@ -160,7 +160,7 @@ int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContex
     }
 
     ret = ReportToTargetClient(reportJson, ctx, cli);
-    AdapterJsonDelete(reportJson);
+    IotcJsonDelete(reportJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("report to target error %d", ret);
         return ret;

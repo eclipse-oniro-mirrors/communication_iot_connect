@@ -16,7 +16,7 @@
  */
 #include "svc_conn_net_info.h"
 #include "utils_json.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "iotc_errcode.h"
 #include "comm_def.h"
 #include "utils_assert.h"
@@ -31,11 +31,11 @@
 
 #define DELAY_CONNECT_WIFI_INTERVAL 10
 
-int32_t ParseAndSaveNetCfgWifiInfo(const AdapterJson *jsonObj)
+int32_t ParseAndSaveNetCfgWifiInfo(const IotcJson *jsonObj)
 {
     CHECK_RETURN_LOGW(jsonObj != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    char ssid[ADAPTER_WIFI_SSID_MAX_LEN + 1] = {0};
-    char pwd[ADAPTER_WIFI_PWD_MAX_LEN + 1] = {0};
+    char ssid[IOTC_WIFI_SSID_MAX_LEN + 1] = {0};
+    char pwd[IOTC_WIFI_PWD_MAX_LEN + 1] = {0};
     int32_t ret = UtilsJsonGetString(jsonObj, STR_NETINFO_SSID, ssid, sizeof(ssid));
     if (ret != IOTC_OK) {
         IOTC_LOGE("get ssid error %d", ret);
@@ -49,7 +49,7 @@ int32_t ParseAndSaveNetCfgWifiInfo(const AdapterJson *jsonObj)
         return ret;
     }
 
-    ret = AdapterSetWifiInfo((const uint8_t *)ssid, strlen(ssid), (const uint8_t *)pwd, strlen(pwd));
+    ret = IotcSetWifiInfo((const uint8_t *)ssid, strlen(ssid), (const uint8_t *)pwd, strlen(pwd));
     (void)memset_s(ssid, sizeof(ssid), 0, sizeof(ssid));
     (void)memset_s(pwd, sizeof(pwd), 0, sizeof(pwd));
     if (ret != IOTC_OK) {
@@ -85,7 +85,7 @@ static void DelayConnetWifiCb(int32_t id, void *userData)
     IOTC_LOGN("delay connect Wifi timer cb finish");
 }
 
-int32_t SvcConnSetNetInfo(const AdapterJson *json)
+int32_t SvcConnSetNetInfo(const IotcJson *json)
 {
     CHECK_RETURN_LOGW(json != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
@@ -101,7 +101,7 @@ int32_t SvcConnSetNetInfo(const AdapterJson *json)
         /* 不退出仅告警 因为verify flag不影响wifi连接，且此处退出会有wifi数据残留 */
     }
 
-    if (AdapterGetWifiMode() != ADAPTER_WIFI_MODE_SOFTAP) {
+    if (IotcGetWifiMode() != IOTC_WIFI_MODE_SOFTAP) {
         /* 异步执行，避免阻塞状态码响应 */
         int32_t delayTimer = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_ONCE, DelayConnetWifiCb,
             DELAY_CONNECT_WIFI_INTERVAL, NULL);

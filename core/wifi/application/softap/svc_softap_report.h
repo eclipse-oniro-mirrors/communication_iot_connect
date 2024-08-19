@@ -16,15 +16,15 @@
 #define NETCFG_SOFTAP_REPORT_H
 
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t SoftapServiceReportToAllPeer(const AdapterJson *dataArray);
+int32_t SoftapServiceReportToAllPeer(const IotcJson *dataArray);
 
-int32_t SoftapServiceReportToTargetPeer(const AdapterJson *dataArray, uint32_t peerAddr);
+int32_t SoftapServiceReportToTargetPeer(const IotcJson *dataArray, uint32_t peerAddr);
 
 #ifdef __cplusplus
 }

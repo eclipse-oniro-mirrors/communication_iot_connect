@@ -18,7 +18,7 @@
 #include "linklayer_send.h"
 #include "linklayer_service.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 
@@ -115,7 +115,7 @@ static int32_t GetCompleteData(const uint8_t *reqBuff, uint8_t token, uint8_t en
     ret = LinkLayerDecryptData(mergedBuff, &mergedBuffLen, encryptType);
     if (ret != IOTC_OK) {
         LinkLayerRspExceptionData(reqBuff, LL_RET_ERR);
-        AdapterFree(mergedBuff);
+        IotcFree(mergedBuff);
         return ret;
     }
 
@@ -136,31 +136,31 @@ static int32_t SendRspData(const uint8_t *reqBuff, uint8_t encryptType,
     }
 
     uint32_t sendBuffLen = PKG_HEAD_LEN + encBuffLen;
-    uint8_t *sendBuff = (uint8_t *)AdapterCalloc(sendBuffLen, sizeof(uint8_t));
+    uint8_t *sendBuff = (uint8_t *)IotcCalloc(sendBuffLen, sizeof(uint8_t));
     if (sendBuff == NULL) {
         IOTC_LOGE("ll rsp data Calloc:%u err", sendBuffLen);
-        AdapterFree(encBuff);
+        IotcFree(encBuff);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
 
     ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, encBuff, encBuffLen);
     if (ret != EOK) {
-        AdapterFree(encBuff);
-        AdapterFree(sendBuff);
+        IotcFree(encBuff);
+        IotcFree(sendBuff);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    AdapterFree(encBuff);
+    IotcFree(encBuff);
 
     ret = memcpy_s(sendBuff, sendBuffLen, reqBuff, PKG_HEAD_LEN);
     if (ret != EOK) {
-        AdapterFree(sendBuff);
+        IotcFree(sendBuff);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     SetPkgHeadCmdType(sendBuff, CMD_TYPE_RESPONSE);
     sendBuff[PKG_HEAD_RET_IDX] = IOTC_OK;
 
     ret = LinkLayerSendBtPkg(sendBuff, sendBuffLen);
-    AdapterFree(sendBuff);
+    IotcFree(sendBuff);
     return ret;
 }
 
@@ -193,13 +193,13 @@ int32_t LinkLayerProcessBtData(const uint8_t *buff, uint32_t len)
     ret = LinkLayerProcessData(completeBuff, completeBuffLen, pkgHead.encryptType, &rspBuff, &rspBuffLen);
     if ((ret != IOTC_OK) || (rspBuff == NULL) || (rspBuffLen == 0)) {
         LinkLayerRspExceptionData(buff, LL_RET_ERR);
-        AdapterFree(completeBuff);
+        IotcFree(completeBuff);
         return ret;
     }
-    AdapterFree(completeBuff);
+    IotcFree(completeBuff);
 
     ret = SendRspData(buff, pkgHead.encryptType, rspBuff, rspBuffLen);
-    AdapterFree(rspBuff);
+    IotcFree(rspBuff);
     return ret;
 }
 
@@ -216,20 +216,20 @@ int32_t LinkLayerReportEncryptCmdData(const uint8_t *buff, uint32_t len)
     CHECK_RETURN((ret == IOTC_OK) && (encBuff != NULL) && (encBuffLen > 0), ret);
 
     uint32_t sendBuffLen = PKG_HEAD_LEN + encBuffLen;
-    uint8_t *sendBuff = (uint8_t *)AdapterCalloc(sendBuffLen, sizeof(uint8_t));
+    uint8_t *sendBuff = (uint8_t *)IotcCalloc(sendBuffLen, sizeof(uint8_t));
     if (sendBuff == NULL) {
         IOTC_LOGE("ll rpt data calloc:%u err", sendBuffLen);
-        AdapterFree(encBuff);
+        IotcFree(encBuff);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
 
     ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, encBuff, encBuffLen);
     if (ret != EOK) {
-        AdapterFree(encBuff);
-        AdapterFree(sendBuff);
+        IotcFree(encBuff);
+        IotcFree(sendBuff);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    AdapterFree(encBuff);
+    IotcFree(encBuff);
 
     SetPkgHeadVersion(sendBuff, PKG_HEAD_VERSION);
     SetPkgHeadCmdType(sendBuff, CMD_TYPE_REPORT);
@@ -239,7 +239,7 @@ int32_t LinkLayerReportEncryptCmdData(const uint8_t *buff, uint32_t len)
     sendBuff[PKG_HEAD_RET_IDX] = IOTC_OK;
 
     ret = LinkLayerSendBtPkg(sendBuff, sendBuffLen);
-    AdapterFree(sendBuff);
+    IotcFree(sendBuff);
     return ret;
 }
 
@@ -249,7 +249,7 @@ int32_t LinkLayerReportCmdData(const uint8_t *buff, uint32_t len)
         "ll process bt data param invalid, len:%u", len);
 
     uint32_t sendBuffLen = PKG_HEAD_LEN + len;
-    uint8_t *sendBuff = (uint8_t *)AdapterCalloc(sendBuffLen, sizeof(uint8_t));
+    uint8_t *sendBuff = (uint8_t *)IotcCalloc(sendBuffLen, sizeof(uint8_t));
     if (sendBuff == NULL) {
         IOTC_LOGE("ll rpt data calloc:%u err", sendBuffLen);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -257,7 +257,7 @@ int32_t LinkLayerReportCmdData(const uint8_t *buff, uint32_t len)
 
     int32_t ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, buff, len);
     if (ret != EOK) {
-        AdapterFree(sendBuff);
+        IotcFree(sendBuff);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
@@ -269,6 +269,6 @@ int32_t LinkLayerReportCmdData(const uint8_t *buff, uint32_t len)
     sendBuff[PKG_HEAD_RET_IDX] = IOTC_OK;
 
     ret = LinkLayerSendBtPkg(sendBuff, sendBuffLen);
-    AdapterFree(sendBuff);
+    IotcFree(sendBuff);
     return ret;
 }

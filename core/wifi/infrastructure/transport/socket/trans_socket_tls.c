@@ -16,7 +16,7 @@
 #include "comm_def.h"
 #include "securec.h"
 #include "security_random.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "utils_time.h"
 #include "iotc_errcode.h"
@@ -25,7 +25,7 @@
 typedef struct {
     TransSocket base;
     SocketTlsInitParam initParam;
-    AdapterTlsClient *ctx;
+    IotcTlsClient *ctx;
 } TlsSocket;
 
 static void TlsSocketFree(TransSocket *socket)
@@ -38,12 +38,12 @@ static void TlsSocketFree(TransSocket *socket)
     if (tlsSocket->initParam.psk.psk != NULL) {
         (void)memset_s((uint8_t *)tlsSocket->initParam.psk.psk, tlsSocket->initParam.psk.pskLen,
             0, tlsSocket->initParam.psk.pskLen);
-        AdapterFree((void *)tlsSocket->initParam.psk.psk);
+        IotcFree((void *)tlsSocket->initParam.psk.psk);
         tlsSocket->initParam.psk.psk = NULL;
     }
 
     if (tlsSocket->ctx != NULL) {
-        AdapterFreeTlsClient(tlsSocket->ctx);
+        IotcFreeTlsClient(tlsSocket->ctx);
         tlsSocket->ctx = NULL;
     }
 }
@@ -51,7 +51,7 @@ static void TlsSocketFree(TransSocket *socket)
 /* 中途失败资源由外部统一释放 */
 static int32_t TlsInitParamCopy(const SocketTlsInitParam *src, SocketTlsInitParam *dst)
 {
-    CHECK_RETURN_LOGW(src->host.hostname != NULL && src->suites.num < ADAPTER_TLS_CIPHERSUITE_MAX_NUM &&
+    CHECK_RETURN_LOGW(src->host.hostname != NULL && src->suites.num < IOTC_TLS_CIPHERSUITE_MAX_NUM &&
         src->suites.ciphersuites != NULL && src->suites.num != 0 && src->onUpdateRemainLen != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
 
@@ -121,33 +121,33 @@ static int32_t GetUtcTime(uint64_t *stamp)
 
 static int32_t CreateAndConnectTls(TlsSocket *tlsSocket)
 {
-    tlsSocket->ctx = AdapterCreateTlsClient(tlsSocket->initParam.name);
+    tlsSocket->ctx = IotcCreateTlsClient(tlsSocket->initParam.name);
     if (tlsSocket->ctx == NULL) {
         IOTC_LOGW("create tls client error");
         return IOTC_ADAPTER_TLS_ERR_NEW;
     }
 
     struct TlsOptions {
-        AdapterTlsOption option;
+        IotcTlsOption option;
         const void *value;
         uint32_t len;
-    } ops[ADAPTER_TLS_OPTION_MAX] = {
-        {ADAPTER_TLS_OPTION_REG_TIME_CALLBACK, GetUtcTime, sizeof(AdapterGetTimeCallback)},
-        {ADAPTER_TLS_OPTION_REG_RANDOM_CALLBACK, SecurityRandom, sizeof(AdapterGetRandom)},
-        {ADAPTER_TLS_OPTION_HOST, &tlsSocket->initParam.host, sizeof(tlsSocket->initParam.host)},
-        {ADAPTER_TLS_OPTION_CIPHERSUITE, &tlsSocket->initParam.suites, sizeof(tlsSocket->initParam.suites)},
+    } ops[IOTC_TLS_OPTION_MAX] = {
+        {IOTC_TLS_OPTION_REG_TIME_CALLBACK, GetUtcTime, sizeof(IotcGetTimeCallback)},
+        {IOTC_TLS_OPTION_REG_RANDOM_CALLBACK, SecurityRandom, sizeof(IotcGetRandom)},
+        {IOTC_TLS_OPTION_HOST, &tlsSocket->initParam.host, sizeof(tlsSocket->initParam.host)},
+        {IOTC_TLS_OPTION_CIPHERSUITE, &tlsSocket->initParam.suites, sizeof(tlsSocket->initParam.suites)},
     };
     uint32_t num = 4; /* 4表示已有四个option */
 
     if (tlsSocket->initParam.psk.psk != NULL) {
-        ops[num].option = ADAPTER_TLS_OPTION_PSK;
+        ops[num].option = IOTC_TLS_OPTION_PSK;
         ops[num].value = &tlsSocket->initParam.psk;
         ops[num].len = sizeof(tlsSocket->initParam.psk);
         ++num;
     }
 
     if (tlsSocket->initParam.cert.certs != NULL) {
-        ops[num].option = ADAPTER_TLS_OPTION_CERT;
+        ops[num].option = IOTC_TLS_OPTION_CERT;
         ops[num].value = &tlsSocket->initParam.cert;
         ops[num].len = sizeof(tlsSocket->initParam.cert);
         ++num;
@@ -155,7 +155,7 @@ static int32_t CreateAndConnectTls(TlsSocket *tlsSocket)
 
     int32_t ret = IOTC_OK;
     for (uint32_t i = 0; i < num; ++i) {
-        ret = AdapterSetTlsClientOption(tlsSocket->ctx, ops[i].option, ops[i].value, ops[i].len);
+        ret = IotcSetTlsClientOption(tlsSocket->ctx, ops[i].option, ops[i].value, ops[i].len);
         if (ret != IOTC_OK) {
             IOTC_LOGW("tls conf error %d/%d", ret, ops[i].option);
             break;
@@ -163,14 +163,14 @@ static int32_t CreateAndConnectTls(TlsSocket *tlsSocket)
     }
     
     if (ret == IOTC_OK) {
-        ret = AdapterTlsClientConnect(tlsSocket->ctx);
+        ret = IotcTlsClientConnect(tlsSocket->ctx);
         if (ret != IOTC_OK) {
             IOTC_LOGW("tls connect error %d", ret);
         }
     }
     
     if (ret != IOTC_OK) {
-        AdapterFreeTlsClient(tlsSocket->ctx);
+        IotcFreeTlsClient(tlsSocket->ctx);
         tlsSocket->ctx = NULL;
         return ret;
     }
@@ -189,7 +189,7 @@ static int32_t TlsSocketConnect(TransSocket *socket)
         }
     }
 
-    return AdapterTlsClientGetFd(tlsSocket->ctx);
+    return IotcTlsClientGetFd(tlsSocket->ctx);
 }
 
 static int32_t TlsSocketSend(TransSocket *socket, uint32_t tmo, const CommData *data, const SocketAddr *addr)
@@ -199,17 +199,17 @@ static int32_t TlsSocketSend(TransSocket *socket, uint32_t tmo, const CommData *
     NOT_USED(addr);
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
-    uint32_t start = AdapterGetSysTimeMs();
+    uint32_t start = IotcGetSysTimeMs();
     uint32_t sendLen = 0;
     do {
-        int32_t ret = AdapterTlsClientSend(tlsSocket->ctx, data->data + sendLen, data->len - sendLen);
+        int32_t ret = IotcTlsClientSend(tlsSocket->ctx, data->data + sendLen, data->len - sendLen);
         if (ret > 0) {
             sendLen += ret;
         } else if (ret < 0) {
-            IOTC_LOGW("tls send error %d/%d", ret, AdapterGetErrno());
+            IOTC_LOGW("tls send error %d/%d", ret, IotcGetErrno());
             return ret;
         }
-    } while (sendLen < data->len && UtilsDeltaTime(AdapterGetSysTimeMs(), start) < tmo);
+    } while (sendLen < data->len && UtilsDeltaTime(IotcGetSysTimeMs(), start) < tmo);
 
     if (sendLen < data->len) {
         IOTC_LOGW("tls send timeout %u/%u/%u", tmo, sendLen, data->len);
@@ -229,7 +229,7 @@ static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
         return IOTC_ERR_CALLBACK_NULL;
     }
 
-    uint32_t startTime = AdapterGetSysTimeMs();
+    uint32_t startTime = IotcGetSysTimeMs();
     uint8_t *pBuf = buf->buffer + buf->len;
     uint32_t bufSize = buf->size - buf->len;
     uint32_t remainLen;
@@ -251,12 +251,12 @@ static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
             return IOTC_OK;
         }
 
-        if (UtilsDeltaTime(AdapterGetSysTimeMs(), startTime) > tmo) {
+        if (UtilsDeltaTime(IotcGetSysTimeMs(), startTime) > tmo) {
             IOTC_LOGW("tls recv timeout %u/%u/%u", tmo, recvLen, remainLen);
             return IOTC_ERR_TIMEOUT;
         }
 
-        ret = AdapterTlsClientRecv(tlsSocket->ctx, pBuf + recvLen, remainLen);
+        ret = IotcTlsClientRecv(tlsSocket->ctx, pBuf + recvLen, remainLen);
         if (ret > 0) {
             if (ret > remainLen) {
                 IOTC_LOGW("tls recv error len %d/%u", ret, remainLen);
@@ -264,7 +264,7 @@ static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
             }
             recvLen += ret;
         } else if (ret < 0) {
-            IOTC_LOGW("tls recv error %d/%d", ret, AdapterGetErrno());
+            IOTC_LOGW("tls recv error %d/%d", ret, IotcGetErrno());
             return ret;
         }
     } while (true);
@@ -278,7 +278,7 @@ static void TlsSocketClose(TransSocket *socket)
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
     if (tlsSocket->ctx != NULL) {
-        AdapterFreeTlsClient(tlsSocket->ctx);
+        IotcFreeTlsClient(tlsSocket->ctx);
         tlsSocket->ctx = NULL;
     }
 }
@@ -299,10 +299,10 @@ TransSocket *TransSocketTlsNew(const SocketTlsInitParam *init)
     return TransSocketNew(&TLS_IF, sizeof(TlsSocket), TLS_NAME, (void *)init);
 }
 
-AdapterTlsCertVerify TransSocketTlsVerifyCert(TransSocket *socket)
+IotcTlsCertVerify TransSocketTlsVerifyCert(TransSocket *socket)
 {
     CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
-    return AdapterTlsClientVerifyCert(tlsSocket->ctx);
+    return IotcTlsClientVerifyCert(tlsSocket->ctx);
 }

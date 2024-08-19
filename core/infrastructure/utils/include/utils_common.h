@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,7 +55,7 @@ extern "C" {
 
 #define UTILS_FREE_2_NULL(ptr) do { \
     if ((ptr) != NULL) { \
-        AdapterFree((void *)(ptr)); \
+        IotcFree((void *)(ptr)); \
         (ptr) = NULL; \
     } \
 } while (0)

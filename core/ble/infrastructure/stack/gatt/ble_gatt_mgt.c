@@ -16,7 +16,7 @@
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_list.h"
 #include "utils_mutex_global.h"
@@ -61,7 +61,7 @@ bool BleIsPair(void)
     return g_isBlePair;
 }
 
-static void PrintBleGattCharDescList(AdapterBleGattCharDesc *desc, uint8_t num)
+static void PrintBleGattCharDescList(IotcAdptBleGattCharDesc *desc, uint8_t num)
 {
     (void)desc;
     (void)num;
@@ -71,7 +71,7 @@ static void PrintBleGattCharDescList(AdapterBleGattCharDesc *desc, uint8_t num)
     }
 }
 
-static void PrintBleGattsCharList(AdapterBleGattsChar *character, uint8_t num)
+static void PrintBleGattsCharList(IotcAdptBleGattsChar *character, uint8_t num)
 {
     (void)character;
     (void)num;
@@ -83,7 +83,7 @@ static void PrintBleGattsCharList(AdapterBleGattsChar *character, uint8_t num)
     }
 }
 
-void PrintBleGattServiceList(AdapterBleGattService *svc, uint8_t num)
+void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint8_t num)
 {
     (void)svc;
     (void)num;
@@ -97,7 +97,7 @@ void PrintBleGattServiceList(AdapterBleGattService *svc, uint8_t num)
 int32_t BleAddGattSvc(const IotcBleGattProfileSvc *svc)
 {
     CHECK_RETURN_LOGW(svc != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    BleGattSvcList *newNode = (BleGattSvcList *)AdapterMalloc(sizeof(BleGattSvcList));
+    BleGattSvcList *newNode = (BleGattSvcList *)IotcMalloc(sizeof(BleGattSvcList));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -120,7 +120,7 @@ static void DestroyBleGattSvcList(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, GetBleGattSvcListHead()) {
         BleGattSvcList *node = CONTAINER_OF(item, BleGattSvcList, list);
         LIST_REMOVE(&node->list);
-        AdapterFree(node);
+        IotcFree(node);
     }
     g_gattSvcListNum = 0;
     UtilsGlobalMutexUnlock();
@@ -130,28 +130,28 @@ static uint32_t ProfilePermissionToAdapterPermission(uint32_t permission)
 {
     uint32_t toPermission = 0;
     if (permission & IOTC_BLE_GATT_PERMISSION_READ) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_READ;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_READ;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_READ_ENCRYPTED) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_READ_ENCRYPTED;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_READ_ENCRYPTED;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_READ_ENCRYPTED_MITM) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_READ_ENCRYPTED_MITM;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_READ_ENCRYPTED_MITM;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_WRITE) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_WRITE;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_WRITE;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_WRITE_ENCRYPTED) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_WRITE_ENCRYPTED;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_WRITE_ENCRYPTED;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_WRITE_ENCRYPTED_MITM) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_WRITE_ENCRYPTED_MITM;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_WRITE_ENCRYPTED_MITM;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_WRITE_SIGNED) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_WRITE_SIGNED;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_WRITE_SIGNED;
     }
     if (permission & IOTC_BLE_GATT_PERMISSION_WRITE_SIGNED_MITM) {
-        toPermission |= ADAPTER_BLE_CHAR_PERM_WRITE_SIGNED_MITM;
+        toPermission |= IOTC_ADPT_BLE_CHAR_PERM_WRITE_SIGNED_MITM;
     }
     return toPermission;
 }
@@ -160,33 +160,33 @@ static uint32_t ProfilePropertyToAdapterProperty(uint32_t property)
 {
     uint32_t toProperty = 0;
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_BROADCAST) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_BROADCAST;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_BROADCAST;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_READ) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_READ;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_READ;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_WRITE_NO_RSP) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_WRITE_WITHOUT_RESP;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_WRITE_WITHOUT_RESP;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_WRITE) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_WRITE;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_WRITE;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_NOTIFY) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_NOTIFY;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_NOTIFY;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_INDICATE) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_INDICATE;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_INDICATE;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_SIGNED_WRITE) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_SIGNED_WRITE;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_SIGNED_WRITE;
     }
     if (property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_EXTENDED_PROPERTY) {
-        toProperty |= ADAPTER_BLE_CHAR_PROP_EXTENDED_PROPERTY;
+        toProperty |= IOTC_ADPT_BLE_CHAR_PROP_EXTENDED_PROPERTY;
     }
     return toProperty;
 }
 
-static int32_t ProfileCharCopyToAdapterChar(const IotcBleGattProfileChar *in, AdapterBleGattsChar *to)
+static int32_t ProfileCharCopyToAdapterChar(const IotcBleGattProfileChar *in, IotcAdptBleGattsChar *to)
 {
     CHECK_RETURN_LOGW(in->uuid != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
     to->uuid = in->uuid;
@@ -199,8 +199,8 @@ static int32_t ProfileCharCopyToAdapterChar(const IotcBleGattProfileChar *in, Ad
     if (in->descNum == 0) {
         return IOTC_OK;
     }
-    uint32_t descMallocSize = in->descNum * sizeof(AdapterBleGattCharDesc);
-    AdapterBleGattCharDesc *desc = (AdapterBleGattCharDesc *)AdapterMalloc(descMallocSize);
+    uint32_t descMallocSize = in->descNum * sizeof(IotcAdptBleGattCharDesc);
+    IotcAdptBleGattCharDesc *desc = (IotcAdptBleGattCharDesc *)IotcMalloc(descMallocSize);
     if (desc == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -216,12 +216,12 @@ static int32_t ProfileCharCopyToAdapterChar(const IotcBleGattProfileChar *in, Ad
     return IOTC_OK;
 }
 
-static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, AdapterBleGattService *to)
+static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, IotcAdptBleGattService *to)
 {
     CHECK_RETURN_LOGW((in->uuid != NULL) && (in->charNum != 0) && (in->character != NULL),
         IOTC_ERR_PARAM_INVALID, "invalid param");
-    uint32_t charMallocSize = in->charNum * sizeof(AdapterBleGattsChar);
-    AdapterBleGattsChar *character = (AdapterBleGattsChar *)AdapterMalloc(charMallocSize);
+    uint32_t charMallocSize = in->charNum * sizeof(IotcAdptBleGattsChar);
+    IotcAdptBleGattsChar *character = (IotcAdptBleGattsChar *)IotcMalloc(charMallocSize);
     if (character == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -231,7 +231,7 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, Adapt
         int32_t ret = ProfileCharCopyToAdapterChar(&in->character[i], &character[i]);
         if (ret != IOTC_OK) {
             IOTC_LOGE("copy ret=%d", ret);
-            AdapterFree(character);
+            IotcFree(character);
             return ret;
         }
     }
@@ -242,12 +242,12 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, Adapt
     return IOTC_OK;
 }
 
-static void GattServiceDestroy(AdapterBleGattService **svcAddr, uint8_t svcNum)
+static void GattServiceDestroy(IotcAdptBleGattService **svcAddr, uint8_t svcNum)
 {
     if ((svcAddr == NULL) || (*svcAddr == NULL) || (svcNum == 0)) {
         return;
     }
-    AdapterBleGattService *svc = *svcAddr;
+    IotcAdptBleGattService *svc = *svcAddr;
     for (uint8_t i = 0; i < svcNum; i++) {
         if (svc[i].character == NULL) {
             continue;
@@ -256,15 +256,15 @@ static void GattServiceDestroy(AdapterBleGattService **svcAddr, uint8_t svcNum)
             if (svc[i].character[j].desc == NULL) {
                 continue;
             }
-            AdapterFree(svc[i].character[j].desc);
+            IotcFree(svc[i].character[j].desc);
             svc[i].character[j].desc = NULL;
             svc[i].character[j].descNum = 0;
         }
-        AdapterFree(svc[i].character);
+        IotcFree(svc[i].character);
         svc[i].character = NULL;
         svc[i].charNum = 0;
     }
-    AdapterFree(svc);
+    IotcFree(svc);
     *svcAddr = NULL;
 }
 
@@ -276,7 +276,7 @@ static int32_t BleGattProfileSvcInit(void)
     }
 
     uint32_t svcNum = GetBleGattSvcListNum();
-    AdapterBleGattService *svc = (AdapterBleGattService *)AdapterCalloc(svcNum, sizeof(AdapterBleGattService));
+    IotcAdptBleGattService *svc = (IotcAdptBleGattService *)IotcCalloc(svcNum, sizeof(IotcAdptBleGattService));
     if (svc == NULL) {
         IOTC_LOGE("calloc error %u", svcNum);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -307,7 +307,7 @@ static int32_t BleGattProfileSvcInit(void)
 static int32_t BleGattPeerDevInfoInit(void)
 {
     uint32_t mallocSize = BLE_DEFAULT_MAX_CONN_NUM * sizeof(BlePeerDevInfo);
-    BlePeerDevInfo *peerDevInfo = (BlePeerDevInfo *)AdapterMalloc(mallocSize);
+    BlePeerDevInfo *peerDevInfo = (BlePeerDevInfo *)IotcMalloc(mallocSize);
     if (peerDevInfo == NULL) {
         IOTC_LOGE("malloc");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -335,7 +335,7 @@ int32_t BleGattMgtInit(void)
         IOTC_LOGE("gatt peer dev info init err ret=%d", ret);
         return ret;
     }
-    ret = AdapterBleStartGattsService(GetBleGattMgtApp()->svc, GetBleGattMgtApp()->svcNum);
+    ret = IotcBleStartGattsService(GetBleGattMgtApp()->svc, GetBleGattMgtApp()->svcNum);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add gatt svc ret=%d", ret);
         return ret;
@@ -348,7 +348,7 @@ void BleGattMgtDestroy(void)
     GattServiceDestroy(&g_bleGattApp.svc, g_bleGattApp.svcNum);
     g_bleGattApp.svcNum = 0;
     if (GetBleGattMgtApp()->peerDevInfo != NULL) {
-        AdapterFree(GetBleGattMgtApp()->peerDevInfo);
+        IotcFree(GetBleGattMgtApp()->peerDevInfo);
         GetBleGattMgtApp()->peerDevInfo = NULL;
     }
     DestroyBleGattSvcList();
@@ -408,7 +408,7 @@ static int32_t GetCharProperty(const char *svcUuid, const char *charUuid, uint32
     return IOTC_CORE_BLE_INVALID_CHAR_UUID;
 }
 
-static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, AdapterBleGattsChar *character, uint8_t charNum)
+static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptBleGattsChar *character, uint8_t charNum)
 {
     for (uint8_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
@@ -435,8 +435,8 @@ static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
     return IOTC_ERROR;
 }
 
-static AdapterBleGattReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
-    AdapterBleGattsChar *character, uint8_t charNum)
+static IotcAdptBleGattReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
+    IotcAdptBleGattsChar *character, uint8_t charNum)
 {
     for (uint8_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
@@ -451,9 +451,9 @@ static AdapterBleGattReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
     return NULL;
 }
 
-static AdapterBleGattReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
+static IotcAdptBleGattReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
 {
-    AdapterBleGattReadFunc res = NULL;
+    IotcAdptBleGattReadFunc res = NULL;
     for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         res = FindReadFuncFromCharacterTbl(attrHandle,
             GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
@@ -464,8 +464,8 @@ static AdapterBleGattReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
     return NULL;
 }
 
-static AdapterBleGattWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
-    AdapterBleGattsChar *character, uint8_t charNum)
+static IotcAdptBleGattWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
+    IotcAdptBleGattsChar *character, uint8_t charNum)
 {
     for (uint8_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
@@ -480,9 +480,9 @@ static AdapterBleGattWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
     return NULL;
 }
 
-static AdapterBleGattWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
+static IotcAdptBleGattWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
 {
-    AdapterBleGattWriteFunc res = NULL;
+    IotcAdptBleGattWriteFunc res = NULL;
     for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         res = FindWriteFuncFromCharacterTbl(attrHandle,
             GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
@@ -501,7 +501,7 @@ int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
         IOTC_LOGE("no connect");
         return IOTC_CORE_BLE_NO_CONNECT;
     }
-    AdapterBleSendIndicateParam param;
+    IotcAdptBleSendIndicateParam param;
     (void)memset_s(&param, sizeof(param), 0, sizeof(param));
     uint32_t property = 0;
     int32_t ret = GetSeviceHandle(svcUuid, &param.svcHandle);
@@ -528,7 +528,7 @@ int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
     param.needConfirm = ((property & IOTC_BLE_GATT_CHARACTER_PROPERTY_BIT_INDICATE) != 0) ? true : false;
     param.valueLen = valueLen;
     param.value = (uint8_t *)value;
-    ret = AdapterBleSendGattsIndicate(&param);
+    ret = IotcBleSendGattsIndicate(&param);
     IOTC_LOGN("send indicate msg ret=%d svcHandle=%d,charHandle=%d,valueLen=%u",
         ret, param.svcHandle, param.charHandle, param.valueLen);
     return ret;
@@ -538,8 +538,8 @@ void BleGattDisconnectAll(void)
 {
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
     for (uint8_t i = 0; i < GetBleGattMgtApp()->connNum; i++) {
-        int32_t ret = AdapterBleDissconnectGatt(peerDevInfoList[i].peerAddr,
-            ADAPTER_BLE_ADDR_LEN);
+        int32_t ret = IotcBleDisconnectGatt(peerDevInfoList[i].peerAddr,
+            IOTC_ADPT_BLE_ADDR_LEN);
         if (ret != IOTC_OK) {
             IOTC_LOGW("disconn with peer[%u] err", i);
         }
@@ -548,11 +548,11 @@ void BleGattDisconnectAll(void)
 
 int32_t SetBleConnectParam(void)
 {
-    AdapterBleConnectParam param = {0};
+    IotcAdptBleConnectParam param = {0};
     param.isDiscover = true;
     param.isConnect = true;
     param.isBond = BleIsPair();
-    return AdapterBleSetConnectParam(&param);
+    return IotcBleSetConnectParam(&param);
 }
 
 int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
@@ -561,7 +561,7 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
         IOTC_LOGE("no connect");
         return IOTC_CORE_BLE_NO_CONNECT;
     }
-    AdapterBleResponseParam param;
+    IotcAdptBleResponseParam param;
     (void)memset_s(&param, sizeof(param), 0, sizeof(param));
     param.connectId = connId;
     param.transId = transId;
@@ -570,37 +570,37 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
         IOTC_LOGE("get server id err ret=%d", ret);
         return ret;
     }
-    param.value = AdapterCalloc(1, ADAPTER_BLE_GATT_READ_BUF_SIZE);
+    param.value = IotcCalloc(1, IOTC_ADPT_BLE_GATT_READ_BUF_SIZE);
     if (param.value == NULL) {
-        (void)AdapterBleSendGattsResponse(&param);
+        (void)IotcBleSendGattsResponse(&param);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
-    AdapterBleGattReadFunc func = FindAttrHandleReadFunc(attrHandle);
+    IotcAdptBleGattReadFunc func = FindAttrHandleReadFunc(attrHandle);
     if (func == NULL) {
         IOTC_LOGE("no find read func");
-        AdapterFree(param.value);
+        IotcFree(param.value);
         param.value = NULL;
-        (void)AdapterBleSendGattsResponse(&param);
+        (void)IotcBleSendGattsResponse(&param);
         return IOTC_ERROR;
     }
-    param.valueLen = ADAPTER_BLE_GATT_READ_BUF_SIZE;
+    param.valueLen = IOTC_ADPT_BLE_GATT_READ_BUF_SIZE;
     ret = func(param.value, (uint32_t *)&param.valueLen);
     if ((ret != IOTC_OK) || (param.valueLen == 0)) {
         IOTC_LOGE("read err ret=%d, len=%d", ret, param.valueLen);
-        AdapterFree(param.value);
+        IotcFree(param.value);
         param.value = NULL;
         param.valueLen = 0;
-        (void)AdapterBleSendGattsResponse(&param);
+        (void)IotcBleSendGattsResponse(&param);
         return IOTC_ERROR;
     }
-    ret = AdapterBleSendGattsResponse(&param);
+    ret = IotcBleSendGattsResponse(&param);
     if (ret != IOTC_OK) {
         IOTC_LOGE("response err ret=%d", ret);
-        AdapterFree(param.value);
+        IotcFree(param.value);
         param.value = NULL;
         return IOTC_ERROR;
     }
-    AdapterFree(param.value);
+    IotcFree(param.value);
     param.value = NULL;
     return IOTC_OK;
 }
@@ -612,7 +612,7 @@ int32_t BleGattReqWrite(int32_t connId, int32_t attrHandle, int32_t transId, uin
         return IOTC_CORE_BLE_NO_CONNECT;
     }
 
-    AdapterBleResponseParam param;
+    IotcAdptBleResponseParam param;
     int32_t ret = GetAttrHandleServerId(attrHandle, &param.serverId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("get server id err ret=%d", ret);
@@ -622,9 +622,9 @@ int32_t BleGattReqWrite(int32_t connId, int32_t attrHandle, int32_t transId, uin
     param.transId = transId;
     param.value = NULL;
     param.valueLen = 0;
-    (void)AdapterBleSendGattsResponse(&param);
+    (void)IotcBleSendGattsResponse(&param);
 
-    AdapterBleGattWriteFunc func = FindAttrHandleWriteFunc(attrHandle);
+    IotcAdptBleGattWriteFunc func = FindAttrHandleWriteFunc(attrHandle);
     if (func == NULL) {
         IOTC_LOGE("no find write func");
         return IOTC_ERROR;

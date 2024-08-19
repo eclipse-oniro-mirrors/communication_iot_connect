@@ -15,13 +15,13 @@
 #ifndef M2M_CLOUD_UTILS_H
 #define M2M_CLOUD_UTILS_H
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t M2mCloudAddDevInfoToJson(AdapterJson *rootObj);
+int32_t M2mCloudAddDevInfoToJson(IotcJson *rootObj);
 
 #ifdef __cplusplus
 }

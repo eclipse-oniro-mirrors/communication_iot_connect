@@ -18,13 +18,13 @@
 #include "utils_assert.h"
 #include "utils_common.h"
 #include "sched_timer.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "coap_codec_utils.h"
 #include "utils_bit_map.h"
 #include "utils_json.h"
-#include "adapter_base64.h"
-#include "adapter_os.h"
-#include "adapter_os.h"
+#include "iotc_base64.h"
+#include "iotc_os.h"
+#include "iotc_os.h"
 #include "svc_softap_sess.h"
 #include "iotc_conf.h"
 #include "svc_softap_report.h"
@@ -63,7 +63,7 @@ void SoftapCoapSpekeReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     if (ret != IOTC_OK || respMsg == NULL || respLen == 0) {
         IOTC_LOGW("speke process packet error %d/%u", ret, respLen);
         if (respMsg != NULL) {
-            AdapterFree(respMsg);
+            IotcFree(respMsg);
         }
         return;
     }
@@ -93,14 +93,14 @@ void SoftapCoapSpekeReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
 
 static int32_t NetCfgInfoRecvProcess(const char *netInfo, uint32_t len)
 {
-    AdapterJson *jsonObj = AdapterJsonParseWithLen(netInfo, len);
+    IotcJson *jsonObj = IotcJsonParseWithLen(netInfo, len);
     if (jsonObj == NULL) {
         IOTC_LOGW("parse json error");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    AdapterJson *dataObj = AdapterJsonGetObj(jsonObj, STR_JSON_DATA);
+    IotcJson *dataObj = IotcJsonGetObj(jsonObj, STR_JSON_DATA);
     if (dataObj == NULL) {
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         IOTC_LOGW("get json data error");
         return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
     }
@@ -108,7 +108,7 @@ static int32_t NetCfgInfoRecvProcess(const char *netInfo, uint32_t len)
 #if IOTC_CONF_AILIFE_SUPPORT
     int32_t ret = DevSvcProxyRecvBindInfo(dataObj);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         IOTC_LOGW("bind info process error %d", ret);
         return ret;
     }
@@ -116,14 +116,14 @@ static int32_t NetCfgInfoRecvProcess(const char *netInfo, uint32_t len)
     /* TODO 端云未就绪，当前仅有绑定信息 */
     int32_t ret = DevSvcProxyRecvAuthInfo(dataObj);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         IOTC_LOGW("auth info process error %d", ret);
         return ret;
     }
 #endif
 
     ret = ConnSvcProxySetNetCfgInfo(dataObj);
-    AdapterJsonDelete(jsonObj);
+    IotcJsonDelete(jsonObj);
     if (ret != IOTC_OK) {
         IOTC_LOGW("net info process error %d", ret);
         return ret;
@@ -162,7 +162,7 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         isNetCfgFail = true;
     }
 
-    AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
+    IotcJson *respJson = UtilsJsonCreateErrcode(ret);
     if (respJson == NULL) {
         IOTC_LOGW("create resp json error");
         return;
@@ -172,7 +172,7 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     ret = CoapServerBuildDefaultRespParam(&respParam, req, respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build resp param error %d", ret);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return;
     }
 
@@ -183,7 +183,7 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     }
     CoapPacket packet;
     ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     respJson = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGW("send coap resp msg error %d", ret);
@@ -290,7 +290,7 @@ SessCode SoftapCoapMsgSendEncryptProcess(SessMsg *msg, UtilsBuffer *buf, SessAdd
     CoapData payloadEnc = {encData, encLen};
     /* 密文替换掉原始coap报文中的明文 */
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadEnc);
-    AdapterFree(encData);
+    IotcFree(encData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace enc payload error %d", ret);
         return SESS_CODE_ERR;
@@ -349,7 +349,7 @@ SessCode SoftapCoapMsgRecvDecryptProcess(SessMsg *msg, UtilsBuffer *buf, SessAdd
     CoapData payloadDec = {decData, decLen};
     /* 将解密后的明文替换掉原始coap报文中的密文 */
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadDec);
-    AdapterFree(decData);
+    IotcFree(decData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace dec payload error %d", ret);
         return SESS_CODE_ERR;
@@ -374,28 +374,28 @@ SessCode SoftapCoapMsgRecvBase64DecodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     }
 
     uint32_t len = 0;
-    int32_t ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &len);
+    int32_t ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &len);
     if (ret != IOTC_OK || len > pkt->payload.len) {
         IOTC_LOGW("get len error %d", ret);
         return SESS_CODE_ERR;
     }
 
-    uint8_t *decodeData = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *decodeData = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     if (decodeData == NULL) {
         IOTC_LOGW("calloc error %d", len);
         return SESS_CODE_ERR;
     }
 
-    ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, decodeData, &len);
+    ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, decodeData, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 decode error %d", ret);
-        AdapterFree(decodeData);
+        IotcFree(decodeData);
         return SESS_CODE_ERR;
     }
 
     CoapData payloadDecode = {decodeData, len};
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadDecode);
-    AdapterFree(decodeData);
+    IotcFree(decodeData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace decode payload error %d", ret);
         return SESS_CODE_ERR;
@@ -420,28 +420,28 @@ SessCode SoftapCoapMsgSendBase64EncodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     }
 
     uint32_t len = 0;
-    int32_t ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &len);
+    int32_t ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get len error %d", ret);
         return SESS_CODE_ERR;
     }
 
-    uint8_t *encodeData = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *encodeData = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     if (encodeData == NULL) {
         IOTC_LOGW("calloc error %d", len);
         return SESS_CODE_ERR;
     }
 
-    ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, encodeData, &len);
+    ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, encodeData, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 encode error %d", ret);
-        AdapterFree(encodeData);
+        IotcFree(encodeData);
         return SESS_CODE_ERR;
     }
 
     CoapData payloadDecode = {encodeData, len};
     ret = CoapUtilsReplacePayload(pkt, buf, &payloadDecode);
-    AdapterFree(encodeData);
+    IotcFree(encodeData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace encode payload error %d", ret);
         return SESS_CODE_ERR;
@@ -449,7 +449,7 @@ SessCode SoftapCoapMsgSendBase64EncodeProcess(SessMsg *msg, UtilsBuffer *buf, Se
     return SESS_CODE_CONTINUE;
 }
 
-static bool SoftCoapE2eCtrlSeqCheck(AdapterJson *payloadJsonObj, SoftapPeerSess *softapSpeke)
+static bool SoftCoapE2eCtrlSeqCheck(IotcJson *payloadJsonObj, SoftapPeerSess *softapSpeke)
 {
     uint32_t recvSeq;
     int32_t ret = UtilsJsonGetUint(payloadJsonObj, STR_JSON_SEQ, &recvSeq);
@@ -491,7 +491,7 @@ static bool SoftCoapE2eCtrlSeqCheck(AdapterJson *payloadJsonObj, SoftapPeerSess 
     return true;
 }
 
-static void SoftapCtrlMsgReportAfterGetCmd(const AdapterJson *dataArray, const void *userData, uint32_t userDataLen)
+static void SoftapCtrlMsgReportAfterGetCmd(const IotcJson *dataArray, const void *userData, uint32_t userDataLen)
 {
     CHECK_V_RETURN_LOGW(dataArray != NULL && userData != NULL && userDataLen == sizeof(uint32_t), "param invalid");
 
@@ -513,21 +513,21 @@ void SoftapCoapE2eCtrlHandler(CoapEndpoint *endpoint, const CoapPacket *req, con
         return;
     }
 
-    AdapterJson *payloadJsonObj = AdapterJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    IotcJson *payloadJsonObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (payloadJsonObj == NULL) {
         IOTC_LOGW("invalid json");
         return;
     }
 
     if (!SoftCoapE2eCtrlSeqCheck(payloadJsonObj, peer)) {
-        AdapterJsonDelete(payloadJsonObj);
+        IotcJsonDelete(payloadJsonObj);
         return;
     }
 
     int32_t ret = E2eCtrlMsgProcess(payloadJsonObj, SoftapCtrlMsgReportAfterGetCmd, &addr->addr, sizeof(addr->addr));
-    AdapterJsonDelete(payloadJsonObj);
+    IotcJsonDelete(payloadJsonObj);
 
-    AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
+    IotcJson *respJson = UtilsJsonCreateErrcode(ret);
     if (respJson == NULL) {
         IOTC_LOGW("create resp json error %d", ret);
         return;
@@ -537,13 +537,13 @@ void SoftapCoapE2eCtrlHandler(CoapEndpoint *endpoint, const CoapPacket *req, con
     ret = CoapServerBuildDefaultRespParam(&respParam, req, respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build resp param error %d", ret);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return;
     }
 
     CoapPacket packet;
     ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send e2e ctrl resp msg error %d", ret);
     }

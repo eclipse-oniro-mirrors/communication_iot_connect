@@ -48,13 +48,13 @@ void CoapEndpointRetransDeinit(CoapEndpointRetrans *retrans)
         CoapRetransNode *node = CONTAINER_OF(item, CoapRetransNode, node);
         UTILS_FREE_2_NULL(node->raw.data);
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
     }
 }
 
 static CoapRetransNode *RetransNodeNew(const CoapPacket *pkt, const CoapBuffer *buf, const SocketAddr *addr)
 {
-    CoapRetransNode *newNode = AdapterMalloc(sizeof(CoapRetransNode));
+    CoapRetransNode *newNode = IotcMalloc(sizeof(CoapRetransNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -86,7 +86,7 @@ static CoapRetransNode *RetransNodeNew(const CoapPacket *pkt, const CoapBuffer *
     } while (0);
 
     UTILS_FREE_2_NULL(newNode->raw.data);
-    AdapterFree(newNode);
+    IotcFree(newNode);
     return NULL;
 }
 
@@ -118,7 +118,7 @@ int32_t CoapRetransAddPacket(CoapEndpoint *endpoint, const CoapPacket *pkt,
             break;
         }
 
-        newNode->lastTime = AdapterGetSysTimeMs();
+        newNode->lastTime = IotcGetSysTimeMs();
         if (!retrans->retransCheck(&newNode->param, &newNode->raw, endpoint->userData, &newNode->remainTime)) {
             IOTC_LOGW("retrans first check error");
             ret = IOTC_CORE_WIFI_TRANS_ERR_COAP_RETRANS_CHECK;
@@ -138,9 +138,9 @@ int32_t CoapRetransAddPacket(CoapEndpoint *endpoint, const CoapPacket *pkt,
     }
     if (newNode != NULL) {
         if (newNode->raw.data != NULL) {
-            AdapterFree((void *)newNode->raw.data);
+            IotcFree((void *)newNode->raw.data);
         }
-        AdapterFree(newNode);
+        IotcFree(newNode);
     }
     return ret;
 }
@@ -185,8 +185,8 @@ bool CoapEndpointRetransCheck(CoapEndpoint *endpoint, uint32_t cur)
 static void RetransNodeFreeBuffer(CoapEndpointRetrans *retrans, CoapRetransNode *node)
 {
     retrans->curBufSize = retrans->curBufSize > node->raw.len ? retrans->curBufSize - node->raw.len : 0;
-    AdapterFree((void *)node->raw.data);
-    AdapterFree(node);
+    IotcFree((void *)node->raw.data);
+    IotcFree(node);
 }
 
 void CoapEndpointRetransDispatch(CoapEndpoint *endpoint)

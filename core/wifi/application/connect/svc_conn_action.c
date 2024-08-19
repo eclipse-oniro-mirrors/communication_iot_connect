@@ -18,7 +18,7 @@
 #include "svc_conn_ctx.h"
 #include "sched_timer.h"
 #include "svc_conn_conf.h"
-#include "adapter_wifi.h"
+#include "iotc_wifi.h"
 #include "event_bus.h"
 #include "utils_bit_map.h"
 #include "utils_common.h"
@@ -34,12 +34,12 @@
 
 static void WifiVerifyFailedProcess(void)
 {
-    int32_t ret = AdapterDisconnectWifi();
+    int32_t ret = IotcDisconnectWifi();
     if (ret != IOTC_OK) {
         IOTC_LOGW("disconnect wifi error %d", ret);
     }
     
-    ret = AdapterDeleteWifiInfo();
+    ret = IotcDeleteWifiInfo();
     if (ret != IOTC_OK) {
         IOTC_LOGF("del wifi info error %d", ret);
     }
@@ -78,7 +78,7 @@ int32_t ConnSvcActionConnectWifi(void)
 
     IOTC_LOGN("wifi connecting");
     EventBusPublishSync(IOTC_CORE_WIFI_EVENT_CONNECTING, NULL, 0);
-    int32_t ret = AdapterConnectWifi();
+    int32_t ret = IotcConnectWifi();
     if (ret != IOTC_OK) {
         IOTC_LOGW("connect wifi error %d", ret);
         EventBusPublishSync(IOTC_CORE_WIFI_EVENT_CONNECT_FAIL, NULL, 0);
@@ -107,7 +107,7 @@ static void WifiReconnectTimerCallback(int32_t id, void *userData)
 {
     NOT_USED(id);
     NOT_USED(userData);
-    int32_t ret = AdapterConnectWifi();
+    int32_t ret = IotcConnectWifi();
     if (ret != IOTC_OK) {
         IOTC_LOGW("connect wifi trig error %d", ret);
     }

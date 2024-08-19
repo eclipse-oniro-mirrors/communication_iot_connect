@@ -26,10 +26,10 @@
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 
-AdapterJson *M2mCloudBuildLoginRequest(M2mCloudContext *ctx)
+IotcJson *M2mCloudBuildLoginRequest(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
-    AdapterJson *rootJson = AdapterCreateJson();
+    IotcJson *rootJson = IotcJsonCreate();
     if (rootJson == NULL) {
         IOTC_LOGW("create json error");
         return NULL;
@@ -42,7 +42,7 @@ AdapterJson *M2mCloudBuildLoginRequest(M2mCloudContext *ctx)
     int32_t ret = UtilsJsonAddStrTable(rootJson, jsonList, ARRAY_SIZE(jsonList));
     if (ret != IOTC_OK) {
         IOTC_LOGE("add json str error %d", ret);
-        AdapterJsonDelete(rootJson);
+        IotcJsonDelete(rootJson);
         return NULL;
     }
 
@@ -54,7 +54,7 @@ int32_t M2mCloudLoginResponseParse(M2mCloudContext *ctx, const CoapPacket *resp,
     CHECK_RETURN_LOGW(resp != NULL && errcode != NULL && ctx != NULL && resp->payload.data != NULL &&
         resp->payload.len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    AdapterJson *respJson = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
+    IotcJson *respJson = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
     if (respJson == NULL) {
         IOTC_LOGW("create json error");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -63,19 +63,19 @@ int32_t M2mCloudLoginResponseParse(M2mCloudContext *ctx, const CoapPacket *resp,
     int32_t ret = UtilsJsonGetNum(respJson, STR_ERRCODE, errcode);
     if (ret != IOTC_OK) {
         IOTC_LOGE("json get errcode error %d", ret);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return ret;
     }
     ret = DealErrCodeRsp(*errcode);
     if (ret == IOTC_OK) {
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return ret;
     }
 
     if (*errcode == CLOUD_ERRCODE_OK) {
         ret = ParseTokenInfo(ctx, respJson);
     }
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
 
     return ret;
 }

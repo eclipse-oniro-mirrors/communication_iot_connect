@@ -14,11 +14,11 @@
  */
 #include "trans_link.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_common.h"
 #include "utils_bit_map.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
 
@@ -44,7 +44,7 @@ TransLink *TransLinkNew(TransSocket *socket, UtilsBufferCtx *buffer, const char 
         IOTC_LOGW("param invalid");
         return NULL;
     }
-    TransLink *link = (TransLink *)AdapterMalloc(sizeof(TransLink));
+    TransLink *link = (TransLink *)IotcMalloc(sizeof(TransLink));
     if (link == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -68,7 +68,7 @@ void TransLinkFree(TransLink *link)
     TransSocketFree(link->socket);
     link->socket = NULL;
     IOTC_LOGD("link[%s] destroy", NON_NULL_STR(link->name));
-    AdapterFree(link);
+    IotcFree(link);
 }
 
 int32_t TransLinkRegErrorCallback(TransLink *link, OnLinkError cb, void *userData)

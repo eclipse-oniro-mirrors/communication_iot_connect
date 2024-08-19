@@ -17,7 +17,7 @@
 #include "securec.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 
 static uint32_t g_svcNum = 0;
@@ -47,7 +47,7 @@ int32_t ModelSvcInfoInit(const IotcServiceInfo svc[], uint32_t num)
         IOTC_ERR_PARAM_INVALID, "param invalid");
 
     ModelSvcInfoDeinit();
-    g_svcInfo = (IotcServiceInfo *)AdapterCalloc(num, sizeof(IotcServiceInfo));
+    g_svcInfo = (IotcServiceInfo *)IotcCalloc(num, sizeof(IotcServiceInfo));
     if (g_svcInfo == NULL) {
         IOTC_LOGW("calloc error %u", num);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;

@@ -15,7 +15,7 @@
 #ifndef SECURITY_SPEKE_NEGO_CTX_H
 #define SECURITY_SPEKE_NEGO_CTX_H
 
-#include "adapter_mpi.h"
+#include "iotc_mpi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,8 +53,8 @@ typedef struct {
     uint32_t saltLen;                           /* 盐值长度 */
     uint8_t *pubKey;                            /* 本端公钥 */
     uint32_t pubKeyLen;                         /* 本端公钥长度 */
-    AdapterMpi *random;                         /* 本端随机数，随本次会话生存 */
-    AdapterMpi *prime;                          /* 极大素数 SPEKE_PRIME */
+    IotcMpi *random;                         /* 本端随机数，随本次会话生存 */
+    IotcMpi *prime;                          /* 极大素数 SPEKE_PRIME */
     uint8_t localChallenge[CHALLENGE_LEN];      /* 本端挑战值 */
     uint8_t remoteChallenge[CHALLENGE_LEN];     /* 对端挑战值 */
     uint8_t identityEncKey[SESSION_KEY_LEN];    /* 协商时派生的sessionKey1 用于加密 */

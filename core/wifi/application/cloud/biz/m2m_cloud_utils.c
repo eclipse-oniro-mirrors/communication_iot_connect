@@ -17,7 +17,7 @@
 #include "iotc_errcode.h"
 #include "comm_def.h"
 #include "iotc_log.h"
-#include "adapter_network.h"
+#include "iotc_network.h"
 #include "utils_json.h"
 #include "dev_info.h"
 #include "svc_info.h"
@@ -25,9 +25,9 @@
 #include "utils_common.h"
 #include "wifi_net_info.h"
 
-int32_t M2mCloudAddDevInfoToJson(AdapterJson *rootObj)
+int32_t M2mCloudAddDevInfoToJson(IotcJson *rootObj)
 {
-    AdapterJson *devInfoObj = MdlBuildDevInfoJson(ModelGetDevInfo());
+    IotcJson *devInfoObj = MdlBuildDevInfoJson(ModelGetDevInfo());
     if (devInfoObj == NULL) {
         IOTC_LOGW("build dev info error");
         return IOTC_CORE_PROF_MDL_ERR_BUILD_DEV_INFO_JSON;
@@ -37,7 +37,7 @@ int32_t M2mCloudAddDevInfoToJson(AdapterJson *rootObj)
     int32_t ret = GetWifiMacAddrStr(macStr, sizeof(macStr));
     if (ret != IOTC_OK) {
         IOTC_LOGE("get mac error %d", ret);
-        AdapterJsonDelete(devInfoObj);
+        IotcJsonDelete(devInfoObj);
         return ret;
     }
 
@@ -49,14 +49,14 @@ int32_t M2mCloudAddDevInfoToJson(AdapterJson *rootObj)
     ret = UtilsJsonAddStrTable(devInfoObj, strItem, ARRAY_SIZE(strItem));
     if (ret != IOTC_OK) {
         IOTC_LOGE("add info err %d", ret);
-        AdapterJsonDelete(devInfoObj);
+        IotcJsonDelete(devInfoObj);
         return ret;
     }
 
-    ret = AdapterJsonAddItem2Obj(rootObj, STR_JSON_DEV_INFO, devInfoObj);
+    ret = IotcJsonAddItem2Obj(rootObj, STR_JSON_DEV_INFO, devInfoObj);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add dev info to root err %d", ret);
-        AdapterJsonDelete(devInfoObj);
+        IotcJsonDelete(devInfoObj);
         return ret;
     }
 

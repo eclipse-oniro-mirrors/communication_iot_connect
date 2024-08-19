@@ -16,7 +16,7 @@
 #define TRANS_SOCKET_TLS_H
 
 #include "trans_socket.h"
-#include "adapter_tls.h"
+#include "iotc_tls.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,16 +26,16 @@ typedef struct {
     /* name应为常量字符 */
     const char *name;
     int32_t (*onUpdateRemainLen)(const uint8_t *packet, uint32_t curLen, uint32_t *remain);
-    AdapterTlsHost host;
-    AdapterTlsCiphersuites suites;
+    IotcTlsHost host;
+    IotcTlsCiphersuites suites;
     /* cert.certs 应为常量字符数组 */
-    AdapterTlsCerts cert;
-    AdapterTlsPsk psk;
+    IotcTlsCerts cert;
+    IotcTlsPsk psk;
 } SocketTlsInitParam;
 
 TransSocket *TransSocketTlsNew(const SocketTlsInitParam *init);
 
-AdapterTlsCertVerify TransSocketTlsVerifyCert(TransSocket *socket);
+IotcTlsCertVerify TransSocketTlsVerifyCert(TransSocket *socket);
 
 #ifdef __cplusplus
 }

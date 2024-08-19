@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-AdapterJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx);
+IotcJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx);
 
 const CloudOption *M2mCloudGetRevokeOption(void);
 

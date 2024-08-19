@@ -26,7 +26,7 @@
 
 static int32_t SendBleNetCfgMsg(const char *info, uint32_t len)
 {
-    AdapterJson *json = AdapterJsonParseWithLen(info, len);
+    IotcJson *json = IotcJsonParseWithLen(info, len);
     if (json == NULL) {
         IOTC_LOGW("net info parse error");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -40,7 +40,7 @@ static int32_t SendBleNetCfgMsg(const char *info, uint32_t len)
         .req = json,
     };
     int32_t ret = ServiceProxySendMessage(&reqInfo, NULL, NULL);
-    AdapterJsonDelete(json);
+    IotcJsonDelete(json);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send msg error %d", ret);
         return ret;
@@ -48,7 +48,7 @@ static int32_t SendBleNetCfgMsg(const char *info, uint32_t len)
     return IOTC_OK;
 }
 
-static int32_t NetCfgProcessFromJson(const AdapterJson *json)
+static int32_t NetCfgProcessFromJson(const IotcJson *json)
 {
     CHECK_RETURN_LOGW(json != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     int32_t ret = DevSvcProxyRecvBindInfo(json);
@@ -66,13 +66,13 @@ static int32_t NetCfgProcessFromJson(const AdapterJson *json)
 
 static int32_t NetCfgProcessFromString(const char *info, uint32_t len)
 {
-    AdapterJson *json = AdapterJsonParseWithLen(info, len);
+    IotcJson *json = IotcJsonParseWithLen(info, len);
     if (json == NULL) {
         IOTC_LOGW("net info parse error");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
     int32_t ret = NetCfgProcessFromJson(json);
-    AdapterJsonDelete(json);
+    IotcJsonDelete(json);
     if (ret != IOTC_OK) {
         return ret;
     }

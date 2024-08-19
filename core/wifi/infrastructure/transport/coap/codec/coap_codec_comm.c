@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "coap_codec_comm.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "utils_assert.h"
 #include "securec.h"
 #include "iotc_errcode.h"
@@ -40,7 +40,7 @@ static int32_t CoapCommParseExtension(uint32_t *value, const CoapData *raw, uint
             IOTC_LOGW("extend uint16 short");
             return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_EXT_SHORT;
         }
-        *value = AdapterNtohs(*((uint16_t *)&raw->data[*pos])) + COAP_DELTA_UINT16_ADD_NUM;
+        *value = IotcNtohs(*((uint16_t *)&raw->data[*pos])) + COAP_DELTA_UINT16_ADD_NUM;
         *pos += extendLen;
         return IOTC_OK;
     }
@@ -51,7 +51,7 @@ static int32_t CoapCommParseExtension(uint32_t *value, const CoapData *raw, uint
             IOTC_LOGW("extend uint32 short");
             return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_EXT_SHORT;
         }
-        uint32_t add = AdapterNtohl(*((uint32_t *)&raw->data[*pos]));
+        uint32_t add = IotcNtohl(*((uint32_t *)&raw->data[*pos]));
         if (add > UINT32_MAX - COAP_DELTA_UINT32_ADD_NUM) {
             IOTC_LOGW("extend uint32 short");
             return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_EXT_LONG;

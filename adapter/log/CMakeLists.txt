@@ -16,7 +16,7 @@ add_subdirectory(printf)
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_log_inner.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_log_inner.c
     PARENT_SCOPE
 )
 set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)

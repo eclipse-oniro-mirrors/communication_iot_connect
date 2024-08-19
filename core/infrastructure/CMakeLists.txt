@@ -19,7 +19,6 @@ add_subdirectory(schedule)
 add_subdirectory(security)
 add_subdirectory(service)
 add_subdirectory(utils)
-add_subdirectory(log)
 add_subdirectory(model)
 add_subdirectory(product)
 

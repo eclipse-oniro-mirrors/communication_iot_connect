@@ -15,7 +15,7 @@
 #include "coap_codec_tcp_v1.h"
 #include "utils_assert.h"
 #include "coap_codec_comm.h"
-#include "adapter_socket.h"
+#include "iotc_socket.h"
 #include "iotc_errcode.h"
 
 #define COAP_TCP_V1_GET_REMAIN_SIZE_FINISH 1
@@ -162,7 +162,7 @@ int32_t CoapTcpV1GetRemainSize(const uint8_t *packet, uint32_t curLen, uint32_t 
         *remain = COAP_TCP_V1_RAW_HEADER_LEN - curLen;
         return IOTC_OK;
     }
-    uint32_t bodyLen = AdapterNtohs(*(const uint16_t *)packet);
+    uint32_t bodyLen = IotcNtohs(*(const uint16_t *)packet);
     uint32_t curBodyLen = curLen - COAP_TCP_V1_RAW_HEADER_LEN;
     if (bodyLen == curBodyLen) {
         *remain = 0;

@@ -18,7 +18,7 @@
 #include "utils_mutex_global.h"
 #include "securec.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
 #include "utils_common.h"
@@ -152,7 +152,7 @@ static void ClearServiceMsgSub(ServiceNode *svcNode, int32_t serviceId)
                 continue;
             }
             LIST_REMOVE(subItem);
-            AdapterFree(subNode);
+            IotcFree(subNode);
             msgNode->subNum = msgNode->subNum > 0 ? msgNode->subNum - 1 : 0;
         }
     }
@@ -307,7 +307,7 @@ int32_t ServiceProxyResetService(int32_t serviceId, void *param)
 
 static MessageSubNode *MessageSubNodeNew(int32_t serviceId, ServiceMessageHandler subHandler)
 {
-    MessageSubNode *newNode = (MessageSubNode *)AdapterMalloc(sizeof(MessageSubNode));
+    MessageSubNode *newNode = (MessageSubNode *)IotcMalloc(sizeof(MessageSubNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -426,7 +426,7 @@ int32_t ServiceProxyRemoveSubscribe(int32_t instanceId, int32_t serviceId, int32
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(node);
+        IotcFree(node);
         msg->subNum = msg->subNum > 0 ? msg->subNum - 1 : 0;
         IOTC_LOGI("remove sub %d/%d/%d", srcSvc->serviceId, serviceId, msgId);
         break;
@@ -449,14 +449,14 @@ static int32_t GetMsgSubList(ServiceNode *svcNode, int32_t msgId,
         IOTC_LOGI("msg no sub %d", msgNode->messageId);
         return IOTC_OK;
     }
-    *subHandler = (ServiceMessageHandler *)AdapterCalloc(*num, sizeof(ServiceMessageHandler));
+    *subHandler = (ServiceMessageHandler *)IotcCalloc(*num, sizeof(ServiceMessageHandler));
     if (*subHandler == NULL) {
         IOTC_LOGW("calloc error %u", *num);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
-    *respMsg = (ServiceMessage *)AdapterCalloc(*num, sizeof(ServiceMessage));
+    *respMsg = (ServiceMessage *)IotcCalloc(*num, sizeof(ServiceMessage));
     if (*respMsg == NULL) {
-        AdapterFree(*respMsg);
+        IotcFree(*respMsg);
         *respMsg = NULL;
         IOTC_LOGW("calloc error %u", *num);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -606,7 +606,7 @@ static void ServiceAsyncHandler(void *userData)
     if (asyncParam->freeHandler != NULL) {
         asyncParam->freeHandler(asyncParam->reqInfo.req);
     }
-    AdapterFree(asyncParam);
+    IotcFree(asyncParam);
 }
 
 int32_t ServiceProxySendAsyncMessage(const ServiceRequestInfo *req, ServiceMessageFreeHandler freeHandler,
@@ -623,7 +623,7 @@ int32_t ServiceProxySendAsyncMessage(const ServiceRequestInfo *req, ServiceMessa
         return IOTC_ERR_CALLBACK_NULL;
     }
 
-    ServiceAsyncMsgInfo *asyncParam = (ServiceAsyncMsgInfo *)AdapterMalloc(sizeof(ServiceAsyncMsgInfo));
+    ServiceAsyncMsgInfo *asyncParam = (ServiceAsyncMsgInfo *)IotcMalloc(sizeof(ServiceAsyncMsgInfo));
     if (asyncParam == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -636,7 +636,7 @@ int32_t ServiceProxySendAsyncMessage(const ServiceRequestInfo *req, ServiceMessa
     int32_t ret = executor(ServiceAsyncHandler, asyncParam);
     if (ret != IOTC_OK) {
         IOTC_LOGW("async executor error %d", ret);
-        AdapterFree(asyncParam);
+        IotcFree(asyncParam);
         return ret;
     }
     return IOTC_OK;
@@ -654,7 +654,7 @@ void ServiceProxyFreeResponseMessage(ServiceMessage *resp, uint32_t respNum)
         freeHandler((void *)cur->msg);
         cur->msg = NULL;
     }
-    AdapterFree(resp);
+    IotcFree(resp);
 }
 
 static void MessageNodeFree(MessageNode *node)
@@ -664,9 +664,9 @@ static void MessageNodeFree(MessageNode *node)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &node->subList) {
         MessageSubNode *subNode = CONTAINER_OF(item, MessageSubNode, node);
         LIST_REMOVE(item);
-        AdapterFree(subNode);
+        IotcFree(subNode);
     }
-    AdapterFree(node);
+    IotcFree(node);
 }
 
 static void ServiceNodeFree(ServiceNode *node)
@@ -679,12 +679,12 @@ static void ServiceNodeFree(ServiceNode *node)
         MessageNodeFree(msgNode);
     }
     UTILS_FREE_2_NULL(node->depends);
-    AdapterFree(node);
+    IotcFree(node);
 }
 
 static MessageNode *MessageNodeNew(int32_t messageId)
 {
-    MessageNode *newNode = (MessageNode *)AdapterMalloc(sizeof(MessageNode));
+    MessageNode *newNode = (MessageNode *)IotcMalloc(sizeof(MessageNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -697,7 +697,7 @@ static MessageNode *MessageNodeNew(int32_t messageId)
 
 static ServiceNode *ServiceNodeNew(const ServiceInstance *ins, uint32_t instanceId)
 {
-    ServiceNode *newNode = (ServiceNode *)AdapterMalloc(sizeof(ServiceNode));
+    ServiceNode *newNode = (ServiceNode *)IotcMalloc(sizeof(ServiceNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;

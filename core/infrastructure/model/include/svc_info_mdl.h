@@ -17,14 +17,14 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_prof_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-AdapterJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num);
+IotcJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num);
 
 #ifdef __cplusplus
 }

@@ -18,11 +18,11 @@
 #include "iotc_errcode.h"
 #include "comm_def.h"
 
-AdapterJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num)
+IotcJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num)
 {
     CHECK_RETURN_LOGE(svcInfo != NULL && num != 0, NULL, "param invalid");
 
-    AdapterJson *svcInfoArr = AdapterJsonCreateArray();
+    IotcJson *svcInfoArr = IotcJsonCreateArray();
     if (svcInfoArr == NULL) {
         IOTC_LOGW("create json error");
         return NULL;
@@ -30,25 +30,25 @@ AdapterJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num)
 
     int32_t ret;
     for (uint32_t i = 0; i < num; ++i) {
-        AdapterJson *cur = AdapterCreateJson();
+        IotcJson *cur = IotcJsonCreate();
         if (cur == NULL) {
             IOTC_LOGE("create svc json error");
             break;
         }
-        ret = AdapterJsonAddItem2Array(svcInfoArr, cur);
+        ret = IotcJsonAddItem2Array(svcInfoArr, cur);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add svc to array err %d", ret);
-            AdapterJsonDelete(cur);
+            IotcJsonDelete(cur);
             break;
         }
 
-        ret = AdapterJsonAddStr2Obj(cur, STR_JSON_SVC_TYPE, svcInfo[i].svcType);
+        ret = IotcJsonAddStr2Obj(cur, STR_JSON_SVC_TYPE, svcInfo[i].svcType);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add st err %s", NON_NULL_STR(svcInfo[i].svcType));
             break;
         }
 
-        ret = AdapterJsonAddStr2Obj(cur, STR_JSON_SVC_ID, svcInfo[i].svcId);
+        ret = IotcJsonAddStr2Obj(cur, STR_JSON_SVC_ID, svcInfo[i].svcId);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add st err %s", NON_NULL_STR(svcInfo[i].svcId));
             break;
@@ -57,6 +57,6 @@ AdapterJson *MdlBuildSvcJsonArray(const IotcServiceInfo *svcInfo, uint32_t num)
             return svcInfoArr;
         }
     }
-    AdapterJsonDelete(svcInfoArr);
+    IotcJsonDelete(svcInfoArr);
     return NULL;
 }

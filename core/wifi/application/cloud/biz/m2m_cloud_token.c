@@ -21,7 +21,7 @@
 #include "utils_bit_map.h"
 #include "utils_time.h"
 #include "securec.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "sched_timer.h"
 #include "event_bus.h"
 #include "iotc_errcode.h"
@@ -48,16 +48,16 @@ static const CloudOption *M2mCloudGetTokenRereshOption(void)
     return &TOKEN_OPTION;
 }
 
-static AdapterJson *M2mCloudBuildTokenRefreshRequest(M2mCloudContext *ctx)
+static IotcJson *M2mCloudBuildTokenRefreshRequest(M2mCloudContext *ctx)
 {
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
 
-    AdapterJson *rootObj = AdapterCreateJson();
+    IotcJson *rootObj = IotcJsonCreate();
     CHECK_RETURN_LOGW(rootObj != NULL, NULL, "param invalid");
 
-    int32_t ret = AdapterJsonAddStr2Obj(rootObj, STR_JSON_REFRESH_TOKEN, ctx->tokenInfo.refresh);
+    int32_t ret = IotcJsonAddStr2Obj(rootObj, STR_JSON_REFRESH_TOKEN, ctx->tokenInfo.refresh);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(rootObj);
+        IotcJsonDelete(rootObj);
         return NULL;
     }
     return rootObj;
@@ -94,7 +94,7 @@ static void CloudTokenRefreshRespHandler(const CoapPacket *resp, const SocketAdd
     CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
     CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
 
-    AdapterJson *jsonObj = AdapterJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
+    IotcJson *jsonObj = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
     if (jsonObj == NULL) {
         IOTC_LOGE("json parse error %u", resp->payload.len);
         return;
@@ -104,22 +104,22 @@ static void CloudTokenRefreshRespHandler(const CoapPacket *resp, const SocketAdd
     int32_t ret = UtilsJsonGetNum(jsonObj, STR_ERRCODE, &errcode);
     if (ret != IOTC_OK) {
         IOTC_LOGE("get errcode error %d", ret);
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         return;
     }
     ret = DealErrCodeRsp(errcode);
     if (ret == IOTC_OK) {
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         return;
     }
     if (errcode != CLOUD_ERRCODE_OK) {
         IOTC_LOGE("get errcode %d", errcode);
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         return;
     }
 
     ret = ParseTokenInfo(ctx, jsonObj);
-    AdapterJsonDelete(jsonObj);
+    IotcJsonDelete(jsonObj);
     if (ret != IOTC_OK) {
         IOTC_LOGW("parse token error %d", ret);
         return;
@@ -129,7 +129,7 @@ static void CloudTokenRefreshRespHandler(const CoapPacket *resp, const SocketAdd
 static int32_t CalcWaitTime(const M2mCloudContext *ctx, uint32_t *waitTime)
 {
     uint32_t expireTime = ctx->tokenInfo.timeout;
-    uint32_t passTime = UtilsDeltaTime(AdapterGetSysTimeMs(), ctx->tokenInfo.updateTime);
+    uint32_t passTime = UtilsDeltaTime(IotcGetSysTimeMs(), ctx->tokenInfo.updateTime);
     if (passTime >= expireTime || ctx->tokenInfo.cnt > TOKEN_MAX_REQ_TIME) {
         IOTC_LOGE("token timeout %u/%u/%u", expireTime, passTime, ctx->tokenInfo.cnt);
         return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_TOKEN_EXPIRE;
@@ -204,7 +204,7 @@ static int32_t UpdateCloudTokenInfo(M2mCloudContext *ctx, const CloudTokenInfo *
         return IOTC_ERR_SECUREC_MEMCPY;
     };
 
-    ctx->tokenInfo.updateTime = AdapterGetSysTimeMs();
+    ctx->tokenInfo.updateTime = IotcGetSysTimeMs();
     ctx->tokenInfo.timeout = token->timeout;
 
     ret = UpdateTokenRefreshTimer(ctx);
@@ -215,10 +215,10 @@ static int32_t UpdateCloudTokenInfo(M2mCloudContext *ctx, const CloudTokenInfo *
     return IOTC_OK;
 }
 
-static int32_t UpdateTimeStamp(const AdapterJson *jsonObj)
+static int32_t UpdateTimeStamp(const IotcJson *jsonObj)
 {
-    const char *timestamp = AdapterJsonGetStr(AdapterJsonGetObj(jsonObj, STR_JSON_TIMESTAMP));
-    const char *timezone = AdapterJsonGetStr(AdapterJsonGetObj(jsonObj, STR_JSON_TIMEZONE));
+    const char *timestamp = IotcJsonGetStr(IotcJsonGetObj(jsonObj, STR_JSON_TIMESTAMP));
+    const char *timezone = IotcJsonGetStr(IotcJsonGetObj(jsonObj, STR_JSON_TIMEZONE));
     IOTC_LOGI("get time info %s/%s", NON_NULL_STR(timestamp), NON_NULL_STR(timezone));
 
     if (timestamp != NULL && timezone != NULL) {
@@ -236,7 +236,7 @@ static int32_t UpdateTimeStamp(const AdapterJson *jsonObj)
     return IOTC_OK;
 }
 
-static int32_t GetTokenInfo(const AdapterJson *jsonObj, CloudTokenInfo *token)
+static int32_t GetTokenInfo(const IotcJson *jsonObj, CloudTokenInfo *token)
 {
     uint32_t timeout = 0;
 
@@ -263,18 +263,18 @@ static int32_t GetTokenInfo(const AdapterJson *jsonObj, CloudTokenInfo *token)
     return IOTC_OK;
 }
 
-int32_t ParseTokenInfo(M2mCloudContext *ctx, AdapterJson *jsonObj)
+int32_t ParseTokenInfo(M2mCloudContext *ctx, IotcJson *jsonObj)
 {
     CHECK_RETURN_LOGW(ctx != NULL && jsonObj != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    int32_t ret = UpdateTimeStamp((const AdapterJson *)jsonObj);
+    int32_t ret = UpdateTimeStamp((const IotcJson *)jsonObj);
     if (ret != IOTC_OK) {
         IOTC_LOGE("update timestamp error %d", ret);
         return ret;
     }
 
     CloudTokenInfo token = {0};
-    ret = GetTokenInfo((const AdapterJson *)jsonObj, &token);
+    ret = GetTokenInfo((const IotcJson *)jsonObj, &token);
     if (ret != IOTC_OK) {
         IOTC_LOGE("get tokeninfo error %d", ret);
         return ret;

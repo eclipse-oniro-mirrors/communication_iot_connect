@@ -18,7 +18,7 @@
 #include "linklayer_encrypt.h"
 #include "utils_list.h"
 #include "utils_assert.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 
@@ -64,7 +64,7 @@ void LinkLayerServiceRelease(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_serviceList) {
         BtSvcInfoNode *svcInfoNode = CONTAINER_OF(item, BtSvcInfoNode, node);
         LIST_REMOVE(&svcInfoNode->node);
-        AdapterFree(svcInfoNode);
+        IotcFree(svcInfoNode);
         g_serviceNum--;
     }
 }
@@ -87,12 +87,12 @@ int32_t LinkLayerServiceRegister(const BtSvcInfo *svcInfo, uint32_t svcNum)
             continue;
         }
 
-        BtSvcInfoNode *svcInfoNode = (BtSvcInfoNode *)AdapterCalloc(1, sizeof(BtSvcInfoNode));
+        BtSvcInfoNode *svcInfoNode = (BtSvcInfoNode *)IotcCalloc(1, sizeof(BtSvcInfoNode));
         CHECK_RETURN_LOGE(svcInfoNode != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc btSvcInfoNode err");
 
         int32_t ret = memcpy_s(&svcInfoNode->svcInfo, sizeof(BtSvcInfo), &(svcInfo[i]), sizeof(BtSvcInfo));
         if (ret != EOK) {
-            AdapterFree(svcInfoNode);
+            IotcFree(svcInfoNode);
             return IOTC_ERR_SECUREC_MEMCPY;
         }
         LIST_INSERT_BEFORE(&svcInfoNode->node, &g_serviceList);
@@ -143,7 +143,7 @@ static int32_t EncodeCmdData(const BtCmdParam *cmdParam, const uint8_t *payload,
         "encode body err, len:%u", payloadLen);
     uint32_t len = SVC_TYPE_LEN + SVC_LEN_LEN + strlen(cmdParam->service) +
         SVC_PAYLOAD_LEN_LEN + payloadLen;
-    uint8_t *out = (uint8_t *)AdapterCalloc(len, sizeof(uint8_t));
+    uint8_t *out = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
     CHECK_RETURN_LOGE(out != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc cmd data rsp:%u err", len);
 
     uint32_t pos = 0;
@@ -154,7 +154,7 @@ static int32_t EncodeCmdData(const BtCmdParam *cmdParam, const uint8_t *payload,
     /* 服务 */
     int32_t ret = memcpy_s(out + pos, len - pos, cmdParam->service, strlen(cmdParam->service));
     if (ret != EOK) {
-        AdapterFree(out);
+        IotcFree(out);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     pos += strlen(cmdParam->service);
@@ -164,7 +164,7 @@ static int32_t EncodeCmdData(const BtCmdParam *cmdParam, const uint8_t *payload,
     /* payload */
     ret = memcpy_s(out + pos, len - pos, payload, payloadLen);
     if (ret != EOK) {
-        AdapterFree(out);
+        IotcFree(out);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
@@ -217,7 +217,7 @@ int32_t LinkLayerProcessData(const uint8_t *buff, uint32_t len, LinkLayerEncrypt
 
     ret = EncodeCmdData(&cmdParam, response, responseLen, outBuff, outLen);
     if (response != NULL) {
-        AdapterFree(response);
+        IotcFree(response);
     }
     return ret;
 }
@@ -244,7 +244,7 @@ static int32_t CreateAndSendRptCmdData(const char *service, const uint8_t *data,
     } else {
         ret = LinkLayerReportCmdData(rptData, rptDataLen);
     }
-    AdapterFree(rptData);
+    IotcFree(rptData);
     return ret;
 }
 

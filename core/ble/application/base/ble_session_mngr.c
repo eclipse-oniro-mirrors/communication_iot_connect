@@ -16,9 +16,9 @@
 #include "config_authinfo.h"
 #include "utils_common.h"
 #include "utils_assert.h"
-#include "adapter_kdf.h"
+#include "iotc_kdf.h"
 #include "security_random.h"
-#include "adapter_aes.h"
+#include "iotc_aes.h"
 #include "event_bus_sub.h"
 #include "ble_linklayer.h"
 #include "securec.h"
@@ -173,15 +173,15 @@ int32_t BleSessKeyGen(const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, u
         return IOTC_CORE_BLE_INVALID_AUTHCODE_ID;
     }
 
-    AdapterPbkdf2HmacParam param = {
-        .md = ADAPTER_MD_SHA256,
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
         .password = authInfo.authCode,
         .passwordLen = sizeof(authInfo.authCode),
         .salt = sessInfo->salt,
         .saltLen = SALT_LEN,
         .iterCount = ITER_TIMES
     };
-    ret = AdapterPkcs5Pbkdf2Hmac(&param, sessInfo->key, SESSION_KEY_LEN);
+    ret = IotcPkcs5Pbkdf2Hmac(&param, sessInfo->key, SESSION_KEY_LEN);
     (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "ble sess key gen err:%d", ret);
     g_sessParam.negoFinish = true;
@@ -225,7 +225,7 @@ static int32_t BleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     CHECK_RETURN_LOGE(pid != NULL && strlen(pid) > 0, IOTC_CORE_BLE_INVALID_PID, "pid err");
     /* 生成密文 */
     BleSessKeyInfo *sessInfo = &g_sessParam.sessInfo;
-    AdapterAesGcmParam param = {
+    IotcAesGcmParam param = {
         .key        = sessInfo->key,
         .keyLen     = SESSION_KEY_LEN,
         .iv         = outBuff,
@@ -235,7 +235,7 @@ static int32_t BleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .data       = data,
         .dataLen    = dataLen,
     };
-    ret = AdapterAesGcmEncrypt(&param, outBuff + SESS_IV_LEN + dataLen, SESS_TAG_LEN,
+    ret = IotcAesGcmEncrypt(&param, outBuff + SESS_IV_LEN + dataLen, SESS_TAG_LEN,
         outBuff + SESS_IV_LEN);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen encData err:%d", ret);
 
@@ -264,7 +264,7 @@ static int32_t BleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     CHECK_RETURN_LOGE(pid != NULL && strlen(pid) > 0, IOTC_CORE_BLE_INVALID_PID, "pid err");
     (void)memset_s(outBuff, outLen, 0, outLen);
     /* AES解密 */
-    AdapterAesGcmParam param = {
+    IotcAesGcmParam param = {
         .key        = sessInfo->key,
         .keyLen     = SESSION_KEY_LEN,
         .iv         = data,
@@ -274,7 +274,7 @@ static int32_t BleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .data       = data + SESS_IV_LEN,
         .dataLen    = outLen,
     };
-    ret = AdapterAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
+    ret = IotcAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen decData err:%d", ret);
     
     return IOTC_OK;
@@ -288,25 +288,25 @@ static int32_t BleSessCalHmac(const uint8_t *data, uint32_t dataLen, uint8_t *ca
 
     BleSessKeyInfo *sessInfo = &g_sessParam.sessInfo;
     uint8_t hmacKey[SESS_HMAC_LEN] = { 0 };
-    AdapterPbkdf2HmacParam param = {
-        .md = ADAPTER_MD_SHA256,
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
         .password = sessInfo->key,
         .passwordLen = SESSION_KEY_LEN,
         .salt = sessInfo->salt,
         .saltLen = SALT_LEN,
         .iterCount = ITER_TIMES
     };
-    int32_t ret = AdapterPkcs5Pbkdf2Hmac(&param, hmacKey, SESS_HMAC_LEN);
+    int32_t ret = IotcPkcs5Pbkdf2Hmac(&param, hmacKey, SESS_HMAC_LEN);
     CHECK_RETURN(ret == IOTC_OK, ret);
 
-    AdapterHmacParam hmacParam = {
-        .md = ADAPTER_MD_SHA256,
+    IotcHmacParam hmacParam = {
+        .md = IOTC_MD_SHA256,
         .key = hmacKey,
         .keyLen = SESS_HMAC_LEN,
         .data = data,
         .dataLen = dataLen
     };
-    ret = AdapterHmacCalc(&hmacParam, calHmac, SESS_HMAC_LEN);
+    ret = IotcHmacCalc(&hmacParam, calHmac, SESS_HMAC_LEN);
     (void)memset_s(hmacKey, SESS_HMAC_LEN, 0, SESS_HMAC_LEN);
     return ret;
 }

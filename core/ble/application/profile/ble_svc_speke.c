@@ -37,7 +37,7 @@ int32_t PutBleSvcSpeke(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
     if (ret != IOTC_OK) {
         IOTC_LOGW("process speke packet %d", ret);
         if (*out != NULL) {
-            AdapterFree(*out);
+            IotcFree(*out);
             *out = NULL;
             *outLen = 0;
         }

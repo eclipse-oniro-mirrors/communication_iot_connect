@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_prof_def.h"
 
 #ifdef __cplusplus
@@ -29,9 +29,9 @@ typedef struct {
     uint32_t *len;
 } GetCharStatesData;
 
-int32_t MdlPutJsonArrayToCharStates(const AdapterJson *json, IotcCharState **states, uint32_t *size);
+int32_t MdlPutJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size);
 
-int32_t MdlGetJsonArrayToCharStates(const AdapterJson *json, IotcCharState **states, uint32_t *size);
+int32_t MdlGetJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size);
 
 void MdlCharStatesFree(IotcCharState **states, uint32_t size);
 
@@ -39,7 +39,7 @@ int32_t MdlInitGetCharStatesData(uint32_t size, GetCharStatesData *charData);
 
 void MdlFreeGetCharStatesData(GetCharStatesData *charData);
 
-int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, AdapterJson **array);
+int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, IotcJson **array);
 
 int32_t MdlUpdateCharStates(IotcCharState states[], const GetCharStatesData *charData, uint32_t num);
 

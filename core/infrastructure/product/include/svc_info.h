@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "iotc_prof_def.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {

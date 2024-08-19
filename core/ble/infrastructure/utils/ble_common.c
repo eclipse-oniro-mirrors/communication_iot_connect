@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "securec.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
@@ -47,8 +47,8 @@ char *GetBleMacStr(void)
 {
     static char macStr[MAC_STR_MAX_LEN];
     (void)memset_s(macStr, sizeof(macStr), 0, sizeof(macStr));
-    uint8_t mac[ADAPTER_BLE_ADDR_LEN] = {0};
-    if (AdapterBleGetBleMac(mac, ADAPTER_BLE_ADDR_LEN) != IOTC_OK) {
+    uint8_t mac[IOTC_ADPT_BLE_ADDR_LEN] = {0};
+    if (IotcBleGetBleMac(mac, IOTC_ADPT_BLE_ADDR_LEN) != IOTC_OK) {
         IOTC_LOGE("get mac");
         (void)memset_s(macStr, sizeof(macStr), 0, sizeof(macStr));
         return macStr;

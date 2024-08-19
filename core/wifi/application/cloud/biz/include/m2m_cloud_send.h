@@ -34,7 +34,7 @@ typedef struct {
     uint8_t opBitMap;
 } CloudOption;
 
-typedef AdapterJson *(*M2mBuildRequest)(M2mCloudContext *ctx);
+typedef IotcJson *(*M2mBuildRequest)(M2mCloudContext *ctx);
 
 int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
     M2mBuildRequest build, const CloudOption *option);

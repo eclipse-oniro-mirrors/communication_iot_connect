@@ -15,7 +15,7 @@
 #ifndef IOTC_SERVICE_BLE_H
 #define IOTC_SERVICE_BLE_H
 #include <stdint.h>
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "iotc_ble_def.h"
 
 #ifdef __cplusplus
@@ -38,7 +38,7 @@ typedef enum {
     IOTC_BLE_ADV_TYPE_CUSTOM,                /* 用户自定义广播 */
 } BleSvcAdvDataType;
 
-typedef int32_t (*BleSvcCustomAdvDataCallback)(AdapterBleAdvData *advData);
+typedef int32_t (*BleSvcCustomAdvDataCallback)(IotcAdptBleAdvData *advData);
 typedef int32_t (*BleStartAdv)(uint32_t ms);
 typedef int32_t (*BleStopAdv)(void);
 typedef void (*BleSetAdvDataType)(BleSvcAdvDataType type);

@@ -14,7 +14,7 @@
  */
 #include <string.h>
 #include "ble_svc_custom_sec_data.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "utils_json.h"
@@ -27,15 +27,15 @@
 #include "iotc_errcode.h"
 #include "product_adapter.h"
 
-static int32_t GetSeq(AdapterJson *root, uint32_t *seq)
+static int32_t GetSeq(IotcJson *root, uint32_t *seq)
 {
-    AdapterJson *seqItem = AdapterJsonGetObj(root, STR_JSON_SEQ);
+    IotcJson *seqItem = IotcJsonGetObj(root, STR_JSON_SEQ);
     if (seqItem == NULL) {
         IOTC_LOGE("get seq item err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
     int64_t num = 0;
-    int32_t ret = AdapterJsonGetNum(seqItem, &num);
+    int32_t ret = IotcJsonGetNum(seqItem, &num);
     if (ret != IOTC_OK) {
         IOTC_LOGE("get seq err=%d", ret);
         return ret;
@@ -44,10 +44,10 @@ static int32_t GetSeq(AdapterJson *root, uint32_t *seq)
     return IOTC_OK;
 }
 
-static bool IsAllServicesSid(AdapterJson *vendorItem)
+static bool IsAllServicesSid(IotcJson *vendorItem)
 {
     uint32_t size = 0;
-    int32_t ret = AdapterJsonGetArraySize(vendorItem, &size);
+    int32_t ret = IotcJsonGetArraySize(vendorItem, &size);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get size error %d", ret);
         return false;
@@ -56,43 +56,43 @@ static bool IsAllServicesSid(AdapterJson *vendorItem)
     if (size != 1) {
         return false;
     }
-    const char *sid = AdapterJsonGetStr(AdapterJsonGetObj(AdapterJsonGetArrayItem(vendorItem, 0), STR_JSON_SID));
+    const char *sid = IotcJsonGetStr(IotcJsonGetObj(IotcJsonGetArrayItem(vendorItem, 0), STR_JSON_SID));
     if (sid == NULL || strcmp(sid, STR_JSON_ALL_SERVICE) != 0) {
         return false;
     }
     return true;
 }
 
-static int32_t BuildBleCustomSecDataService(AdapterJson *item, uint8_t **out, uint32_t *outLen)
+static int32_t BuildBleCustomSecDataService(IotcJson *item, uint8_t **out, uint32_t *outLen)
 {
-    AdapterJson *root = AdapterCreateJson();
+    IotcJson *root = IotcJsonCreate();
     if (root == NULL) {
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
-    int32_t ret = AdapterJsonAddNum2Obj(root, STR_JSON_SEQ, (int64_t)BleSessSendSeqGet());
+    int32_t ret = IotcJsonAddNum2Obj(root, STR_JSON_SEQ, (int64_t)BleSessSendSeqGet());
     if (ret != IOTC_OK) {
         IOTC_LOGW("add seq error %d", ret);
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return ret;
     }
 
-    AdapterJson *dupItem = AdapterDuplicateJson(item, true);
+    IotcJson *dupItem = IotcDuplicateJson(item, true);
     if (dupItem == NULL) {
         IOTC_LOGW("duplicate item err");
-        AdapterJsonDelete(root);
+        IotcJsonDelete(root);
         return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
     }
 
-    ret = AdapterJsonAddItem2Obj(root, STR_JSON_VENDOR, dupItem);
+    ret = IotcJsonAddItem2Obj(root, STR_JSON_VENDOR, dupItem);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(root);
-        AdapterJsonDelete(dupItem);
+        IotcJsonDelete(root);
+        IotcJsonDelete(dupItem);
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
 
     *out = (uint8_t *)UtilsJsonPrintByMalloc(root);
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
     if (*out == NULL) {
         return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
     }
@@ -102,22 +102,22 @@ static int32_t BuildBleCustomSecDataService(AdapterJson *item, uint8_t **out, ui
 }
 
 #if IOTC_CONF_AILIFE_SUPPORT
-static int32_t BuildBleCustomSecDataSingleService(AdapterJson *array, uint8_t **out, uint32_t *outLen)
+static int32_t BuildBleCustomSecDataSingleService(IotcJson *array, uint8_t **out, uint32_t *outLen)
 {
     uint32_t size = 0;
-    int32_t ret = AdapterJsonGetArraySize(array, &size);
+    int32_t ret = IotcJsonGetArraySize(array, &size);
     CHECK_RETURN_LOGW(ret == IOTC_OK, ret, "get arr size err:%d", ret);
     CHECK_RETURN_LOGW(size == 1, IOTC_CORE_BLE_ERR_CUSTOM_DATA_SIZE, "get arr size:%u err", size);
-    AdapterJson *item = AdapterJsonGetArrayItem(array, 0);
+    IotcJson *item = IotcJsonGetArrayItem(array, 0);
     CHECK_RETURN_LOGW(item != NULL, IOTC_ADAPTER_JSON_ERR_GET_ARRAY_ITEM, "get arr item err");
     return BuildBleCustomSecDataService(item, out, outLen);
 }
 #endif
 
-static int32_t BleCustomSecDataGetChar(AdapterJson *vendorItem, uint8_t **out, uint32_t *outLen,
+static int32_t BleCustomSecDataGetChar(IotcJson *vendorItem, uint8_t **out, uint32_t *outLen,
     DevCtlGetCharStates getChar)
 {
-    AdapterJson *arrayObj = NULL;
+    IotcJson *arrayObj = NULL;
     int32_t ret = getChar(vendorItem, &arrayObj);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get char control error %d", ret);
@@ -129,7 +129,7 @@ static int32_t BleCustomSecDataGetChar(AdapterJson *vendorItem, uint8_t **out, u
 #else
     ret = BuildBleCustomSecDataService(arrayObj, out, outLen);
 #endif
-    AdapterJsonDelete(arrayObj);
+    IotcJsonDelete(arrayObj);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build get char json array %d", ret);
         return ret;
@@ -141,11 +141,11 @@ static int32_t BleCustomSecDataGetChar(AdapterJson *vendorItem, uint8_t **out, u
 static void PutCharReportExecutorCallback(void *userData)
 {
     CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
-    AdapterJson *vendor = (AdapterJson *)userData;
+    IotcJson *vendor = (IotcJson *)userData;
 
-    AdapterJson *respVendor = NULL;
+    IotcJson *respVendor = NULL;
     int32_t ret = DevSvcProxyCtlGetCharStates(vendor, &respVendor);
-    AdapterJsonDelete(vendor);
+    IotcJsonDelete(vendor);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get char control error %d", ret);
         return;
@@ -158,22 +158,22 @@ static void PutCharReportExecutorCallback(void *userData)
 #else
     ret = BuildBleCustomSecDataService(respVendor, &data, &len);
 #endif
-    AdapterJsonDelete(respVendor);
+    IotcJsonDelete(respVendor);
     if (ret != IOTC_OK || data == NULL || len == 0) {
         IOTC_LOGW("trans rpt json err:%d", ret);
         return;
     }
     ret = LinkLayerReportSvcDataEnc(BLE_SVC_CUSTOM_SEC_DATA, data, len);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("rpt custom sec data err:%d", ret);
     }
 }
 
-static int32_t BleCustomSecDataProcess(AdapterJson *vendorItem, uint8_t **out, uint32_t *outLen)
+static int32_t BleCustomSecDataProcess(IotcJson *vendorItem, uint8_t **out, uint32_t *outLen)
 {
     uint32_t size = 0;
-    int32_t ret = AdapterJsonGetArraySize(vendorItem, &size);
+    int32_t ret = IotcJsonGetArraySize(vendorItem, &size);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get array size error %d", ret);
         return ret;
@@ -185,7 +185,7 @@ static int32_t BleCustomSecDataProcess(AdapterJson *vendorItem, uint8_t **out, u
     }
 
     /* 基于是否有data字段来判断是否为控制指令 */
-    bool isGetCmd = (AdapterJsonGetObj(AdapterJsonGetArrayItem(vendorItem, 0), STR_JSON_DATA) == NULL);
+    bool isGetCmd = (IotcJsonGetObj(IotcJsonGetArrayItem(vendorItem, 0), STR_JSON_DATA) == NULL);
     if (isGetCmd) {
         if (IsAllServicesSid(vendorItem)) {
             return DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
@@ -203,7 +203,7 @@ static int32_t BleCustomSecDataProcess(AdapterJson *vendorItem, uint8_t **out, u
         return IOTC_OK;
     }
 
-    AdapterJson *vendorCopy = AdapterDuplicateJson(vendorItem, true);
+    IotcJson *vendorCopy = IotcDuplicateJson(vendorItem, true);
     if (vendorCopy == NULL) {
         return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
     }
@@ -212,30 +212,30 @@ static int32_t BleCustomSecDataProcess(AdapterJson *vendorItem, uint8_t **out, u
     ret = SchedAsyncExecutor(PutCharReportExecutorCallback, vendorCopy);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add executor error %d", ret);
-        AdapterJsonDelete(vendorCopy);
+        IotcJsonDelete(vendorCopy);
         return ret;
     }
     return IOTC_OK;
 }
 
 /* 对端下发服务非array时先进行处理 */
-static int32_t BuildVendorArrayFromItem(AdapterJson *vendorItem, AdapterJson **vendorArray)
+static int32_t BuildVendorArrayFromItem(IotcJson *vendorItem, IotcJson **vendorArray)
 {
-    AdapterJson *array = AdapterJsonCreateArray();
+    IotcJson *array = IotcJsonCreateArray();
     CHECK_RETURN_LOGE(array != NULL, IOTC_ADAPTER_JSON_ERR_CREATE, "create vendor arr err");
 
-    AdapterJson *duplicateItem = AdapterDuplicateJson(vendorItem, true);
+    IotcJson *duplicateItem = IotcDuplicateJson(vendorItem, true);
     if (duplicateItem == NULL) {
         IOTC_LOGE("copy vendor item err");
-        AdapterJsonDelete(array);
+        IotcJsonDelete(array);
         return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
     }
 
-    int32_t ret = AdapterJsonAddItem2Array(array, duplicateItem);
+    int32_t ret = IotcJsonAddItem2Array(array, duplicateItem);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add item copy err");
-        AdapterJsonDelete(array);
-        AdapterJsonDelete(duplicateItem);
+        IotcJsonDelete(array);
+        IotcJsonDelete(duplicateItem);
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
 
@@ -243,14 +243,14 @@ static int32_t BuildVendorArrayFromItem(AdapterJson *vendorItem, AdapterJson **v
     return IOTC_OK;
 }
 
-static int32_t ForwardCustomSecData(AdapterJson *root, uint8_t **out, uint32_t *outLen)
+static int32_t ForwardCustomSecData(IotcJson *root, uint8_t **out, uint32_t *outLen)
 {
-    AdapterJson *vendorItem = AdapterJsonGetObj(root, STR_JSON_VENDOR);
+    IotcJson *vendorItem = IotcJsonGetObj(root, STR_JSON_VENDOR);
     if (vendorItem == NULL) {
         IOTC_LOGE("get vendor item err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    char *vendor = AdapterJsonPrint(vendorItem);
+    char *vendor = IotcJsonPrint(vendorItem);
     if (vendor == NULL) {
         IOTC_LOGE("print vendor item err");
         return IOTC_ADAPTER_JSON_ERR_PRINT;
@@ -258,7 +258,7 @@ static int32_t ForwardCustomSecData(AdapterJson *root, uint8_t **out, uint32_t *
 
     /* custom sec data 优先由外部回调处理 */
     int32_t ret = ProductRecvCustomSecData((const uint8_t *)vendor, strlen(vendor));
-    AdapterJsonFreePrint(vendor);
+    IotcJsonFreePrint(vendor);
     if (ret == IOTC_OK) {
         return IOTC_OK;
     } else if (ret != IOTC_ERR_CALLBACK_NULL) {
@@ -266,12 +266,12 @@ static int32_t ForwardCustomSecData(AdapterJson *root, uint8_t **out, uint32_t *
         return ret;
     }
 
-    if (!AdapterJsonIsArray(vendorItem)) {
-        AdapterJson *vendorArray = NULL;
+    if (!IotcJsonIsArray(vendorItem)) {
+        IotcJson *vendorArray = NULL;
         ret = BuildVendorArrayFromItem(vendorItem, &vendorArray);
         CHECK_RETURN(ret == IOTC_OK, ret);
         ret = BleCustomSecDataProcess(vendorArray, out, outLen);
-        AdapterJsonDelete(vendorArray);
+        IotcJsonDelete(vendorArray);
     } else {
         ret = BleCustomSecDataProcess(vendorItem, out, outLen);
     }
@@ -280,7 +280,7 @@ static int32_t ForwardCustomSecData(AdapterJson *root, uint8_t **out, uint32_t *
 
 static int32_t PutCustomSecData(const char *jsonStr, uint8_t **out, uint32_t *outLen)
 {
-    AdapterJson *root = AdapterJsonParse(jsonStr);
+    IotcJson *root = IotcJsonParse(jsonStr);
     if (root == NULL) {
         IOTC_LOGE("json parse");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
@@ -306,7 +306,7 @@ static int32_t PutCustomSecData(const char *jsonStr, uint8_t **out, uint32_t *ou
         }
         ret = IOTC_OK;
     } while (false);
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
     return ret;
 }
 

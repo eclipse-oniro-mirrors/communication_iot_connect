@@ -18,19 +18,19 @@
 #include "security_speke_common.h"
 #include "security_speke_session.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "security_random.h"
 #include "iotc_errcode.h"
 
-static int32_t VerifyClientReqPayload(const AdapterJson *payload)
+static int32_t VerifyClientReqPayload(const IotcJson *payload)
 {
-    AdapterJson *opCodeObj = AdapterJsonGetObj(payload, SPEKE_SEC_DATA_OPCODE_JSON);
+    IotcJson *opCodeObj = IotcJsonGetObj(payload, SPEKE_SEC_DATA_OPCODE_JSON);
     if (opCodeObj == NULL) {
         IOTC_LOGE("Speke server verify req get opcode item err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
     int64_t opCode = 0;
-    int32_t ret = AdapterJsonGetNum(opCodeObj, &opCode);
+    int32_t ret = IotcJsonGetNum(opCodeObj, &opCode);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server get opcode err:%d", ret);
         return ret;
@@ -49,9 +49,9 @@ static int32_t VerifyClientReqPayload(const AdapterJson *payload)
     return IOTC_OK;
 }
 
-static int32_t CreateSpekeServerRspSecPayload(const NegoContext *negoCtx, AdapterJson **rspPayload)
+static int32_t CreateSpekeServerRspSecPayload(const NegoContext *negoCtx, IotcJson **rspPayload)
 {
-    AdapterJson *payload = AdapterCreateJson();
+    IotcJson *payload = IotcJsonCreate();
     if (payload == NULL) {
         IOTC_LOGE("Speke server rsp create payload JSON err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -60,25 +60,25 @@ static int32_t CreateSpekeServerRspSecPayload(const NegoContext *negoCtx, Adapte
     int32_t ret = SpekeCommonAddVerInfoToJson(payload);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server rsp add ver info JSON err:%d", ret);
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return ret;
     }
     ret = SpekeCommonAddDataToJson(payload, SPEKE_SEC_DATA_CHALLENGE_JSON, negoCtx->localChallenge, CHALLENGE_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server rsp add challenge JSON err:%d", ret);
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return ret;
     }
     ret = SpekeCommonAddDataToJson(payload, SPEKE_SEC_DATA_SALT_JSON, negoCtx->salt, negoCtx->saltLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server rsp add salt JSON err:%d", ret);
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return ret;
     }
     ret = SpekeCommonAddDataToJson(payload, SPEKE_SEC_DATA_EPK_JSON, negoCtx->pubKey, negoCtx->pubKeyLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server rsp add epk JSON err:%d", ret);
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return ret;
     }
 
@@ -108,18 +108,18 @@ int32_t SpekeServerProcessReq(SpekeProcessParam param, uint8_t **msg, uint32_t *
     }
     NegoContext *negoCtx = session->negoContext;
 
-    AdapterJson *rspPayload = NULL;
+    IotcJson *rspPayload = NULL;
     ret = CreateSpekeServerRspSecPayload(negoCtx, &rspPayload);
     if (ret != IOTC_OK) {
         return ret;
     }
 
     ret = SpekeCommonCreateNegoMsg(param.sessionId, SPEKE_SEC_DATA_MSG_TYPE_SERVER_RSP, rspPayload, msg, len);
-    AdapterJsonDelete(rspPayload);
+    IotcJsonDelete(rspPayload);
     return ret;
 }
 
-static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const AdapterJson *payload)
+static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const IotcJson *payload)
 {
     uint8_t *remoteChallenge = NULL;
     uint32_t remoteChallengeLen = 0;
@@ -132,10 +132,10 @@ static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const AdapterJson *pa
     ret = NegoContextSetRemoteChallenge(negoCtx, remoteChallenge, remoteChallengeLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server set remote challenge err:%d", ret);
-        AdapterFree(remoteChallenge);
+        IotcFree(remoteChallenge);
         return ret;
     }
-    AdapterFree(remoteChallenge);
+    IotcFree(remoteChallenge);
 
     uint8_t *remotePubKey = NULL;
     uint32_t remotePubKeyLen = 0;
@@ -146,10 +146,10 @@ static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const AdapterJson *pa
     }
     ret = NegoContextGenSessionKey(negoCtx, remotePubKey, remotePubKeyLen);
     if (ret != IOTC_OK) {
-        AdapterFree(remotePubKey);
+        IotcFree(remotePubKey);
         return ret;
     }
-    AdapterFree(remotePubKey);
+    IotcFree(remotePubKey);
 
     uint8_t *remoteHmac = NULL;
     uint32_t remoteHmacLen = 0;
@@ -160,17 +160,17 @@ static int32_t ParseClientCfmPayload(NegoContext *negoCtx, const AdapterJson *pa
     }
     ret = NegoContextVerifyHmac(negoCtx, remoteHmac, remoteHmacLen);
     if (ret != IOTC_OK) {
-        AdapterFree(remoteHmac);
+        IotcFree(remoteHmac);
         return ret;
     }
-    AdapterFree(remoteHmac);
+    IotcFree(remoteHmac);
 
     return IOTC_OK;
 }
 
-static int32_t CreateSpekeServerCfmSecPayload(const NegoContext *negoCtx, AdapterJson **cfmPayload)
+static int32_t CreateSpekeServerCfmSecPayload(const NegoContext *negoCtx, IotcJson **cfmPayload)
 {
-    AdapterJson *payload = AdapterCreateJson();
+    IotcJson *payload = IotcJsonCreate();
     if (payload == NULL) {
         IOTC_LOGE("Speke server create cfm payload JSON err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -179,13 +179,13 @@ static int32_t CreateSpekeServerCfmSecPayload(const NegoContext *negoCtx, Adapte
     uint8_t hmac[HMAC_LEN] = { 0 };
     int32_t ret = NegoContextGenHmac(negoCtx, hmac, HMAC_LEN);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return ret;
     }
     ret = SpekeCommonAddDataToJson(payload, SPEKE_SEC_DATA_KCF_JSON, hmac, HMAC_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke server add hmac to cfm payload err:%d", ret);
-        AdapterJsonDelete(payload);
+        IotcJsonDelete(payload);
         return ret;
     }
 
@@ -212,7 +212,7 @@ int32_t SpekeServerProcessCfm(SpekeProcessParam param, uint8_t **msg, uint32_t *
         return ret;
     }
 
-    AdapterJson *cfmPayload = NULL;
+    IotcJson *cfmPayload = NULL;
     ret = CreateSpekeServerCfmSecPayload(session->negoContext, &cfmPayload);
     if (ret != IOTC_OK) {
         return ret;
@@ -220,10 +220,10 @@ int32_t SpekeServerProcessCfm(SpekeProcessParam param, uint8_t **msg, uint32_t *
 
     ret = SpekeCommonCreateNegoMsg(param.sessionId, SPEKE_SEC_DATA_MSG_TYPE_SERVER_CFM, cfmPayload, msg, len);
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(cfmPayload);
+        IotcJsonDelete(cfmPayload);
         return ret;
     }
-    AdapterJsonDelete(cfmPayload);
+    IotcJsonDelete(cfmPayload);
 
     return NegoContextGenDataEncKey(session->negoContext, session->dataEncKey, sizeof(session->dataEncKey));
 }

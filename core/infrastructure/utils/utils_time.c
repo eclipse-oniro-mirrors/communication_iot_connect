@@ -19,7 +19,7 @@
 #include "securec.h"
 #include "iotc_log.h"
 #include "iotc_errcode.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_mutex_ex.h"
 
 typedef struct {
@@ -73,7 +73,7 @@ static bool IsTimeOverflow(uint64_t deltaTime, uint64_t lastTime)
 
 static int32_t GetDeltaTime(uint64_t lastSystemTime, uint64_t lastTime, uint64_t *deltaTime)
 {
-    uint32_t curStamp = AdapterGetSysTimeMs();
+    uint32_t curStamp = IotcGetSysTimeMs();
     uint64_t tmpDeltaTime = (uint64_t)UtilsDeltaTime(curStamp, lastSystemTime);
     if (!IsTimeOverflow(tmpDeltaTime, lastTime)) {
         IOTC_LOGE("time overflow");
@@ -145,7 +145,7 @@ static void SetDefaultTimezone(TimeZoneInfo *timeZone)
 
 int32_t UtilsSetUtcTimeStamp(uint64_t stamp)
 {
-    uint32_t curStamp = AdapterGetSysTimeMs();
+    uint32_t curStamp = IotcGetSysTimeMs();
     int32_t ret = IOTC_OK;
 
     if (!TIME_LOCK()) {

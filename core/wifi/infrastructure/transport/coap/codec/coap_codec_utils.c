@@ -18,7 +18,7 @@
 #include "utils_assert.h"
 #include "securec.h"
 #include "utils_common.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "iotc_errcode.h"
 #include "dfx_anonymize.h"
 
@@ -27,9 +27,9 @@ int32_t CoapUtilsBuildJsonPayloadFunc(const CoapBuildPacket *build, CoapBuffer *
     CHECK_RETURN_LOGW(buf != NULL && buf->buffer != NULL && buf->len < buf->size, IOTC_ERR_PARAM_INVALID,
         "param invalid");
     
-    AdapterJson *jsonObj = (AdapterJson *)userData;
+    IotcJson *jsonObj = (IotcJson *)userData;
     uint32_t size = buf->size - buf->len;
-    int32_t ret = AdapterJsonPrint2Buffer(jsonObj, (char *)buf->buffer + buf->len, &size);
+    int32_t ret = IotcJsonPrint2Buffer(jsonObj, (char *)buf->buffer + buf->len, &size);
     if (ret != IOTC_OK) {
         IOTC_LOGW("json print error %u/%u", buf->len, buf->size);
         return ret;

@@ -59,7 +59,7 @@ static void BleNetcfgRptStatus(uint32_t event, void *param, uint32_t len)
     }
     ret = LinkLayerReportSvcDataEnc(BLE_SVC_NETCFG, (const uint8_t *)out, outLen);
     IOTC_LOGN("ret=%d, out=%s", ret, out);
-    AdapterFree(out);
+    IotcFree(out);
 }
 
 int32_t BleSvcNetCfgInit(void)

@@ -14,7 +14,7 @@
  */
 #include "event_source.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "securec.h"
 #include "utils_assert.h"
 #include "utils_common.h"
@@ -27,7 +27,7 @@ EventSource *EventSourceNew(const EventSourceOps *ops, uint32_t size, const char
         return NULL;
     }
 
-    EventSource *source = (EventSource *)AdapterMalloc(size);
+    EventSource *source = (EventSource *)IotcMalloc(size);
     if (source == NULL) {
         IOTC_LOGW("malloc source failed, size[%u]", size);
         return NULL;
@@ -47,7 +47,7 @@ void EventSourceFree(EventSource *source)
     if ((source->ops != NULL) && (source->ops->finalize != NULL)) {
         source->ops->finalize(source);
     }
-    AdapterFree(source);
+    IotcFree(source);
 }
 
 bool EventSourcePrepare(EventSource *source, uint32_t *timeout)

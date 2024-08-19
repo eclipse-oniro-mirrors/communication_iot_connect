@@ -15,12 +15,12 @@
 #include "fwk_init.h"
 #include "utils_list.h"
 #include "utils_bit_map.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "comm_def.h"
 #include "securec.h"
 #include "utils_bit_map.h"
 #include "iotc_log.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "utils_mutex_global.h"
 #include "utils_common.h"
 #include "utils_assert.h"
@@ -80,7 +80,7 @@ int32_t FwkInitAll(FwkInitPolicy policy)
     bool retry = false;
     do {
         if (retry) {
-            AdapterSleepMs(UTILS_SEC_TO_MS(FWK_INIT_BLOCK_SLEEP_TIME_SEC));
+            IotcSleepMs(UTILS_SEC_TO_MS(FWK_INIT_BLOCK_SLEEP_TIME_SEC));
         }
         retry = true;
         ret = InitAllUnit();
@@ -134,7 +134,7 @@ int32_t FwkRegInitUnits(const FwkInitUnit *units, uint32_t num, const char *mdlN
         }
     }
 
-    InitUnitNode *node = (InitUnitNode *)AdapterMalloc(sizeof(InitUnitNode));
+    InitUnitNode *node = (InitUnitNode *)IotcMalloc(sizeof(InitUnitNode));
     if (node == NULL) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
@@ -142,7 +142,7 @@ int32_t FwkRegInitUnits(const FwkInitUnit *units, uint32_t num, const char *mdlN
 
     node->initMap = UtilsCreateBitMap(num);
     if (node->initMap == NULL) {
-        AdapterFree(node);
+        IotcFree(node);
         return IOTC_CORE_COMM_UTILS_ERR_BIT_MAP_CREATE;
     }
     node->name = mdlName;
@@ -155,7 +155,7 @@ int32_t FwkRegInitUnits(const FwkInitUnit *units, uint32_t num, const char *mdlN
 static void FreeInitUnitNode(InitUnitNode *node)
 {
     UtilsFreeBitMap(node->initMap);
-    AdapterFree(node);
+    IotcFree(node);
 }
 
 void FwkUnregInitUnit(const FwkInitUnit *units)

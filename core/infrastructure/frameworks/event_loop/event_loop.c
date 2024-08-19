@@ -20,8 +20,8 @@
 #include "iotc_log.h"
 #include "utils_mutex_ex.h"
 #include "utils_bit_map.h"
-#include "adapter_mem.h"
-#include "adapter_os.h"
+#include "iotc_mem.h"
+#include "iotc_os.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
@@ -47,9 +47,9 @@ struct EventLoop {
     const char *name;
     uint8_t bitMap;
     UtilsExMutex *lock;
-    AdapterSemId *sem;
+    IotcSemId *sem;
     EventLoopIdleCallback idle;
-    AdapterTaskId *taskId;
+    IotcTaskId *taskId;
     uint32_t pollMinTime;
     uint32_t pollMaxTime;
     uint32_t pollTimeout;
@@ -87,7 +87,7 @@ static void EventLoopStaticInit(EventLoop *loop)
 
 EventLoop *EventLoopNew(const char *name)
 {
-    EventLoop *loop = (EventLoop *)AdapterMalloc(sizeof(EventLoop));
+    EventLoop *loop = (EventLoop *)IotcMalloc(sizeof(EventLoop));
     if (loop == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -97,7 +97,7 @@ EventLoop *EventLoopNew(const char *name)
     loop->lock = UtilsCreateExMutex();
     if (loop->lock == NULL) {
         IOTC_LOGW("create ex mutex error");
-        AdapterFree(loop);
+        IotcFree(loop);
         return NULL;
     }
 
@@ -139,11 +139,11 @@ void EventLoopFree(EventLoop *loop)
     EventLoopReset(loop);
     UtilsDestroyExMutex(&loop->lock);
     if (loop->sem != NULL) {
-        AdapterDestroySem(loop->sem);
+        IotcSemDestroy(loop->sem);
         loop->sem = NULL;
     }
 
-    AdapterFree(loop);
+    IotcFree(loop);
 }
 
 void EventLoopReset(EventLoop *loop)
@@ -157,13 +157,13 @@ void EventLoopReset(EventLoop *loop)
         EventNode *eventNode = CONTAINER_OF(item, EventNode, node);
         LIST_REMOVE(item);
         EventSourceFree(eventNode->source);
-        AdapterFree(eventNode);
+        IotcFree(eventNode);
     }
     LIST_FOR_EACH_ITEM_SAFE(item, next, &loop->sourceList) {
         EventNode *eventNode = CONTAINER_OF(item, EventNode, node);
         LIST_REMOVE(item);
         EventSourceFree(eventNode->source);
-        AdapterFree(eventNode);
+        IotcFree(eventNode);
     }
     
     EventLoopStaticInit(loop);
@@ -190,7 +190,7 @@ int32_t EventLoopResume(EventLoop *loop)
     LOCK_LOOP_RETURN_IF_FAIL(loop);
 
     if (loop->sem != NULL) {
-        ret = AdapterPostSem(loop->sem);
+        ret = IotcSemPost(loop->sem);
         if (ret != 0) {
             IOTC_LOGW("sem post error %d", ret);
         }
@@ -214,7 +214,7 @@ static void LoopPrepareEvent(EventLoop *loop)
             if (UTILS_IS_BIT_SET(eventNode->bitMap, EVENT_NODE_FLAG_POLL)) {
                 loop->pollSourceCnt = loop->pollSourceCnt > 0 ? loop->pollSourceCnt - 1 : 0;
             }
-            AdapterFree(eventNode);
+            IotcFree(eventNode);
             continue;
         }
 
@@ -238,7 +238,7 @@ static void LoopCheckSuspend(EventLoop *loop)
         return;
     }
     UTILS_BIT_RESET(loop->bitMap, EVENT_LOOP_FLAG_SUSPEND);
-    loop->sem = AdapterCreateSem(0);
+    loop->sem = IotcSemCreate(0);
     if (loop->sem == NULL) {
         IOTC_LOGE("create sem error");
         UNLOCK_LOOP(loop);
@@ -247,7 +247,7 @@ static void LoopCheckSuspend(EventLoop *loop)
 
     UNLOCK_LOOP(loop);
     IOTC_LOGN("loop suspend for max %u ms", loop->suspendTime);
-    int32_t ret = AdapterWaitSem(loop->sem, loop->suspendTime);
+    int32_t ret = IotcSemWait(loop->sem, loop->suspendTime);
     if (ret == IOTC_OK) {
         IOTC_LOGN("loop resume by sem");
     } else if (ret == IOTC_ERR_TIMEOUT) {
@@ -257,7 +257,7 @@ static void LoopCheckSuspend(EventLoop *loop)
     }
 
     LOCK_LOOP_V_RETURN_IF_FAIL(loop);
-    AdapterDestroySem(loop->sem);
+    IotcSemDestroy(loop->sem);
     loop->sem = NULL;
     UNLOCK_LOOP(loop);
 }
@@ -265,7 +265,7 @@ static void LoopCheckSuspend(EventLoop *loop)
 static void LoopPollEvent(EventLoop *loop)
 {
     if (loop->pollSourceCnt == 0) {
-        AdapterSleepMs(loop->pollTimeout);
+        IotcSleepMs(loop->pollTimeout);
         return;
     }
 
@@ -344,7 +344,7 @@ void EventLoopRun(EventLoop *loop)
     CHECK_V_RETURN(loop != NULL);
 
     LOCK_LOOP_V_RETURN_IF_FAIL(loop);
-    loop->taskId = AdapterGetCurrentTaskId();
+    loop->taskId = IotcTaskGetCurrentTaskId();
     UNLOCK_LOOP(loop);
 
     bool isQuit = false;
@@ -402,7 +402,7 @@ void EventLoopGetPollTime(EventLoop *loop, uint32_t *minTime, uint32_t *maxTime)
 
 static EventNode *EventNodeNew(EventSource *source)
 {
-    EventNode *newNode = (EventNode *)AdapterMalloc(sizeof(EventNode));
+    EventNode *newNode = (EventNode *)IotcMalloc(sizeof(EventNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -469,7 +469,7 @@ void EventLoopDelSource(EventLoop *loop, EventSource *source)
         }
         LIST_REMOVE(item);
         EventSourceFree(eventNode->source);
-        AdapterFree(eventNode);
+        IotcFree(eventNode);
         return;
     }
 
@@ -485,14 +485,14 @@ void EventLoopAddIdle(EventLoop *loop, EventLoopIdleCallback cb)
     UNLOCK_LOOP(loop);
 }
 
-AdapterTaskId *EventLoopGetTaskId(EventLoop *loop)
+IotcTaskId *EventLoopGetTaskId(EventLoop *loop)
 {
     CHECK_RETURN_LOGE(loop != NULL, NULL, "param invalid");
     if (!UtilsExMutexLockAnyway(loop->lock)) {
         IOTC_LOGW("lock loop failed");
         return NULL;
     }
-    AdapterTaskId *taskId = loop->taskId;
+    IotcTaskId *taskId = loop->taskId;
     UNLOCK_LOOP(loop);
     return taskId;
 }

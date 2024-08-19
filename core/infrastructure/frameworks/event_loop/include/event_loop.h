@@ -16,7 +16,7 @@
 #define EVENT_LOOP_H
 
 #include "event_source.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,7 +125,7 @@ int32_t EventLoopAddSource(EventLoop *loop, EventSource *source);
  */
 void EventLoopDelSource(EventLoop *loop, EventSource *source);
 
-AdapterTaskId *EventLoopGetTaskId(EventLoop *loop);
+IotcTaskId *EventLoopGetTaskId(EventLoop *loop);
 
 #ifdef __cplusplus
 }

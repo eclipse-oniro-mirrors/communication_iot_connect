@@ -15,29 +15,33 @@
 #include <stdint.h>
 #include <string.h>
 #include "wifi_net_info.h"
-#include "adapter_wifi.h"
-#include "adapter_network.h"
+#include "iotc_wifi.h"
+#include "iotc_network.h"
 #include "utils_common.h"
 #include "securec.h"
 #include "iotc_errcode.h"
-#include "adapter_wifi_def.h"
+#include "iotc_wifi_def.h"
 #include "utils_assert.h"
 
 #define INADDR_IP_STR "0.0.0.0"
 
 bool IsNetworkConnected(void)
 {
-    if (AdapterGetWifiMode() != ADAPTER_WIFI_MODE_STATION) {
+    if (IotcGetNetworkState() != IOTC_NETWORK_CONNECTED) {
         return false;
     }
 
-    if (AdapterGetNetworkState() != ADAPTER_NETWORK_CONNECTED) {
+    IotcWifiMode mode = IotcGetWifiMode();
+    if (mode != IOTC_WIFI_MODE_STATION) {
         return false;
     }
 
-    char ip[ADAPTER_IP_STR_MAX_LEN + 1] = {0};
-    int32_t ret = AdapterGetLocalIp(ip, sizeof(ip));
-    if (ret != IOTC_OK || strcmp(ip, INADDR_IP_STR) == 0) {
+    char ip[IOTC_IP_STR_MAX_LEN + 1] = {0};
+    int32_t ret = IotcGetLocalIp(ip, sizeof(ip));
+    if (ret != IOTC_OK) {
+        return false;
+    }
+    if (strcmp(ip, INADDR_IP_STR) == 0) {
         return false;
     }
 
@@ -46,11 +50,11 @@ bool IsNetworkConnected(void)
 
 bool IsWifiNetInfoExit(void)
 {
-    uint8_t ssid[ADAPTER_WIFI_SSID_MAX_LEN + 1] = {0};
-    uint8_t pwd[ADAPTER_WIFI_PWD_MAX_LEN + 1] = {0};
-    uint32_t ssidLen = ADAPTER_WIFI_SSID_MAX_LEN;
-    uint32_t pwdLen = ADAPTER_WIFI_PWD_MAX_LEN;
-    int32_t ret = AdapterGetWifiInfo(ssid, &ssidLen, pwd, &pwdLen);
+    uint8_t ssid[IOTC_WIFI_SSID_MAX_LEN + 1] = {0};
+    uint8_t pwd[IOTC_WIFI_PWD_MAX_LEN + 1] = {0};
+    uint32_t ssidLen = IOTC_WIFI_SSID_MAX_LEN;
+    uint32_t pwdLen = IOTC_WIFI_PWD_MAX_LEN;
+    int32_t ret = IotcGetWifiInfo(ssid, &ssidLen, pwd, &pwdLen);
     if (ret != IOTC_OK) {
         return false;
     }
@@ -65,8 +69,8 @@ int32_t GetWifiMacAddrStr(char *buf, uint32_t len)
 {
     CHECK_RETURN_LOGW(buf != NULL && len > MAC_ADDR_STR_LEN, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    uint8_t mac[ADAPTER_MAC_ADDRESS_LEN] = {0};
-    int32_t ret = AdapterGetMacAddr(mac, sizeof(mac));
+    uint8_t mac[IOTC_MAC_ADDRESS_LEN] = {0};
+    int32_t ret = IotcGetMacAddr(mac, sizeof(mac));
     if (ret != IOTC_OK) {
         IOTC_LOGW("get mac error %d", ret);
         return ret;

@@ -14,7 +14,7 @@
  */
 #include "fwk_main.h"
 #include "utils_mutex_global.h"
-#include "adapter_os.h"
+#include "iotc_os.h"
 #include "iotc_log.h"
 #include "utils_common.h"
 #include "main_loop.h"
@@ -25,19 +25,19 @@
 #include "product_adapter.h"
 
 static bool g_existsFlag = false;
-static AdapterSemId *g_resetSem = NULL;
-static AdapterSemId *g_exitSem = NULL;
-static AdapterTaskId *g_mainTaskId = NULL;
+static IotcSemId *g_resetSem = NULL;
+static IotcSemId *g_exitSem = NULL;
+static IotcTaskId *g_mainTaskId = NULL;
 static uint32_t g_stackSize = 0;
 #define API_MAX_BLOCK_SLEEP_TIME_SEC UTILS_SEC_TO_MS(30)
 
-static void MainTaskBehaviorNotice(AdapterSemId **sem)
+static void MainTaskBehaviorNotice(IotcSemId **sem)
 {
     if (!UtilsGlobalMutexLock()) {
         return;
     }
     if (*sem != NULL)  {
-        int32_t ret = AdapterPostSem(*sem);
+        int32_t ret = IotcSemPost(*sem);
         if (ret != IOTC_OK) {
             IOTC_LOGE("post sem error %d", ret);
         }
@@ -65,7 +65,7 @@ static void IotcFwkMainTaskBody(void *arg)
 
         /* 全局初始化 */
         if (FwkInitAll(FWK_INIT_FAILED_RETURN) != IOTC_OK) {
-            AdapterSleepMs(UTILS_SEC_TO_MS(FWK_INIT_BLOCK_SLEEP_TIME_SEC));
+            IotcSleepMs(UTILS_SEC_TO_MS(FWK_INIT_BLOCK_SLEEP_TIME_SEC));
             continue;
         }
         EventBusPublishAsync(IOTC_CORE_COMM_EVENT_MAIN_INITIALIZED, NULL, 0, NULL);
@@ -96,16 +96,16 @@ int32_t IotcFwkMain(uint32_t stackSize)
     }
     g_stackSize = stackSize;
 
-    AdapterTaskParam task = {
+    IotcTaskParam task = {
         .arg = NULL,
         .func = IotcFwkMainTaskBody,
         .name = "iotc_main_task",
-        .prio = ADAPTER_TASK_PRIORITY_MID,
+        .prio = IOTC_TASK_PRIORITY_MID,
         .stackSize = stackSize,
     };
 
     MainTaskExistsFlagChange(true);
-    g_mainTaskId = AdapterCreateTask(&task);
+    g_mainTaskId = IotcTaskCreate(&task);
     if (g_mainTaskId == NULL) {
         IOTC_LOGF("create iotc main task error %u", task.stackSize);
         MainTaskExistsFlagChange(false);
@@ -115,7 +115,7 @@ int32_t IotcFwkMain(uint32_t stackSize)
     return IOTC_OK;
 }
 
-static int32_t MainTaskCreateSem(AdapterSemId **sem)
+static int32_t MainTaskCreateSem(IotcSemId **sem)
 {
     if (!UtilsGlobalMutexLock()) {
         return IOTC_ERR_TIMEOUT;
@@ -127,7 +127,7 @@ static int32_t MainTaskCreateSem(AdapterSemId **sem)
         return IOTC_SDK_MNGR_ERR_MULTI_INVOKE;
     }
 
-    *sem = AdapterCreateSem(0);
+    *sem = IotcSemCreate(0);
     UtilsGlobalMutexUnlock();
     if (*sem == NULL) {
         IOTC_LOGE("create sem error");
@@ -136,15 +136,15 @@ static int32_t MainTaskCreateSem(AdapterSemId **sem)
     return IOTC_OK;
 }
 
-static int32_t MainTaskWaitAndDestroySem(AdapterSemId **sem)
+static int32_t MainTaskWaitAndDestroySem(IotcSemId **sem)
 {
-    int32_t ret = AdapterWaitSem(*sem, API_MAX_BLOCK_SLEEP_TIME_SEC);
+    int32_t ret = IotcSemWait(*sem, API_MAX_BLOCK_SLEEP_TIME_SEC);
     if (ret != IOTC_OK) {
         IOTC_LOGE("sem timeout %d", ret);
     }
 
     (void)UtilsGlobalMutexLock();
-    AdapterDestroySem(*sem);
+    IotcSemDestroy(*sem);
     *sem = NULL;
     UtilsGlobalMutexUnlock();
     return ret;
@@ -157,7 +157,7 @@ int32_t IotcFwkReset(void)
         IOTC_LOGW("main task not exists");
         return IOTC_SDK_MNGR_ERR_MAIN_TASK_NOT_EXISTS;
     }
-    if (AdapterGetCurrentTaskId() == g_mainTaskId) {
+    if (IotcTaskGetCurrentTaskId() == g_mainTaskId) {
         IOTC_LOGW("invoke reset in main task");
         return IOTC_CORE_COMM_FWK_ERR_MAIN_INVOKE_RESET_INVALID_TASK;
     }
@@ -180,7 +180,7 @@ int32_t IotcFwkStop(void)
         return IOTC_OK;
     }
 
-    if (AdapterGetCurrentTaskId() == g_mainTaskId) {
+    if (IotcTaskGetCurrentTaskId() == g_mainTaskId) {
         IOTC_LOGW("invoke stop in main task");
         return IOTC_CORE_COMM_FWK_ERR_MAIN_INVOKE_STOP_INVALID_TASK;
     }

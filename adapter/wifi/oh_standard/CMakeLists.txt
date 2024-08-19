@@ -14,7 +14,7 @@
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_network.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_wifi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_network.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_wifi.c
     PARENT_SCOPE
 )

@@ -67,7 +67,7 @@ void ProfileReportDeinit(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, GetUplinkList()) {
         UplinkNode *curNode = CONTAINER_OF(item, UplinkNode, node);
         LIST_REMOVE(item);
-        AdapterFree(curNode);
+        IotcFree(curNode);
     }
     g_uplinkNum = 0;
     UtilsDestroyMutexLocal(GetMutexLocal());
@@ -77,7 +77,7 @@ int32_t ProfileReportRegUplink(UplinkReportFunc func, const char *name)
 {
     CHECK_RETURN_LOGW(func != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    UplinkNode *newNode = (UplinkNode *)AdapterMalloc(sizeof(UplinkNode));
+    UplinkNode *newNode = (UplinkNode *)IotcMalloc(sizeof(UplinkNode));
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -89,7 +89,7 @@ int32_t ProfileReportRegUplink(UplinkReportFunc func, const char *name)
 
     if (!UtilsMutexLocalLock(GetMutexLocal())) {
         IOTC_LOGW("lock error");
-        AdapterFree(newNode);
+        IotcFree(newNode);
         return IOTC_ERR_TIMEOUT;
     }
 
@@ -113,7 +113,7 @@ void ProfileReportUnregUplink(const UplinkReportFunc uplink)
             continue;
         }
         LIST_REMOVE(item);
-        AdapterFree(curNode);
+        IotcFree(curNode);
         --g_uplinkNum;
         break;
     }
@@ -139,7 +139,7 @@ int32_t ProfileReportCharState(const IotcCharState state[], uint32_t num)
             break;
         }
 
-        uplinks = (Uplink *)AdapterCalloc(GetUplinkNum(), sizeof(Uplink));
+        uplinks = (Uplink *)IotcCalloc(GetUplinkNum(), sizeof(Uplink));
         if (uplinks == NULL) {
             IOTC_LOGW("calloc error %u", GetUplinkNum());
             ret = IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -171,6 +171,6 @@ int32_t ProfileReportCharState(const IotcCharState state[], uint32_t num)
             }
         }
     }
-    AdapterFree(uplinks);
+    IotcFree(uplinks);
     return ret;
 }

@@ -14,7 +14,7 @@
  */
 #include "ble_svc_device_info.h"
 #include "securec.h"
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "ble_common.h"
@@ -28,7 +28,7 @@
 
 #define PROT_TYPE_MAX_LEN 4
 
-static int32_t BuildDeviceInfo(AdapterJson *root)
+static int32_t BuildDeviceInfo(IotcJson *root)
 {
     char protTypeBuf[PROT_TYPE_MAX_LEN + 1] = {0};
     int32_t protType = ModelGetDevProtType();
@@ -60,9 +60,9 @@ static int32_t BuildDeviceInfo(AdapterJson *root)
     return IOTC_OK;
 }
 
-static int32_t BuildVendor(AdapterJson *root)
+static int32_t BuildVendor(IotcJson *root)
 {
-    AdapterJson *devInfo = AdapterCreateJson();
+    IotcJson *devInfo = IotcJsonCreate();
     if (devInfo == NULL) {
         IOTC_LOGE("create vendor err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -70,29 +70,29 @@ static int32_t BuildVendor(AdapterJson *root)
     int32_t ret = BuildDeviceInfo(devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("build vendor err ret=%d", ret);
-        AdapterJsonDelete(devInfo);
+        IotcJsonDelete(devInfo);
         return ret;
     }
-    ret = AdapterJsonAddItem2Obj(root, STR_JSON_DEVICE_INFO, devInfo);
+    ret = IotcJsonAddItem2Obj(root, STR_JSON_DEVICE_INFO, devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add device info err ret=%d", ret);
-        AdapterJsonDelete(devInfo);
+        IotcJsonDelete(devInfo);
         return ret;
     }
     return IOTC_OK;
 }
 
-static int32_t BuildAll(AdapterJson *root)
+static int32_t BuildAll(IotcJson *root)
 {
-    if (AdapterJsonAddStr2Obj(root, STR_JSON_PRODUCT_ID, ModelGetDevProId()) != IOTC_OK) {
+    if (IotcJsonAddStr2Obj(root, STR_JSON_PRODUCT_ID, ModelGetDevProId()) != IOTC_OK) {
         IOTC_LOGE("add prod id err");
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
-    if (AdapterJsonAddStr2Obj(root, STR_JSON_SN, ModelGetDevSn()) != IOTC_OK) {
+    if (IotcJsonAddStr2Obj(root, STR_JSON_SN, ModelGetDevSn()) != IOTC_OK) {
         IOTC_LOGE("add sn err");
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
-    AdapterJson *vendor = AdapterCreateJson();
+    IotcJson *vendor = IotcJsonCreate();
     if (vendor == NULL) {
         IOTC_LOGE("create vendor err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -100,12 +100,12 @@ static int32_t BuildAll(AdapterJson *root)
     int32_t ret = BuildVendor(vendor);
     if (ret != IOTC_OK) {
         IOTC_LOGE("build vendor ret=%d", ret);
-        AdapterJsonDelete(vendor);
+        IotcJsonDelete(vendor);
         return ret;
     }
-    if (AdapterJsonAddItem2Obj(root, STR_JSON_VENDOR, vendor) != IOTC_OK) {
+    if (IotcJsonAddItem2Obj(root, STR_JSON_VENDOR, vendor) != IOTC_OK) {
         IOTC_LOGE("add vendor err");
-        AdapterJsonDelete(vendor);
+        IotcJsonDelete(vendor);
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
 
@@ -119,7 +119,7 @@ int32_t GetBleSvcDeviceInfo(const BtCmdParam *param, uint8_t **out, uint32_t *ou
 
     *out = NULL;
     *outLen = 0;
-    AdapterJson *root = AdapterCreateJson();
+    IotcJson *root = IotcJsonCreate();
     if (root == NULL) {
         IOTC_LOGE("create err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -141,7 +141,7 @@ int32_t GetBleSvcDeviceInfo(const BtCmdParam *param, uint8_t **out, uint32_t *ou
         *outLen = strlen(outStr);
         ret = IOTC_OK;
     } while (false);
-    AdapterJsonDelete(root);
+    IotcJsonDelete(root);
 
     return ret;
 }

@@ -15,7 +15,7 @@
 #ifndef SECURITY_SPEKE_SERVER_H
 #define SECURITY_SPEKE_SERVER_H
 
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "security_speke_common.h"
 
 #ifdef __cplusplus

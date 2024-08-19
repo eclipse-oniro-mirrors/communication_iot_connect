@@ -15,16 +15,16 @@
 #ifndef LOCAL_CONTROL_REPORT_H
 #define LOCAL_CONTROL_REPORT_H
 #include <stdint.h>
-#include "adapter_json.h"
+#include "iotc_json.h"
 #include "local_ctl_ctx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t LocalCtlReportToAllClient(const AdapterJson *json, LocalControlContext *ctx);
+int32_t LocalCtlReportToAllClient(const IotcJson *json, LocalControlContext *ctx);
 
-int32_t LocalCtlReportToTargetClient(const AdapterJson *json, LocalControlContext *ctx, LocalControlClient *cli);
+int32_t LocalCtlReportToTargetClient(const IotcJson *json, LocalControlContext *ctx, LocalControlClient *cli);
 
 #ifdef __cplusplus
 }

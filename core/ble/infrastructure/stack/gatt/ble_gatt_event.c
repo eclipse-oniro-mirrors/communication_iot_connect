@@ -14,18 +14,18 @@
  */
 #include "ble_gatt_event.h"
 #include "ble_gatt_mgt.h"
-#include "adapter_ble.h"
+#include "iotc_ble.h"
 #include "ble_sched_event.h"
 #include "sched_msg_queue.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_common.h"
 
 typedef struct {
-    AdapterBleGattEvent gattEvent;
+    IotcAdptBleGattEvent gattEvent;
     BleScheduleEvent scheduleEvent;
     void (*msgFree)(void *msg);
 } GattEventToScheduleEvent;
@@ -35,52 +35,52 @@ static void ReqWriteMsgFree(void *msg);
 
 static const GattEventToScheduleEvent EVENT_COVERT_MAP[] = {
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_CONNECT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_CONNECT,
         .scheduleEvent = BLE_EVENT_CONNECT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_DISCONNECT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_DISCONNECT,
         .scheduleEvent = BLE_EVENT_DISCONNECT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_START_SVC_RESULT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_START_SVC_RESULT,
         .scheduleEvent = BLE_EVENT_START_SVC_RESULT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_STOP_SVC_RESULT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_STOP_SVC_RESULT,
         .scheduleEvent = BLE_EVENT_STOP_SVC_RESULT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_INDICATE_CONF,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_INDICATE_CONF,
         .scheduleEvent = BLE_EVENT_INDICATE_CONF,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_SET_MTU_RESULT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_SET_MTU_RESULT,
         .scheduleEvent = BLE_EVENT_SET_MTU_RESULT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_START_ADV_RESULT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_START_ADV_RESULT,
         .scheduleEvent = BLE_EVENT_START_ADV_RESULT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_STOP_ADV_RESULT,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_STOP_ADV_RESULT,
         .scheduleEvent = BLE_EVENT_STOP_ADV_RESULT,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_REQ_READ,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_REQ_READ,
         .scheduleEvent = BLE_EVENT_REQ_READ,
         .msgFree = MsgFree
     },
     {
-        .gattEvent = ADAPTER_BLE_GATT_EVENT_REQ_WRITE,
+        .gattEvent = IOTC_ADPT_BLE_GATT_EVENT_REQ_WRITE,
         .scheduleEvent = BLE_EVENT_REQ_WRITE,
         .msgFree = ReqWriteMsgFree
     },
@@ -88,19 +88,19 @@ static const GattEventToScheduleEvent EVENT_COVERT_MAP[] = {
 
 static void MsgFree(void *msg)
 {
-    /* AdapterFree may be macro when debug */
-    AdapterFree(msg);
+    /* IotcFree may be macro when debug */
+    IotcFree(msg);
 }
 
 static void ReqWriteMsgFree(void *msg)
 {
-    AdapterBleGattEventParam *eventParam = (AdapterBleGattEventParam *)msg;
-    AdapterFree(eventParam->reqWrite.value);
+    IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)msg;
+    IotcFree(eventParam->reqWrite.value);
     eventParam->reqWrite.value = NULL;
-    AdapterFree(msg);
+    IotcFree(msg);
 }
 
-static int32_t BleGattEventHandler(AdapterBleGattEvent gattEvent, const AdapterBleGattEventParam *param)
+static int32_t BleGattEventHandler(IotcAdptBleGattEvent gattEvent, const IotcAdptBleGattEventParam *param)
 {
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
     for (uint32_t i = 0; i < ARRAY_SIZE(EVENT_COVERT_MAP); i++) {
@@ -108,8 +108,8 @@ static int32_t BleGattEventHandler(AdapterBleGattEvent gattEvent, const AdapterB
             continue;
         }
 
-        AdapterBleGattEventParam *eventParam =
-            (AdapterBleGattEventParam *)UtilsMallocCopy((const uint8_t *)param, sizeof(AdapterBleGattEventParam));
+        IotcAdptBleGattEventParam *eventParam =
+            (IotcAdptBleGattEventParam *)UtilsMallocCopy((const uint8_t *)param, sizeof(IotcAdptBleGattEventParam));
         if (eventParam == NULL) {
             IOTC_LOGW("malloc error");
             return IOTC_ADAPTER_MEM_ERR_MALLOC;
@@ -121,7 +121,7 @@ static int32_t BleGattEventHandler(AdapterBleGattEvent gattEvent, const AdapterB
         msg.free = EVENT_COVERT_MAP[i].msgFree;
         int32_t ret = BleSchedMsgQueueSend(&msg, 0);
         if (ret != IOTC_OK) {
-            AdapterFree(eventParam);
+            IotcFree(eventParam);
             IOTC_LOGW("send msg error %d", ret);
             return ret;
         }
@@ -136,10 +136,10 @@ static void BleSendIndicateDataFree(void *param)
     CHECK_V_RETURN(param != NULL);
     BleIndicateParam *indParam = (BleIndicateParam *)param;
     if (indParam->value != NULL) {
-        AdapterFree(indParam->value);
+        IotcFree(indParam->value);
         indParam->value = NULL;
     }
-    AdapterFree(indParam);
+    IotcFree(indParam);
 }
 
 int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
@@ -148,14 +148,14 @@ int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
         IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    BleIndicateParam *param = AdapterCalloc(1, sizeof(BleIndicateParam));
+    BleIndicateParam *param = IotcCalloc(1, sizeof(BleIndicateParam));
     if (param == NULL) {
         IOTC_LOGE("malloc err");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     param->value = UtilsMallocCopy(value, valueLen);
     if (param->value == NULL) {
-        AdapterFree(param);
+        IotcFree(param);
         IOTC_LOGE("malloc err");
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
@@ -169,8 +169,8 @@ int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     msg.free = BleSendIndicateDataFree;
     int32_t ret = BleSchedMsgQueueSend(&msg, 0);
     if (ret != IOTC_OK) {
-        AdapterFree(param->value);
-        AdapterFree(param);
+        IotcFree(param->value);
+        IotcFree(param);
         IOTC_LOGE("send msg err ret=%d", ret);
         return ret;
     }
@@ -180,5 +180,5 @@ int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
 
 int32_t BleGattEventInit(void)
 {
-    return AdapterBleRegisterGattCb(BleGattEventHandler);
+    return IotcBleRegisterGattCb(BleGattEventHandler);
 }

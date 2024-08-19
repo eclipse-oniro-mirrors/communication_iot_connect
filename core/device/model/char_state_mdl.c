@@ -16,7 +16,7 @@
 #include <string.h>
 #include "utils_assert.h"
 #include "iotc_errcode.h"
-#include "adapter_mem.h"
+#include "iotc_mem.h"
 #include "utils_common.h"
 #include "utils_json.h"
 #include "comm_def.h"
@@ -36,29 +36,29 @@ void MdlCharStatesFree(IotcCharState **states, uint32_t size)
     UTILS_FREE_2_NULL(*states);
 }
 
-static int32_t JsonArrayToCharStates(const AdapterJson *json, IotcCharState **states, uint32_t size,
+static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t size,
     CharStateDataType type)
 {
-    IotcCharState *statesTmp = (IotcCharState *)AdapterCalloc(size, sizeof(IotcCharState));
+    IotcCharState *statesTmp = (IotcCharState *)IotcCalloc(size, sizeof(IotcCharState));
     if (statesTmp == NULL) {
         IOTC_LOGW("calloc error %u", size);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
 
     int32_t ret = IOTC_OK;
-    AdapterJson *cur = NULL;
+    IotcJson *cur = NULL;
     for (uint32_t i = 0; i < size; ++i) {
-        cur = AdapterJsonGetArrayItem(json, i);
+        cur = IotcJsonGetArrayItem(json, i);
         if (cur == NULL) {
             ret = IOTC_ADAPTER_JSON_ERR_GET_ARRAY_ITEM;
             break;
         }
-        statesTmp[i].svcId = (char *)UtilsStrDup(AdapterJsonGetStr(AdapterJsonGetObj(cur, STR_JSON_SID)));
+        statesTmp[i].svcId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_SID)));
         if (statesTmp[i].svcId == NULL) {
             ret = IOTC_CORE_PROF_MDL_ERR_SVC_NO_SID;
             break;
         }
-        statesTmp[i].data = (char *)UtilsJsonPrintByMalloc(AdapterJsonGetObj(cur, STR_JSON_DATA));
+        statesTmp[i].data = (char *)UtilsJsonPrintByMalloc(IotcJsonGetObj(cur, STR_JSON_DATA));
         if (statesTmp[i].data != NULL) {
             statesTmp[i].len = strlen(statesTmp[i].data);
         } else if (type == CHAR_STATE_NEED_DATA) {
@@ -76,10 +76,10 @@ static int32_t JsonArrayToCharStates(const AdapterJson *json, IotcCharState **st
     return ret;
 }
 
-static int32_t MdlJsonArrayToCharStates(const AdapterJson *json, IotcCharState **states, uint32_t *size,
+static int32_t MdlJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size,
     CharStateDataType type)
 {
-    int32_t ret = AdapterJsonGetArraySize(json, size);
+    int32_t ret = IotcJsonGetArraySize(json, size);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get array size error %d", ret);
         return ret;
@@ -97,7 +97,7 @@ static int32_t MdlJsonArrayToCharStates(const AdapterJson *json, IotcCharState *
     return ret;
 }
 
-int32_t MdlPutJsonArrayToCharStates(const AdapterJson *json, IotcCharState **states, uint32_t *size)
+int32_t MdlPutJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size)
 {
     CHECK_RETURN_LOGE(json != NULL && states != NULL && *states == NULL && size != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -105,7 +105,7 @@ int32_t MdlPutJsonArrayToCharStates(const AdapterJson *json, IotcCharState **sta
     return MdlJsonArrayToCharStates(json, states, size, CHAR_STATE_NEED_DATA);
 }
 
-int32_t MdlGetJsonArrayToCharStates(const AdapterJson *json, IotcCharState **states, uint32_t *size)
+int32_t MdlGetJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size)
 {
     CHECK_RETURN_LOGE(json != NULL && states != NULL && *states == NULL && size != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -116,8 +116,8 @@ int32_t MdlGetJsonArrayToCharStates(const AdapterJson *json, IotcCharState **sta
 int32_t MdlBuildGetCharStatesData(uint32_t size, char ***data, uint32_t **len)
 {
     CHECK_RETURN_LOGE(size != 0 && data != NULL && len != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    *data = (char **)AdapterCalloc(size, sizeof(char *));
-    *len = (uint32_t *)AdapterCalloc(size, sizeof(uint32_t));
+    *data = (char **)IotcCalloc(size, sizeof(char *));
+    *len = (uint32_t *)IotcCalloc(size, sizeof(uint32_t));
     if (*data == NULL || *len == NULL) {
         IOTC_LOGW("calloc error %u", size);
         UTILS_FREE_2_NULL(*data);
@@ -130,8 +130,8 @@ int32_t MdlBuildGetCharStatesData(uint32_t size, char ***data, uint32_t **len)
 int32_t MdlInitGetCharStatesData(uint32_t size, GetCharStatesData *charData)
 {
     CHECK_RETURN_LOGW(size != 0 && charData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    charData->data = (char **)AdapterCalloc(size, sizeof(char *));
-    charData->len = (uint32_t *)AdapterCalloc(size, sizeof(uint32_t));
+    charData->data = (char **)IotcCalloc(size, sizeof(char *));
+    charData->len = (uint32_t *)IotcCalloc(size, sizeof(uint32_t));
     if (charData->data == NULL || charData->len == NULL) {
         IOTC_LOGW("calloc error %u", size);
         UTILS_FREE_2_NULL(charData->data);
@@ -148,28 +148,28 @@ void MdlFreeGetCharStatesData(GetCharStatesData *charData)
     UTILS_FREE_2_NULL(charData->len);
 }
 
-static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, AdapterJson *array)
+static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, IotcJson *array)
 {
     for (uint32_t i = 0; i < num; ++i) {
-        AdapterJson *curJsonObj = AdapterCreateJson();
+        IotcJson *curJsonObj = IotcJsonCreate();
         CHECK_RETURN(curJsonObj != NULL, IOTC_ADAPTER_JSON_ERR_CREATE);
 
-        int32_t ret = AdapterJsonAddItem2Array(array, curJsonObj);
+        int32_t ret = IotcJsonAddItem2Array(array, curJsonObj);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add to array error %d", ret);
-            AdapterJsonDelete(curJsonObj);
+            IotcJsonDelete(curJsonObj);
             return IOTC_ADAPTER_JSON_ERR_ADD;
         }
 
-        ret = AdapterJsonAddStr2Obj(curJsonObj, STR_JSON_SID, state[i].svcId);
+        ret = IotcJsonAddStr2Obj(curJsonObj, STR_JSON_SID, state[i].svcId);
         CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_ADD, "add sid error %d", ret);
 
-        AdapterJson *dataObj = AdapterJsonParseWithLen(state[i].data, state[i].len);
+        IotcJson *dataObj = IotcJsonParseWithLen(state[i].data, state[i].len);
         CHECK_RETURN_LOGE(dataObj != NULL, IOTC_ADAPTER_JSON_ERR_PARSE, "parse data error %d", ret);
 
-        ret = AdapterJsonAddItem2Obj(curJsonObj, STR_JSON_DATA, dataObj);
+        ret = IotcJsonAddItem2Obj(curJsonObj, STR_JSON_DATA, dataObj);
         if (ret != IOTC_OK) {
-            AdapterJsonDelete(dataObj);
+            IotcJsonDelete(dataObj);
             IOTC_LOGW("add data error %d", ret);
             return IOTC_ADAPTER_JSON_ERR_ADD;
         }
@@ -177,12 +177,12 @@ static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, Ada
     return IOTC_OK;
 }
 
-int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, AdapterJson **array)
+int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, IotcJson **array)
 {
     CHECK_RETURN_LOGE(state != NULL && num != 0 && num <= IOTC_CONF_PROF_MAX_SVC_NUM && array != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
     
-    AdapterJson *arrayTmp = AdapterJsonCreateArray();
+    IotcJson *arrayTmp = IotcJsonCreateArray();
     if (arrayTmp == NULL) {
         IOTC_LOGW("create array error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
@@ -191,7 +191,7 @@ int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, AdapterJs
     int32_t ret = BuildCharStateJson(state, num, arrayTmp);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build char states array error %d", ret);
-        AdapterJsonDelete(arrayTmp);
+        IotcJsonDelete(arrayTmp);
         return ret;
     }
 
@@ -206,7 +206,7 @@ int32_t MdlUpdateCharStates(IotcCharState states[], const GetCharStatesData *cha
     
     for (uint32_t i = 0; i < num; ++i) {
         if (states[i].data != NULL) {
-            AdapterFree((char *)states[i].data);
+            IotcFree((char *)states[i].data);
         }
         states[i].data = UtilsStrDupWithLen(charData->data[i], charData->len[i]);
         if (states[i].data == NULL) {

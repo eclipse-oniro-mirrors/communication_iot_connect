@@ -17,7 +17,7 @@
 #include "comm_def.h"
 #include "securec.h"
 #include "utils_common.h"
-#include "adapter_wifi_def.h"
+#include "iotc_wifi_def.h"
 #include "iotc_svc_dev.h"
 #include "iotc_svc.h"
 #include "service_proxy.h"
@@ -91,7 +91,7 @@ static int32_t BuildManuNameAndDeviceName(CommBuffer *buf, const IotcDeviceInfo 
     char *deviceTypeBuf = UtilsStrDup(deviceType);
     if (deviceTypeBuf == NULL) {
         IOTC_LOGW("dum dev name error");
-        AdapterFree(manuBuf);
+        IotcFree(manuBuf);
         return IOTC_CORE_COMM_UTILS_ERR_STR_DUP;
     }
 
@@ -103,8 +103,8 @@ static int32_t BuildManuNameAndDeviceName(CommBuffer *buf, const IotcDeviceInfo 
 
     int32_t ret = sprintf_s((char *)buf->buffer + buf->len, buf->size - buf->len, "%s%c%s", manuBuf,
         HILINK_SOFTAP_DASH_CHAR, deviceTypeBuf);
-    AdapterFree(manuBuf);
-    AdapterFree(deviceTypeBuf);
+    IotcFree(manuBuf);
+    IotcFree(deviceTypeBuf);
     if (ret <= 0) {
         return IOTC_ERR_SECUREC_SPRINTF;
     }
@@ -206,7 +206,7 @@ static int32_t BuildHiLinkSsid(CommBuffer *buf)
 
 int32_t BuildHiLinkSoftapSsid(uint8_t *ssid, uint32_t *len)
 {
-    CHECK_RETURN(ssid != NULL && len != NULL && *len >= ADAPTER_WIFI_SSID_MAX_LEN, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN(ssid != NULL && len != NULL && *len >= IOTC_WIFI_SSID_MAX_LEN, IOTC_ERR_PARAM_INVALID);
 
     uint32_t size = *len;
     (void)memset_s(ssid, size, 0, size);

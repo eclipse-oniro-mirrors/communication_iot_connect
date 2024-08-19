@@ -21,7 +21,7 @@
 #include "iotc_errcode.h"
 #include "utils_bit_map.h"
 #include "utils_assert.h"
-#include "adapter_base64.h"
+#include "iotc_base64.h"
 #include "coap_codec_utils.h"
 
 typedef enum {
@@ -110,7 +110,7 @@ static bool LanSearchSessSpekeProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
 
     CoapData newPayload = {data, dataLen};
     ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace payload error %d", ret);
         return false;
@@ -132,35 +132,35 @@ static bool LanSearchSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtl
     int32_t ret;
     /* 获取编解码后的大小 */
     if (type == LAN_SEARCH_BASE64_TYPE_DECODE) {
-        ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
+        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
     } else {
-        ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
+        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
     }
     if (ret != IOTC_OK || dataLen == 0 || dataLen > buf->size) {
         IOTC_LOGW("get len error %d/%d", ret, type);
         return false;
     }
 
-    uint8_t *data = (uint8_t *)AdapterCalloc(dataLen, sizeof(uint8_t));
+    uint8_t *data = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
     if (data == NULL) {
         IOTC_LOGW("calloc error %u", dataLen);
         return false;
     }
 
     if (type == LAN_SEARCH_BASE64_TYPE_DECODE) {
-        ret = AdapterBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
+        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
     } else {
-        ret = AdapterBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
+        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
     }
     if (ret != IOTC_OK) {
         IOTC_LOGW("base64 error %d/%d", ret, type);
-        AdapterFree(data);
+        IotcFree(data);
         return false;
     }
 
     CoapData newPayload = {data, dataLen};
     ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
-    AdapterFree(data);
+    IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("coap replace payload error %d", ret);
         return false;

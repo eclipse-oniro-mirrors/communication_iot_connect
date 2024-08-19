@@ -14,13 +14,13 @@
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_aes.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_base64.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_drbg.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_kdf.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_md.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_mpi.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/adapter_rsa.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_aes.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_base64.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_drbg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_kdf.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_md.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_mpi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_rsa.c
     PARENT_SCOPE
 )
 

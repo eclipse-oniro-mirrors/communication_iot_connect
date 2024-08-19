@@ -37,9 +37,9 @@ typedef enum {
     LOCAL_MODE_AES_GCM,
 } LocalMode;
 
-static AdapterJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const LocalControlClient *client)
+static IotcJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const LocalControlClient *client)
 {
-    AdapterJson *jsonObj = UtilsJsonCreateErrcode(0);
+    IotcJson *jsonObj = UtilsJsonCreateErrcode(0);
     if (jsonObj == NULL) {
         IOTC_LOGW("create json obj error");
         return NULL;
@@ -53,7 +53,7 @@ static AdapterJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const
 
     int32_t ret = UtilsJsonAddStrTable(jsonObj, strTable, ARRAY_SIZE(strTable));
     if (ret != IOTC_OK) {
-        AdapterJsonDelete(jsonObj);
+        IotcJsonDelete(jsonObj);
         IOTC_LOGW("add str table error %d", ret);
         return NULL;
     }
@@ -62,7 +62,7 @@ static AdapterJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const
 }
 
 static int32_t SendLocalCtlResp(CoapEndpoint *endpoint, const CoapPacket *reqPkt, const SocketAddr *addr,
-    LocalCoapSessMsg *respSessMsg, AdapterJson *respJson)
+    LocalCoapSessMsg *respSessMsg, IotcJson *respJson)
 {
     CoapServerRespParam respParam;
     int32_t ret = CoapServerBuildDefaultRespParam(&respParam, reqPkt, respJson);
@@ -113,7 +113,7 @@ void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         return;
     }
 
-    AdapterJson *respJson = CreateLocalSearchRespJson(&authInfo, client);
+    IotcJson *respJson = CreateLocalSearchRespJson(&authInfo, client);
     (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
     if (respJson == NULL) {
         return;
@@ -123,15 +123,15 @@ void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     BuildLocalCoapSessMsg(&respSessMsg, LOCAL_COAP_PLAIN, client);
 
     ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGE("send local ctl search resp error %d", ret);
     }
 }
 
-static AdapterJson *CreateSessMngrRespJson(LocalControlClient *client, uint8_t sn2[SESS_SN_LEN])
+static IotcJson *CreateSessMngrRespJson(LocalControlClient *client, uint8_t sn2[SESS_SN_LEN])
 {
-    AdapterJson *respJson = UtilsJsonCreateErrcode(0);
+    IotcJson *respJson = UtilsJsonCreateErrcode(0);
     if (respJson == NULL) {
         IOTC_LOGW("create json obj error");
         return NULL;
@@ -144,19 +144,19 @@ static AdapterJson *CreateSessMngrRespJson(LocalControlClient *client, uint8_t s
             break;
         }
 
-        ret = AdapterJsonAddStr2Obj(respJson, STR_JSON_SESS_ID, client->sessInfo.sessId);
+        ret = IotcJsonAddStr2Obj(respJson, STR_JSON_SESS_ID, client->sessInfo.sessId);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add sessid error %d", ret);
             break;
         }
 
-        ret = AdapterJsonAddNum2Obj(respJson, STR_JSON_SEQ_NUM, client->sessInfo.recvSeq);
+        ret = IotcJsonAddNum2Obj(respJson, STR_JSON_SEQ_NUM, client->sessInfo.recvSeq);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add seq error %d", ret);
             break;
         }
 
-        ret = AdapterJsonAddNum2Obj(respJson, STR_JSON_MODE_RESP, UTILS_BIT(LOCAL_MODE_AES_GCM));
+        ret = IotcJsonAddNum2Obj(respJson, STR_JSON_MODE_RESP, UTILS_BIT(LOCAL_MODE_AES_GCM));
         if (ret != IOTC_OK) {
             IOTC_LOGW("add mode resp error %d", ret);
             break;
@@ -164,15 +164,15 @@ static AdapterJson *CreateSessMngrRespJson(LocalControlClient *client, uint8_t s
         return respJson;
     } while (0);
 
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     return NULL;
 }
 
 static LocalControlClient *CreateLocalCtlClient(LocalControlContext *ctx, const CoapOption *puuidOption,
-    uint32_t addr, const AdapterJson *reqJson, uint8_t sn2[SESS_SN_LEN])
+    uint32_t addr, const IotcJson *reqJson, uint8_t sn2[SESS_SN_LEN])
 {
     uint8_t sn1[SESS_SN_LEN] = {0};
-    const char *sn1Hex = AdapterJsonGetStr(AdapterJsonGetObj(reqJson, STR_JSON_SN1));
+    const char *sn1Hex = IotcJsonGetStr(IotcJsonGetObj(reqJson, STR_JSON_SN1));
     if (sn1Hex == NULL || !UtilsUnhexify(sn1Hex, strlen(sn1Hex), sn1, SESS_SN_LEN)) {
         IOTC_LOGW("json sn1 invalid");
         return NULL;
@@ -203,7 +203,7 @@ static LocalControlClient *CreateLocalCtlClient(LocalControlContext *ctx, const 
     return client;
 }
 
-static bool LocalModeSupportCheck(const AdapterJson *reqJson)
+static bool LocalModeSupportCheck(const IotcJson *reqJson)
 {
     uint32_t mode;
     int32_t ret = UtilsJsonGetUint(reqJson, STR_JSON_MODE_SUPPORT, &mode);
@@ -230,28 +230,28 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
         return;
     }
 
-    AdapterJson *reqJson = AdapterJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    IotcJson *reqJson = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (reqJson == NULL) {
         IOTC_LOGW("parse json error");
         return;
     }
 
     if (!LocalModeSupportCheck(reqJson)) {
-        AdapterJsonDelete(reqJson);
+        IotcJsonDelete(reqJson);
         return;
     }
 
     uint8_t sn2[SESS_SN_LEN] = {0};
     (void)SecurityRandom(sn2, SESS_SN_LEN);
     LocalControlClient *client = CreateLocalCtlClient(userData, puuidOption, addr->addr, reqJson, sn2);
-    AdapterJsonDelete(reqJson);
+    IotcJsonDelete(reqJson);
     reqJson = NULL;
     if (client == NULL) {
         IOTC_LOGW("create client error");
         return;
     }
 
-    AdapterJson *respJson = CreateSessMngrRespJson(client, sn2);
+    IotcJson *respJson = CreateSessMngrRespJson(client, sn2);
     if (respJson == NULL) {
         return;
     }
@@ -260,18 +260,18 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
     BuildLocalCoapSessMsg(&respSessMsg, LOCAL_COAP_PLAIN, client);
 
     int32_t ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGE("send local ctl sess mngr resp error %d", ret);
     }
 }
 
-static int32_t SessCoapRecvSeqCheck(const AdapterJson *payloadJson, LocalCoapSessMsg *sessMsg)
+static int32_t SessCoapRecvSeqCheck(const IotcJson *payloadJson, LocalCoapSessMsg *sessMsg)
 {
-    AdapterJson *seqObj = AdapterJsonGetObj(payloadJson, STR_JSON_SEQ_NUM);
+    IotcJson *seqObj = IotcJsonGetObj(payloadJson, STR_JSON_SEQ_NUM);
     CHECK_RETURN_LOGE(seqObj != NULL, IOTC_ADAPTER_JSON_ERR_GET_OBJ, "get seq json err");
     int64_t seq = 0;
-    int32_t ret = AdapterJsonGetNum(seqObj, &seq);
+    int32_t ret = IotcJsonGetNum(seqObj, &seq);
     CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_GET_NUM, "get seq num err");
     CHECK_RETURN_LOGE(seq >= 0 && seq <= UINT32_MAX, IOTC_CORE_BLE_INVALID_SEQ, "get seq num:%ld overflow", seq);
 
@@ -301,7 +301,7 @@ static int32_t SessCoapRecvSeqCheck(const AdapterJson *payloadJson, LocalCoapSes
     return IOTC_OK;
 }
 
-static void LocalCtrlMsgReportAfterGetCmd(const AdapterJson *dataArray,
+static void LocalCtrlMsgReportAfterGetCmd(const IotcJson *dataArray,
     const void *userData, uint32_t userDataLen)
 {
     CHECK_V_RETURN_LOGW(dataArray != NULL && userData != NULL &&
@@ -329,13 +329,13 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
 
     LocalCoapSessMsg *sessMsg = (LocalCoapSessMsg *)req;
     CHECK_V_RETURN_LOGW(sessMsg->client != NULL, "invalid client");
-    AdapterJson *payloadJsonObj = AdapterJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    IotcJson *payloadJsonObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (payloadJsonObj == NULL) {
         IOTC_LOGW("invalid ctl json");
         return;
     }
     
-    int32_t ret = SessCoapRecvSeqCheck((const AdapterJson *)payloadJsonObj, sessMsg);
+    int32_t ret = SessCoapRecvSeqCheck((const IotcJson *)payloadJsonObj, sessMsg);
     if (ret != IOTC_OK) {
         IOTC_LOGW("check seq error %d", ret);
         return;
@@ -343,21 +343,21 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
 
     ret = E2eCtrlMsgProcess(payloadJsonObj, LocalCtrlMsgReportAfterGetCmd, sessMsg->client->sessInfo.sessId,
         LOCAL_CONTROL_SESS_ID_STR_LEN);
-    AdapterJsonDelete(payloadJsonObj);
+    IotcJsonDelete(payloadJsonObj);
     payloadJsonObj = NULL;
     if (ret != IOTC_OK) {
         IOTC_LOGW("e2e ctl error %d", ret);
     }
 
-    AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
+    IotcJson *respJson = UtilsJsonCreateErrcode(ret);
     if (respJson == NULL) {
         IOTC_LOGW("create resp json error %d", ret);
         return;
     }
-    ret = AdapterJsonAddNum2Obj(respJson, STR_JSON_SEQ_NUM, sessMsg->client->sessInfo.sendSeq);
+    ret = IotcJsonAddNum2Obj(respJson, STR_JSON_SEQ_NUM, sessMsg->client->sessInfo.sendSeq);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add seqNum error %d", ret);
-        AdapterJsonDelete(respJson);
+        IotcJsonDelete(respJson);
         return;
     }
 
@@ -365,7 +365,7 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
     BuildLocalCoapSessMsg(&respSessMsg, 0, sessMsg->client);
 
     ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
-    AdapterJsonDelete(respJson);
+    IotcJsonDelete(respJson);
     if (ret != IOTC_OK) {
         IOTC_LOGE("send local ctl resp error %d", ret);
     }
