@@ -17,12 +17,10 @@
 #define LAN_SEARCH_CONTEXT_H
 #include <stdint.h>
 #include "comm_def.h"
-#include "coap_endpoint.h"
-#include "coap_endpoint_event_source.h"
+#include "coap_net_stack.h"
 #include "utils_hash_map.h"
 #include "security_sess_key.h"
 #include "service_manager.h"
-#include "utils_buffer.h"
 #include "utils_common.h"
 #include "security_speke.h"
 
@@ -73,16 +71,7 @@ typedef struct {
         uint32_t maxPeerNum;
         uint32_t peerExpireTime;
     } config;
-    struct {
-        UtilsBufferCtx *sendBuf;
-        UtilsBufferCtx *recvBuf;
-        TransLink *link;
-        TransSess *sess;
-        CoapEndpoint *endpoint;
-        EventSource *coapSource;
-        const char **whiteList;
-        uint32_t whiteListNum;
-    } coapServer;
+    CoapNetStack coapStack;
     struct {
         uint32_t curPeerNum;
         int32_t expireCheckTimer;

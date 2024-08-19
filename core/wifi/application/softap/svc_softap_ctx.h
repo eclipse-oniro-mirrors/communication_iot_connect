@@ -17,17 +17,13 @@
 
 #include <stdint.h>
 #include "wifi_svc_softap.h"
-#include "trans_socket_udp.h"
 #include "trans_buffer.h"
-#include "trans_link.h"
-#include "trans_sess.h"
-#include "coap_endpoint.h"
 #include "security_speke.h"
-#include "coap_endpoint_event_source.h"
 #include "iotc_conf.h"
 #include "adapter_wifi.h"
 #include "service_manager.h"
 #include "iotc_svc_softap.h"
+#include "coap_net_stack.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,12 +61,7 @@ typedef struct {
 
 typedef struct {
     uint8_t bitMap;
-    UtilsBufferCtx *sendBuf;
-    UtilsBufferCtx *recvBuf;
-    TransLink *link;
-    TransSess *sess;
-    CoapEndpoint *endpoint;
-    EventSource *coapSource;
+    CoapNetStack coapStack;
     SoftapPeerSess peerSess[IOTC_CONF_SOFTAP_MAX_PEER_SESS_NUM];
     const char **plainUri;
     uint32_t plainUriNum;

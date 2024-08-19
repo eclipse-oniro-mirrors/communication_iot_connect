@@ -152,12 +152,14 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         return;
     }
 
+    bool isNetCfgFail = false;
     int32_t ret = NetCfgInfoRecvProcess((const char *)req->payload.data, req->payload.len);
     if (ret != IOTC_OK) {
         IOTC_LOGE("net cfg info process error %d", ret);
     } else {
         IOTC_LOGN("net cfg info process ok");
         UTILS_BIT_SET(ctx->bitMap, SOFTAP_CTX_BIT_MAP_NETCFG_RECVED);
+        isNetCfgFail = true;
     }
 
     AdapterJson *respJson = UtilsJsonCreateErrcode(ret);
@@ -186,6 +188,7 @@ void SoftapCoapSetupReqHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     if (ret != IOTC_OK) {
         IOTC_LOGW("send coap resp msg error %d", ret);
     }
+    CHECK_V_RETURN(isNetCfgFail);
     if (ctx->stopTimerFd < 0) {
         ctx->stopTimerFd = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_ONCE, CloseSoftapService, RETRANS_WAIT_TIME_MS, NULL);
         if (ctx->stopTimerFd < 0) {

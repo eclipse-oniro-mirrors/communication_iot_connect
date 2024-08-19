@@ -58,7 +58,7 @@ static int32_t FdSocketPollBySelect(EventSourceFdSet *read, EventSourceFdSet *wr
     return ret;
 }
 
-static EventSource *GetWifiFdEventSource(void)
+static inline EventSource *GetWifiFdEventSource(void)
 {
     return g_wifiFdEventSource;
 }
@@ -66,18 +66,20 @@ static EventSource *GetWifiFdEventSource(void)
 int32_t WifiSchedFdWatchInit(void)
 {
     if (GetSchedEventLoop() == NULL) {
+        IOTC_LOGW("event loop not init");
         return IOTC_ERR_NOT_INIT;
     }
 
-    if (GetWifiFdEventSource() != NULL) {
+    if (g_wifiFdEventSource != NULL) {
         return IOTC_OK;
     }
 
     g_wifiFdEventSource = EventSourceFdNew(FdSocketPollBySelect);
     if (g_wifiFdEventSource == NULL) {
+        IOTC_LOGW("event source new error");
         return IOTC_CORE_COMM_FWK_ERR_SOURCE_NEW;
     }
-    int32_t ret = EventLoopAddSource(GetSchedEventLoop(), GetWifiFdEventSource());
+    int32_t ret = EventLoopAddSource(GetSchedEventLoop(), g_wifiFdEventSource);
     if (ret != IOTC_OK) {
         EventSourceFree(g_wifiFdEventSource);
         g_wifiFdEventSource = NULL;
@@ -89,7 +91,7 @@ int32_t WifiSchedFdWatchInit(void)
 
 void WifiSchedFdWatchDeinit(void)
 {
-    /* 资源由event loop异步释放 */
+    /* 资源由event loop 管理并释放 */
     EventLoopDelSource(GetSchedEventLoop(), GetWifiFdEventSource());
     g_wifiFdEventSource = NULL;
 }
@@ -97,11 +99,13 @@ void WifiSchedFdWatchDeinit(void)
 int32_t WifiSchedFdWatch(const FdWatchParam *watch)
 {
     CHECK_RETURN_LOGW(watch != NULL && watch->fd >= 0, IOTC_ERR_PARAM_INVALID, "param invalid");
-    if (GetWifiFdEventSource() == NULL) {
+
+    EventSource *fdSrc = GetWifiFdEventSource();
+    if (fdSrc == NULL) {
         return IOTC_ERR_NOT_INIT;
     }
 
-    if (!EventSourceFdWatch(GetWifiFdEventSource(), watch)) {
+    if (!EventSourceFdWatch(fdSrc, watch)) {
         IOTC_LOGW("watch fd error");
         return IOTC_CORE_COMM_FWK_ERR_SOURCE_FD_WATCH;
     }
@@ -111,10 +115,12 @@ int32_t WifiSchedFdWatch(const FdWatchParam *watch)
 int32_t WifiSchedFdSuspend(int32_t fd)
 {
     CHECK_RETURN_LOGW(fd >= 0, IOTC_ERR_PARAM_INVALID, "param invalid");
-    if (GetWifiFdEventSource() == NULL) {
+
+    EventSource *fdSrc = GetWifiFdEventSource();
+    if (fdSrc == NULL) {
         return IOTC_ERR_NOT_INIT;
     }
-    if (!EventSourceFdSuspend(GetWifiFdEventSource(), fd)) {
+    if (!EventSourceFdSuspend(fdSrc, fd)) {
         IOTC_LOGW("suspend fd error");
         return IOTC_CORE_COMM_FWK_ERR_SOURCE_FD_SUSPEND;
     }
@@ -124,11 +130,13 @@ int32_t WifiSchedFdSuspend(int32_t fd)
 int32_t WifiSchedFdResume(int32_t fd)
 {
     CHECK_RETURN_LOGW(fd >= 0, IOTC_ERR_PARAM_INVALID, "param invalid");
-    if (GetWifiFdEventSource() == NULL) {
+
+    EventSource *fdSrc = GetWifiFdEventSource();
+    if (fdSrc == NULL) {
         return IOTC_ERR_NOT_INIT;
     }
 
-    if (!EventSourceFdResume(GetWifiFdEventSource(), fd)) {
+    if (!EventSourceFdResume(fdSrc, fd)) {
         IOTC_LOGW("resume fd error");
         return IOTC_CORE_COMM_FWK_ERR_SOURCE_FD_RESUME;
     }
@@ -138,16 +146,19 @@ int32_t WifiSchedFdResume(int32_t fd)
 void WifiSchedFdRemove(int32_t fd)
 {
     CHECK_V_RETURN_LOGW(fd >= 0, "param invalid");
-    if (GetWifiFdEventSource() == NULL) {
+
+    EventSource *fdSrc = GetWifiFdEventSource();
+    if (fdSrc == NULL) {
         return;
     }
 
-    EventSourceFdRemove(GetWifiFdEventSource(), fd);
+    EventSourceFdRemove(fdSrc, fd);
 }
 
 static bool LinkFdReadCallback(int32_t fd, void *userData)
 {
     CHECK_RETURN_LOGW(fd >= 0 && userData != NULL, false, "invalid param");
+
     TransLink *link = (TransLink *)userData;
     TransLinkRecvReadEvent(link);
     return true;
@@ -156,6 +167,7 @@ static bool LinkFdReadCallback(int32_t fd, void *userData)
 int32_t WifiSchedLinkRecvWatch(TransLink *link)
 {
     CHECK_RETURN_LOGW(link != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+
     int32_t fd = TransLinkGetFd(link);
     if (fd < 0) {
         IOTC_LOGW("link get fd error %d", fd);
@@ -170,7 +182,6 @@ int32_t WifiSchedLinkRecvWatch(TransLink *link)
         .exceEvent = NULL,
         .userData = link,
     };
-
     int32_t ret = WifiSchedFdWatch(&fdWatch);
     if (ret != IOTC_OK) {
         IOTC_LOGW("fd watch error %d", ret);

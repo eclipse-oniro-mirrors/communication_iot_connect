@@ -44,7 +44,7 @@
 /* 每5秒检查一次sta列表，检查当前对端是否已断开softap */
 #define SOFTAP_STA_CHECK_TIMER_PERIOD UTILS_SEC_TO_MS(5)
 
-static const char *SOFTAP_NAME = "softap";
+static const char *SOFTAP_NAME = "SOFTAP";
 
 static SoftapPeerSess *FindSoftapPeerSession(SoftapSess *sess, const SocketAddr *addr)
 {
@@ -239,12 +239,12 @@ SoftapPeerSess *SoftapGetPeerSessCreateIfNotExist(const SocketAddr *addrInfo, So
     return peerSess;
 }
 
-static int32_t CreateSoftapLink(SoftapSess *sess)
+static int32_t SoftapCoapStackCreate(SoftapSess *sess)
 {
     char local[ADAPTER_IP_STR_MAX_LEN + 1] = {0};
     int32_t ret = AdapterGetSoftApIp(local, ADAPTER_IP_STR_MAX_LEN);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("get local ip error %d", ret);
+        IOTC_LOGW("get softap ip error %d", ret);
         return ret;
     }
 
@@ -261,44 +261,41 @@ static int32_t CreateSoftapLink(SoftapSess *sess)
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_CREATE;
     }
 
-    sess->link = TransLinkNew(socket, sess->recvBuf, SOFTAP_NAME);
-    if (sess->link == NULL) {
+    CoapNetStackParam stackParam = {
+        .name = SOFTAP_NAME,
+        .socket = socket,
+        .sessMsgSize = sizeof(CoapPacket),
+        .sessUserData = sess,
+        .encoder = CoapUdpEncode,
+        .decoder = CoapUdpDecode,
+        .endpointUserData = sess,
+    };
+    ret = CoapNetStackCreate(&sess->coapStack, &stackParam);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("stack create error %d", ret);
         TransSocketFree(socket);
-        IOTC_LOGW("create link error");
-        return IOTC_CORE_WIFI_TRANS_ERR_LINK_CREATE;
+        return ret;
     }
 
     return IOTC_OK;
 }
 
-static int32_t CreateSoftapSession(SoftapSess *sess)
+static int32_t SoftapSessionSetup(SoftapSess *sess)
 {
-    sess->sess = TransSessNew(sess->link, sizeof(CoapPacket), SOFTAP_NAME, sess);
-    if (sess->sess == NULL) {
-        IOTC_LOGW("create session error");
-        return IOTC_CORE_WIFI_TRANS_ERR_SESS_CREATE;
-    }
-
-    TransSessAddTailRecvHandler(sess->sess, SoftapCoapMsgRecvPreProcess, "pre", NULL);
-    TransSessAddTailRecvHandler(sess->sess, SoftapCoapMsgRecvBase64DecodeProcess, "base64_decode", NULL);
-    TransSessAddTailRecvHandler(sess->sess, SoftapCoapMsgRecvDecryptProcess, "decrypt", NULL);
+    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgRecvPreProcess, "pre", NULL);
+    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgRecvBase64DecodeProcess, "base64_decode", NULL);
+    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgRecvDecryptProcess, "decrypt", NULL);
     
-    TransSessAddTailSendHandler(sess->sess, SoftapCoapMsgSendEncryptProcess, "encrypt", NULL);
-    TransSessAddTailSendHandler(sess->sess, SoftapCoapMsgSendBase64EncodeProcess, "base64_encode", NULL);
-    TransSessAddTailRecvHandler(sess->sess, SoftapCoapMsgSendFinalProcess, "final", NULL);
+    TransSessAddTailSendHandler(sess->coapStack.sess, SoftapCoapMsgSendEncryptProcess, "encrypt", NULL);
+    TransSessAddTailSendHandler(sess->coapStack.sess, SoftapCoapMsgSendBase64EncodeProcess, "base64_encode", NULL);
+    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgSendFinalProcess, "final", NULL);
 
+    CoapEndpointSessSetup(sess->coapStack.endpoint);
     return IOTC_OK;
 }
 
-static int32_t CreateSoftapCoapEndpoint(SoftapSess *sess, const SoftapSvcInitParam *initParam)
+static int32_t SoftapCoapEndpointSetup(SoftapSess *sess, const SoftapSvcInitParam *initParam)
 {
-    sess->endpoint = CoapEndpointNew(sess->sendBuf, sess->sess,
-        CoapUdpEncode, CoapUdpDecode, sess);
-    if (sess->endpoint == NULL) {
-        IOTC_LOGW("create coap endpoint error");
-        return IOTC_CORE_WIFI_TRANS_ERR_COAP_ENDPOINT_CREATE;
-    }
-
     /* uri white list for recv not decrypt or not base64 decode */
     static const char *PLAIN_URI[] = {STR_URI_SPEKE};
     static const char *NO_BASE64_URI[] = {STR_URI_SPEKE};
@@ -318,14 +315,14 @@ static int32_t CreateSoftapCoapEndpoint(SoftapSess *sess, const SoftapSvcInitPar
         {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_E2E_CONTROL, NULL, SoftapCoapE2eCtrlHandler},
     };
 
-    int32_t ret = CoapServerAddResource(sess->endpoint, SPEKE_RES, ARRAY_SIZE(SPEKE_RES));
+    int32_t ret = CoapServerAddResource(sess->coapStack.endpoint, SPEKE_RES, ARRAY_SIZE(SPEKE_RES));
     if (ret != IOTC_OK) {
         IOTC_LOGW("add speke coap res error %d", ret);
         return ret;
     }
 
     if (UTILS_IS_BIT_SET(initParam->bitMap, IOTC_WIFI_SERVICE_SOFTAP_NETCFG)) {
-        ret = CoapServerAddResource(sess->endpoint, CLOUD_SETUP_V2_RES, ARRAY_SIZE(CLOUD_SETUP_V2_RES));
+        ret = CoapServerAddResource(sess->coapStack.endpoint, CLOUD_SETUP_V2_RES, ARRAY_SIZE(CLOUD_SETUP_V2_RES));
         if (ret != IOTC_OK) {
             IOTC_LOGW("add cloud setup coap res error %d", ret);
             return ret;
@@ -333,7 +330,7 @@ static int32_t CreateSoftapCoapEndpoint(SoftapSess *sess, const SoftapSvcInitPar
     }
 
     if (UTILS_IS_BIT_SET(initParam->bitMap, IOTC_WIFI_SERVICE_SOFTAP_E2E_CTRL)) {
-        ret = CoapServerAddResource(sess->endpoint, E2E_CTL_RES, ARRAY_SIZE(E2E_CTL_RES));
+        ret = CoapServerAddResource(sess->coapStack.endpoint, E2E_CTL_RES, ARRAY_SIZE(E2E_CTL_RES));
         if (ret != IOTC_OK) {
             IOTC_LOGW("add e2e ctrl coap res error %d", ret);
             return ret;
@@ -341,38 +338,9 @@ static int32_t CreateSoftapCoapEndpoint(SoftapSess *sess, const SoftapSvcInitPar
     }
 
     /* use max send buffer for retrans, ensure single message can be retransmitted */
-    ret = CoapEndpointRetransEnable(sess->endpoint, SoftapCoapRetransCheckFunc, TransGetSendBufferResSize());
+    ret = CoapEndpointRetransEnable(sess->coapStack.endpoint, SoftapCoapRetransCheckFunc, TransGetSendBufferResSize());
     if (ret != IOTC_OK) {
         IOTC_LOGW("enable coap retrans error %d", ret);
-        return ret;
-    }
-
-    return IOTC_OK;
-}
-
-static int32_t SoftapServerStart(SoftapSess *sess)
-{
-    int32_t ret = TransLinkConnect(sess->link);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("link connect error %d", ret);
-        return ret;
-    }
-
-    ret = WifiSchedLinkRecvWatch(sess->link);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("link watch error %d", ret);
-        return ret;
-    }
-
-    sess->coapSource = CoapEndpointEventSourceNew(sess->endpoint);
-    if (sess->coapSource == NULL) {
-        IOTC_LOGW("create coap source error");
-        return IOTC_CORE_WIFI_TRANS_ERR_COAP_ENDPOINT_SOURCE_NEW;
-    }
-
-    ret = EventLoopAddSource(GetSchedEventLoop(), sess->coapSource);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add coap source error %d", ret);
         return ret;
     }
 
@@ -449,40 +417,30 @@ int32_t CreateSoftapSess(SoftapSess *sess, const SoftapSvcInitParam *initParam)
 
     int32_t ret;
     do {
-        /* 1. init recv and send buffer */
-        sess->sendBuf = TransCreateSendBuffer();
-        sess->recvBuf = TransCreateRecvBuffer();
-        if (sess->sendBuf == NULL || sess->recvBuf == NULL) {
-            IOTC_LOGW("create buffer error");
-            ret = IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_CREATE_BUFFER;
-            break;
-        }
-
-        /* 2. create udp socket */
-        ret = CreateSoftapLink(sess);
+        ret = SoftapCoapStackCreate(sess);
         if (ret != IOTC_OK) {
+            IOTC_LOGW("create coap stack error %d", ret);
             break;
         }
 
-        /* 3. create sess for codec/encrypt/decrypt */
-        ret = CreateSoftapSession(sess);
+        ret = SoftapSessionSetup(sess);
         if (ret != IOTC_OK) {
+            IOTC_LOGW("softap sess setup error %d", ret);
             break;
         }
 
-        /* 4. create coap endpoint for coap msg process */
-        ret = CreateSoftapCoapEndpoint(sess, initParam);
+        ret = SoftapCoapEndpointSetup(sess, initParam);
         if (ret != IOTC_OK) {
+            IOTC_LOGW("softap endpoint setup error %d", ret);
             break;
         }
 
-        /* 5. start server for recv data */
-        ret = SoftapServerStart(sess);
+        ret = CoapNetStackStart(&sess->coapStack);
         if (ret != IOTC_OK) {
+            IOTC_LOGW("stack start error %d", ret);
             break;
         }
 
-        /* 6. start timer to check station disconnect */
         ret = StartStationCheckTimer(sess);
         if (ret != IOTC_OK) {
             break;
@@ -500,30 +458,9 @@ void DestroySoftapSess(SoftapSess *sess)
     if (sess->staTimer >= 0) {
         SchedTimerRemove(sess->staTimer);
     }
-    if (sess->coapSource != NULL) {
-        EventLoopDelSource(GetSchedEventLoop(), sess->coapSource);
-    }
-    if (sess->link != NULL && TransLinkGetFd(sess->link) >= 0) {
-        WifiSchedFdRemove(TransLinkGetFd(sess->link));
-        TransLinkClose(sess->link);
-    }
-    if (sess->endpoint != NULL) {
-        CoapEndpointFree(sess->endpoint);
-    }
+    CoapNetStackDestroy(&sess->coapStack);
     for (uint32_t i = 0; i < IOTC_CONF_SOFTAP_MAX_PEER_SESS_NUM; ++i) {
         DestroyPeerSession(&sess->peerSess[i]);
-    }
-    if (sess->sess != NULL) {
-        TransSessFree(sess->sess);
-    }
-    if (sess->link != NULL) {
-        TransLinkFree(sess->link);
-    }
-    if (sess->recvBuf != NULL) {
-        TransReleaseBuffer(sess->recvBuf);
-    }
-    if (sess->sendBuf != NULL) {
-        TransReleaseBuffer(sess->sendBuf);
     }
     (void)memset_s(sess, sizeof(SoftapSess), 0, sizeof(SoftapSess));
 }

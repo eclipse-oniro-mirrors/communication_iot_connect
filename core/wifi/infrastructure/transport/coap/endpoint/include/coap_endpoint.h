@@ -33,6 +33,8 @@ typedef int32_t (*CoapEndpointPacketDecode)(CoapPacket *pkt, const CoapData *raw
 CoapEndpoint *CoapEndpointNew(UtilsBufferCtx *buf, TransSess *sess,
     CoapEndpointPacketEncode encoder, CoapEndpointPacketDecode decoder, void *userData);
 
+void CoapEndpointSessSetup(CoapEndpoint *endpoint);
+
 void CoapEndpointFree(CoapEndpoint *endpoint);
 
 #ifdef __cplusplus

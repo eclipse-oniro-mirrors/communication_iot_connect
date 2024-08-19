@@ -18,7 +18,7 @@
 #include "iotc_svc.h"
 #include "iotc_svc_lan_search.h"
 #include "lan_search_peer_mngr.h"
-#include "lan_search_coap_srv.h"
+#include "lan_search_coap_stack.h"
 #include "utils_assert.h"
 #include "event_bus.h"
 #include "iotc_event.h"
@@ -40,13 +40,13 @@ static void LanSearchInitParamSetup(LanSearchContext *ctx, const LanSearchInitPa
     IOTC_LOGI("lan search init %u/%u", ctx->config.maxPeerNum, ctx->config.peerExpireTime);
 }
 
-static void EventSubForLanSearchCoapServerStart(uint32_t event, void *param, uint32_t len)
+static void EventSubForLanSearchCoapStackStart(uint32_t event, void *param, uint32_t len)
 {
     NOT_USED(event);
     NOT_USED(len);
     NOT_USED(param);
 
-    int32_t ret = LanSearchCoapServerStart(GetLanSearchCtx());
+    int32_t ret = LanSearchCoapStackStart(GetLanSearchCtx());
     if (ret != IOTC_OK) {
         IOTC_LOGW("start lan search coap server error %d", ret);
     } else {
@@ -54,18 +54,18 @@ static void EventSubForLanSearchCoapServerStart(uint32_t event, void *param, uin
     }
 }
 
-static void EventSubForLanSearchCoapServerStop(uint32_t event, void *param, uint32_t len)
+static void EventSubForLanSearchCoapStackStop(uint32_t event, void *param, uint32_t len)
 {
     NOT_USED(event);
     NOT_USED(len);
     NOT_USED(param);
 
-    LanSearchCoapServerStop(GetLanSearchCtx());
+    LanSearchCoapStackStop(GetLanSearchCtx());
 }
 
 static void LanSearchServiceStopInner(LanSearchContext *ctx)
 {
-    LanSearchCoapServerDestroy(ctx);
+    LanSearchCoapStackDestroy(ctx);
     LanSearchPeerManagerDeinit(ctx);
 }
 
@@ -87,20 +87,20 @@ static int32_t LanSearchServiceStart(int32_t instanceId, ServiceFinishCallback o
             break;
         }
 
-        ret = EventBusSubscribe(EventSubForLanSearchCoapServerStart, IOTC_SDK_AILIFE_EVENT_WIFI_NET_CONNECT);
+        ret = EventBusSubscribe(EventSubForLanSearchCoapStackStart, IOTC_SDK_AILIFE_EVENT_WIFI_NET_CONNECT);
         if (ret != IOTC_OK) {
             IOTC_LOGW("sub coap start event error %d", ret);
             break;
         }
 
-        ret = EventBusSubscribe(EventSubForLanSearchCoapServerStop, IOTC_SDK_AILIFE_EVENT_WIFI_NET_DISCONNECT);
+        ret = EventBusSubscribe(EventSubForLanSearchCoapStackStop, IOTC_SDK_AILIFE_EVENT_WIFI_NET_DISCONNECT);
         if (ret != IOTC_OK) {
             IOTC_LOGW("sub coap stop event error %d", ret);
             break;
         }
 
         if (ConnSvcProxyIsNetConnected()) {
-            ret = LanSearchCoapServerStart(ctx);
+            ret = LanSearchCoapStackStart(ctx);
             if (ret != IOTC_OK) {
                 IOTC_LOGW("start lan search coap server error %d", ret);
                 break;

@@ -25,30 +25,26 @@
 
 #define INADDR_IP_STR "0.0.0.0"
 
-bool WifiIsNetConnected(void)
+bool IsNetworkConnected(void)
 {
-    AdapterNetworkState state = AdapterGetNetworkState();
-    if (state != ADAPTER_NETWORK_CONNECTED) {
+    if (AdapterGetWifiMode() != ADAPTER_WIFI_MODE_STATION) {
         return false;
     }
 
-    AdapterWifiMode mode = AdapterGetWifiMode();
-    if (mode != ADAPTER_WIFI_MODE_STATION) {
+    if (AdapterGetNetworkState() != ADAPTER_NETWORK_CONNECTED) {
         return false;
     }
 
     char ip[ADAPTER_IP_STR_MAX_LEN + 1] = {0};
     int32_t ret = AdapterGetLocalIp(ip, sizeof(ip));
-    if (ret != IOTC_OK) {
+    if (ret != IOTC_OK || strcmp(ip, INADDR_IP_STR) == 0) {
         return false;
     }
-    if (strcmp(ip, INADDR_IP_STR) == 0) {
-        return false;
-    }
+
     return true;
 }
 
-bool WifiIsNetInfoExit(void)
+bool IsWifiNetInfoExit(void)
 {
     uint8_t ssid[ADAPTER_WIFI_SSID_MAX_LEN + 1] = {0};
     uint8_t pwd[ADAPTER_WIFI_PWD_MAX_LEN + 1] = {0};
@@ -65,9 +61,9 @@ bool WifiIsNetInfoExit(void)
     return valid;
 }
 
-int32_t WifiGetMacAddrStr(char *buf, uint32_t len)
+int32_t GetWifiMacAddrStr(char *buf, uint32_t len)
 {
-    CHECK_RETURN_LOGW(buf != NULL && len > MAX_ADDR_STR_LEN, IOTC_ERR_PARAM_INVALID, "param invalid");
+    CHECK_RETURN_LOGW(buf != NULL && len > MAC_ADDR_STR_LEN, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     uint8_t mac[ADAPTER_MAC_ADDRESS_LEN] = {0};
     int32_t ret = AdapterGetMacAddr(mac, sizeof(mac));
@@ -75,7 +71,8 @@ int32_t WifiGetMacAddrStr(char *buf, uint32_t len)
         IOTC_LOGW("get mac error %d", ret);
         return ret;
     }
-    /* 012345为mac的6字节序号 */
+
+    /* CI NOTE: 012345为mac的前6字节序号 */
     ret = sprintf_s(buf, len, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if (ret <= 0) {
         IOTC_LOGW("sprintf error %d", ret);

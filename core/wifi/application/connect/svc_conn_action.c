@@ -60,7 +60,7 @@ static void WifiVerifyConnectTimeoutTimerCallback(int32_t id, void *userData)
     ConnectServiceContext *ctx = GetConnSvcCtx();
     SchedTimerRemove(ctx->verifyTimerFd);
     ctx->verifyTimerFd = EVENT_SOURCE_INVALID_TIMER_FD;
-    if (WifiIsNetConnected()) {
+    if (IsNetworkConnected()) {
         return;
     }
 
@@ -120,7 +120,7 @@ static void WifiStatusCheckTimerCallback(int32_t id, void *userData)
 
     ConnectServiceContext *ctx = GetConnSvcCtx();
     bool wifiStatusBef = UTILS_IS_BIT_SET(ctx->bitMap, CONN_SVC_BIT_MAP_WIFI_CONNECTED);
-    bool wifiStatusCur = WifiIsNetConnected();
+    bool wifiStatusCur = IsNetworkConnected();
     if (wifiStatusCur == wifiStatusBef) {
         return;
     }

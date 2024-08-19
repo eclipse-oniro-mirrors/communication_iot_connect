@@ -14,6 +14,7 @@
 
 add_subdirectory(codec)
 add_subdirectory(endpoint)
+add_subdirectory(stack)
 
 set(IOTC_SRC_LIST ${IOTC_SRC_LIST} PARENT_SCOPE)
 set(IOTC_INC_LIST ${IOTC_INC_LIST} PARENT_SCOPE)

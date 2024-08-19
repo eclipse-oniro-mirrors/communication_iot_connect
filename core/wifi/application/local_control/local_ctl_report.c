@@ -51,7 +51,7 @@ static int32_t ReportToTargetClient(AdapterJson *json, LocalControlContext *ctx,
 
     LocalCoapSessMsg sessMsg = {0};
     sessMsg.client = cli;
-    ret = CoapClientSendReq(ctx->coapServer.endpoint, &param, &addr, &sessMsg.packet);
+    ret = CoapClientSendReq(ctx->coapStack.endpoint, &param, &addr, &sessMsg.packet);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send report error %d", ret);
         return ret;

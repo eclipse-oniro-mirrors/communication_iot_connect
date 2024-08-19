@@ -128,8 +128,8 @@ int32_t WifiServiceConnectInit(void)
     };
 
     static const ConnSvcApi CONN_SVC_API = {
-        .isNetConnected = WifiIsNetConnected,
-        .isWifiExist = WifiIsNetInfoExit,
+        .isNetConnected = IsNetworkConnected,
+        .isWifiExist = IsWifiNetInfoExit,
         .onSetNetInfo = SvcConnSetNetInfo,
     };
 

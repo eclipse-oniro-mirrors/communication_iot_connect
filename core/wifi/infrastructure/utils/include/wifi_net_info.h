@@ -20,13 +20,13 @@
 extern "C" {
 #endif
 
-#define MAX_ADDR_STR_LEN 17
+#define MAC_ADDR_STR_LEN 17
 
-bool WifiIsNetConnected(void);
+bool IsNetworkConnected(void);
 
-bool WifiIsNetInfoExit(void);
+bool IsWifiNetInfoExit(void);
 
-int32_t WifiGetMacAddrStr(char *buf, uint32_t len);
+int32_t GetWifiMacAddrStr(char *buf, uint32_t len);
 
 #ifdef __cplusplus
 }

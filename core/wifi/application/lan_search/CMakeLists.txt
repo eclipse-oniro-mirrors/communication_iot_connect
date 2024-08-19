@@ -15,7 +15,7 @@
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/lan_search_coap_api.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/lan_search_coap_srv.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/lan_search_coap_stack.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lan_search_ctx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lan_search_peer_mngr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lan_search_sess.c

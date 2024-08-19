@@ -42,13 +42,9 @@ static bool LanSearchSessMsgCheck(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo 
     return true;
 }
 
-static bool LanSearchPlainCheck(const CoapPacket *packet, LanSearchContext *ctx)
+static bool LanSearchPlainCheck(const CoapPacket *packet, const char *uriWhiteList[])
 {
     if (COAP_CODE_CLASS(packet->header.code) != COAP_CODE_CLASS_REQ) {
-        return false;
-    }
-
-    if (ctx->coapServer.whiteList == NULL || ctx->coapServer.whiteListNum == 0) {
         return false;
     }
 
@@ -59,8 +55,8 @@ static bool LanSearchPlainCheck(const CoapPacket *packet, LanSearchContext *ctx)
         return false;
     }
 
-    for (uint32_t i = 0; i < ctx->coapServer.whiteListNum; ++i) {
-        if (strcmp(ctx->coapServer.whiteList[i], uriBuf) != 0) {
+    for (const char **whiteUri = uriWhiteList; *whiteUri != NULL; ++whiteUri) {
+        if (strcmp(*whiteUri, uriBuf) != 0) {
             continue;
         }
         return true;
@@ -71,12 +67,13 @@ static bool LanSearchPlainCheck(const CoapPacket *packet, LanSearchContext *ctx)
 SessCode LanSearchSessCoapRecvPreProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info)
 {
     CHECK_RETURN_LOGW(LanSearchSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
+    CHECK_RETURN_LOGW(info->corData != NULL, SESS_CODE_ERR, "uri white list invalid");
 
     LanSearchSessMsg *sessMsg = (LanSearchSessMsg *)msg;
     LanSearchContext *ctx = (LanSearchContext *)info->userData;
     (void)LanSearchGetPeer(ctx, info->addr->addr, &sessMsg->peer);
 
-    if (LanSearchPlainCheck(&sessMsg->packet, ctx)) {
+    if (LanSearchPlainCheck(&sessMsg->packet, info->corData)) {
         UTILS_BIT_SET(sessMsg->bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN);
     }
     return SESS_CODE_CONTINUE;
