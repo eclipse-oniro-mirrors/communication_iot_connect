@@ -195,12 +195,12 @@ static int32_t BleCustomSecDataProcess(AdapterJson *vendorItem, uint8_t **out, u
     }
 
     ret = DevSvcProxyCtlPutCharStates(vendorItem, NULL);
+    if (ret == IOTC_CORE_PROF_SVC_ERR_ASYNC_REPORT) {
+        return IOTC_OK;
+    }
     if (ret != IOTC_OK) {
         IOTC_LOGW("put char control error %d", ret);
         return ret;
-    }
-    if (ret == IOTC_CORE_PROF_SVC_ERR_ASYNC_REPORT) {
-        return IOTC_OK;
     }
 
     AdapterJson *vendorCopy = AdapterDuplicateJson(vendorItem, true);
