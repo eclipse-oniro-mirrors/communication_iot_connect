@@ -29,11 +29,11 @@
 #include "config_revoke_flag.h"
 
 #define IOTC_OH_RESTORE_TIMEOUT UTILS_SEC_TO_MS(10)
-#define IOTC_OH_DEFAULT_TASK_SIZE 0X8000
+
 static const FwkInitUnit OH_COMM[] = {
     {FWK_INIT_LVL_BIZ, "config", IotcOhStoreDataInit, IotcOhStoreDataDeinit},
 };
-static uint32_t g_taskSize = IOTC_OH_DEFAULT_TASK_SIZE;
+static uint32_t g_taskSize = IOTC_CONF_OH_DEFAULT_TASK_SIZE;
 
 static int32_t OptionSetLogLevel(va_list args)
 {

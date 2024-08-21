@@ -50,6 +50,15 @@
 #define IOTC_CONF_PROF_MAX_SVC_NUM 128
 #endif
 
+/* 任务栈默认大小 */
+#ifndef IOTC_CONF_OH_DEFAULT_TASK_SIZE
+    #if IOTC_CONF_DEVICE_LEVEL < IOTC_DEVICE_LEVEL_SMALL
+        #define IOTC_CONF_OH_DEFAULT_TASK_SIZE (8 * 1024)
+    #else
+        #define IOTC_CONF_OH_DEFAULT_TASK_SIZE (32 * 1024)
+    #endif
+#endif
+
 /* wifi发送缓冲区常驻内存大小 */
 #ifndef IOTC_CONF_WIFI_DEFAULT_SEND_BUFFER_SIZE
     #if IOTC_CONF_DEVICE_LEVEL < IOTC_DEVICE_LEVEL_SMALL
