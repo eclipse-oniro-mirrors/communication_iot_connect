@@ -125,7 +125,7 @@ static int32_t IdAnonymizeStr(char *srcAndDst, uint32_t bufLen)
 
 static int32_t MacAnonymizeStr(char *srcAndDst, uint32_t bufLen)
 {
-    char macUnit[MAC_UNIT_NUM][MAC_UNIT_LEN];
+    char macUnit[MAC_UNIT_NUM][MAC_UNIT_LEN] = {0};
     char *context = NULL;
     char *ch = strtok_s(srcAndDst, ":", &context);
     uint32_t index = 0;
@@ -150,7 +150,7 @@ static int32_t SnAnonymizeStr(char *srcAndDst, uint32_t bufLen)
 
 static int32_t IpAnonymizeStr(char *srcAndDst, uint32_t bufLen)
 {
-    char ipUnit[IP_UNIT_NUM][IP_UNIT_LEN];
+    char ipUnit[IP_UNIT_NUM][IP_UNIT_LEN] = {0};
     char *context = NULL;
     char *ch = strtok_s(srcAndDst, ".", &context);
     uint32_t index = 0;
@@ -212,7 +212,7 @@ int32_t DfxAnonymizeStr(const char *src, AnonymizeType type, char **dst)
 
 int32_t DfxAnonymizeIpAddrWithBuffer(uint32_t ip, char *dstBuf, uint32_t bufLen)
 {
-    char ipStr[IPV4_STR_MAX_LEN];
+    char ipStr[IPV4_STR_MAX_LEN] = {0};
     int32_t ret = UtilsGetIpV4Str(ip, ipStr, IPV4_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get ip str err ret=%d", ret);
@@ -223,7 +223,7 @@ int32_t DfxAnonymizeIpAddrWithBuffer(uint32_t ip, char *dstBuf, uint32_t bufLen)
 
 int32_t DfxAnonymizeIpAddr(uint32_t ip, char **dst)
 {
-    char ipStr[IPV4_STR_MAX_LEN];
+    char ipStr[IPV4_STR_MAX_LEN] = {0};
     int32_t ret = UtilsGetIpV4Str(ip, ipStr, IPV4_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get ip str err ret=%d", ret);
@@ -234,7 +234,7 @@ int32_t DfxAnonymizeIpAddr(uint32_t ip, char **dst)
 
 int32_t DfxAnonymizeMacAddrWithBuffer(const uint8_t *mac, uint32_t macLen, char *dstBuf, uint32_t bufLen)
 {
-    char macStr[MAC_STR_MAX_LEN];
+    char macStr[MAC_STR_MAX_LEN] = {0};
     int32_t ret = UtilsGetMacStr(mac, macLen, macStr, MAC_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get mac str err ret=%d", ret);
@@ -245,7 +245,7 @@ int32_t DfxAnonymizeMacAddrWithBuffer(const uint8_t *mac, uint32_t macLen, char 
 
 int32_t DfxAnonymizeMacAddr(const uint8_t *mac, uint32_t macLen, char **dst)
 {
-    char macStr[MAC_STR_MAX_LEN];
+    char macStr[MAC_STR_MAX_LEN] = {0};
     int32_t ret = UtilsGetMacStr(mac, macLen, macStr, MAC_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get mac str err ret=%d", ret);
