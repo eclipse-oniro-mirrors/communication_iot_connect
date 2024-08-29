@@ -57,26 +57,6 @@ void TransSetRecvBufferSize(uint32_t res, uint32_t max)
     IOTC_LOGI("set recv buf %u/%u", GetBufferCtx()->recvRes, GetBufferCtx()->recvMax);
 }
 
-uint32_t TransGetSendBufferResSize(void)
-{
-    return GetBufferCtx()->sendRes;
-}
-
-uint32_t TransGetSendBufferMaxSize(void)
-{
-    return GetBufferCtx()->sendMax;
-}
-
-uint32_t TransGetRecvBufferResSize(void)
-{
-    return GetBufferCtx()->recvRes;
-}
-
-uint32_t TransGetRecvBufferMaxSize(void)
-{
-    return GetBufferCtx()->recvMax;
-}
-
 UtilsBufferCtx *TransCreateSendBuffer(void)
 {
     return GetBufferCtx()->sendBuf;
@@ -85,6 +65,24 @@ UtilsBufferCtx *TransCreateSendBuffer(void)
 UtilsBufferCtx *TransCreateRecvBuffer(void)
 {
     return GetBufferCtx()->recvBuf;
+}
+
+uint32_t TransGetBufferSize(TransBufferType type)
+{
+    switch (type) {
+        case TRANS_BUFFER_SEND_BUFFER_RES_SIZE:
+            return GetBufferCtx()->sendRes;
+        case TRANS_BUFFER_SEND_BUFFER_MAX_SIZE:
+            return GetBufferCtx()->sendMax;
+        case TRANS_BUFFER_RECV_BUFFER_RES_SIZE:
+            return GetBufferCtx()->recvRes;
+        case TRANS_BUFFER_RECV_BUFFER_MAX_SIZE:
+            return GetBufferCtx()->recvMax;
+        default:
+            IOTC_LOGW("invalid type %d", type);
+            break;
+    }
+    return 0;
 }
 
 /* 保留release接口用于对外屏蔽buffer内部的单例实现 */

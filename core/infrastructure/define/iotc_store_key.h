@@ -35,4 +35,4 @@ typedef enum {
 }
 #endif
 
-#endif /* WIFI_BASE_EVENT_H */
+#endif /* IOTC_STORE_KEY_H */

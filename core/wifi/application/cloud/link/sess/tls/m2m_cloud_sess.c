@@ -128,7 +128,7 @@ static int32_t CloudTlsSessInit(M2mCloudContext *ctx)
         return IOTC_CORE_WIFI_TRANS_ERR_SESS_CREATE;
     }
 
-    TransSessAddTailSendHandler(ctx->linkInfo.sess, CloudTlsSessSendUpdateSeqProcess, "update_seq", NULL);
+    TransSessAddSendTailHandler(ctx->linkInfo.sess, CloudTlsSessSendUpdateSeqProcess, "update_seq", NULL);
     return IOTC_OK;
 }
 

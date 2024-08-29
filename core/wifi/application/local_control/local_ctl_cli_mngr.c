@@ -24,11 +24,9 @@
 #include "utils_bit_map.h"
 #include "iotc_svc_dev.h"
 
-/* 本地控会话持续时间较长，超时检测周期也相对较长，创建新会话时会移除创建时间较早的会话作为削减措施 */
-#define CLIENT_EXPIRE_TIMER_CHECK_PERIOD UTILS_HOUR_TO_MS(1)
-#define CLIENT_SESS_EXPIRE_TIME CLIENT_EXPIRE_TIMER_CHECK_PERIOD
+#define CLIENT_EXPIRE_TIMER_CHECK_PERIOD    UTILS_HOUR_TO_MS(1)
 
-static void LocalClientFree(LocalControlClient *cli)
+static void LocalCtlClientFree(LocalControlClient *cli)
 {
     if (cli->appInfo.puuid != NULL) {
         DFX_ANONYMIZE_ID_STR(anonyPuuid, cli->appInfo.puuid);
@@ -44,7 +42,7 @@ static void LocalClientFree(LocalControlClient *cli)
 static void ClientHashMapFreeValue(void *value)
 {
     CHECK_V_RETURN_LOGW(value != NULL, "param invalid");
-    LocalClientFree(value);
+    LocalCtlClientFree(value);
 }
 
 static HashMapTravCode ClientMapTraversalCheckExpire(const void *value, va_list argp)
@@ -118,7 +116,7 @@ int32_t LocalCtlClientManagerInit(LocalControlContext *ctx)
         }
         return IOTC_OK;
     } while (0);
-    
+
     LocalCtlClientManagerDestroy(ctx);
     return ret;
 }
@@ -151,7 +149,7 @@ static HashMapTravCode ClientMapTraversalFindPuuid(const void *value, va_list ar
     uint32_t puuidLen = va_arg(argp, uint32_t);
     LocalControlClient **clientFind = va_arg(argp, LocalControlClient **);
     if (puuid == NULL || puuidLen == 0 || clientFind == NULL) {
-        IOTC_LOGW("invalid param");
+        IOTC_LOGW("param invalid");
         return HASH_MAP_TRAVE_BREAK;
     }
 
@@ -217,7 +215,9 @@ static bool LocalControlSessKeyCreate(LocalControlClient *client, const LocalCli
             break;
         }
 
-        ret = SecuritySessKeyGenTransKey(sessCtx, authInfo.authCode, BLE_AUTHCODE_LEN, client->sessInfo.transKey);
+        ret = SecuritySessKeyGenTransKey(sessCtx, authInfo.authCode,
+            sizeof(authInfo.authCode), client->sessInfo.transKey);
+        (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
         if (ret != IOTC_OK) {
             IOTC_LOGW("gem trans key error %d", ret);
             break;
@@ -275,38 +275,16 @@ static LocalControlClient *LocalControlClientNew(LocalControlContext *ctx, const
     return newCli;
 }
 
-static HashMapTravCode RemoveOneSessNotCreatedClient(const void *value, va_list argp)
-{
-    CHECK_RETURN_LOGW(value != NULL, HASH_MAP_TRAVE_BREAK, "param invalid");
-
-    const LocalControlClient *client = (const LocalControlClient *)value;
-    LocalControlContext *ctx = va_arg(argp, LocalControlContext *);
-    if (ctx == NULL) {
-        IOTC_LOGW("invalid ctx");
-        return HASH_MAP_TRAVE_BREAK;
-    }
-
-    DFX_ANONYMIZE_IP_ADDR(anonyIp, client->appInfo.addr);
-    DFX_ANONYMIZE_ID_STR(anonyPuuid, client->appInfo.puuid);
-    IOTC_LOGI("local no sess client remove %s/%s/%u", anonyIp, anonyPuuid, client->timeInfo.createTime);
-    int32_t ret = UtilsHashMapRemove(ctx->clientManager.clientMap,
-        (const uint8_t *)client->sessInfo.sessId, strlen(client->sessInfo.sessId));
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("remove sess error %d", ret);
-    }
-    return HASH_MAP_TRAVE_BREAK;
-}
-
 static HashMapTravCode GetEarliestClientSessId(const void *value, va_list argp)
 {
     CHECK_RETURN_LOGW(value != NULL, HASH_MAP_TRAVE_BREAK, "param invalid");
 
     const LocalControlClient *client = (const LocalControlClient *)value;
     LocalControlContext *ctx = va_arg(argp, LocalControlContext *);
-    const char **sessId = va_arg(argp, const char **);
+    const LocalControlClient **earliestClient = va_arg(argp, const LocalControlClient **);
     uint32_t *maxLifeTime = va_arg(argp, uint32_t *);
     uint32_t curTime = va_arg(argp, uint32_t);
-    if (ctx == NULL || maxLifeTime == NULL || sessId == NULL) {
+    if (ctx == NULL || maxLifeTime == NULL || earliestClient == NULL) {
         IOTC_LOGW("invalid arg");
         return HASH_MAP_TRAVE_BREAK;
     }
@@ -317,41 +295,47 @@ static HashMapTravCode GetEarliestClientSessId(const void *value, va_list argp)
     }
 
     *maxLifeTime = curCliLifeTime;
-    *sessId = client->sessInfo.sessId;
+    *earliestClient = client;
     return HASH_MAP_TRAVE_CONTINUE;
+}
+
+static int32_t LocalCtlClientFullProcess(LocalControlClient *client, LocalControlContext *ctx)
+{
+    if (ctx->clientManager.curClientNum < ctx->config.maxClientNum) {
+        return IOTC_OK;
+    }
+
+    const LocalControlClient *earliestClient = NULL;
+    uint32_t maxLifeTime = 0;
+    uint32_t curTime = IotcGetSysTimeMs();
+    (void)UtilsHashMapIterate(ctx->clientManager.clientMap, GetEarliestClientSessId,
+        ctx, &earliestClient, &maxLifeTime, curTime);
+    if (earliestClient == NULL) {
+        IOTC_LOGW("get earliest client error");
+        return IOTC_CORE_WIFI_LOCAL_CTL_ERR_GET_EARLIEST_CLIENT;
+    }
+
+    DFX_ANONYMIZE_IP_ADDR(anonyIp, earliestClient->appInfo.addr);
+    DFX_ANONYMIZE_ID_STR(anonyPuuid, earliestClient->appInfo.puuid);
+    IOTC_LOGI("client remove %s/%s/%u", anonyIp, anonyPuuid, client->timeInfo.createTime);
+
+    int32_t ret = UtilsHashMapRemove(ctx->clientManager.clientMap, (const uint8_t *)earliestClient->sessInfo.sessId,
+        LOCAL_CONTROL_SESS_ID_STR_LEN);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("remove earliest client error %d", ret);
+        return ret;
+    }
+    ctx->clientManager.curClientNum = UtilsHashMapLength(ctx->clientManager.clientMap);
+    return IOTC_OK;
 }
 
 static int32_t LocalControlClientInsert(LocalControlClient *client, LocalControlContext *ctx)
 {
-    int32_t ret;
-
-    do {
-        if (ctx->clientManager.curClientNum < ctx->config.maxClientNum) {
-            break;
-        }
-
-        (void)UtilsHashMapIterate(ctx->clientManager.clientMap, RemoveOneSessNotCreatedClient);
-        ctx->clientManager.curClientNum = UtilsHashMapLength(ctx->clientManager.clientMap);
-        if (ctx->clientManager.curClientNum < ctx->config.maxClientNum) {
-            break;
-        }
-
-        const char *earliestSessId = NULL;
-        uint32_t maxLifeTime = 0;
-        uint32_t curTime = IotcGetSysTimeMs();
-        (void)UtilsHashMapIterate(ctx->clientManager.clientMap, GetEarliestClientSessId,
-            ctx, &earliestSessId, &maxLifeTime, curTime);
-        if (earliestSessId == NULL) {
-            IOTC_LOGW("get earliest client error");
-            return IOTC_CORE_WIFI_LOCAL_CTL_ERR_GET_EARLIEST_CLIENT;
-        }
-
-        ret = UtilsHashMapRemove(ctx->clientManager.clientMap, (const uint8_t *)earliestSessId, strlen(earliestSessId));
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("remove earliest client error %d", ret);
-            return ret;
-        }
-    } while (0);
+    int32_t ret = LocalCtlClientFullProcess(client, ctx);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("client full process error %d", ret);
+        return ret;
+    }
 
     ret = UtilsHashMapInsert(ctx->clientManager.clientMap, (const uint8_t *)client->sessInfo.sessId,
         LOCAL_CONTROL_SESS_ID_STR_LEN, client);
@@ -397,7 +381,7 @@ int32_t CreateLocalControlClient(LocalControlContext *ctx, const LocalClientBuil
 
     int32_t ret = LocalControlClientInsert(newClient, ctx);
     if (ret != IOTC_OK) {
-        LocalClientFree(newClient);
+        LocalCtlClientFree(newClient);
         return ret;
     }
 

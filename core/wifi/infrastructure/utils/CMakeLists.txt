@@ -16,6 +16,8 @@ set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/wifi_net_info.c
     ${CMAKE_CURRENT_SOURCE_DIR}/seq_num_utils.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/base64_codec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/coap_sess_utils.c
     PARENT_SCOPE
 )
 

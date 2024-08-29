@@ -20,6 +20,17 @@
 #include "wifi_sched_fd_watch.h"
 #include "sched_event_loop.h"
 
+static int32_t CreateCoapNetStackBuffer(CoapNetStack *stack)
+{
+    stack->sendBuf = TransCreateSendBuffer();
+    stack->recvBuf = TransCreateRecvBuffer();
+    if (stack->sendBuf == NULL || stack->recvBuf == NULL) {
+        IOTC_LOGW("create buffer error");
+        return IOTC_CORE_WIFI_TRANS_BUFFER_ERR_CREATE;
+    }
+    return IOTC_OK;
+}
+
 static int32_t CreateCoapNetStackLink(CoapNetStack *stack, const CoapNetStackParam *initParam)
 {
     stack->link = TransLinkNew(initParam->socket, stack->recvBuf, initParam->name);
@@ -64,11 +75,8 @@ int32_t CoapNetStackCreate(CoapNetStack *stack, const CoapNetStackParam *initPar
     int32_t ret;
     do {
         /* 1. 初始化收发缓冲区 */
-        stack->sendBuf = TransCreateSendBuffer();
-        stack->recvBuf = TransCreateRecvBuffer();
-        if (stack->sendBuf == NULL || stack->recvBuf == NULL) {
-            IOTC_LOGW("create buffer error");
-            ret = IOTC_CORE_WIFI_TRANS_BUFFER_ERR_CREATE;
+        ret = CreateCoapNetStackBuffer(stack);
+        if (ret != IOTC_OK) {
             break;
         }
 

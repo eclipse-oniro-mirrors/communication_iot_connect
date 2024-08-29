@@ -18,11 +18,14 @@
 #include "securec.h"
 #include "iotc_errcode.h"
 
+#define COAP_DEFAULT_COAP_RETRANS_CNT 5
+#define COAP_DEFAULT_RETRANS_INTERVAL UTILS_SEC_TO_MS(1)
+
 int32_t CoapEndpointRetransEnable(CoapEndpoint *endpoint, CoapRetransCheckFunc func, uint32_t maxBufSize)
 {
     CHECK_RETURN_LOGW(endpoint != NULL && func != NULL && maxBufSize != 0, IOTC_ERR_PARAM_INVALID,
         "param invalid");
-    
+
     ENDPOINT_LOCK_RETURN(endpoint, IOTC_ERR_TIMEOUT);
 
     endpoint->retrans.retransCheck = func;
@@ -34,7 +37,7 @@ int32_t CoapEndpointRetransEnable(CoapEndpoint *endpoint, CoapRetransCheckFunc f
 
 int32_t CoapEndpointRetransInit(CoapEndpointRetrans *retrans)
 {
-    CHECK_RETURN(retrans != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(retrans != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     LIST_INIT(&retrans->retransList);
     return IOTC_OK;
 }
@@ -75,7 +78,7 @@ static CoapRetransNode *RetransNodeNew(const CoapPacket *pkt, const CoapBuffer *
                 break;
             }
         }
-        
+
         newNode->raw.data = UtilsMallocCopy(buf->buffer, buf->len);
         if (newNode->raw.data == NULL)  {
             IOTC_LOGW("malloc copy error %u", buf->len);
@@ -131,11 +134,10 @@ int32_t CoapRetransAddPacket(CoapEndpoint *endpoint, const CoapPacket *pkt,
             retrans->maxBufSize, newNode->remainTime);
         ret = IOTC_OK;
     } while (0);
-    
+
     ENDPOINT_UNLOCK(endpoint);
-    if (ret == IOTC_OK) {
-        return ret;
-    }
+    CHECK_RETURN(ret != IOTC_OK, IOTC_OK);
+
     if (newNode != NULL) {
         if (newNode->raw.data != NULL) {
             IotcFree((void *)newNode->raw.data);
@@ -147,7 +149,7 @@ int32_t CoapRetransAddPacket(CoapEndpoint *endpoint, const CoapPacket *pkt,
 
 void CoapEndpointRetransPrepare(CoapEndpoint *endpoint, uint32_t *timeout)
 {
-    CHECK_V_RETURN(endpoint != NULL && timeout != NULL);
+    CHECK_V_RETURN_LOGW(endpoint != NULL && timeout != NULL, "param invalid");
     if (LIST_EMPTY(&endpoint->retrans.retransList)) {
         return;
     }
@@ -164,7 +166,7 @@ void CoapEndpointRetransPrepare(CoapEndpoint *endpoint, uint32_t *timeout)
 
 bool CoapEndpointRetransCheck(CoapEndpoint *endpoint, uint32_t cur)
 {
-    CHECK_RETURN(endpoint != NULL && cur != 0, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && cur != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     bool ready = false;
     ListEntry *item = NULL;
@@ -182,16 +184,18 @@ bool CoapEndpointRetransCheck(CoapEndpoint *endpoint, uint32_t cur)
     return ready;
 }
 
-static void RetransNodeFreeBuffer(CoapEndpointRetrans *retrans, CoapRetransNode *node)
+static inline void RetransNodeFreeBuffer(CoapEndpointRetrans *retrans, CoapRetransNode *node)
 {
     retrans->curBufSize = retrans->curBufSize > node->raw.len ? retrans->curBufSize - node->raw.len : 0;
-    IotcFree((void *)node->raw.data);
+    if (node->raw.data != NULL) {
+        IotcFree((void *)node->raw.data);
+    }
     IotcFree(node);
 }
 
 void CoapEndpointRetransDispatch(CoapEndpoint *endpoint)
 {
-    CHECK_V_RETURN(endpoint != NULL);
+    CHECK_V_RETURN_LOGW(endpoint != NULL, "param invalid");
     if (LIST_EMPTY(&endpoint->retrans.retransList)) {
         return;
     }
@@ -254,4 +258,19 @@ bool CoapEndpointRecvPacketRetransProcess(CoapEndpoint *endpoint, const CoapPack
         return true;
     }
     return false;
+}
+
+bool CoapEndpointRetransDefaultCheckFunc(const CoapRetransParam *param, const CoapData *raw,
+    void *userData, uint32_t *next)
+{
+    CHECK_RETURN_LOGW(param != NULL && next != NULL, false, "param invalid");
+    NOT_USED(param);
+    NOT_USED(raw);
+    NOT_USED(userData);
+
+    if (param->cnt >= COAP_DEFAULT_COAP_RETRANS_CNT) {
+        return false;
+    }
+    *next = COAP_DEFAULT_RETRANS_INTERVAL;
+    return true;
 }

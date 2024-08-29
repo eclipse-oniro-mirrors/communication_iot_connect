@@ -12,23 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef E2E_CONTROL_MSG_H
-#define E2E_CONTROL_MSG_H
-#include <stdbool.h>
+#ifndef BASE64_CODEC_H
+#define BASE64_CODEC_H
 #include <stdint.h>
-#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef void (*E2eCtrlMsgReportAfterGetCmd)(const IotcJson *dataArray, const void *userData, uint32_t userDataLen);
+typedef enum {
+    BASE64_CODEC_TYPE_DECODE = 0,
+    BASE64_CODEC_TYPE_ENCODE,
+} Base64CodecType;
 
-int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
-    const void *userData, uint32_t userDataLen);
+uint8_t *GetBase64CodecData(const uint8_t *in, uint32_t inLen, uint32_t *dataLen,
+    Base64CodecType type, uint32_t maxSize);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* E2E_CONTROL_MSG_H */
+#endif /* BASE64_CODEC_H */

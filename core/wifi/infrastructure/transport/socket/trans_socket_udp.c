@@ -30,12 +30,12 @@ typedef struct {
 
 static void UdpSocketFree(TransSocket *socket)
 {
-    CHECK_V_RETURN_LOGW(socket != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(socket != NULL, "param invalid");
     UdpSocket *udpSocket = (UdpSocket *)socket;
 
-    UTILS_FREE_2_NULL(udpSocket->initParam.broadAddr);
+    UTILS_FREE_2_NULL(udpSocket->initParam.broadcastAddr);
     UTILS_FREE_2_NULL(udpSocket->initParam.localAddr);
-    UTILS_FREE_2_NULL(udpSocket->initParam.multiAddr);
+    UTILS_FREE_2_NULL(udpSocket->initParam.multicastAddr);
     if (udpSocket->fd >= 0) {
         IotcClose(udpSocket->fd);
         udpSocket->fd = TRANS_SOCKET_INVALID_FD;
@@ -44,7 +44,7 @@ static void UdpSocketFree(TransSocket *socket)
 
 static int32_t UdpSocketInit(TransSocket *socket, void *userData)
 {
-    CHECK_RETURN_LOGW(socket != NULL && userData != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(socket != NULL && userData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     const SocketUdpInitParam *initParam = (const SocketUdpInitParam *)userData;
     UdpSocket *udpSocket = (UdpSocket *)socket;
 
@@ -53,9 +53,9 @@ static int32_t UdpSocketInit(TransSocket *socket, void *userData)
     SocketUdpInitParam *dst = &udpSocket->initParam;
     dst->port = initParam->port;
     do {
-        if (initParam->multiAddr != NULL) {
-            dst->multiAddr = UtilsStrDup(initParam->multiAddr);
-            if (dst->multiAddr == NULL) {
+        if (initParam->multicastAddr != NULL) {
+            dst->multicastAddr = UtilsStrDup(initParam->multicastAddr);
+            if (dst->multicastAddr == NULL) {
                 IOTC_LOGW("copy multicast addr error");
                 break;
             }
@@ -67,9 +67,9 @@ static int32_t UdpSocketInit(TransSocket *socket, void *userData)
                 break;
             }
         }
-        if (initParam->broadAddr != NULL) {
-            dst->broadAddr = UtilsStrDup(initParam->broadAddr);
-            if (dst->broadAddr == NULL) {
+        if (initParam->broadcastAddr != NULL) {
+            dst->broadcastAddr = UtilsStrDup(initParam->broadcastAddr);
+            if (dst->broadcastAddr == NULL) {
                 IOTC_LOGW("copy broadcast addr error");
                 break;
             }
@@ -80,7 +80,7 @@ static int32_t UdpSocketInit(TransSocket *socket, void *userData)
     return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_INIT;
 }
 
-static int32_t BindUdpSocket(int32_t fd, const SocketUdpInitParam *param)
+static int32_t UdpSocketBindAddr(int32_t fd, const SocketUdpInitParam *param)
 {
     int32_t ret;
     char anonyIpBuf[ANONYMIZE_IP_MIN_BUF_LEN + 1] = {0};
@@ -89,32 +89,34 @@ static int32_t BindUdpSocket(int32_t fd, const SocketUdpInitParam *param)
     addr.sinFamily = IOTC_SOCKET_DOMAIN_AF_INET;
     addr.sinPort = IotcHtons(param->port);
     /* 有广播地址则绑定广播地址，否则绑定本地ip */
-    if (param->broadAddr != NULL) {
-        addr.sinAddr = IotcInetAddr(param->broadAddr);
+    if (param->broadcastAddr != NULL) {
+        addr.sinAddr = IotcInetAddr(param->broadcastAddr);
         ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_ENABLE_BROADCAST, NULL, 0);
         if (ret != IOTC_OK) {
             IOTC_LOGW("enable broadcast error %d", ret);
             return ret;
         }
-        (void)DfxAnonymizeStrWithBuffer(param->broadAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
+        (void)DfxAnonymizeStrWithBuffer(param->broadcastAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
     } else if (param->localAddr != NULL) {
         addr.sinAddr = IotcInetAddr(param->localAddr);
         (void)DfxAnonymizeStrWithBuffer(param->localAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
     } else {
-        IOTC_LOGW("invalid addr to bind");
+        IOTC_LOGW("no addr to bind");
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_ADDR;
     }
-    IOTC_LOGD("udp socket[%d] bind to %s:%u", fd, anonyIpBuf, param->port);
+
     ret = IotcBind(fd, (IotcSockaddr *)&addr, sizeof(IotcSockaddrIn));
     if (ret != IOTC_OK) {
-        IOTC_LOGW("udp bind to %s:%u error %d", anonyIpBuf, param->port, ret);
+        IOTC_LOGW("udp socket[%d] bind to %s:%u error %d", fd, anonyIpBuf, param->port, ret);
+    } else {
+        IOTC_LOGD("udp socket[%d] bind to %s:%u", fd, anonyIpBuf, param->port);
     }
     return ret;
 }
 
 static int32_t JoinMulticastGroup(int32_t fd, const SocketUdpInitParam *param)
 {
-    if (param->multiAddr == NULL) {
+    if (param->multicastAddr == NULL) {
         return IOTC_OK;
     }
 
@@ -124,15 +126,15 @@ static int32_t JoinMulticastGroup(int32_t fd, const SocketUdpInitParam *param)
         return ret;
     }
 
-    DFX_ANONYMIZE_IP_STR(anonyIp, param->multiAddr);
+    DFX_ANONYMIZE_IP_STR(anonyIp, param->multicastAddr);
     IotcSocketMultiAddr multi = {
-            param->broadAddr != NULL ? param->broadAddr : param->localAddr, param->multiAddr };
+        param->broadcastAddr != NULL ? param->broadcastAddr : param->localAddr, param->multicastAddr };
     ret = IotcSetSocketOpt(fd, IOTC_SOCKET_OPTION_ADD_MULTI_GROUP, &multi, sizeof(multi));
     if (ret != IOTC_OK) {
         IOTC_LOGW("add multi group %s error %d", anonyIp, ret);
         return ret;
     }
-    
+
     IOTC_LOGD("udp socket[%d] join multicast group %s", fd, anonyIp);
     return IOTC_OK;
 }
@@ -151,7 +153,7 @@ static int32_t SetUdpOpt(int32_t fd, const SocketUdpInitParam *param)
         return ret;
     }
 
-    ret = BindUdpSocket(fd, param);
+    ret = UdpSocketBindAddr(fd, param);
     if (ret != IOTC_OK) {
         return ret;
     }
@@ -166,7 +168,7 @@ static int32_t SetUdpOpt(int32_t fd, const SocketUdpInitParam *param)
 
 static int32_t UdpSocketConnect(TransSocket *socket)
 {
-    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     UdpSocket *udpSocket = (UdpSocket *)socket;
 
     if (udpSocket->fd >= 0) {
@@ -175,6 +177,7 @@ static int32_t UdpSocketConnect(TransSocket *socket)
     udpSocket->fd = IotcSocket(IOTC_SOCKET_DOMAIN_AF_INET, IOTC_SOCKET_TYPE_DGRAM,
         IOTC_SOCKET_PROTO_UDP);
     if (udpSocket->fd < 0) {
+        IOTC_LOGW("create udp socket error %d/%d", udpSocket->fd, IotcGetErrno());
         return udpSocket->fd;
     }
 
@@ -191,7 +194,7 @@ static int32_t UdpSocketSend(TransSocket *socket, uint32_t tmo, const CommData *
 {
     NOT_USED(tmo);
     CHECK_RETURN_LOGW(socket != NULL && data != NULL && data->len != 0 && data->data != NULL && addr != NULL,
-        IOTC_ERR_PARAM_INVALID, "invalid param");
+        IOTC_ERR_PARAM_INVALID, "param invalid");
     UdpSocket *udpSocket = (UdpSocket *)socket;
 
     if (udpSocket->fd < 0) {
@@ -215,11 +218,11 @@ static int32_t UdpSocketSend(TransSocket *socket, uint32_t tmo, const CommData *
     if (err == IOTC_SOCKET_ERRNO_NO_ERR || err == IOTC_SOCKET_ERRNO_EAGAIN ||
         err == IOTC_SOCKET_ERRNO_EWOULDBLOCK || err == IOTC_SOCKET_ERRNO_EINTR) {
         /* 链路无异常则不抛错 */
-        IOTC_LOGD("udp socket[%d] send errno ok %d", udpSocket->fd, err);
+        IOTC_LOGD("udp socket[%d] send fail errno ok %d/%d", udpSocket->fd, err, IotcGetErrno());
         return IOTC_OK;
     }
 
-    IOTC_LOGW("udp socket[%d] send error %d/%d", udpSocket->fd, ret, err);
+    IOTC_LOGW("udp socket[%d] send error %d/%d/%d", udpSocket->fd, ret, err, IotcGetErrno());
     return err;
 }
 
@@ -227,7 +230,7 @@ static int32_t UdpSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
 {
     NOT_USED(tmo);
     CHECK_RETURN_LOGW(socket != NULL && buf != NULL && buf->buffer != NULL && buf->size != 0 &&
-        buf->size > buf->len && addr != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+        buf->size > buf->len && addr != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     UdpSocket *udpSocket = (UdpSocket *)socket;
     if (udpSocket->fd < 0) {
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_NOT_CONNECT;
@@ -251,17 +254,17 @@ static int32_t UdpSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
     if (err == IOTC_SOCKET_ERRNO_NO_ERR || err == IOTC_SOCKET_ERRNO_EAGAIN ||
         err == IOTC_SOCKET_ERRNO_EWOULDBLOCK || err == IOTC_SOCKET_ERRNO_EINTR) {
         /* 链路无异常则不抛错 */
-        IOTC_LOGD("udp socket[%d] recv errno ok %d", udpSocket->fd, err);
+        IOTC_LOGD("udp socket[%d] recv fail errno ok %d/%d", udpSocket->fd, err, IotcGetErrno());
         return IOTC_OK;
     }
 
-    IOTC_LOGW("udp socket[%d] recv error %d/%d", udpSocket->fd, readLen, err);
+    IOTC_LOGW("udp socket[%d] recv error %d/%d/%d", udpSocket->fd, readLen, err, IotcGetErrno());
     return err;
 }
 
 static void UdpSocketClose(TransSocket *socket)
 {
-    CHECK_V_RETURN_LOGW(socket != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(socket != NULL, "param invalid");
     UdpSocket *udpSocket = (UdpSocket *)socket;
 
     if (udpSocket->fd >= 0) {
@@ -271,38 +274,40 @@ static void UdpSocketClose(TransSocket *socket)
     }
 }
 
+static const SocketIf UDP_IF = {
+    .socketInit = UdpSocketInit,
+    .socketConnect = UdpSocketConnect,
+    .socketSend = UdpSocketSend,
+    .socketRecv = UdpSocketRecv,
+    .socketClose = UdpSocketClose,
+    .socketFree = UdpSocketFree,
+};
+static const char *UDP_NAME = "UDP";
+
 TransSocket *TransSocketUdpNew(const SocketUdpInitParam *init)
 {
     CHECK_RETURN_LOGW(init != NULL, NULL, "param invalid");
-    static const SocketIf UDP_IF = {
-        .socketInit = UdpSocketInit,
-        .socketConnect = UdpSocketConnect,
-        .socketSend = UdpSocketSend,
-        .socketRecv = UdpSocketRecv,
-        .socketClose = UdpSocketClose,
-        .socketFree = UdpSocketFree,
-    };
-    static const char *UDP_NAME = "UDP";
 
     return TransSocketNew(&UDP_IF, sizeof(UdpSocket), UDP_NAME, (void *)init);
 }
 
-int32_t TransSocketUdpLeaveMultiGroup(TransSocket *socket)
+int32_t TransSocketUdpLeaveMulticastGroup(TransSocket *socket)
 {
-    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     UdpSocket *udpSocket = (UdpSocket *)socket;
-    if (udpSocket->fd < 0 || udpSocket->initParam.multiAddr == NULL) {
+    if (udpSocket->fd < 0 || udpSocket->initParam.multicastAddr == NULL) {
         IOTC_LOGW("udp socket[%d] invalid", udpSocket->fd);
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_INVALID;
     }
 
+    DFX_ANONYMIZE_IP_STR(anonyIp, udpSocket->initParam.multicastAddr);
     int32_t ret = IotcSetSocketOpt(udpSocket->fd, IOTC_SOCKET_OPTION_DROP_MULTI_GROUP,
-        udpSocket->initParam.multiAddr, strlen(udpSocket->initParam.multiAddr));
+        udpSocket->initParam.multicastAddr, strlen(udpSocket->initParam.multicastAddr));
     if (ret != IOTC_OK) {
-        IOTC_LOGW("leave multi group error %d", ret);
+        IOTC_LOGW("udp socket[%d] leave multi group %s error %d", udpSocket->fd, anonyIp, ret);
         return ret;
     }
-    DFX_ANONYMIZE_IP_STR(anonyIp, udpSocket->initParam.multiAddr);
+
     IOTC_LOGD("udp socket[%d] leave multicast group %s", udpSocket->fd, anonyIp);
     return IOTC_OK;
 }

@@ -24,8 +24,8 @@
 #include "utils_bit_map.h"
 #include "product_adapter.h"
 
-#define LAN_SEARCH_NEW_PEER_SPEKE_TIMEOUT UTILS_SEC_TO_MS(30)
-#define LAN_SEARCH_EXPIRE_TIMER_CHECK_PERIOD UTILS_SEC_TO_MS(30)
+#define LAN_SEARCH_NEW_PEER_SPEKE_TIMEOUT       UTILS_SEC_TO_MS(30)
+#define LAN_SEARCH_EXPIRE_TIMER_CHECK_PERIOD    UTILS_SEC_TO_MS(30)
 
 static void LanSearchPeerInfoFree(LanSearchPeer *peer)
 {
@@ -186,11 +186,11 @@ static LanSearchPeer *LanSearchPeerNew(uint32_t addr)
     newPeer->timeInfo.createTime = IotcGetSysTimeMs();
     newPeer->timeInfo.expireTime = LAN_SEARCH_NEW_PEER_SPEKE_TIMEOUT;
     newPeer->peerInfo.addr = addr;
-    static const SpekeCallback SPEKE_CALL_BACK = {
+    SpekeCallback spekeCbs = {
         .getPinCode = LanSearchSpekeGetPinCodeCallback,
         .notifySpekeFinished = LanSearchSpekeNotifySpekeFinishedCallback,
     };
-    newPeer->sessInfo.speke = SpekeInitSession(SPEKE_TYPE_SERVER, &SPEKE_CALL_BACK, newPeer);
+    newPeer->sessInfo.speke = SpekeInitSession(SPEKE_TYPE_SERVER, &spekeCbs, newPeer);
     if (newPeer->sessInfo.speke == NULL) {
         IOTC_LOGW("create speke error");
         IotcFree(newPeer);

@@ -24,7 +24,7 @@ typedef struct {
     ListEntry node;
     SessMsgProcess handler;
     const char *comment;
-    void *corData;
+    void *nodeData;
 } MsgCor;
 
 struct TransSess {
@@ -45,11 +45,8 @@ typedef enum {
     COR_TYPE_SEND_HEAD,
 } CorType;
 
-MsgCor *MsgCorNew(SessMsgProcess handler, const char *comment, void *corData)
+static MsgCor *MsgCorNew(SessMsgProcess handler, const char *comment, void *nodeData)
 {
-    if (handler == NULL) {
-        return NULL;
-    }
     MsgCor *cor = IotcMalloc(sizeof(MsgCor));
     if (cor == NULL) {
         IOTC_LOGW("malloc error");
@@ -59,24 +56,23 @@ MsgCor *MsgCorNew(SessMsgProcess handler, const char *comment, void *corData)
     LIST_INIT(&cor->node);
     cor->handler = handler;
     cor->comment = comment;
-    cor->corData = corData;
+    cor->nodeData = nodeData;
     return cor;
 }
 
 static int32_t SessionOnLinkRecvData(TransLink *link, UtilsBuffer *data, void *userData, const SocketAddr *addr)
 {
-    if (link == NULL || data == NULL || userData == NULL) {
-        return IOTC_ERR_PARAM_INVALID;
-    }
+    CHECK_RETURN_LOGW(link != NULL && data != NULL && userData != NULL,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
     TransSess *sess = (TransSess *)userData;
     return TransSessMsgRecv(sess, data, addr);
 }
 
 TransSess *TransSessNew(TransLink *link, uint32_t msgSize, const char *name, void *userData)
 {
-    if (link == NULL || msgSize == 0 || msgSize > TRANS_SESS_MSG_MAX_SIZE) {
-        return NULL;
-    }
+    CHECK_RETURN_LOGW(link != NULL && msgSize != 0 && msgSize <= TRANS_SESS_MSG_MAX_SIZE,
+        NULL, "param invalid");
+
     TransSess *sess = (TransSess *)IotcMalloc(sizeof(TransSess));
     if (sess == NULL) {
         IOTC_LOGW("malloc error");
@@ -91,6 +87,7 @@ TransSess *TransSessNew(TransLink *link, uint32_t msgSize, const char *name, voi
     sess->name = name;
     sess->msg = (uint8_t *)IotcCalloc(msgSize, sizeof(uint8_t));
     if (sess->msg == NULL) {
+        IOTC_LOGW("calloc error %u", msgSize);
         TransSessFree(sess);
         return NULL;
     }
@@ -107,9 +104,7 @@ TransSess *TransSessNew(TransLink *link, uint32_t msgSize, const char *name, voi
 
 void TransSessFree(TransSess *sess)
 {
-    if (sess == NULL) {
-        return;
-    }
+    CHECK_V_RETURN(sess != NULL);
     ListEntry *item = NULL;
     ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &sess->recvCor) {
@@ -127,12 +122,12 @@ void TransSessFree(TransSess *sess)
     IotcFree(sess);
 }
 
-static void AddCorListHandler(TransSess *sess, SessMsgProcess handler, const char *comment, void *corData, CorType type)
+static void AddCorListHandler(TransSess *sess, SessMsgProcess handler, const char *comment,
+    void *nodeData, CorType type)
 {
-    MsgCor *cor = MsgCorNew(handler, comment, corData);
-    if (cor == NULL) {
-        return;
-    }
+    MsgCor *cor = MsgCorNew(handler, comment, nodeData);
+    CHECK_V_RETURN_LOGW(cor != NULL, "cor node new error");
+
     switch (type) {
         case COR_TYPE_RECV_TAIL:
             LIST_INSERT_BEFORE(&cor->node, &sess->recvCor);
@@ -151,43 +146,34 @@ static void AddCorListHandler(TransSess *sess, SessMsgProcess handler, const cha
     };
 }
 
-void TransSessAddTailRecvHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *corData)
+void TransSessAddRecvTailHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *nodeData)
 {
-    if (sess == NULL || next == NULL) {
-        return;
-    }
-    AddCorListHandler(sess, next, comment, corData, COR_TYPE_RECV_TAIL);
+    CHECK_V_RETURN_LOGW(sess != NULL && next != NULL, "param invalid");
+    AddCorListHandler(sess, next, comment, nodeData, COR_TYPE_RECV_TAIL);
 }
 
-void TransSessAddTailSendHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *corData)
+void TransSessAddSendTailHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *nodeData)
 {
-    if (sess == NULL || next == NULL) {
-        return;
-    }
-    AddCorListHandler(sess, next, comment, corData, COR_TYPE_SEND_TAIL);
+    CHECK_V_RETURN_LOGW(sess != NULL && next != NULL, "param invalid");
+    AddCorListHandler(sess, next, comment, nodeData, COR_TYPE_SEND_TAIL);
 }
 
-void TransSessAddHeadRecvHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *corData)
+void TransSessAddRecvHeadHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *nodeData)
 {
-    if (sess == NULL || before == NULL) {
-        return;
-    }
-    AddCorListHandler(sess, before, comment, corData, COR_TYPE_RECV_HEAD);
+    CHECK_V_RETURN_LOGW(sess != NULL && before != NULL, "param invalid");
+    AddCorListHandler(sess, before, comment, nodeData, COR_TYPE_RECV_HEAD);
 }
 
-void TransSessAddHeadSendHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *corData)
+void TransSessAddSendHeadHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *nodeData)
 {
-    if (sess == NULL || before == NULL) {
-        return;
-    }
-    AddCorListHandler(sess, before, comment, corData, COR_TYPE_SEND_HEAD);
+    CHECK_V_RETURN_LOGW(sess != NULL && before != NULL, "param invalid");
+    AddCorListHandler(sess, before, comment, nodeData, COR_TYPE_SEND_HEAD);
 }
 
 void TransSessRemoveHandler(TransSess *sess, SessMsgProcess handler)
 {
-    if (sess == NULL || handler == NULL) {
-        return;
-    }
+    CHECK_V_RETURN_LOGW(sess != NULL && handler != NULL, "param invalid");
+
     ListEntry *item = NULL;
     ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &sess->recvCor) {
@@ -208,44 +194,57 @@ void TransSessRemoveHandler(TransSess *sess, SessMsgProcess handler)
     }
 }
 
-int32_t TransSessMsgSend(TransSess *sess, SessMsg *msg, UtilsBuffer *buf, const SocketAddr *addr)
+static bool TransSessMsgCorNodeProcess(TransSess *sess, SessMsg *msg,
+    UtilsBuffer *buf, const SocketAddr *addr, ListEntry *corList)
 {
-    if (sess == NULL || msg == NULL || buf == NULL || buf->buffer == NULL ||
-        buf->len == 0 || buf->size < buf->len || buf->size == 0) {
-        IOTC_LOGW("param invalid");
-        return IOTC_ERR_PARAM_INVALID;
-    }
     const char *nodeCmt = NULL;
     ListEntry *item = NULL;
     SessCode code = SESS_CODE_OK;
-    LIST_FOR_EACH_ITEM(item, &sess->sendCor) {
+    SessAddtlInfo info = { addr, sess->userData, NULL };
+
+    LIST_FOR_EACH_ITEM(item, corList) {
         MsgCor *node = CONTAINER_OF(item, MsgCor, node);
         nodeCmt = node->comment;
         if (node->handler == NULL) {
+            IOTC_LOGW("invalid handler");
             code = SESS_CODE_ERR;
             break;
         }
-        SessAddtlInfo info = { addr, sess->userData, node->corData };
+
+        info.nodeData = node->nodeData;
         code = node->handler(msg, buf, &info);
         if (code != SESS_CODE_CONTINUE) {
             break;
         }
-        IOTC_LOGD("sess [%s] send msg [%s] ok", NON_NULL_STR(sess->name), NON_NULL_STR(nodeCmt));
+        IOTC_LOGD("sess[%s] process msg [%s] ok", NON_NULL_STR(sess->name), NON_NULL_STR(nodeCmt));
     }
 
     if (code == SESS_CODE_ERR) {
-        IOTC_LOGW("sess [%s] send msg [%s] error", NON_NULL_STR(sess->name), NON_NULL_STR(nodeCmt));
-        return IOTC_CORE_WIFI_TRANS_ERR_SESS_RECV_COR;
+        IOTC_LOGW("sess[%s] process msg [%s] error", NON_NULL_STR(sess->name), NON_NULL_STR(nodeCmt));
+        return false;
     }
-    
-    return TransLinkSendData(sess->link, buf->buffer, buf->len, addr);
+    return true;
+}
+
+int32_t TransSessMsgSend(TransSess *sess, SessMsg *msg, UtilsBuffer *buf, const SocketAddr *addr)
+{
+    CHECK_RETURN_LOGW(sess != NULL && msg != NULL && buf != NULL && buf->buffer != NULL &&
+        buf->len != 0 && buf->size >= buf->len && buf->size != 0,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    if (TransSessMsgCorNodeProcess(sess, msg, buf, addr, &sess->sendCor)) {
+        return TransLinkSendData(sess->link, buf->buffer, buf->len, addr);
+    } else {
+        IOTC_LOGW("sess cor send error");
+        return IOTC_CORE_WIFI_TRANS_ERR_SESS_SEND_COR;
+    }
 }
 
 int32_t TransSessSendRaw(TransSess *sess, const CommData *data, const SocketAddr *addr)
 {
     CHECK_RETURN_LOGW(sess != NULL && data != NULL && data->data != NULL && data->len != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     return TransLinkSendData(sess->link, data->data, data->len, addr);
 }
 
@@ -260,27 +259,10 @@ int32_t TransSessMsgRecv(TransSess *sess, UtilsBuffer *buf, const SocketAddr *ad
     }
 
     (void)memset_s(sess->msg, sess->msgSize, 0, sess->msgSize);
-    const char *nodeCmt = NULL;
-    ListEntry *item = NULL;
-    SessCode code = SESS_CODE_OK;
-    LIST_FOR_EACH_ITEM(item, &sess->recvCor) {
-        MsgCor *node = CONTAINER_OF(item, MsgCor, node);
-        nodeCmt = node->comment;
-        if (node->handler == NULL) {
-            code = SESS_CODE_ERR;
-            break;
-        }
-        SessAddtlInfo info = { addr, sess->userData, node->corData };
-        code = node->handler(sess->msg, buf, &info);
-        if (code != SESS_CODE_CONTINUE) {
-            break;
-        }
-        IOTC_LOGD("sess [%s] recv msg [%s] ok", NON_NULL_STR(sess->name), NON_NULL_STR(nodeCmt));
+    if (TransSessMsgCorNodeProcess(sess, sess->msg, buf, addr, &sess->recvCor)) {
+        return IOTC_OK;
+    } else {
+        IOTC_LOGW("sess cor recv error");
+        return IOTC_CORE_WIFI_TRANS_ERR_SESS_SEND_COR;
     }
-
-    if (code == SESS_CODE_ERR) {
-        IOTC_LOGW("sess [%s] recv msg [%s] error", NON_NULL_STR(sess->name), NON_NULL_STR(nodeCmt));
-        return IOTC_CORE_WIFI_TRANS_ERR_SESS_RECV_COR;
-    }
-    return IOTC_OK;
 }

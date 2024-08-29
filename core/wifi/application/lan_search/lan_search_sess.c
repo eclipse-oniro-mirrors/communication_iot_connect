@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,18 +19,15 @@
 #include "iotc_errcode.h"
 #include "utils_bit_map.h"
 #include "utils_assert.h"
-#include "iotc_base64.h"
+#include "base64_codec.h"
 #include "coap_codec_utils.h"
+#include "coap_sess_utils.h"
+#include "iotc_mem.h"
 
 typedef enum {
     LAN_SEARCH_SPEKE_TYPE_DECRYPT = 0,
     LAN_SEARCH_SPEKE_TYPE_ENCRYPT,
 } LanSearchSpekeType;
-
-typedef enum {
-    LAN_SEARCH_BASE64_TYPE_DECODE = 0,
-    LAN_SEARCH_BASE64_TYPE_ENCODE,
-} LanSearchBase64Type;
 
 static bool LanSearchSessMsgCheck(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info)
 {
@@ -42,41 +37,28 @@ static bool LanSearchSessMsgCheck(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo 
     return true;
 }
 
-static bool LanSearchPlainCheck(const CoapPacket *packet, const char *uriWhiteList[])
-{
-    if (COAP_CODE_CLASS(packet->header.code) != COAP_CODE_CLASS_REQ) {
-        return false;
-    }
-
-    char uriBuf[COAP_URI_MAX_LEN + 1] = {0};
-    int32_t ret = CoapUtilsGetUri(packet, uriBuf, COAP_URI_MAX_LEN);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("get uri error %d", ret);
-        return false;
-    }
-
-    for (const char **whiteUri = uriWhiteList; *whiteUri != NULL; ++whiteUri) {
-        if (strcmp(*whiteUri, uriBuf) != 0) {
-            continue;
-        }
-        return true;
-    }
-    return false;
-}
-
 SessCode LanSearchSessCoapRecvPreProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info)
 {
     CHECK_RETURN_LOGW(LanSearchSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
-    CHECK_RETURN_LOGW(info->corData != NULL, SESS_CODE_ERR, "uri white list invalid");
+    CHECK_RETURN_LOGW(info->nodeData != NULL, SESS_CODE_ERR, "uri whitelist invalid");
 
     LanSearchSessMsg *sessMsg = (LanSearchSessMsg *)msg;
     LanSearchContext *ctx = (LanSearchContext *)info->userData;
     (void)LanSearchGetPeer(ctx, info->addr->addr, &sessMsg->peer);
 
-    if (LanSearchPlainCheck(&sessMsg->packet, info->corData)) {
+    if (CoapUriWhiteListMatch(&sessMsg->packet, info->nodeData)) {
         UTILS_BIT_SET(sessMsg->bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN);
     }
     return SESS_CODE_CONTINUE;
+}
+
+static inline bool LanSearchPlainMsgCheck(LanSearchSessMsg *sessMsg)
+{
+    if (UTILS_IS_BIT_SET(sessMsg->bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN) || sessMsg->packet.payload.data == NULL ||
+        sessMsg->packet.payload.len == 0) {
+        return true;
+    }
+    return false;
 }
 
 static bool LanSearchSessSpekeProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info, LanSearchSpekeType type)
@@ -85,8 +67,7 @@ static bool LanSearchSessSpekeProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     LanSearchPeer *peer = sessMsg->peer;
     CoapPacket *pkt = &sessMsg->packet;
 
-    if (UTILS_IS_BIT_SET(sessMsg->bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN) || pkt->payload.data == NULL ||
-        pkt->payload.len == 0) {
+    if (LanSearchPlainMsgCheck(sessMsg)) {
         return true;
     }
 
@@ -103,66 +84,39 @@ static bool LanSearchSessSpekeProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     } else {
         ret = SpekeEncryptData(peer->sessInfo.speke, pkt->payload.data, pkt->payload.len, &data, &dataLen);
     }
-    if (ret != IOTC_OK || data == NULL || dataLen == 0) {
+    if (ret != IOTC_OK || data == NULL) {
         IOTC_LOGW("speke err %d/%u", ret, dataLen);
         return false;
     }
 
-    CoapData newPayload = {data, dataLen};
+    CoapData newPayload = { data, dataLen };
     ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
     IotcFree(data);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("coap replace payload error %d", ret);
-        return false;
-    }
+    CHECK_RETURN_LOGW(ret == IOTC_OK, false, "coap replace payload error %d", ret);
     return true;
 }
 
-static bool LanSearchSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info, LanSearchBase64Type type)
+static bool LanSearchSessBase64Process(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info, Base64CodecType type)
 {
     LanSearchSessMsg *sessMsg = (LanSearchSessMsg *)msg;
     CoapPacket *pkt = &sessMsg->packet;
 
-    if (UTILS_IS_BIT_SET(sessMsg->bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN) || pkt->payload.data == NULL ||
-        pkt->payload.len == 0) {
+    if (LanSearchPlainMsgCheck(sessMsg)) {
         return true;
     }
 
     uint32_t dataLen = 0;
-    int32_t ret;
-    /* 获取编解码后的大小 */
-    if (type == LAN_SEARCH_BASE64_TYPE_DECODE) {
-        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
-    } else {
-        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, NULL, &dataLen);
-    }
-    if (ret != IOTC_OK || dataLen == 0 || dataLen > buf->size) {
-        IOTC_LOGW("get len error %d/%d", ret, type);
-        return false;
-    }
-
-    uint8_t *data = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
+    uint8_t *data = GetBase64CodecData(pkt->payload.data, pkt->payload.len, &dataLen, type, buf->size);
     if (data == NULL) {
-        IOTC_LOGW("calloc error %u", dataLen);
+        IOTC_LOGW("lan search base64 codec error %u", dataLen);
         return false;
     }
 
-    if (type == LAN_SEARCH_BASE64_TYPE_DECODE) {
-        ret = IotcBase64Decode(pkt->payload.data, pkt->payload.len, data, &dataLen);
-    } else {
-        ret = IotcBase64Encode(pkt->payload.data, pkt->payload.len, data, &dataLen);
-    }
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("base64 error %d/%d", ret, type);
-        IotcFree(data);
-        return false;
-    }
-
-    CoapData newPayload = {data, dataLen};
-    ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
+    CoapData newPayload = { data, dataLen };
+    int32_t ret = CoapUtilsReplacePayload(pkt, buf, &newPayload);
     IotcFree(data);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("coap replace payload error %d", ret);
+        IOTC_LOGW("lan search coap replace payload error %d", ret);
         return false;
     }
     return true;
@@ -172,7 +126,8 @@ SessCode LanSearchSessCoapRecvBase64Decode(SessMsg *msg, UtilsBuffer *buf, SessA
 {
     CHECK_RETURN_LOGW(LanSearchSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
 
-    if (!LanSearchSessBase64Process(msg, buf, info, LAN_SEARCH_BASE64_TYPE_DECODE)) {
+    if (!LanSearchSessBase64Process(msg, buf, info, BASE64_CODEC_TYPE_DECODE)) {
+        IOTC_LOGW("lan search base64 decode error");
         return SESS_CODE_ERR;
     }
     return SESS_CODE_CONTINUE;
@@ -183,6 +138,7 @@ SessCode LanSearchSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     CHECK_RETURN_LOGW(LanSearchSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
 
     if (!LanSearchSessSpekeProcess(msg, buf, info, LAN_SEARCH_SPEKE_TYPE_DECRYPT)) {
+        IOTC_LOGW("lan search speke dec error");
         return SESS_CODE_ERR;
     }
     return SESS_CODE_CONTINUE;
@@ -193,6 +149,7 @@ SessCode LanSearchSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlI
     CHECK_RETURN_LOGW(LanSearchSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
 
     if (!LanSearchSessSpekeProcess(msg, buf, info, LAN_SEARCH_SPEKE_TYPE_ENCRYPT)) {
+        IOTC_LOGW("lan search speke enc error");
         return SESS_CODE_ERR;
     }
     return SESS_CODE_CONTINUE;
@@ -202,7 +159,8 @@ SessCode LanSearchSessCoapRecvBase64Encode(SessMsg *msg, UtilsBuffer *buf, SessA
 {
     CHECK_RETURN_LOGW(LanSearchSessMsgCheck(msg, buf, info), SESS_CODE_ERR, "param invalid");
 
-    if (!LanSearchSessBase64Process(msg, buf, info, LAN_SEARCH_BASE64_TYPE_ENCODE)) {
+    if (!LanSearchSessBase64Process(msg, buf, info, BASE64_CODEC_TYPE_ENCODE)) {
+        IOTC_LOGW("lan search base64 encode error");
         return SESS_CODE_ERR;
     }
     return SESS_CODE_CONTINUE;

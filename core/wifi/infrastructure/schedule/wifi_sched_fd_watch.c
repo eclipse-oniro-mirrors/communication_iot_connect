@@ -15,9 +15,6 @@
 #include "wifi_sched_fd_watch.h"
 #include "sched_event_loop.h"
 #include "iotc_socket.h"
-#include "iotc_os.h"
-#include "utils_common.h"
-#include "comm_def.h"
 #include "event_loop.h"
 #include "utils_assert.h"
 #include "iotc_errcode.h"
@@ -25,7 +22,7 @@
 static EventSource *g_wifiFdEventSource = NULL;
 
 #define EVENT_SOURCE_FD_SET_TO_ADAPTER(eventSourceFdSet, adapterFdSet) \
-    IotcFdSet buffer##adapterFdSet = {0, NULL}; \
+    IotcFdSet buffer##adapterFdSet = { 0, NULL }; \
     IotcFdSet *(adapterFdSet) = NULL; \
     if ((eventSourceFdSet) != NULL && (eventSourceFdSet)->num != 0 && \
         (eventSourceFdSet)->num <= EVENT_SOURCE_FD_MAX_WATCH_SIZE) { \
@@ -157,7 +154,7 @@ void WifiSchedFdRemove(int32_t fd)
 
 static bool LinkFdReadCallback(int32_t fd, void *userData)
 {
-    CHECK_RETURN_LOGW(fd >= 0 && userData != NULL, false, "invalid param");
+    CHECK_RETURN_LOGW(fd >= 0 && userData != NULL, false, "param invalid");
 
     TransLink *link = (TransLink *)userData;
     TransLinkRecvReadEvent(link);
@@ -166,7 +163,7 @@ static bool LinkFdReadCallback(int32_t fd, void *userData)
 
 int32_t WifiSchedLinkRecvWatch(TransLink *link)
 {
-    CHECK_RETURN_LOGW(link != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(link != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     int32_t fd = TransLinkGetFd(link);
     if (fd < 0) {

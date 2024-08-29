@@ -117,12 +117,12 @@ static void EventSubForStopCoapServerAndClearAllClient(uint32_t event, void *par
 
 static bool LocalCoapStartEventMatch(uint32_t event)
 {
-    const int32_t START_EVENT[] = {
+    const int32_t startEvents[] = {
         IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_REGISTERED,
         IOTC_SDK_AILIFE_EVENT_WIFI_NET_CONNECT,
     };
-    for (uint32_t i = 0 ; i < ARRAY_SIZE(START_EVENT); ++i) {
-        if (event == START_EVENT[i]) {
+    for (uint32_t i = 0 ; i < ARRAY_SIZE(startEvents); ++i) {
+        if (event == startEvents[i]) {
             return true;
         }
     }
@@ -231,7 +231,7 @@ int32_t LocalControlServiceInit(void)
         return ret;
     }
 
-    static const ServiceHandler LOCAL_CTL_SERVICE_HANDLER = {
+    static const ServiceHandler localCtlHandler = {
         .onStart = LocalControlServiceStart,
         .onStop = LocalControlServiceStop,
         .onReset = NULL,
@@ -240,7 +240,7 @@ int32_t LocalControlServiceInit(void)
     ServiceInstance instance = {
         .serviceId = IOTC_SERVICE_ID_LOCAL_CONTROL,
         .name = LOCAL_CONTROL_SERVICE_NAME,
-        .handler = &LOCAL_CTL_SERVICE_HANDLER,
+        .handler = &localCtlHandler,
         .msgNum = 0,
         .msgIds = NULL,
         .apiHandler = NULL,

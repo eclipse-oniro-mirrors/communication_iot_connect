@@ -15,12 +15,9 @@
 #ifndef LAN_SEARCH_CONTEXT_H
 #define LAN_SEARCH_CONTEXT_H
 #include <stdint.h>
-#include "comm_def.h"
 #include "coap_net_stack.h"
 #include "utils_hash_map.h"
-#include "security_sess_key.h"
 #include "service_manager.h"
-#include "utils_common.h"
 #include "security_speke.h"
 
 #ifdef __cplusplus

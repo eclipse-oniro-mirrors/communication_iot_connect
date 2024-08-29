@@ -25,9 +25,7 @@ static const uint8_t COAP_ENDPOINT_CLIENT_REQ_MAX_CNT = UINT8_MAX;
 
 int32_t CoapEndpointClientInit(CoapEndpointClient *cli)
 {
-    if (cli == NULL) {
-        return IOTC_ERR_PARAM_INVALID;
-    }
+    CHECK_RETURN_LOGW(cli != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     LIST_INIT(&cli->reqList);
     cli->timeout = COAP_CLIENT_DEFAULT_RESP_TIMEOUT;
@@ -76,9 +74,10 @@ static CoapClientRespHandler GetRespHandler(CoapEndpoint *endpoint, const CoapPa
     ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &endpoint->client.reqList) {
         CoapReqNode *node = CONTAINER_OF(item, CoapReqNode, node);
-
-        if (pkt->header.msgId == node->msgId && /* 匹配msgid */
-            (endpoint->client.tkl == 0 || /* token长度不为0则匹配token */
+        /* 匹配msgid */
+        if (pkt->header.msgId == node->msgId &&
+            /* token长度不为0则匹配token */
+            (endpoint->client.tkl == 0 ||
             (endpoint->client.tkl == pkt->header.tkl && memcmp(pkt->token, node->token, pkt->header.tkl) == 0))) {
             /* 移除匹配到的节点 */
             ret = node->respHandler;
@@ -158,6 +157,7 @@ static uint16_t GetMsgId(CoapEndpoint *endpoint)
 {
     uint16_t msgId = 0;
     ENDPOINT_LOCK_RETURN(endpoint, msgId);
+    /* msgId无序列属性，接受翻转 */
     msgId = endpoint->client.msgId++;
     ENDPOINT_UNLOCK(endpoint);
     return msgId;
@@ -202,7 +202,8 @@ static int32_t CoapClientInsertReq(CoapEndpoint *endpoint, uint16_t msgId, const
 int32_t CoapClientSendReq(CoapEndpoint *endpoint, const CoapClientReqParam *param,
     const SocketAddr *addr, CoapPacket *packetBuf)
 {
-    CHECK_RETURN(endpoint != NULL && param != NULL && packetBuf != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && param != NULL && packetBuf != NULL,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
 
     CoapBuildPacket buildPkt;
     (void)memset_s(&buildPkt, sizeof(buildPkt), 0, sizeof(buildPkt));
@@ -221,7 +222,7 @@ int32_t CoapClientSendReq(CoapEndpoint *endpoint, const CoapClientReqParam *para
     buildPkt.buildFunc = param->payloadBuilder;
     buildPkt.userData = param->payloadUserData;
 
-    IOTC_LOGI("endpoint client send req packet");
+    IOTC_LOGD("endpoint client send req packet");
     int32_t ret = CoapEndpointSendPacket(endpoint, &buildPkt, packetBuf, param->preSize, addr);
     if (ret != IOTC_OK) {
         (void)memset_s(packetBuf, sizeof(CoapPacket), 0, sizeof(CoapPacket));
@@ -236,13 +237,14 @@ int32_t CoapClientSendReq(CoapEndpoint *endpoint, const CoapClientReqParam *para
             IOTC_LOGW("insert req list error %d/%u", ret, buildPkt.header.msgId);
         }
     }
+    /* CoapPacket结构体存在二级指针，退出需清理 */
     (void)memset_s(packetBuf, sizeof(CoapPacket), 0, sizeof(CoapPacket));
     return IOTC_OK;
 }
 
 int32_t CoapClientAddDefaultRespHandler(CoapEndpoint *endpoint, CoapClientRespHandler handler)
 {
-    CHECK_RETURN(endpoint != NULL && handler != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && handler != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     ENDPOINT_LOCK_RETURN(endpoint, IOTC_ERR_TIMEOUT);
 

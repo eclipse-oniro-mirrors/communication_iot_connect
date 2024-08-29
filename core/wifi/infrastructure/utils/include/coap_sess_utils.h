@@ -12,23 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef E2E_CONTROL_MSG_H
-#define E2E_CONTROL_MSG_H
+#ifndef COAP_SESS_UTILS_H
+#define COAP_SESS_UTILS_H
 #include <stdbool.h>
 #include <stdint.h>
-#include "iotc_json.h"
+#include "coap_codec_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef void (*E2eCtrlMsgReportAfterGetCmd)(const IotcJson *dataArray, const void *userData, uint32_t userDataLen);
-
-int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd reportFunc,
-    const void *userData, uint32_t userDataLen);
+/* uriWhiteList以NULL作为结束符 */
+bool CoapUriWhiteListMatch(const CoapPacket *packet, const char *uriWhiteList[]);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* E2E_CONTROL_MSG_H */
+#endif /* COAP_SESS_UTILS_H */

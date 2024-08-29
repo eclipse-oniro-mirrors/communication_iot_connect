@@ -245,6 +245,29 @@ static int32_t CoapCommBuildExtension(CoapBuffer *buf, uint32_t value)
     return IOTC_OK;
 }
 
+static int32_t CoapCommBuildOptionData(CoapBuffer *buf, const CoapOption *src, CoapOption *dst)
+{
+    if (src->value.len == 0) {
+        return IOTC_OK;
+    }
+    /* 值为空预留空间，用于后续填充，例如seq */
+    if (src->value.data == NULL) {
+        (void)memset_s(buf->buffer + buf->len, buf->size - buf->len, 0, src->value.len);
+        buf->len += src->value.len;
+        return IOTC_OK;
+    }
+    int32_t ret = memcpy_s(buf->buffer + buf->len, buf->size - buf->len,
+        src->value.data, src->value.len);
+    if (ret != EOK) {
+        return IOTC_ERR_SECUREC_MEMCPY;
+    }
+
+    dst->value.data = buf->buffer + buf->len;
+    dst->value.len = src->value.len;
+    buf->len += src->value.len;
+    return IOTC_OK;
+}
+
 static int32_t CoapCommBuildSingleOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf, uint8_t index)
 {
     const CoapOption *curOption = &build->options[index];
@@ -280,27 +303,18 @@ static int32_t CoapCommBuildSingleOption(const CoapBuildPacket *build, CoapPacke
     if (ret != IOTC_OK) {
         return ret;
     }
+
     ret = CoapCommBuildExtension(buf, curOption->value.len);
     if (ret != IOTC_OK) {
         return ret;
     }
 
-    if (curOption->value.len != 0) {
-        if (curOption->value.data != NULL) {
-            ret = memcpy_s(buf->buffer + buf->len, buf->size - buf->len, curOption->value.data, curOption->value.len);
-            if (ret != EOK) {
-                return IOTC_ERR_SECUREC_MEMCPY;
-            }
-        } else {
-            (void)memset_s(buf->buffer + buf->len, buf->size - buf->len, 0, curOption->value.len);
-        }
+    ret = CoapCommBuildOptionData(buf, curOption, &pkt->options[index]);
+    if (ret != IOTC_OK) {
+        return ret;
     }
 
-    pkt->options[index].value.data = buf->buffer + buf->len;
-    pkt->options[index].value.len = curOption->value.len;
     pkt->options[index].option = curOption->option;
-    buf->len += curOption->value.len;
-
     return IOTC_OK;
 }
 
@@ -339,11 +353,44 @@ int32_t CoapCommBuildOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapB
     return IOTC_OK;
 }
 
+static int32_t BuildPayloadByCallback(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf)
+{
+    uint32_t curLen = buf->len;
+    int32_t ret = build->buildFunc(build, buf, build->userData);
+    if (ret != IOTC_OK || buf->len <= curLen) {
+        IOTC_LOGW("build func error %d", ret);
+        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUILD_FUNC;
+    }
+    pkt->payload.len = buf->len - curLen;
+    return IOTC_OK;
+}
+
+static int32_t BuildPayloadByData(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf)
+{
+    if (build->payload->len == 0 || build->payload->data == NULL) {
+        IOTC_LOGW("invalid payload");
+        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_INVALID_BUILD;
+    }
+
+    if (buf->size - buf->len < build->payload->len) {
+        IOTC_LOGW("buf short for payload %u/%u/%u", buf->size, buf->len, build->payload->len);
+        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
+    }
+
+    int32_t ret = memcpy_s(buf->buffer + buf->len, buf->size - buf->len, build->payload->data, build->payload->len);
+    if (ret != EOK) {
+        return IOTC_ERR_SECUREC_MEMCPY;
+    }
+    pkt->payload.len = build->payload->len;
+    buf->len += build->payload->len;
+    return IOTC_OK;
+}
+
 int32_t CoapCommBuildPayload(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf)
 {
     CHECK_RETURN(build != NULL && pkt != NULL && buf != NULL && buf->size >= buf->len,
         IOTC_ERR_PARAM_INVALID);
-    
+
     /* 空报文 */
     if (build->payload == NULL && build->buildFunc == NULL) {
         return IOTC_OK;
@@ -357,36 +404,11 @@ int32_t CoapCommBuildPayload(const CoapBuildPacket *build, CoapPacket *pkt, Coap
     buf->buffer[buf->len++] = 0xFF;
     pkt->payload.data = buf->buffer + buf->len;
 
-    int32_t ret;
-    /* 外部回调填充payload */
     if (build->buildFunc != NULL) {
-        pkt->payload.len = buf->len;
-        ret = build->buildFunc(build, buf, build->userData);
-        if (ret != IOTC_OK || buf->len < pkt->payload.len) {
-            IOTC_LOGW("build func error %d", ret);
-            return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUILD_FUNC;
-        }
-        pkt->payload.len = buf->len - pkt->payload.len;
-        return IOTC_OK;
+        return BuildPayloadByCallback(build, pkt, buf);
+    } else {
+        return BuildPayloadByData(build, pkt, buf);
     }
-
-    pkt->payload.len = build->payload->len;
-    if (build->payload->len == 0 || build->payload->data == NULL) {
-        IOTC_LOGW("invalid payload");
-        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_INVALID_BUILD;
-    }
-
-    if (buf->size - buf->len < build->payload->len) {
-        IOTC_LOGW("buf short for payload %u/%u/%u", buf->size, buf->len, build->payload->len);
-        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
-    }
-
-    ret = memcpy_s(buf->buffer + buf->len, buf->size - buf->len, build->payload->data, build->payload->len);
-    if (ret != EOK) {
-        return IOTC_ERR_SECUREC_MEMCPY;
-    }
-    buf->len += build->payload->len;
-    return IOTC_OK;
 }
 
 int32_t CoapCommParseToken(CoapPacket *pkt, const CoapData *raw, uint32_t *pos)

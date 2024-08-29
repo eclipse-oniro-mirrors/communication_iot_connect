@@ -31,4 +31,4 @@ uint32_t CoapSeqToNum(const uint8_t *data, uint32_t len);
 }
 #endif
 
-#endif /* WIFI_BASE_EVENT_H */
+#endif /* SEQ_NUM_UTILS_H */
