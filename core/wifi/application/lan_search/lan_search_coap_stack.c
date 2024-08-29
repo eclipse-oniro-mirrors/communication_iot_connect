@@ -37,7 +37,7 @@
 
 static int32_t LanSearchSessionSetup(LanSearchContext *ctx)
 {
-    /* 发现、协商不需要会话校验及加密, 以NULL结尾 */
+    /* 发现、协商不需要会话校验及加密, 以NULL作结束符 */
     static const char *WHITE_LIST[] = { STR_URI_LAN_SEARCH, STR_URI_SPKEK_V2, NULL };
 
     /* 本地发现收包责任链：预处理=>base64解码=>speke解密 */
