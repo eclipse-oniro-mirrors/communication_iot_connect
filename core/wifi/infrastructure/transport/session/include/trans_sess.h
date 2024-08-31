@@ -38,7 +38,7 @@ typedef enum {
 typedef struct {
     const SocketAddr *addr;
     void *userData;
-    void *corData;
+    void *nodeData;
 } SessAddtlInfo;
 
 typedef SessCode (*SessMsgProcess)(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info);
@@ -47,13 +47,14 @@ TransSess *TransSessNew(TransLink *link, uint32_t msgSize, const char *name, voi
 
 void TransSessFree(TransSess *sess);
 
-void TransSessAddTailRecvHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *corData);
+/* comment为描述当前节点的常量字符串 */
+void TransSessAddRecvTailHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *nodeData);
 
-void TransSessAddTailSendHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *corData);
+void TransSessAddSendTailHandler(TransSess *sess, SessMsgProcess next, const char *comment, void *nodeData);
 
-void TransSessAddHeadRecvHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *corData);
+void TransSessAddRecvHeadHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *nodeData);
 
-void TransSessAddHeadSendHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *corData);
+void TransSessAddSendHeadHandler(TransSess *sess, SessMsgProcess before, const char *comment, void *nodeData);
 
 void TransSessRemoveHandler(TransSess *sess, SessMsgProcess handler);
 
@@ -66,6 +67,5 @@ int32_t TransSessMsgRecv(TransSess *sess, UtilsBuffer *buf, const SocketAddr *ad
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* TRANS_SESS_H */

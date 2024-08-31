@@ -24,13 +24,13 @@ extern "C" {
 typedef struct {
     uint16_t port;
     const char *localAddr;
-    const char *multiAddr;
-    const char *broadAddr;
+    const char *multicastAddr;
+    const char *broadcastAddr;
 } SocketUdpInitParam;
 
 TransSocket *TransSocketUdpNew(const SocketUdpInitParam *init);
 
-int32_t TransSocketUdpLeaveMultiGroup(TransSocket *socket);
+int32_t TransSocketUdpLeaveMulticastGroup(TransSocket *socket);
 
 #ifdef __cplusplus
 }

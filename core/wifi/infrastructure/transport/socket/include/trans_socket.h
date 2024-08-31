@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TRANS_LINK_H
-#define TRANS_LINK_H
+#ifndef TRANS_SOCKET_H
+#define TRANS_SOCKET_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -73,4 +73,4 @@ void TransSocketFree(TransSocket *socket);
 }
 #endif
 
-#endif /* TRANS_LINK_H */
+#endif /* TRANS_SOCKET_H */

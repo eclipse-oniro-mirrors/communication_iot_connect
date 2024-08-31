@@ -48,7 +48,7 @@ bool IsNetworkConnected(void)
     return true;
 }
 
-bool IsWifiNetInfoExit(void)
+bool IsWifiNetInfoExist(void)
 {
     uint8_t ssid[IOTC_WIFI_SSID_MAX_LEN + 1] = {0};
     uint8_t pwd[IOTC_WIFI_PWD_MAX_LEN + 1] = {0};

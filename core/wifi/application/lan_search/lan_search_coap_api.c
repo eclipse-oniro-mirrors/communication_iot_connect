@@ -25,6 +25,7 @@
 #include "lan_search_peer_mngr.h"
 #include "svc_info.h"
 #include "dev_info.h"
+#include "utils_common.h"
 
 static void LanSearchSendJsonResp(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
     IotcJson *respJson, LanSearchSessMsg *sessMsg)
@@ -92,6 +93,14 @@ static bool LanSearchAddDevid(IotcJson *json)
     return true;
 }
 
+static inline bool LanSearchDevInfoCheck(const IotcDeviceInfo *devInfo)
+{
+    CHECK_RETURN_LOGW(devInfo != NULL && devInfo->sn != NULL && devInfo->devTypeId != NULL &&
+        devInfo->manuId != NULL && devInfo->prodId != NULL && devInfo->protType != IOTC_PROT_TYPE_INVALID,
+        false, "devinfo invalid");
+    return true;
+}
+
 static bool LanSearchAddDevInfo(IotcJson *json)
 {
     IotcJson *devInfoJson = IotcJsonCreate();
@@ -108,9 +117,7 @@ static bool LanSearchAddDevInfo(IotcJson *json)
     }
 
     const IotcDeviceInfo *devInfo = ModelGetDevInfo();
-    if (devInfo == NULL || devInfo->sn == NULL || devInfo->devTypeId == NULL || devInfo->manuId == NULL ||
-        devInfo->prodId == NULL || devInfo->protType == IOTC_PROT_TYPE_INVALID) {
-        IOTC_LOGW("dev info invalid %d", ret);
+    if (!LanSearchDevInfoCheck(devInfo)) {
         return false;
     }
 
@@ -129,15 +136,15 @@ static bool LanSearchAddDevInfo(IotcJson *json)
 
     ret = IotcJsonAddNum2Obj(devInfoJson, STR_JSON_PROT_TYPE, devInfo->protType);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("add prot err %d", ret);
+        IOTC_LOGW("add prot err %d", ret);
         return false;
     }
 
-    /* 高四bit预留，低四bit依次为softap coap sle ble */
-    const uint8_t DISCOVERY_TYPE = 0b01100100;
-    ret = IotcJsonAddNum2Obj(devInfoJson, STR_JSON_DISC_TYPE, DISCOVERY_TYPE);
+    /* 高四bit预留0110保证为可见字符，低四bit依次为softap coap sle ble发现能力 */
+    const uint8_t discType = 0b01100100;
+    ret = IotcJsonAddNum2Obj(devInfoJson, STR_JSON_DISC_TYPE, discType);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("add disc err %d", ret);
+        IOTC_LOGW("add disc err %d", ret);
         return false;
     }
 
@@ -197,12 +204,10 @@ static IotcJson *CreateLanSearchRespJson(void)
 
 void LanSearchCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
-    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
 
     IotcJson *respJson = CreateLanSearchRespJson();
-    if (respJson == NULL) {
-        return;
-    }
+    CHECK_V_RETURN_LOGW(respJson != NULL, "create lan search resp error");
 
     LanSearchSessMsg respMsg;
     (void)memset_s(&respMsg, sizeof(LanSearchSessMsg), 0, sizeof(LanSearchSessMsg));
@@ -213,15 +218,12 @@ void LanSearchCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
 
 void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
-    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
 
     LanSearchContext *ctx = (LanSearchContext *)userData;
     LanSearchSessMsg *sessMsg = (LanSearchSessMsg *)req;
 
-    if (req->payload.data == NULL || req->payload.len == 0) {
-        IOTC_LOGW("invalid peer sess msg");
-        return;
-    }
+    CHECK_V_RETURN_LOGW(req->payload.data != NULL && req->payload.len != 0, "invalid peer sess msg");
 
     int32_t ret;
     if (sessMsg->peer == NULL) {
@@ -248,7 +250,7 @@ void LanSearchCoapSpekeHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         return;
     }
 
-    CoapData respPayload = {respMsg, respLen};
+    CoapData respPayload = { respMsg, respLen };
     LanSearchSessMsg sendMsg;
     (void)memset_s(&sendMsg, sizeof(LanSearchSessMsg), 0, sizeof(LanSearchSessMsg));
     UTILS_BIT_SET(sendMsg.bitMap, LAN_SEARCH_SESS_MSG_BIT_PLAIN);
@@ -261,7 +263,7 @@ void LanSearchCoapCloudSetupHandler(CoapEndpoint *endpoint, const CoapPacket *re
     const SocketAddr *addr, void *userData)
 {
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL &&
-        req->payload.data != NULL && req->payload.len != 0, "invalid param");
+        req->payload.data != NULL && req->payload.len != 0, "param invalid");
     LanSearchSessMsg *sessMsg = (LanSearchSessMsg *)req;
 
     IotcJson *reqJson = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
@@ -273,7 +275,7 @@ void LanSearchCoapCloudSetupHandler(CoapEndpoint *endpoint, const CoapPacket *re
     IotcJson *dataJson = IotcJsonGetObj(reqJson, STR_JSON_DATA);
     if (dataJson == NULL) {
         IOTC_LOGW("cloud setup get data error");
-        IotcJsonDelete(dataJson);
+        IotcJsonDelete(reqJson);
         return;
     }
 

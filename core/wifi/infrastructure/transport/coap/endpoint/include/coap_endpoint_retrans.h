@@ -34,6 +34,10 @@ typedef bool (*CoapRetransCheckFunc)(const CoapRetransParam *param, const CoapDa
 
 int32_t CoapEndpointRetransEnable(CoapEndpoint *endpoint, CoapRetransCheckFunc func, uint32_t maxBufSize);
 
+/* 默认重传函数，每秒重发1次，持续4次，盲发 */
+bool CoapEndpointRetransDefaultCheckFunc(const CoapRetransParam *param, const CoapData *raw,
+    void *userData, uint32_t *next);
+
 #ifdef __cplusplus
 }
 #endif

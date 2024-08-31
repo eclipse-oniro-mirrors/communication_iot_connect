@@ -30,6 +30,7 @@
 #include "securec.h"
 #include "lan_search_sess.h"
 #include "lan_search_coap_api.h"
+#include "utils_common.h"
 
 #define LAN_SEARCH_SESS_NAME "LAN_SEARCH"
 #define LAN_SEARCH_COAP_RETRANS_CNT 5
@@ -37,57 +38,41 @@
 
 static int32_t LanSearchSessionSetup(LanSearchContext *ctx)
 {
-    /* 发现、协商不需要会话校验及加密, 以NULL结尾 */
-    static const char *WHITE_LIST[] = { STR_URI_LAN_SEARCH, STR_URI_SPKEK_V2, NULL };
+    /* 发现、协商不需要会话校验及加密, 以NULL作结束符 */
+    static const char *uriWhiteList[] = { STR_URI_LAN_SEARCH, STR_URI_SPKEK_V2, NULL };
 
     /* 本地发现收包责任链：预处理=>base64解码=>speke解密 */
-    TransSessAddTailRecvHandler(ctx->coapStack.sess, LanSearchSessCoapRecvPreProcess, "pre", WHITE_LIST);
-    TransSessAddTailRecvHandler(ctx->coapStack.sess, LanSearchSessCoapRecvBase64Decode, "base64", NULL);
-    TransSessAddTailRecvHandler(ctx->coapStack.sess, LanSearchSessCoapRecvDecrypt, "decrypt", NULL);
+    TransSessAddRecvTailHandler(ctx->coapStack.sess, LanSearchSessCoapRecvPreProcess, "pre", uriWhiteList);
+    TransSessAddRecvTailHandler(ctx->coapStack.sess, LanSearchSessCoapRecvBase64Decode, "base64", NULL);
+    TransSessAddRecvTailHandler(ctx->coapStack.sess, LanSearchSessCoapRecvDecrypt, "decrypt", NULL);
 
     /* 本地发现发包责任链：speke加密=>base64编码 */
-    TransSessAddTailSendHandler(ctx->coapStack.sess, LanSearchSessCoapSendEncrypt, "encrypt", NULL);
-    TransSessAddTailSendHandler(ctx->coapStack.sess, LanSearchSessCoapRecvBase64Encode, "base64", NULL);
+    TransSessAddSendTailHandler(ctx->coapStack.sess, LanSearchSessCoapSendEncrypt, "encrypt", NULL);
+    TransSessAddSendTailHandler(ctx->coapStack.sess, LanSearchSessCoapRecvBase64Encode, "base64", NULL);
 
     CoapEndpointSessSetup(ctx->coapStack.endpoint);
     return IOTC_OK;
 }
 
-static bool LocalCoapRetransCheckFunc(const CoapRetransParam *param, const CoapData *raw,
-    void *userData, uint32_t *next)
-{
-    CHECK_RETURN_LOGW(param != NULL && next != NULL, false, "param invalid");
-    NOT_USED(param);
-    NOT_USED(raw);
-    NOT_USED(userData);
-
-    if (param->cnt >= LAN_SEARCH_COAP_RETRANS_CNT) {
-        return false;
-    }
-    *next = LAN_SEARCH_COAP_RETRANS_INTERVAL;
-    return true;
-}
-
 static int32_t LanSearchCoapEndpointSetup(LanSearchContext *ctx)
 {
-    static const CoapResource LAN_SEARCH_COAP_RES[] = {
-        {UTILS_BIT(COAP_METHOD_TYPE_GET), STR_URI_LAN_SEARCH, NULL, LanSearchCoapSearchHandler},
-        {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_SPKEK_V2, NULL, LanSearchCoapSpekeHandler},
-        {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_CLOUD_SETUP_V2, NULL,
-            LanSearchCoapCloudSetupHandler},
+    static const CoapResource lanSearchCoapRes[] = {
+        { UTILS_BIT(COAP_METHOD_TYPE_GET), STR_URI_LAN_SEARCH, NULL, LanSearchCoapSearchHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_SPKEK_V2, NULL, LanSearchCoapSpekeHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_CLOUD_SETUP_V2, NULL,
+            LanSearchCoapCloudSetupHandler },
     };
 
-    int32_t ret = CoapServerAddResource(ctx->coapStack.endpoint,
-        LAN_SEARCH_COAP_RES, ARRAY_SIZE(LAN_SEARCH_COAP_RES));
+    int32_t ret = CoapServerAddResource(ctx->coapStack.endpoint, lanSearchCoapRes, ARRAY_SIZE(lanSearchCoapRes));
     if (ret != IOTC_OK) {
-        IOTC_LOGW("add coap res error %d", ret);
+        IOTC_LOGW("add lan search coap res error %d", ret);
         return ret;
     }
 
-    ret = CoapEndpointRetransEnable(ctx->coapStack.endpoint, LocalCoapRetransCheckFunc,
-        TransGetSendBufferResSize());
+    ret = CoapEndpointRetransEnable(ctx->coapStack.endpoint, CoapEndpointRetransDefaultCheckFunc,
+        TransGetBufferSize(TRANS_BUFFER_SEND_BUFFER_RES_SIZE));
     if (ret != IOTC_OK) {
-        IOTC_LOGW("enable coap retrans error %d", ret);
+        IOTC_LOGW("enable lan search coap retrans error %d", ret);
         return ret;
     }
 
@@ -96,8 +81,8 @@ static int32_t LanSearchCoapEndpointSetup(LanSearchContext *ctx)
 
 static int32_t LanSearchCoapStackCreate(LanSearchContext *ctx)
 {
-    char local[IOTC_IP_STR_MAX_LEN + 1] = {0};
-    int32_t ret = IotcGetLocalIp(local, IOTC_IP_STR_MAX_LEN);
+    char localIp[IOTC_IP_STR_MAX_LEN + 1] = {0};
+    int32_t ret = IotcGetLocalIp(localIp, IOTC_IP_STR_MAX_LEN);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get local ip error %d", ret);
         return ret;
@@ -105,13 +90,13 @@ static int32_t LanSearchCoapStackCreate(LanSearchContext *ctx)
 
     SocketUdpInitParam udp = {
         .port = LAN_SEARCH_PORT,
-        .localAddr = local,
-        .multiAddr = NULL,
-        .broadAddr = NULL,
+        .localAddr = localIp,
+        .multicastAddr = NULL,
+        .broadcastAddr = NULL,
     };
     TransSocket *socket = TransSocketUdpNew(&udp);
     if (socket == NULL) {
-        IOTC_LOGW("create socket error");
+        IOTC_LOGW("create lan search socket error");
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_UDP_CREATE;
     }
 
@@ -126,7 +111,7 @@ static int32_t LanSearchCoapStackCreate(LanSearchContext *ctx)
     };
     ret = CoapNetStackCreate(&ctx->coapStack, &stackParam);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("stack create error %d", ret);
+        IOTC_LOGW("lan search coap stack create error %d", ret);
         TransSocketFree(socket);
         return ret;
     }

@@ -23,6 +23,7 @@
 #include "event_bus.h"
 #include "iotc_event.h"
 #include "iotc_svc_conn.h"
+#include "utils_common.h"
 
 static const char *LAN_SEARCH_SERVICE_NAME = "LAN_SEARCH";
 static const uint8_t LAN_SEARCH_DEFAULT_PEER_NUM = 2;
@@ -140,7 +141,7 @@ int32_t LanSearchServiceInit(void)
         return ret;
     }
 
-    static const ServiceHandler LOCAL_CTL_SERVICE_HANDLER = {
+    static const ServiceHandler lanSearchHandler = {
         .onStart = LanSearchServiceStart,
         .onStop = LanSearchServiceStop,
         .onReset = NULL,
@@ -149,7 +150,7 @@ int32_t LanSearchServiceInit(void)
     ServiceInstance instance = {
         .serviceId = IOTC_SERVICE_ID_LAN_SEARCH,
         .name = LAN_SEARCH_SERVICE_NAME,
-        .handler = &LOCAL_CTL_SERVICE_HANDLER,
+        .handler = &lanSearchHandler,
         .msgNum = 0,
         .msgIds = NULL,
         .apiHandler = NULL,
@@ -157,7 +158,7 @@ int32_t LanSearchServiceInit(void)
 
     ret = ServiceManagerRegisterInstance(&instance);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("reg local control service instance error %d", ret);
+        IOTC_LOGW("reg lan search instance error %d", ret);
         return ret;
     }
 

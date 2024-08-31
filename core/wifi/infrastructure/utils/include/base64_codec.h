@@ -12,27 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LOCAL_CONTROL_SESSION_H
-#define LOCAL_CONTROL_SESSION_H
+#ifndef BASE64_CODEC_H
+#define BASE64_CODEC_H
 #include <stdint.h>
-#include "trans_sess.h"
-#include "coap_codec_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-SessCode LanSearchSessCoapRecvPreProcess(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info);
+typedef enum {
+    BASE64_CODEC_TYPE_DECODE = 0,
+    BASE64_CODEC_TYPE_ENCODE,
+} Base64CodecType;
 
-SessCode LanSearchSessCoapRecvBase64Decode(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info);
-
-SessCode LanSearchSessCoapRecvDecrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info);
-
-SessCode LanSearchSessCoapSendEncrypt(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info);
-
-SessCode LanSearchSessCoapRecvBase64Encode(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info);
+uint8_t *GetBase64CodecData(const uint8_t *in, uint32_t inLen, uint32_t *dataLen,
+    Base64CodecType type, uint32_t maxSize);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* LOCAL_CONTROL_SESSION_H */
+
+#endif /* BASE64_CODEC_H */

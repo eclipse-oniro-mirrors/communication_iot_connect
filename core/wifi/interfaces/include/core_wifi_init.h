@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CORE_COMM_INIT_H
-#define CORE_COMM_INIT_H
-
+#ifndef CORE_WIFI_INIT_H
+#define CORE_WIFI_INIT_H
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -29,4 +28,4 @@ void CoreWifiUnregisterInitItem(void);
 }
 #endif
 
-#endif /* CORE_COMM_INIT_H */
+#endif /* CORE_WIFI_INIT_H */

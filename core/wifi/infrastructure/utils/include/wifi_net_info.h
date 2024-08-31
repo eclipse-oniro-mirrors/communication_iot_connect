@@ -24,7 +24,7 @@ extern "C" {
 
 bool IsNetworkConnected(void);
 
-bool IsWifiNetInfoExit(void);
+bool IsWifiNetInfoExist(void);
 
 int32_t GetWifiMacAddrStr(char *buf, uint32_t len);
 
@@ -32,4 +32,4 @@ int32_t GetWifiMacAddrStr(char *buf, uint32_t len);
 }
 #endif
 
-#endif /* WIFI_BASE_EVENT_H */
+#endif /* WIFI_NET_INFO_H */

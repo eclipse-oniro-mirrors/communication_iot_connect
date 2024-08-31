@@ -57,25 +57,25 @@ int32_t CoapUdpDecode(CoapPacket *pkt, const CoapData *raw)
     uint32_t pos = 0;
     int32_t ret = CoapUdpParseHeader(pkt, raw, &pos);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("parse header error %d", ret);
+        IOTC_LOGW("parse coap udp header error %d", ret);
         return ret;
     }
 
     ret = CoapCommParseToken(pkt, raw, &pos);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("parse token error %d", ret);
+        IOTC_LOGW("parse coap udp token error %d", ret);
         return ret;
     }
 
     ret = CoapCommParseOptions(pkt, raw, &pos);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("parse option error %d", ret);
+        IOTC_LOGW("parse coap udp option error %d", ret);
         return ret;
     }
 
     ret = CoapCommParsePayload(pkt, raw, &pos);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("parse payload error %d", ret);
+        IOTC_LOGW("parse coap udp payload error %d", ret);
         return ret;
     }
     return IOTC_OK;
@@ -116,25 +116,25 @@ int32_t CoapUdpEncode(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer 
 
     int32_t ret = CoapUdpBuildHeader(build, pkt, buf);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("build header error %d", ret);
+        IOTC_LOGW("build coap udp header error %d", ret);
         return ret;
     }
 
     ret = CoapCommBuildToken(build, pkt, buf);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("build token error %d", ret);
+        IOTC_LOGW("build coap udp token error %d", ret);
         return ret;
     }
 
     ret = CoapCommBuildOption(build, pkt, buf);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("build option error %d", ret);
+        IOTC_LOGW("build coap udp option error %d", ret);
         return ret;
     }
 
     ret = CoapCommBuildPayload(build, pkt, buf);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("build payload error %d", ret);
+        IOTC_LOGW("build coap udp payload error %d", ret);
         return ret;
     }
     return IOTC_OK;

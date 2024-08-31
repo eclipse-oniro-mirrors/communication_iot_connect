@@ -26,7 +26,7 @@ int32_t CoapUtilsBuildJsonPayloadFunc(const CoapBuildPacket *build, CoapBuffer *
 {
     CHECK_RETURN_LOGW(buf != NULL && buf->buffer != NULL && buf->len < buf->size, IOTC_ERR_PARAM_INVALID,
         "param invalid");
-    
+
     IotcJson *jsonObj = (IotcJson *)userData;
     uint32_t size = buf->size - buf->len;
     int32_t ret = IotcJsonPrint2Buffer(jsonObj, (char *)buf->buffer + buf->len, &size);
@@ -64,14 +64,11 @@ static int32_t CoapUtilsGetUriOption(const CoapPacket *pkt, char *buf, uint32_t 
             return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
         }
         int32_t ret = memcpy_s(buf + len, size - len, curOption->value.data, curOption->value.len);
-        if (ret != EOK) {
-            return IOTC_ERR_SECUREC_MEMCPY;
-        }
+        CHECK_RETURN(ret == EOK, IOTC_ERR_SECUREC_MEMCPY);
+
         len += curOption->value.len;
         if (i < uriSeg - 1) {
-            if (len >= size) {
-                return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
-            }
+            CHECK_RETURN(len < size, IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT);
             /* 加入分隔符 */
             buf[len++] = delimiter;
         }
@@ -83,7 +80,7 @@ static int32_t CoapUtilsGetUriOption(const CoapPacket *pkt, char *buf, uint32_t 
 
 int32_t CoapUtilsGetUriPath(const CoapPacket *pkt, char *buf, uint32_t size)
 {
-    CHECK_RETURN_LOGW(pkt != NULL && buf != NULL && size != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(pkt != NULL && buf != NULL && size != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     uint32_t bufSize = size;
     int32_t ret = CoapUtilsGetUriOption(pkt, buf, &bufSize, COAP_OPTION_TYPE_URI_PATH, '/');
@@ -100,7 +97,7 @@ int32_t CoapUtilsGetUriPath(const CoapPacket *pkt, char *buf, uint32_t size)
 
 int32_t CoapUtilsGetUri(const CoapPacket *pkt, char *buf, uint32_t size)
 {
-    CHECK_RETURN_LOGW(pkt != NULL && buf != NULL && size != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(pkt != NULL && buf != NULL && size != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     uint32_t len = size;
     int32_t ret = CoapUtilsGetUriOption(pkt, buf, &len, COAP_OPTION_TYPE_URI_PATH, '/');
@@ -139,9 +136,8 @@ int32_t CoapUtilsGetUri(const CoapPacket *pkt, char *buf, uint32_t size)
 static void CoapGetOptionChar(const CoapOption *option, char *buf, uint32_t len)
 {
     buf[0] = '\0';
-    if (option->value.data == NULL || option->value.len == 0) {
-        return;
-    }
+    CHECK_V_RETURN(option->value.data != NULL && option->value.len != 0);
+
     /* 只打印部分可见的option */
     int32_t ret;
     if (option->option == COAP_OPTION_TYPE_DEV_ID || option->option == COAP_OPTION_TYPE_PUUID) {
@@ -209,26 +205,25 @@ void CoapUtilsDumpPacket(const CoapPacket *pkt)
     }
 
     IOTC_LOGD("PayloadLen: %u", pkt->payload.len);
+
 #if IOTC_CONF_COAP_DEBUG_DUMP_PAYLOAD
-    if (pkt->payload.len != 0) {
-        IOTC_LOGD("Payload:", pkt->payload.len);
+    CHECK_V_RETURN(pkt->payload.len != 0);
+    IOTC_LOGD("Payload:", pkt->payload.len);
 #define PRINT_PER_LINE 64
-        for (uint32_t i = 0 ; i < pkt->payload.len && pkt->payload.data != NULL; i += PRINT_PER_LINE) {
-            uint32_t len = (i + PRINT_PER_LINE) > pkt->payload.len ? pkt->payload.len - i : PRINT_PER_LINE;
-            CoapGetPayloadChar(pkt->payload.data + i, len, buf, sizeof(buf));
-            IOTC_LOGD("  %s", buf);
-        }
+    for (uint32_t i = 0 ; i < pkt->payload.len && pkt->payload.data != NULL; i += PRINT_PER_LINE) {
+        uint32_t len = (i + PRINT_PER_LINE) > pkt->payload.len ? pkt->payload.len - i : PRINT_PER_LINE;
+        CoapGetPayloadChar(pkt->payload.data + i, len, buf, sizeof(buf));
+        IOTC_LOGD("  %s", buf);
     }
 #endif
-    return;
 }
 #endif /* IOTC_CONF_COAP_DEBUG_DUMP_PACKET */
 
 int32_t CoapUtilsReplacePayload(CoapPacket *pkt, CoapBuffer *buf, const CoapData *payload)
 {
     CHECK_RETURN_LOGW(pkt != NULL && buf != NULL && buf->size != 0 && payload != NULL && payload->data != NULL &&
-        payload->len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
-    
+        payload->len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+
     const uint8_t *payloadPoint = pkt->payload.data;
     /* payload指针应该指向buffer内 */
     if (payloadPoint < buf->buffer || payloadPoint > buf->buffer + buf->size) {
@@ -255,7 +250,7 @@ int32_t CoapUtilsReplacePayload(CoapPacket *pkt, CoapBuffer *buf, const CoapData
 
 const CoapOption *CoapUtilsFindOption(const CoapPacket *pkt, CoapOptionType option, uint32_t *seg)
 {
-    CHECK_RETURN_LOGW(pkt != NULL && seg != NULL, NULL, "invalid param");
+    CHECK_RETURN_LOGW(pkt != NULL && seg != NULL, NULL, "param invalid");
 
     *seg = 0;
     const CoapOption *first = NULL;

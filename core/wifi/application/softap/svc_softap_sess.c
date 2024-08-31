@@ -251,8 +251,8 @@ static int32_t SoftapCoapStackCreate(SoftapSess *sess)
     SocketUdpInitParam udp = {
         .port = WIFI_SOFTAP_UDP_PORT,
         .localAddr = local,
-        .multiAddr = NULL,
-        .broadAddr = NULL,
+        .multicastAddr = NULL,
+        .broadcastAddr = NULL,
     };
 
     TransSocket *socket = TransSocketUdpNew(&udp);
@@ -282,13 +282,13 @@ static int32_t SoftapCoapStackCreate(SoftapSess *sess)
 
 static int32_t SoftapSessionSetup(SoftapSess *sess)
 {
-    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgRecvPreProcess, "pre", NULL);
-    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgRecvBase64DecodeProcess, "base64_decode", NULL);
-    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgRecvDecryptProcess, "decrypt", NULL);
+    TransSessAddRecvTailHandler(sess->coapStack.sess, SoftapCoapMsgRecvPreProcess, "pre", NULL);
+    TransSessAddRecvTailHandler(sess->coapStack.sess, SoftapCoapMsgRecvBase64DecodeProcess, "base64_decode", NULL);
+    TransSessAddRecvTailHandler(sess->coapStack.sess, SoftapCoapMsgRecvDecryptProcess, "decrypt", NULL);
     
-    TransSessAddTailSendHandler(sess->coapStack.sess, SoftapCoapMsgSendEncryptProcess, "encrypt", NULL);
-    TransSessAddTailSendHandler(sess->coapStack.sess, SoftapCoapMsgSendBase64EncodeProcess, "base64_encode", NULL);
-    TransSessAddTailRecvHandler(sess->coapStack.sess, SoftapCoapMsgSendFinalProcess, "final", NULL);
+    TransSessAddSendTailHandler(sess->coapStack.sess, SoftapCoapMsgSendEncryptProcess, "encrypt", NULL);
+    TransSessAddSendTailHandler(sess->coapStack.sess, SoftapCoapMsgSendBase64EncodeProcess, "base64_encode", NULL);
+    TransSessAddSendTailHandler(sess->coapStack.sess, SoftapCoapMsgSendFinalProcess, "final", NULL);
 
     CoapEndpointSessSetup(sess->coapStack.endpoint);
     return IOTC_OK;
@@ -297,13 +297,13 @@ static int32_t SoftapSessionSetup(SoftapSess *sess)
 static int32_t SoftapCoapEndpointSetup(SoftapSess *sess, const SoftapSvcInitParam *initParam)
 {
     /* uri white list for recv not decrypt or not base64 decode */
-    static const char *PLAIN_URI[] = {STR_URI_SPEKE};
-    static const char *NO_BASE64_URI[] = {STR_URI_SPEKE};
+    static const char *plainUri[] = {STR_URI_SPEKE};
+    static const char *noBase64uri[] = {STR_URI_SPEKE};
 
-    sess->plainUri = PLAIN_URI;
-    sess->plainUriNum = ARRAY_SIZE(PLAIN_URI);
-    sess->noBase64Uri = NO_BASE64_URI;
-    sess->noBase64Num = ARRAY_SIZE(NO_BASE64_URI);
+    sess->plainUri = plainUri;
+    sess->plainUriNum = ARRAY_SIZE(plainUri);
+    sess->noBase64Uri = noBase64uri;
+    sess->noBase64Num = ARRAY_SIZE(noBase64uri);
 
     static const CoapResource SPEKE_RES[] = {
         {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_SPEKE, NULL, SoftapCoapSpekeReqHandler},
@@ -338,7 +338,8 @@ static int32_t SoftapCoapEndpointSetup(SoftapSess *sess, const SoftapSvcInitPara
     }
 
     /* use max send buffer for retrans, ensure single message can be retransmitted */
-    ret = CoapEndpointRetransEnable(sess->coapStack.endpoint, SoftapCoapRetransCheckFunc, TransGetSendBufferResSize());
+    ret = CoapEndpointRetransEnable(sess->coapStack.endpoint, SoftapCoapRetransCheckFunc,
+        TransGetBufferSize(TRANS_BUFFER_SEND_BUFFER_RES_SIZE));
     if (ret != IOTC_OK) {
         IOTC_LOGW("enable coap retrans error %d", ret);
         return ret;

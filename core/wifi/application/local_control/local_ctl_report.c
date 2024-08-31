@@ -24,8 +24,8 @@
 static int32_t ReportToTargetClient(IotcJson *json, LocalControlContext *ctx, LocalControlClient *cli)
 {
     const CoapOption options[] = {
-        {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_E2E_DATA_CHANGE, strlen(STR_E2E_DATA_CHANGE)}},
-        {COAP_OPTION_TYPE_SESSION_ID, {(const uint8_t *)cli->sessInfo.sessId, LOCAL_CONTROL_SESS_ID_STR_LEN}},
+        { COAP_OPTION_TYPE_URI_PATH, { (const uint8_t *)STR_E2E_DATA_CHANGE, strlen(STR_E2E_DATA_CHANGE) } },
+        { COAP_OPTION_TYPE_SESSION_ID, { (const uint8_t *)cli->sessInfo.sessId, LOCAL_CONTROL_SESS_ID_STR_LEN } },
     };
     if (IotcJsonHasObj(json, STR_JSON_SEQ_NUM)) {
         IotcJsonDeleteItem(json, STR_JSON_SEQ_NUM);
@@ -78,7 +78,7 @@ static HashMapTravCode ClientMapTraversalReport(const void *value, va_list argp)
     uint32_t *succNum = va_arg(argp, uint32_t *);
     uint32_t *failNum = va_arg(argp, uint32_t *);
     if (reportJson == NULL || succNum == NULL || ctx == NULL || failNum == NULL) {
-        IOTC_LOGW("invalid param");
+        IOTC_LOGW("param invalid");
         return HASH_MAP_TRAVE_BREAK;
     }
 
@@ -133,7 +133,7 @@ int32_t LocalCtlReportToAllClient(const IotcJson *dataArray, LocalControlContext
         IOTC_LOGW("create report all json error %d", ret);
         return ret;
     }
-    
+
     uint32_t succNum = 0;
     uint32_t failNum = 0;
     (void)UtilsHashMapIterate(ctx->clientManager.clientMap, ClientMapTraversalReport, ctx, reportJson,

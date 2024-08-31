@@ -111,6 +111,8 @@ iotc_core_wifi_src = [
   "$wifi_core_path/domain/e2e_ctl/e2e_ctl_msg.c",
   "$wifi_core_path/infrastructure/utils/wifi_net_info.c",
   "$wifi_core_path/infrastructure/utils/seq_num_utils.c",
+  "$wifi_core_path/infrastructure/utils/base64_codec.c",
+  "$wifi_core_path/infrastructure/utils/coap_sess_utils.c",
 ]
 
 iotc_core_wifi_def = []

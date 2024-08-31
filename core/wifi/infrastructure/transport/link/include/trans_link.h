@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TRANS_LINK_IF_H
-#define TRANS_LINK_IF_H
+#ifndef TRANS_LINK_H
+#define TRANS_LINK_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -62,4 +62,4 @@ int32_t TransLinkSendData(TransLink *link, const uint8_t *data, uint32_t len, co
 }
 #endif
 
-#endif /* TRANS_LINK_IF_H */
+#endif /* TRANS_LINK_H */

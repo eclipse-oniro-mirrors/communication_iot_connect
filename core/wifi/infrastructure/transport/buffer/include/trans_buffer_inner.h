@@ -21,15 +21,19 @@
 extern "C" {
 #endif
 
+typedef enum {
+    TRANS_BUFFER_SEND_BUFFER_RES_SIZE = 0,
+    TRANS_BUFFER_SEND_BUFFER_MAX_SIZE,
+    TRANS_BUFFER_RECV_BUFFER_RES_SIZE,
+    TRANS_BUFFER_RECV_BUFFER_MAX_SIZE,
+} TransBufferType;
+
 UtilsBufferCtx *TransCreateSendBuffer(void);
 UtilsBufferCtx *TransCreateRecvBuffer(void);
 void TransReleaseBuffer(UtilsBufferCtx *ctx);
 int32_t TransBufferInit(void);
 void TransBufferDeinit(void);
-uint32_t TransGetSendBufferResSize(void);
-uint32_t TransGetSendBufferMaxSize(void);
-uint32_t TransGetRecvBufferResSize(void);
-uint32_t TransGetRecvBufferMaxSize(void);
+uint32_t TransGetBufferSize(TransBufferType type);
 
 #ifdef __cplusplus
 }

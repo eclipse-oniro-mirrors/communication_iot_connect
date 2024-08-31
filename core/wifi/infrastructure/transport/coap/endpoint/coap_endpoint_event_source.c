@@ -73,7 +73,7 @@ EventSource *CoapEndpointEventSourceNew(CoapEndpoint *endpoint)
         .dispatch = RetransSourceDispatch,
         .finalize = NULL,
     };
-    
+
     EventSource *source = EventSourceNew(&retransSourceOps, sizeof(CoapEndpointEventSource),
         COAP_ENDPOINT_EVENT_SOURCE_NAME, NULL);
     if (source == NULL) {

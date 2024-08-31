@@ -86,13 +86,24 @@ static inline void BuildLocalCoapSessMsg(LocalCoapSessMsg *respSessMsg, uint32_t
     respSessMsg->client = client;
 }
 
+static bool LocalCtlPuuidOptionCheck(const CoapOption *puuidOption, uint32_t seg)
+{
+    CHECK_RETURN_LOGW(puuidOption != NULL, false, "puuid null");
+    /* CI NOTE: puuid仅有1个分片 */
+    CHECK_RETURN_LOGW(seg == 1, false, "puuid seg invalid %u", seg);
+    CHECK_RETURN_LOGW(puuidOption->value.data != NULL, false, "puuid value null");
+    CHECK_RETURN_LOGW(puuidOption->value.len != 0, false, "puuid len invalid %u",
+        puuidOption->value.len);
+    return true;
+}
+
 void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
-    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
 
     uint32_t seg = 0;
     const CoapOption *puuidOption = CoapUtilsFindOption(req, COAP_OPTION_TYPE_PUUID, &seg);
-    if (puuidOption == NULL || seg != 1 || puuidOption->value.data == NULL || puuidOption->value.len == 0) {
+    if (!LocalCtlPuuidOptionCheck(puuidOption, seg)) {
         IOTC_LOGW("invalid search packet");
         return;
     }
@@ -221,12 +232,12 @@ static bool LocalModeSupportCheck(const IotcJson *reqJson)
 
 void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
-    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
 
     uint32_t seg = 0;
     const CoapOption *puuidOption = CoapUtilsFindOption(req, COAP_OPTION_TYPE_PUUID, &seg);
-    if (puuidOption == NULL || seg != 1 || puuidOption->value.data == NULL || puuidOption->value.len == 0) {
-        IOTC_LOGW("invalid search packet");
+    if (!LocalCtlPuuidOptionCheck(puuidOption, seg)) {
+        IOTC_LOGW("invalid mngr packet");
         return;
     }
 
@@ -325,7 +336,7 @@ static void LocalCtrlMsgReportAfterGetCmd(const IotcJson *dataArray,
 
 void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
-    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
 
     LocalCoapSessMsg *sessMsg = (LocalCoapSessMsg *)req;
     CHECK_V_RETURN_LOGW(sessMsg->client != NULL, "invalid client");
@@ -334,7 +345,7 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
         IOTC_LOGW("invalid ctl json");
         return;
     }
-    
+
     int32_t ret = SessCoapRecvSeqCheck((const IotcJson *)payloadJsonObj, sessMsg);
     if (ret != IOTC_OK) {
         IOTC_LOGW("check seq error %d", ret);

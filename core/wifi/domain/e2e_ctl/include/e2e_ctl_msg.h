@@ -31,4 +31,4 @@ int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd repor
 }
 #endif
 
-#endif /* WIFI_BASE_EVENT_H */
+#endif /* E2E_CONTROL_MSG_H */

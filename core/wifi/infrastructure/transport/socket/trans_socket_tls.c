@@ -92,7 +92,7 @@ static int32_t TlsInitParamCopy(const SocketTlsInitParam *src, SocketTlsInitPara
 
 static int32_t TlsSocketInit(TransSocket *socket, void *userData)
 {
-    CHECK_RETURN_LOGW(socket != NULL && userData != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(socket != NULL && userData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     const SocketTlsInitParam *initParam = (const SocketTlsInitParam *)userData;
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
@@ -102,7 +102,7 @@ static int32_t TlsSocketInit(TransSocket *socket, void *userData)
         TlsSocketFree(socket);
         return ret;
     }
-    
+
     return IOTC_OK;
 }
 
@@ -132,12 +132,13 @@ static int32_t CreateAndConnectTls(TlsSocket *tlsSocket)
         const void *value;
         uint32_t len;
     } ops[IOTC_TLS_OPTION_MAX] = {
-        {IOTC_TLS_OPTION_REG_TIME_CALLBACK, GetUtcTime, sizeof(IotcGetTimeCallback)},
-        {IOTC_TLS_OPTION_REG_RANDOM_CALLBACK, SecurityRandom, sizeof(IotcGetRandom)},
-        {IOTC_TLS_OPTION_HOST, &tlsSocket->initParam.host, sizeof(tlsSocket->initParam.host)},
-        {IOTC_TLS_OPTION_CIPHERSUITE, &tlsSocket->initParam.suites, sizeof(tlsSocket->initParam.suites)},
+        { IOTC_TLS_OPTION_REG_TIME_CALLBACK, GetUtcTime, sizeof(IotcGetTimeCallback) },
+        { IOTC_TLS_OPTION_REG_RANDOM_CALLBACK, SecurityRandom, sizeof(IotcGetRandom) },
+        { IOTC_TLS_OPTION_HOST, &tlsSocket->initParam.host, sizeof(tlsSocket->initParam.host) },
+        { IOTC_TLS_OPTION_CIPHERSUITE, &tlsSocket->initParam.suites, sizeof(tlsSocket->initParam.suites) },
     };
-    uint32_t num = 4; /* 4表示已有四个option */
+    /* CI NOTE: 4表示已有四个option */
+    uint32_t num = 4;
 
     if (tlsSocket->initParam.psk.psk != NULL) {
         ops[num].option = IOTC_TLS_OPTION_PSK;
@@ -161,14 +162,14 @@ static int32_t CreateAndConnectTls(TlsSocket *tlsSocket)
             break;
         }
     }
-    
+
     if (ret == IOTC_OK) {
         ret = IotcTlsClientConnect(tlsSocket->ctx);
         if (ret != IOTC_OK) {
             IOTC_LOGW("tls connect error %d", ret);
         }
     }
-    
+
     if (ret != IOTC_OK) {
         IotcFreeTlsClient(tlsSocket->ctx);
         tlsSocket->ctx = NULL;
@@ -179,9 +180,9 @@ static int32_t CreateAndConnectTls(TlsSocket *tlsSocket)
 
 static int32_t TlsSocketConnect(TransSocket *socket)
 {
-    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     TlsSocket *tlsSocket = (TlsSocket *)socket;
-    
+
     if (tlsSocket->ctx == NULL) {
         int32_t ret = CreateAndConnectTls(tlsSocket);
         if (ret != IOTC_OK) {
@@ -221,13 +222,11 @@ static int32_t TlsSocketSend(TransSocket *socket, uint32_t tmo, const CommData *
 static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf, SocketAddr *addr)
 {
     CHECK_RETURN_LOGW(socket != NULL && buf != NULL && buf->buffer != NULL && buf->size != 0 && buf->size > buf->len,
-        IOTC_ERR_PARAM_INVALID, "invalid param");
+        IOTC_ERR_PARAM_INVALID, "param invalid");
     NOT_USED(addr);
     TlsSocket *tlsSocket = (TlsSocket *)socket;
-    if (tlsSocket->initParam.onUpdateRemainLen == NULL) {
-        IOTC_LOGW("get remain size func null");
-        return IOTC_ERR_CALLBACK_NULL;
-    }
+    CHECK_RETURN_LOGW(tlsSocket->initParam.onUpdateRemainLen != NULL, IOTC_ERR_CALLBACK_NULL,
+        "get remain size func null");
 
     uint32_t startTime = IotcGetSysTimeMs();
     uint8_t *pBuf = buf->buffer + buf->len;
@@ -257,16 +256,11 @@ static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
         }
 
         ret = IotcTlsClientRecv(tlsSocket->ctx, pBuf + recvLen, remainLen);
-        if (ret > 0) {
-            if (ret > remainLen) {
-                IOTC_LOGW("tls recv error len %d/%u", ret, remainLen);
-                return IOTC_CORE_WIFI_TRANS_ERR_TLS_SOCKET_RECV;
-            }
-            recvLen += ret;
-        } else if (ret < 0) {
+        if (ret < 0 || ret > remainLen) {
             IOTC_LOGW("tls recv error %d/%d", ret, IotcGetErrno());
-            return ret;
+            return IOTC_CORE_WIFI_TRANS_ERR_TLS_SOCKET_RECV;
         }
+        recvLen += ret;
     } while (true);
 
     /* unreachable */
@@ -274,7 +268,7 @@ static int32_t TlsSocketRecv(TransSocket *socket, uint32_t tmo, CommBuffer *buf,
 }
 static void TlsSocketClose(TransSocket *socket)
 {
-    CHECK_V_RETURN_LOGW(socket != NULL, "invalid param");
+    CHECK_V_RETURN_LOGW(socket != NULL, "param invalid");
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
     if (tlsSocket->ctx != NULL) {
@@ -283,25 +277,26 @@ static void TlsSocketClose(TransSocket *socket)
     }
 }
 
+static const SocketIf TLS_IF = {
+    .socketInit = TlsSocketInit,
+    .socketConnect = TlsSocketConnect,
+    .socketSend = TlsSocketSend,
+    .socketRecv = TlsSocketRecv,
+    .socketClose = TlsSocketClose,
+    .socketFree = TlsSocketFree,
+};
+static const char *TLS_NAME = "TLS";
+
 TransSocket *TransSocketTlsNew(const SocketTlsInitParam *init)
 {
     CHECK_RETURN_LOGW(init != NULL, NULL, "param invalid");
-    static const SocketIf TLS_IF = {
-        .socketInit = TlsSocketInit,
-        .socketConnect = TlsSocketConnect,
-        .socketSend = TlsSocketSend,
-        .socketRecv = TlsSocketRecv,
-        .socketClose = TlsSocketClose,
-        .socketFree = TlsSocketFree,
-    };
-    static const char *TLS_NAME = "TLS";
 
     return TransSocketNew(&TLS_IF, sizeof(TlsSocket), TLS_NAME, (void *)init);
 }
 
 IotcTlsCertVerify TransSocketTlsVerifyCert(TransSocket *socket)
 {
-    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW(socket != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     TlsSocket *tlsSocket = (TlsSocket *)socket;
 
     return IotcTlsClientVerifyCert(tlsSocket->ctx);

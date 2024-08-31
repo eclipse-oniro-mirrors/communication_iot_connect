@@ -21,14 +21,14 @@
 
 int32_t CoapEndpointServerInit(CoapEndpointServer *server)
 {
-    CHECK_RETURN(server != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(server != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     LIST_INIT(&server->resList);
     return IOTC_OK;
 }
 
 void CoapEndpointServerDeinit(CoapEndpointServer *server)
 {
-    CHECK_V_RETURN(server != NULL);
+    CHECK_V_RETURN_LOGW(server != NULL, "param invalid");
 
     ListEntry *item = NULL;
     ListEntry *next = NULL;
@@ -41,7 +41,7 @@ void CoapEndpointServerDeinit(CoapEndpointServer *server)
 
 int32_t CoapServerAddGlobalChecker(CoapEndpoint *endpoint, CoapServerReqChecker checker)
 {
-    CHECK_RETURN(endpoint != NULL && checker != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && checker != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     ENDPOINT_LOCK_RETURN(endpoint, IOTC_ERR_TIMEOUT);
 
@@ -53,7 +53,7 @@ int32_t CoapServerAddGlobalChecker(CoapEndpoint *endpoint, CoapServerReqChecker 
 
 int32_t CoapServerAddDefaultReqHandler(CoapEndpoint *endpoint, CoapServerReqHandler handler)
 {
-    CHECK_RETURN(endpoint != NULL && handler != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && handler != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     ENDPOINT_LOCK_RETURN(endpoint, IOTC_ERR_TIMEOUT);
 
@@ -65,7 +65,7 @@ int32_t CoapServerAddDefaultReqHandler(CoapEndpoint *endpoint, CoapServerReqHand
 
 int32_t CoapServerAddResource(CoapEndpoint *endpoint, const CoapResource *res, uint32_t num)
 {
-    CHECK_RETURN(endpoint != NULL && res != NULL && num != 0, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && res != NULL && num != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     CoapResourceNode *newNode = (CoapResourceNode *)IotcMalloc(sizeof(CoapResourceNode));
     if (newNode == NULL) {
@@ -90,7 +90,7 @@ int32_t CoapServerAddResource(CoapEndpoint *endpoint, const CoapResource *res, u
 
 void CoapServerRemoveResource(CoapEndpoint *endpoint, const CoapResource *res)
 {
-    CHECK_V_RETURN(endpoint != NULL && res != NULL);
+    CHECK_V_RETURN_LOGW(endpoint != NULL && res != NULL, "param invalid");
 
     ENDPOINT_LOCK_V_RETURN(endpoint);
 
@@ -112,7 +112,8 @@ void CoapServerRemoveResource(CoapEndpoint *endpoint, const CoapResource *res)
 int32_t CoapServerSendResp(CoapEndpoint *endpoint, const CoapServerRespParam *param, const SocketAddr *addr,
     CoapPacket *packetBuf)
 {
-    CHECK_RETURN(endpoint != NULL && param != NULL && param->req != NULL && packetBuf != NULL, IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGW(endpoint != NULL && param != NULL && param->req != NULL && packetBuf != NULL,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
 
     CoapBuildPacket buildPkt;
     (void)memset_s(&buildPkt, sizeof(buildPkt), 0, sizeof(buildPkt));
@@ -172,7 +173,7 @@ static void CoapReqHandler(CoapEndpoint *endpoint, const CoapPacket *pkt, const 
         defaultHandler(endpoint, pkt, addr, endpoint->userData);
         return;
     }
-    IOTC_LOGW("recv req no handler");
+    IOTC_LOGI("recv req no handler");
     return;
 }
 
@@ -229,6 +230,6 @@ int32_t CoapServerBuildDefaultRespParam(CoapServerRespParam *param, const CoapPa
     param->code = COAP_RESPONSE_CODE_CONTENT;
     param->payloadBuilder = CoapUtilsBuildJsonPayloadFunc;
     param->payloadUserData = respJson;
-    
+
     return IOTC_OK;
 }
