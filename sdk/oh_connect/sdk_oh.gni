@@ -32,14 +32,14 @@ iotc_sdk_oh_src = [
 
 iotc_sdk_oh_def = []
 
-if (iotc_ailife_support) {
+if (iot_connect_feature_ailife_support) {
   iotc_sdk_oh_def += ["IOTC_CONF_AILIFE_SUPPORT=1"]
 }
 
-if (iotc_ble_support) {
+if (iot_connect_feature_ble_support) {
   iotc_sdk_oh_src += ["$iotc_sdk_path/oh_connect/api/iotc_oh_ble.c"]
 }
 
-if (iotc_wifi_support) {
+if (iot_connect_feature_wifi_support) {
   iotc_sdk_oh_src += ["$iotc_sdk_path/oh_connect/api/iotc_oh_wifi.c"]
 }

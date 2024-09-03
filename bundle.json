@@ -23,7 +23,11 @@
     ],
     "hisysevent_config": [],
     "syscap":[],
-    "features": [],
+    "features": [
+      "iot_connect_feature_ble_support",
+      "iot_connect_feature_wifi_support",
+      "iot_connect_feature_ailife_support"
+    ],
     "rom": "",
     "ram": "",
     "deps": {
