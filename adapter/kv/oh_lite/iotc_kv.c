@@ -69,7 +69,7 @@ static int32_t CreateFile(const char *filePath)
     IOTC_LOGD("create %s", filePath);
     int32_t fd = UtilsFileOpen(filePath, O_RDWR_FS | O_CREAT_FS, 0);
     if (fd < 0) {
-        IOTC_LOGE("open or create error");
+        IOTC_LOGE("open or create error %d", fd);
         return IOTC_ADAPTER_KV_ERR_CREATE_FILE;
     }
     UtilsFileClose(fd);
