@@ -57,8 +57,8 @@ static void CachePkgDataFree(CachePkgData *pkgData)
 {
     CHECK_V_RETURN_LOGE(pkgData != NULL, "pkgData double free");
 
-    ListEntry *item;
-    ListEntry *next;
+    ListEntry *item = NULL;
+    ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &pkgData->subPkgList.subPkgs) {
         SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
         if (subPkg->buff != NULL) {
@@ -73,8 +73,8 @@ static void CachePkgDataFree(CachePkgData *pkgData)
 
 void LinkLayerClearAllCachePkg(void)
 {
-    ListEntry *item;
-    ListEntry *next;
+    ListEntry *item = NULL;
+    ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_pkgList.pkgs) {
         CachePkgData *pkgData = CONTAINER_OF(item, CachePkgData, node);
         LIST_REMOVE(&pkgData->node);
@@ -87,8 +87,8 @@ static void ClearTimeoutPkg(void)
 {
     uint64_t curTime = IotcGetSysTimeMs();
 
-    ListEntry *item;
-    ListEntry *next;
+    ListEntry *item = NULL;
+    ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_pkgList.pkgs) {
         CachePkgData *pkgData = CONTAINER_OF(item, CachePkgData, node);
         if (UtilsDeltaTime(curTime, pkgData->savedTime) < PKG_TIMEOUT) {
@@ -102,7 +102,7 @@ static void ClearTimeoutPkg(void)
 
 static CachePkgData* FindPkgByToken(uint8_t token)
 {
-    ListEntry *item;
+    ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_pkgList.pkgs) {
         CachePkgData *pkgData = CONTAINER_OF(item, CachePkgData, node);
         if (pkgData->token == token) {
@@ -114,7 +114,7 @@ static CachePkgData* FindPkgByToken(uint8_t token)
 
 static int32_t InsertSubPkg(SubPkgList *subPkgList, uint8_t pkgIdx, const uint8_t *data, uint32_t dataLen)
 {
-    ListEntry *item;
+    ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &subPkgList->subPkgs) {
         SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
         if (subPkg->index == pkgIdx) {
@@ -235,7 +235,7 @@ int32_t LinkLayerRecvMergePkgs(uint8_t token, uint8_t **outData, uint32_t *outDa
 
     uint8_t *curPtr = data;
     uint32_t curLen = 0;
-    ListEntry *item;
+    ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &pkgData->subPkgList.subPkgs) {
         SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
         if (subPkg->buff == NULL) {

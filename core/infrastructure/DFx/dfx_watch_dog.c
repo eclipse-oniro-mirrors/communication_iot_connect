@@ -67,7 +67,7 @@ static WatchdogContext *GetWatchDogCtx(void)
 
 #define WATCH_DOG_LOCK() (void)UtilsExMutexLock(GetWatchDogCtx()->mutex)
 #define WATCH_DOG_UNLOCK() UtilsExMutexUnlock(GetWatchDogCtx()->mutex)
-            
+
 static bool WatchDogProc(void)
 {
     bool isRunning = true;
@@ -323,7 +323,7 @@ void DfxDumpAllTask(void)
     }
     LIST_FOR_EACH_ITEM(item, &GetWatchDogCtx()->recordList) {
         RecordNode *node = CONTAINER_OF(item, RecordNode, list);
-        IOTC_LOGN("record task [%s/%u/%u/%u]", NON_NULL_STR(node->name), UtilsGetTaskIdShort(node->id));
+        IOTC_LOGN("record task [%s/%u]", NON_NULL_STR(node->name), UtilsGetTaskIdShort(node->id));
     }
 
     WATCH_DOG_UNLOCK();

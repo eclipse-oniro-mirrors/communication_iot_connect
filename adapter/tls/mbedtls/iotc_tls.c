@@ -333,7 +333,7 @@ int32_t IotcTlsClientSend(IotcTlsClient *cli, const uint8_t *buf, uint32_t len)
     } else if ((ret == MBEDTLS_ERR_SSL_TIMEOUT) || (ret == MBEDTLS_ERR_SSL_WANT_WRITE)) {
         return IOTC_OK;
     }
-        
+
     IOTC_LOGW("send error [%s/-0x%04x/%d]", cliCtx->custom, -ret, IotcGetErrno());
     return IOTC_ADAPTER_TLS_ERR_RECV;
 }

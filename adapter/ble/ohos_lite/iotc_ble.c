@@ -409,8 +409,7 @@ static int32_t AdapterDescToOhosDesc(IotcAdptBleGattCharDesc *in, BleGattAttr *t
     }
     to->attrType = OHOS_BLE_ATTRIB_TYPE_CHAR_USER_DESCR;
     to->permission = AdapterPemissionToOhosPermission(in->permission);
-    if (!UtilsUnhexifyR(in->uuid, strlen(in->uuid),
-        to->uuid, sizeof(to->uuid))) {
+    if (!UtilsUnhexifyR(in->uuid, strlen(in->uuid), to->uuid, sizeof(to->uuid))) {
         IOTC_LOGE("str to hex");
         return IOTC_ERROR;
     }

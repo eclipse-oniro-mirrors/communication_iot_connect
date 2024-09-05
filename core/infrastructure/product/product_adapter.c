@@ -94,7 +94,7 @@ int32_t ProductGetRootCaCert(const char **ca[], uint32_t *num)
 {
     CHECK_RETURN_LOGW(ca != NULL && num != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    GetRootCaCertCallback cb;
+    GetRootCaCertCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onGetRootCaCert);
 
     int32_t ret = cb(ca, num);
@@ -109,7 +109,7 @@ int32_t ProductRecvNetCfgInfo(const char *netInfo, uint32_t len)
 {
     CHECK_RETURN_LOGW(netInfo != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    RecvNetCfgInfoCallback cb;
+    RecvNetCfgInfoCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onRecvNetCfgInfo);
 
     int32_t ret = cb(netInfo, len);
@@ -123,7 +123,7 @@ int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len)
 {
     CHECK_RETURN_LOGW(data != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    RecvCustomSecDataCallback cb;
+    RecvCustomSecDataCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onRecvCustomSecData);
 
     int32_t ret = cb(data, len);
@@ -137,7 +137,7 @@ int32_t ProductGetSurfacePower(int8_t *power)
 {
     CHECK_RETURN_LOGW(power != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    GetSurfacePowerCallback cb;
+    GetSurfacePowerCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onGetSurfacePower);
 
     int32_t ret = cb(power);
@@ -151,7 +151,7 @@ int32_t ProductProfPutCharState(const IotcCharState state[], uint32_t num)
 {
     CHECK_RETURN_LOGW(state != NULL && num != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    ProfPutCharStateCallback cb;
+    ProfPutCharStateCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfPutCharState);
 
     int32_t ret = cb(state, num);
@@ -166,7 +166,7 @@ int32_t ProductProfGetCharState(const IotcCharState state[], char *out[], uint32
     CHECK_RETURN_LOGW(state != NULL && out != NULL && len != NULL && num != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    ProfGetCharStateCallback cb;
+    ProfGetCharStateCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfGetCharState);
 
     int32_t ret = cb(state, out, len, num);
@@ -178,7 +178,7 @@ int32_t ProductProfGetCharState(const IotcCharState state[], char *out[], uint32
 
 int32_t ProductProfReportAll(void)
 {
-    ProfReportAllCallback cb;
+    ProfReportAllCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfReportAll);
 
     int32_t ret = cb();
@@ -192,7 +192,7 @@ int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen)
 {
     CHECK_RETURN_LOGW(buf != NULL && bufLen != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    ProfGetPincodeCallback cb;
+    ProfGetPincodeCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfGetPincode);
 
     int32_t ret = cb(buf, bufLen);
@@ -206,7 +206,7 @@ int32_t ProductProfGetAcKey(uint8_t *buf, uint32_t bufLen)
 {
     CHECK_RETURN_LOGW(buf != NULL && bufLen != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    ProfGetAcKeyCallback cb;
+    ProfGetAcKeyCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfGetAcKey);
 
     int32_t ret = cb(buf, bufLen);
@@ -218,6 +218,7 @@ int32_t ProductProfGetAcKey(uint8_t *buf, uint32_t bufLen)
 
 void ProductProfFree(void *ptr)
 {
+    CHECK_V_RETURN_LOGW(ptr != NULL, "param invalid");
     (void)UtilsGlobalMutexLock();
     ProfFreeCallback cb = g_hooks.onProfFree;
     UtilsGlobalMutexUnlock();
@@ -231,7 +232,7 @@ void ProductProfFree(void *ptr)
 
 int32_t ProductDevReboot(int8_t res)
 {
-    DevRebootCallback cb;
+    DevRebootCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onDevReboot);
 
     int32_t ret = cb(res);
@@ -245,7 +246,7 @@ int32_t ProductDevTrng(uint8_t *buf, uint32_t bufLen)
 {
     CHECK_RETURN_LOGW(buf != NULL && bufLen != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    DevTrngCallback cb;
+    DevTrngCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onDevTrng);
 
     int32_t ret = cb(buf, bufLen);

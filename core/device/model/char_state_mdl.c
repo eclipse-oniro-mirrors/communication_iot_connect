@@ -71,7 +71,7 @@ static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **state
         *states = statesTmp;
         return IOTC_OK;
     }
-    
+
     MdlCharStatesFree(&statesTmp, size);
     return ret;
 }
@@ -181,7 +181,7 @@ int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, IotcJson 
 {
     CHECK_RETURN_LOGE(state != NULL && num != 0 && num <= IOTC_CONF_PROF_MAX_SVC_NUM && array != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     IotcJson *arrayTmp = IotcJsonCreateArray();
     if (arrayTmp == NULL) {
         IOTC_LOGW("create array error");
@@ -203,7 +203,7 @@ int32_t MdlUpdateCharStates(IotcCharState states[], const GetCharStatesData *cha
 {
     CHECK_RETURN_LOGE(states != NULL && charData != NULL && charData->data != NULL &&
         charData->len != NULL && num != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     for (uint32_t i = 0; i < num; ++i) {
         if (states[i].data != NULL) {
             IotcFree((char *)states[i].data);

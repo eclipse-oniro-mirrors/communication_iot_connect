@@ -137,7 +137,7 @@ HashMap *UtilsHashMapCreate(uint32_t n, const char *name, HashMapFreeValue freeV
     (void)memset_s(hashMap->name, sizeof(hashMap->name), 0, sizeof(hashMap->name));
     uint32_t nameLen = strlen(name);
     uint32_t cpLen = (nameLen > sizeof(hashMap->name) - 1) ? (sizeof(hashMap->name) - 1) : nameLen;
-    if (memcpy_s(hashMap->name, sizeof(hashMap->name) - 1, name, cpLen) != EOK) {
+    if (strncpy_s(hashMap->name, sizeof(hashMap->name), name, cpLen) != EOK) {
         IOTC_LOGW("init hashMap name fail");
         IotcFree(hashMap->hashArr);
         IotcFree(hashMap);
