@@ -122,6 +122,7 @@ static void RegBleUplink(uint32_t event, void *param, uint32_t len)
     NOT_USED(len);
 
     BleSvcCtx *ctx = GetBleSvcCtx();
+    CHECK_V_RETURN(ctx != NULL);
     int32_t ret = ServiceProxySubscribeMessage(ctx->instanceId, IOTC_SERVICE_ID_DEVICE,
         DEVICE_SERVICE_MSG_ID_REPORT, DeviceServiceReportMessageHandler);
     if (ret != IOTC_OK) {
@@ -137,6 +138,7 @@ static void UnregBleUplink(uint32_t event, void *param, uint32_t len)
     NOT_USED(len);
 
     BleSvcCtx *ctx = GetBleSvcCtx();
+    CHECK_V_RETURN(ctx != NULL);
     int32_t ret = ServiceProxyRemoveSubscribe(ctx->instanceId, IOTC_SERVICE_ID_DEVICE, DEVICE_SERVICE_MSG_ID_REPORT);
     if (ret != IOTC_OK) {
         IOTC_LOGW("remove sub report error %d", ret);

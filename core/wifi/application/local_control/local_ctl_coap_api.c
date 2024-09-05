@@ -131,7 +131,7 @@ void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
     }
 
     LocalCoapSessMsg respSessMsg;
-    BuildLocalCoapSessMsg(&respSessMsg, LOCAL_COAP_PLAIN, client);
+    BuildLocalCoapSessMsg(&respSessMsg, UTILS_BIT(LOCAL_COAP_PLAIN), client);
 
     ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
     IotcJsonDelete(respJson);
@@ -268,7 +268,7 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
     }
 
     LocalCoapSessMsg respSessMsg;
-    BuildLocalCoapSessMsg(&respSessMsg, LOCAL_COAP_PLAIN, client);
+    BuildLocalCoapSessMsg(&respSessMsg, UTILS_BIT(LOCAL_COAP_PLAIN), client);
 
     int32_t ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
     IotcJsonDelete(respJson);

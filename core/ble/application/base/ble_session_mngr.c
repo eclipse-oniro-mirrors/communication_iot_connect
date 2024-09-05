@@ -242,7 +242,7 @@ static int32_t BleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     /* 填充 sessId */
     ret = memcpy_s(outBuff + outLen - SESSION_ID_LEN, SESSION_ID_LEN, sessInfo->sessId, SESSION_ID_LEN);
     CHECK_RETURN(ret == EOK, IOTC_ERR_SECUREC_MEMCPY);
-    
+
     return IOTC_OK;
 }
 
@@ -276,7 +276,7 @@ static int32_t BleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     };
     ret = IotcAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen decData err:%d", ret);
-    
+
     return IOTC_OK;
 }
 

@@ -292,7 +292,7 @@ int32_t UtilsGetIpV4Str(uint32_t ip, char *ipStr, uint32_t ipStrSize)
     CHECK_RETURN_LOGW(ipStr != NULL && ipStrSize != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
     uint8_t *ipUint = (uint8_t *)&ip;
-    CHECK_RETURN_LOGW(sprintf_s(ipStr, ipStrSize, "%d.%d.%d.%d",
+    CHECK_RETURN_LOGW(sprintf_s(ipStr, ipStrSize, "%u.%u.%u.%u",
         ipUint[IP_UINT_INDEX_3], ipUint[IP_UINT_INDEX_2], ipUint[IP_UINT_INDEX_1], ipUint[IP_UINT_INDEX_0]) > 0,
         IOTC_ERR_SECUREC_SPRINTF, "sprintf_s err");
     return IOTC_OK;

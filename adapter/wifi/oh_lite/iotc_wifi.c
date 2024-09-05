@@ -190,7 +190,7 @@ static void OnWifiScanStateChangedCallback(int32_t state, int32_t size)
     g_isStaScanSuccess = true;
     int32_t iotcState = state == WIFI_STATE_AVAILABLE ? IOTC_WIFI_EVENT_STATE_OK :
         IOTC_WIFI_EVENT_STATE_ERROR;
-    
+
     if (g_adapterEventHandler.onScanFinished != NULL) {
         g_adapterEventHandler.onScanFinished(iotcState, size);
     }
@@ -254,7 +254,7 @@ static void OnHotspotStateChangedCallback(int32_t state)
 {
     int32_t iotcState = state == WIFI_STATE_AVAILABLE ? IOTC_WIFI_EVENT_STATE_OK :
         IOTC_WIFI_EVENT_STATE_ERROR;
-    
+
     if (g_adapterEventHandler.onSoftapStateChanged != NULL) {
         g_adapterEventHandler.onSoftapStateChanged(iotcState);
     }

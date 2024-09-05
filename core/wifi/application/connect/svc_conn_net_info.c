@@ -109,9 +109,11 @@ int32_t SvcConnSetNetInfo(const IotcJson *json)
         }
     } else {
         ret = EventBusSubscribe(SoftapStopEventCallback, IOTC_CORE_WIFI_EVENT_SOFTAP_STOP);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("sub softap stop event error");
+            return ret;
+        }
     }
-    if (ret != IOTC_OK) {
-        return ret;
-    }
+
     return IOTC_OK;
 }

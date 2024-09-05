@@ -115,8 +115,8 @@ int32_t BleAddGattSvc(const IotcBleGattProfileSvc *svc)
 static void DestroyBleGattSvcList(void)
 {
     (void)UtilsGlobalMutexLock();
-    ListEntry *item;
-    ListEntry *next;
+    ListEntry *item = NULL;
+    ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, GetBleGattSvcListHead()) {
         BleGattSvcList *node = CONTAINER_OF(item, BleGattSvcList, list);
         LIST_REMOVE(&node->list);

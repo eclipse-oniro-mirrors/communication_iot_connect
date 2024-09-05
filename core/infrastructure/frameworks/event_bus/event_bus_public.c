@@ -61,7 +61,7 @@ static void ListenerEventBusCallback(uint32_t event, void *param, uint32_t len)
             IOTC_LOGW("calloc error %u", g_listenerNum);
             break;
         }
-        
+
         ListEntry *item = NULL;
         LIST_FOR_EACH_ITEM(item, &g_listenerList) {
             EventListenerNode *curNode = CONTAINER_OF(item, EventListenerNode, node);
@@ -108,7 +108,7 @@ int32_t IotcRegPublicEventListener(IotcEventCallback listener)
     }
     (void)memset_s(newNode, sizeof(EventListenerNode), 0, sizeof(EventListenerNode));
     newNode->listener = listener;
-    
+
     (void)UtilsGlobalMutexLock();
     LIST_INSERT_BEFORE(&newNode->node, &g_listenerList);
     ++g_listenerNum;

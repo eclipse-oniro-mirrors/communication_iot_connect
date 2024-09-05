@@ -35,7 +35,7 @@ static int32_t g_serviceNum = 0;
 
 static BtSvcInfo *GetBtSvcInfoBySvcIdx(uint8_t svcIdx)
 {
-    ListEntry *item;
+    ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_serviceList) {
         BtSvcInfoNode *svcInfoNode = CONTAINER_OF(item, BtSvcInfoNode, node);
         if (svcInfoNode->svcInfo.svcIdx == svcIdx) {
@@ -47,7 +47,7 @@ static BtSvcInfo *GetBtSvcInfoBySvcIdx(uint8_t svcIdx)
 
 static BtSvcInfo *GetBtSvcInfoByService(const char *service)
 {
-    ListEntry *item;
+    ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_serviceList) {
         BtSvcInfoNode *svcInfoNode = CONTAINER_OF(item, BtSvcInfoNode, node);
         if (strcmp(svcInfoNode->svcInfo.service, service) == 0) {
@@ -59,8 +59,8 @@ static BtSvcInfo *GetBtSvcInfoByService(const char *service)
 
 void LinkLayerServiceRelease(void)
 {
-    ListEntry *item;
-    ListEntry *next;
+    ListEntry *item = NULL;
+    ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_serviceList) {
         BtSvcInfoNode *svcInfoNode = CONTAINER_OF(item, BtSvcInfoNode, node);
         LIST_REMOVE(&svcInfoNode->node);

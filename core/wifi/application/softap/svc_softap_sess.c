@@ -285,7 +285,7 @@ static int32_t SoftapSessionSetup(SoftapSess *sess)
     TransSessAddRecvTailHandler(sess->coapStack.sess, SoftapCoapMsgRecvPreProcess, "pre", NULL);
     TransSessAddRecvTailHandler(sess->coapStack.sess, SoftapCoapMsgRecvBase64DecodeProcess, "base64_decode", NULL);
     TransSessAddRecvTailHandler(sess->coapStack.sess, SoftapCoapMsgRecvDecryptProcess, "decrypt", NULL);
-    
+
     TransSessAddSendTailHandler(sess->coapStack.sess, SoftapCoapMsgSendEncryptProcess, "encrypt", NULL);
     TransSessAddSendTailHandler(sess->coapStack.sess, SoftapCoapMsgSendBase64EncodeProcess, "base64_encode", NULL);
     TransSessAddSendTailHandler(sess->coapStack.sess, SoftapCoapMsgSendFinalProcess, "final", NULL);
