@@ -27,3 +27,11 @@
 -   [Wi-Fi设备DEMO](docs/iotc-demo-wifi.md)
 -   [BLE设备DEMO](docs/iotc-demo-ble.md)
 -   [Combo设备DEMO](docs/iotc-demo-combo.md)
+
+## 添加编译子系统构建动态库
+
+-   [L2设备库编译](docs/iotc-build-l2.md)
+
+## 添加编译子系统构建APP demo
+
+-   [构建参考DEMO](https://gitee.com/ohos-oneconnect/applications_sample_iot_connect_samples)

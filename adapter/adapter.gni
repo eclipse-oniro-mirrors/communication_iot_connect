@@ -38,7 +38,7 @@ iotc_adapter_src = [
 iotc_adapter_def = []
 iotc_adapter_dep = []
 
-if (iotc_ble_support) {
+if (iot_connect_feature_ble_support) {
   if (defined(ohos_lite)) {
     iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/iotc_ble.c"]
   } else {
@@ -53,7 +53,7 @@ if (iotc_ble_support) {
   }
 }
 
-if (iotc_wifi_support) {
+if (iot_connect_feature_wifi_support) {
   iotc_adapter_src += ["$iotc_adapter_path/socket/iotc_socket.c"]
   if (ohos_kernel_type == "liteos_m") {
     iotc_adapter_src += [

@@ -22,13 +22,13 @@ iotc_core_src = iotc_core_infrastructure_src + iotc_core_device_src
 iotc_core_inc = iotc_core_infrastructure_inc + iotc_core_device_inc
 iotc_core_def = iotc_core_infrastructure_def + iotc_core_device_def
 
-if (iotc_ble_support) {
+if (iot_connect_feature_ble_support) {
   iotc_core_inc += iotc_core_ble_inc
   iotc_core_src += iotc_core_ble_src
   iotc_core_def += iotc_core_ble_def
 }
 
-if (iotc_wifi_support) {
+if (iot_connect_feature_wifi_support) {
   iotc_core_inc += iotc_core_wifi_inc
   iotc_core_src += iotc_core_wifi_src
   iotc_core_def += iotc_core_wifi_def
