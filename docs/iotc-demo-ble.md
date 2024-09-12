@@ -7,7 +7,7 @@ BLE Connect DEMO适用于使用BLE发现连接、接收配网信息、质量控�
 #include <stdbool.h>
 #include "iotc_oh_wifi.h"
 #include "iotc_oh_ble.h"
-#include "iotc_oh_connect.h"
+#include "iotc_oh_sdk.h"
 #include "iotc_oh_device.h"
 #include "securec.h"
 #include "cJSON.h"
@@ -35,7 +35,7 @@ static const IotcDeviceInfo DEV_INFO = {
     .fwv = "1.0.0",
     .hwv = "1.0.0",
     .swv = "1.0.0",
-    .protType = IOTC_PROT_TYPE_WIFI,
+    .protType = IOTC_PROT_TYPE_BLE,
 };
 
 /**

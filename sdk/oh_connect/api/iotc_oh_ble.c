@@ -185,7 +185,7 @@ int32_t IotcOhBleEnable(void)
 
     ret = BleCoreRegisterInitUnit();
     if (ret != IOTC_OK) {
-        IOTC_LOGE("reg wifi core unit error %d", ret);
+        IOTC_LOGE("reg ble core unit error %d", ret);
         return ret;
     }
 

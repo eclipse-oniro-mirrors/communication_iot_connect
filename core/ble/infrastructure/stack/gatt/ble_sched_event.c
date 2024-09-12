@@ -154,8 +154,9 @@ static void BleEventStartSvcResultHandler(int32_t event, void *param)
         IOTC_LOGN("all svc start success");
         PrintBleGattServiceList(GetBleGattMgtApp()->svc, GetBleGattMgtApp()->svcNum);
     }
-    IOTC_LOGN("start svc result success startedSvcNum=%u, svcHandle=%d, serverId=%d,",
-        GetBleGattMgtApp()->startedSvcNum, eventParam->startSvc.svcHandle, eventParam->startSvc.serverId);
+    IOTC_LOGN("start svc result success startedSvcNum=%u, svcHandle=%d, serverId=%d, svcNum=%d",
+        GetBleGattMgtApp()->startedSvcNum, eventParam->startSvc.svcHandle, eventParam->startSvc.serverId,
+        GetBleGattMgtApp()->svcNum);
 }
 
 static void BleEventStopSvcResultHandler(int32_t event, void *param)
@@ -170,7 +171,9 @@ static void BleEventStopSvcResultHandler(int32_t event, void *param)
         }
         return;
     }
-    GetBleGattMgtApp()->startedSvcNum--;
+    if (GetBleGattMgtApp()->startedSvcNum > 0) {
+        GetBleGattMgtApp()->startedSvcNum--;
+    }
     if (GetBleGattMgtApp()->startedSvcNum == 0) {
         IOTC_LOGN("all svc stop success");
     }

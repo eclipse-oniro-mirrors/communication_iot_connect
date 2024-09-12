@@ -18,18 +18,20 @@ if (defined(ohos_lite)) {
   import("//build/lite/config/component/lite_component.gni")
 } else {
   import("//build/test.gni")
-  module_output_path = "iotc/xts"
+  module_output_path = "iotc/xts/dcts"
 
-  ohos_unittest("IotcOhBleTest") {
+  ohos_unittest("IotcBleOnlyDctsTest") {
     module_out_path = module_output_path
-    sources = [ "iotc_oh_ble_test.cpp" ]
+    sources = [ "iotc_ble_only_dcts_test.cpp" ]
     include_dirs = [
-      "$iotc_interface_path/common",
-      "$iotc_interface_path/oh_connect",
+      "$iotc_interface_path/kits/common",
+      "$iotc_interface_path/kits/oh_connect",
       "//third_party/bounds_checking_function/include",
     ]
     deps = [
+      "//foundation/communication/iot_connect:iotc_shared",
       "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/cJSON:cjson",
       "//third_party/googletest:gtest_main",
     ]
     external_deps = [
@@ -38,16 +40,18 @@ if (defined(ohos_lite)) {
     ]
   }
 
-  ohos_unittest("IotcOhDevTest") {
+  ohos_unittest("IotcWifiOnlyDctsTest") {
     module_out_path = module_output_path
-    sources = [ "iotc_oh_dev_test.cpp" ]
+    sources = [ "iotc_wifi_only_dcts_test.cpp" ]
     include_dirs = [
-      "$iotc_interface_path/common",
-      "$iotc_interface_path/oh_connect",
+      "$iotc_interface_path/kits/common",
+      "$iotc_interface_path/kits/oh_connect",
       "//third_party/bounds_checking_function/include",
     ]
     deps = [
+      "//foundation/communication/iot_connect:iotc_shared",
       "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/cJSON:cjson",
       "//third_party/googletest:gtest_main",
     ]
     external_deps = [
@@ -56,49 +60,11 @@ if (defined(ohos_lite)) {
     ]
   }
 
-  ohos_unittest("IotcOhSdkTest") {
-    module_out_path = module_output_path
-    sources = [ "iotc_oh_sdk_test.cpp" ]
-    include_dirs = [
-      "$iotc_interface_path/common",
-      "$iotc_interface_path/oh_connect",
-      "//third_party/bounds_checking_function/include",
-    ]
-    deps = [
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/googletest:gtest_main",
-    ]
-    external_deps = [
-      "c_utils:utils",
-      "hilog:libhilog",
-    ]
-  }
-
-  ohos_unittest("IotcOhWifiTest") {
-    module_out_path = module_output_path
-    sources = [ "iotc_oh_wifi_test.cpp" ]
-    include_dirs = [
-      "$iotc_interface_path/common",
-      "$iotc_interface_path/oh_connect",
-      "//third_party/bounds_checking_function/include",
-    ]
-    deps = [
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/googletest:gtest_main",
-    ]
-    external_deps = [
-      "c_utils:utils",
-      "hilog:libhilog",
-    ]
-  }
-
-  group("unittest") {
+  group("dcts") {
     testonly = true
     deps = [
-      ":IotcOhBleTest",
-      ":IotcOhDevTest",
-      ":IotcOhSdkTest",
-      ":IotcOhWifiTest",
+      ":IotcBleOnlyDctsTest",
+      ":IotcWifiOnlyDctsTest",
     ]
   }
 }

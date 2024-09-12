@@ -35,6 +35,7 @@ extern "C" {
 #define UTILS_MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define UTILS_MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define NON_NULL_STR(s) (((s) != NULL) ? (s) : "NULL")
+#define NON_NULL_EMPTY_STR(_str) (((_str) != NULL) ? (_str) : ('\0'))
 #define UTILS_MIN_STR_LEN 1
 #define BIT_PER_BYTE 8
 #define TO_STR(x) (#x)
@@ -111,6 +112,8 @@ int32_t UtilsReplaceStrWithRange(char *srcAndDst, uint32_t bufLen,
 int32_t UtilsGetIpV4Str(uint32_t ip, char *ipStr, uint32_t ipStrSize);
 
 int32_t UtilsGetMacStr(const uint8_t *mac, uint32_t macLen, char *macStr, uint32_t macStrSize);
+
+void UtilsReplaceCharacters(char *src, char m, char t);
 
 #ifdef __cplusplus
 }

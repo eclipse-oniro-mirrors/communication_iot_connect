@@ -83,8 +83,8 @@ static void IotcFwkMainTaskBody(void *arg)
     } while (g_existsFlag);
 
     /* 退出通知 */
-    MainTaskBehaviorNotice(&g_exitSem);
     g_mainTaskId = NULL;
+    MainTaskBehaviorNotice(&g_exitSem);
     IOTC_LOGN("iotc main task exit");
 }
 

@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "securec.h"
 #include "iotc_os.h"
+#include "iotc_conf.h"
 #include "iotc_errcode.h"
 #include "utils_list.h"
 #include "utils_mutex_ex.h"
@@ -29,7 +30,6 @@
 #define DFX_WATCH_DOG_API_WAIT_TIME UTILS_SEC_TO_MS(30)
 
 #define DFX_WATCH_DOG_TASK_NAME "iotc_watchdog"
-#define DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (2 * 1024)
 #define DFX_WATCH_DOG_TASK_NAME_LEN 128
 
 typedef struct {
@@ -57,7 +57,7 @@ typedef struct {
     IotcSemId *sem;
 } WatchdogContext;
 
-static uint32_t g_taskSize = DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE;
+static uint32_t g_taskSize = IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE;
 static DfxWatchDogTimeoutHandler g_commHdl = NULL;
 static WatchdogContext *GetWatchDogCtx(void)
 {
