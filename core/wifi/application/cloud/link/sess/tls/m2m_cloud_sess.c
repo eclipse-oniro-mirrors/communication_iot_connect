@@ -25,7 +25,6 @@
 #include "comm_def.h"
 #include "product_adapter.h"
 
-/* TODO 证书延迟校验 */
 static const char *TLS_SESS_NAME = "CLOUD_TLS";
 
 static int32_t CloudTlsTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemainLen remainUpdate)

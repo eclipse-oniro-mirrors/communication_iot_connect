@@ -22,30 +22,11 @@
 extern "C" {
 #endif
 
-#if !IOTC_CONF_MEM_DEBUG
 void *IotcMalloc(uint32_t size);
 
 void *IotcCalloc(uint32_t num, uint32_t size);
 
 void IotcFree(void *pt);
-
-#else
-
-void *IotcDebugMalloc(uint32_t size, const char *func, uint32_t line);
-
-void *IotcDebugCalloc(uint32_t num, uint32_t size, const char *func, uint32_t line);
-
-void IotcDebugFree(void *pt, const char *func, uint32_t line);
-
-void IotcMemDump(void);
-
-#define IotcMalloc(size) IotcDebugMalloc(size, __func__, __LINE__)
-
-#define IotcCalloc(num, size) IotcDebugCalloc(num, size, __func__, __LINE__)
-
-#define IotcFree(size) IotcDebugFree(size, __func__, __LINE__)
-
-#endif
 
 #ifdef __cplusplus
 }

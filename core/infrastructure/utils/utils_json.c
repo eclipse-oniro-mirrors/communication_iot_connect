@@ -164,7 +164,7 @@ char *UtilsJsonPrintByMalloc(const IotcJson *json)
         return NULL;
     }
 
-#if IOTC_CONF_JSON_FREE_EQUAL_MALLOC_FREE && !IOTC_CONF_MEM_DEBUG
+#if IOTC_CONF_JSON_FREE_EQUAL_MALLOC_FREE
     return ret;
 #else
     char *copy = UtilsStrDup(ret);

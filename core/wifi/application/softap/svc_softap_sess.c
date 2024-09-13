@@ -176,7 +176,7 @@ static int32_t CreatePeerSession(SoftapPeerSess *peerSess, const SocketAddr *add
 
     /* start timer to clean sess if timeout */
     peerSess->timer = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_ONCE, PeerSessTimeoutTimerCallback,
-            PEER_WAIT_SPEKE_NEGO_TIMEOUT, peerSess);
+        PEER_WAIT_SPEKE_NEGO_TIMEOUT, peerSess);
     if (peerSess->timer < 0) {
         IOTC_LOGW("start speke timer error %d", peerSess->timer);
         return peerSess->timer;

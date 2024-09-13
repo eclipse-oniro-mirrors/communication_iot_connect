@@ -113,7 +113,7 @@ static int32_t NetCfgInfoRecvProcess(const char *netInfo, uint32_t len)
         return ret;
     }
 #else
-    /* TODO 端云未就绪，当前仅有绑定信息 */
+    /* 端云未就绪，当前仅有绑定信息 */
     int32_t ret = DevSvcProxyRecvAuthInfo(dataObj);
     if (ret != IOTC_OK) {
         IotcJsonDelete(jsonObj);

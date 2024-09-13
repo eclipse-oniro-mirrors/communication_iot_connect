@@ -35,7 +35,7 @@
 
 #define M2M_CLOUD_REGISTER_TIMEOUT_MS UTILS_MIN_TO_MS(1)
 
-#define CHANGE_FSM_TO(ctx, state) UtilsFsmSwitch((ctx)->stateManager.fsmCtx, (state));
+#define CHANGE_FSM_TO(ctx, state) UtilsFsmSwitch((ctx)->stateManager.fsmCtx, (state))
 
 static void M2mCloudFsmOnStateChange(UtilsFsm *fsm, int32_t before, int32_t next)
 {
