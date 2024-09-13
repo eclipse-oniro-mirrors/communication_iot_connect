@@ -61,24 +61,24 @@ void M2mCloudBackoffUpdate(M2mCloudContext *ctx)
         return;
     }
 
-    const uint8_t CLOUD_BACKOFF_MAX_CNT = 5;
-    const uint8_t CLOUD_BACKOFF_EXP_TIMES = 3;
-    const uint32_t CLOUD_BACKOFF_FIRST_MAX_TIME = UTILS_SEC_TO_MS(5);
-    const uint32_t CLOUD_BACKOFF_MAX_TIME = UTILS_MIN_TO_MS(10);
+    const uint8_t cloudBackoffMaxCnt = 5;
+    const uint8_t cloudBackoffExpTimes = 3;
+    const uint32_t cloudBackoffFirstMaxTime = UTILS_SEC_TO_MS(5);
+    const uint32_t cloudBackoffMaxTime = UTILS_MIN_TO_MS(10);
 
     uint32_t min = 0;
-    uint32_t max = CLOUD_BACKOFF_FIRST_MAX_TIME;
+    uint32_t max = cloudBackoffFirstMaxTime;
 
     /* Every login failure will increase waiting time range */
     for (uint8_t i = 0; i < ctx->backoffInfo.cnt; ++i) {
         min = max;
-        max = max * CLOUD_BACKOFF_EXP_TIMES;
+        max = max * cloudBackoffExpTimes;
     }
-    if (max > CLOUD_BACKOFF_MAX_TIME) {
-        max = UTILS_MAX(min, CLOUD_BACKOFF_MAX_TIME);
+    if (max > cloudBackoffMaxTime) {
+        max = UTILS_MAX(min, cloudBackoffMaxTime);
     }
 
-    if (ctx->backoffInfo.cnt < CLOUD_BACKOFF_MAX_CNT) {
+    if (ctx->backoffInfo.cnt < cloudBackoffMaxCnt) {
         ++ctx->backoffInfo.cnt;
     }
 

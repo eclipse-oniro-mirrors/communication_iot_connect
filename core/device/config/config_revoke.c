@@ -24,7 +24,7 @@
 
 static void RevokeEventConfigCallback(uint32_t event, void *param, uint32_t len)
 {
-    /* TODO After the cloud function is complete, add the factory reset flag */
+    /* After the cloud function is complete, add the factory reset flag */
     int32_t ret = ConfigClearRegisterInfo();
     if (ret != IOTC_OK) {
         IOTC_LOGW("clear register info error %d", ret);

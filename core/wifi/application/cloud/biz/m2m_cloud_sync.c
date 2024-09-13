@@ -67,32 +67,32 @@ IotcJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx)
     IotcJson *devInfoArr = IotcJsonCreateArray();
     CHECK_RETURN_LOGW(devInfoArr != NULL, NULL, "create json error");
 
-    IotcJson *devinfoObj = NULL;
+    IotcJson *devInfoObj = NULL;
     int32_t ret;
     do {
-        devinfoObj = IotcJsonCreate();
-        if (devinfoObj == NULL) {
+        devInfoObj = IotcJsonCreate();
+        if (devInfoObj == NULL) {
             IOTC_LOGW("create json error");
             ret = IOTC_ADAPTER_JSON_ERR_CREATE;
             break;
         }
-        ret = M2mCloudAddDevInfoToJson(devinfoObj);
+        ret = M2mCloudAddDevInfoToJson(devInfoObj);
         if (ret != IOTC_OK) {
-            IotcJsonDelete(devinfoObj);
+            IotcJsonDelete(devInfoObj);
             IOTC_LOGW("add dev info error %d", ret);
             break;
         }
 
-        ret = BuildDevInfoSyncSvcInfo(devinfoObj, (const M2mCloudContext *)ctx);
+        ret = BuildDevInfoSyncSvcInfo(devInfoObj, (const M2mCloudContext *)ctx);
         if (ret != IOTC_OK) {
-            IotcJsonDelete(devinfoObj);
+            IotcJsonDelete(devInfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }
 
-        ret = IotcJsonAddItem2Array(devInfoArr, devinfoObj);
+        ret = IotcJsonAddItem2Array(devInfoArr, devInfoObj);
         if (ret != IOTC_OK) {
-            IotcJsonDelete(devinfoObj);
+            IotcJsonDelete(devInfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }
@@ -136,10 +136,10 @@ int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket 
 
 const CloudOption *M2mCloudGetDevInfoSyncOption(void)
 {
-    static const char *SYS_SYNC[] = {STR_URI_PATH_SYS, STR_URI_PATH_SYNC};
+    static const char *sysSync[] = {STR_URI_PATH_SYS, STR_URI_PATH_SYNC};
     static const CloudOption SYNC_OPTION = {
-        .uri = SYS_SYNC,
-        .num = ARRAY_SIZE(SYS_SYNC),
+        .uri = sysSync,
+        .num = ARRAY_SIZE(sysSync),
         .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &SYNC_OPTION;
