@@ -82,10 +82,10 @@ int32_t M2mCloudLoginResponseParse(M2mCloudContext *ctx, const CoapPacket *resp,
 
 const CloudOption *M2mCloudGetLoginOption(void)
 {
-    static const char *SYS_LOGIN[] = {STR_URI_PATH_SYS, STR_URI_PATH_LOGIN};
+    static const char *sysLogin[] = {STR_URI_PATH_SYS, STR_URI_PATH_LOGIN};
     static const CloudOption REG_OPTION = {
-        .uri = SYS_LOGIN,
-        .num = ARRAY_SIZE(SYS_LOGIN),
+        .uri = sysLogin,
+        .num = ARRAY_SIZE(sysLogin),
         .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID),
     };
     return &REG_OPTION;

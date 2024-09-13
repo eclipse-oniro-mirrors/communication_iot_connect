@@ -126,17 +126,8 @@ static int32_t SendCloudCtlMsgResp(int32_t errcode, CoapEndpoint *endpoint, cons
             {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)uerIdOpt->value.data, uerIdOpt->value.len}},
             {COAP_OPTION_TYPE_SEQ_NUM_ID, {NULL, sizeof(uint32_t)}},
         };
-        CoapServerRespParam respParam = {
-            .req = req,
-            .type = COAP_MSG_TYPE_NCON,
-            .code = COAP_RESPONSE_CODE_CONTENT,
-            .opNum = ARRAY_SIZE(options),
-            .options = options,
-            .payload = NULL,
-            .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-            .payloadUserData = respJson,
-            .preSize = 0,
-        };
+        CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
+            options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
         CoapPacket packet;
         ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
         if (ret != IOTC_OK) {

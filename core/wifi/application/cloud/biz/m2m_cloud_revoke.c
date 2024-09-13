@@ -40,10 +40,10 @@ IotcJson *M2mCloudBuildRevokeRequest(M2mCloudContext *ctx)
 
 const CloudOption *M2mCloudGetRevokeOption(void)
 {
-    static const char *SYS_REVOKE[] = {STR_URI_PATH_SYS, STR_URI_PATH_REVOKE};
+    static const char *sysRevoke[] = {STR_URI_PATH_SYS, STR_URI_PATH_REVOKE};
     static const CloudOption REVOKE_OPTION = {
-        .uri = SYS_REVOKE,
-        .num = ARRAY_SIZE(SYS_REVOKE),
+        .uri = sysRevoke,
+        .num = ARRAY_SIZE(sysRevoke),
         .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &REVOKE_OPTION;

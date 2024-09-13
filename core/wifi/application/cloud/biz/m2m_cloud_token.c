@@ -37,12 +37,12 @@ static const uint8_t TOKEN_MAX_REQ_TIME = 4;
 /* right shift 5 bit = divide by 32 */
 static const uint8_t TOKEN_REQ_TIME_INTERVAL_RATIO_RIGHT_SHIFT = 5;
 
-static const CloudOption *M2mCloudGetTokenRereshOption(void)
+static const CloudOption *M2mCloudGetTokenRefreshOption(void)
 {
-    static const char *SYS_TOKEN[] = {STR_URI_PATH_SYS, STR_URI_PATH_TOKEN};
+    static const char *sysToken[] = {STR_URI_PATH_SYS, STR_URI_PATH_TOKEN};
     static const CloudOption TOKEN_OPTION = {
-        .uri = SYS_TOKEN,
-        .num = ARRAY_SIZE(SYS_TOKEN),
+        .uri = sysToken,
+        .num = ARRAY_SIZE(sysToken),
         .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &TOKEN_OPTION;
@@ -149,7 +149,7 @@ static void TokenUpdateTimerCallback(int32_t id, void *userData)
     CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
 
     int32_t ret = M2mCloudSendRequest(ctx, CloudTokenRefreshRespHandler,
-        M2mCloudBuildTokenRefreshRequest, M2mCloudGetTokenRereshOption());
+        M2mCloudBuildTokenRefreshRequest, M2mCloudGetTokenRefreshOption());
     if (ret != IOTC_OK) {
         IOTC_LOGW("dev token refresh error %d", ret);
         return;
@@ -276,7 +276,7 @@ int32_t ParseTokenInfo(M2mCloudContext *ctx, IotcJson *jsonObj)
     CloudTokenInfo token = {0};
     ret = GetTokenInfo((const IotcJson *)jsonObj, &token);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("get tokeninfo error %d", ret);
+        IOTC_LOGE("get token info error %d", ret);
         return ret;
     }
 
