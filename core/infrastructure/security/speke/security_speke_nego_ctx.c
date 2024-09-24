@@ -492,8 +492,7 @@ static int32_t GenSessionKey(NegoContext *context, uint8_t *sharedKey, uint32_t 
         .materialLen    = sharedKeyLen,
     };
     uint8_t sessionKey[SESSION_KEY_LEN + SESSION_KEY_LEN] = { 0 };
-    uint32_t keyLen = SESSION_KEY_LEN + SESSION_KEY_LEN;
-    int32_t ret = IotcHkdf(&param, sessionKey, keyLen);
+    int32_t ret = IotcHkdf(&param, sessionKey, sizeof(sessionKey));
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx gen session key err:%d", ret);
         return ret;
@@ -501,11 +500,11 @@ static int32_t GenSessionKey(NegoContext *context, uint8_t *sharedKey, uint32_t 
 
     ret = memcpy_s(context->identityEncKey, SESSION_KEY_LEN, sessionKey, SESSION_KEY_LEN);
     if (ret != EOK) {
-        (void)memset_s(sessionKey, keyLen, 0, keyLen);
+        (void)memset_s(sessionKey, sizeof(sessionKey), 0, sizeof(sessionKey));
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     ret = memcpy_s(context->hmacKey, SESSION_KEY_LEN, sessionKey + SESSION_KEY_LEN, SESSION_KEY_LEN);
-    (void)memset_s(sessionKey, keyLen, 0, keyLen);
+    (void)memset_s(sessionKey, sizeof(sessionKey), 0, sizeof(sessionKey));
     if (ret != EOK) {
         (void)memset_s(context->identityEncKey, SESSION_KEY_LEN, 0, SESSION_KEY_LEN);
         return IOTC_ERR_SECUREC_MEMCPY;

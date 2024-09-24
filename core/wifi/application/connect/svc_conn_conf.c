@@ -41,7 +41,7 @@ CHECK_TYPE_SIZE(ConnDataInfoV1, CONNECT_DATA_INFO_V1_LEN);
 static ConnDataInfoV1 g_connDataInfo;
 static SecurityStoreItem g_storeItem[] = {
     { IOTC_STORE_KEY_INT_WIFI_CONN_CONFIG, IOTC_STORE_KEY_CHAR_WIFI_CONN_CONFIG, SECURITY_STORE_FLAG_VERIFY,
-    (uint8_t *)&g_connDataInfo, sizeof(ConnDataInfoV1), sizeof(ConnDataInfoV1) },
+        (uint8_t *)&g_connDataInfo, sizeof(ConnDataInfoV1), sizeof(ConnDataInfoV1) },
 };
 
 int32_t ConnectConfigInfoInit(void)

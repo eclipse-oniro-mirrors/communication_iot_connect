@@ -109,16 +109,6 @@
     #define IOTC_CONF_JSON_FREE_EQUAL_MALLOC_FREE 1
 #endif
 
-/* 内存测试，会导致性能较差且可能存在泄漏 */
-#ifndef IOTC_CONF_MEM_DEBUG
-    #define IOTC_CONF_MEM_DEBUG 0
-#endif
-
-/* 内存调试时是否释放内存，不释放内存判断重复释放时更加准确，但会导致内存大量泄漏 */
-#ifndef IOTC_CONF_MEM_DEBUG_NO_FREE
-    #define IOTC_CONF_MEM_DEBUG_NO_FREE 0
-#endif
-
 #ifndef IOTC_CONF_AILIFE_SUPPORT
     #define IOTC_CONF_AILIFE_SUPPORT 0
 #endif

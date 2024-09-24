@@ -66,7 +66,7 @@ static int32_t CloudLinkUrlInit(M2mCloudContext *ctx)
         return IOTC_CORE_COMM_UTILS_ERR_STR_DUP;
     }
 
-    return IOTC_OK;    
+    return IOTC_OK;
 }
 
 static int32_t CloudLinkCoapInit(M2mCloudContext *ctx)

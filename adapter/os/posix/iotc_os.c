@@ -27,9 +27,6 @@
 #include "iotc_log.h"
 #include "iotc_mem.h"
 #include "iotc_conf.h"
-#if IOTC_CONF_MEM_DEBUG
-#include <stdlib.h>
-#endif
 
 #ifndef MS_PER_SECOND
 #define MS_PER_SECOND   (1000UL)
@@ -121,11 +118,7 @@ IotcTaskId *IotcTaskGetCurrentTaskId(void)
 
 IotcMutexId *IotcMutexCreate(void)
 {
-#if IOTC_CONF_MEM_DEBUG
-    pthread_mutex_t *mutex = malloc(sizeof(pthread_mutex_t));
-#else
     pthread_mutex_t *mutex = IotcMalloc(sizeof(pthread_mutex_t));
-#endif
     if (mutex == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
@@ -213,11 +206,8 @@ void IotcMutexDestroy(IotcMutexId *id)
     if (ret != 0) {
         IOTC_LOGW("mutex release error %d", ret);
     }
-#if IOTC_CONF_MEM_DEBUG
-    free(id);
-#else
+
     IotcFree(id);
-#endif
     return;
 }
 

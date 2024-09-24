@@ -172,7 +172,8 @@ static int32_t UpdateTokenRefreshTimer(M2mCloudContext *ctx)
             IOTC_LOGW("calc waitTime error %d", ret);
             return ret;
         }
-        ctx->stateManager.tokenTimer = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_REPEAT, TokenUpdateTimerCallback, waitTime, ctx);
+        ctx->stateManager.tokenTimer = SchedTimerAdd(EVENT_SOURCE_TIMER_TYPE_REPEAT,
+            TokenUpdateTimerCallback, waitTime, ctx);
         if (ctx->stateManager.tokenTimer < 0) {
             IOTC_LOGE("add token update timer error %d", ctx->stateManager.tokenTimer);
             return ctx->stateManager.tokenTimer;
