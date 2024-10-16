@@ -23,6 +23,8 @@
 #include "utils_json.h"
 #include "iotc_errcode.h"
 
+#define JSON_DATA_MAX_LEN    512
+
 int32_t SpekeCommonAddVerInfoToJson(IotcJson *secDataPayload)
 {
     if (secDataPayload == NULL) {
@@ -151,7 +153,6 @@ int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const I
     IotcJsonDelete(root);
     if (outMsg == NULL) {
         IOTC_LOGE("Speke create nego msg print JSON err");
-        IotcJsonDelete(root);
         return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
     }
 
@@ -162,7 +163,8 @@ int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const I
 
 int32_t SpekeCommonAddDataToJson(IotcJson *target, const char *name, const uint8_t *input, uint32_t inputLen)
 {
-    if ((target == NULL) || (name == NULL) || (input == NULL) || (inputLen == 0)) {
+    if ((target == NULL) || (name == NULL) || (input == NULL) ||
+        (inputLen == 0) || (inputLen > JSON_DATA_MAX_LEN)) {
         return IOTC_ERR_PARAM_INVALID;
     }
 
@@ -204,7 +206,7 @@ int32_t SpekeCommonParseDataFromJson(const IotcJson *src, const char *name, uint
     }
 
     uint32_t dataLen = UNHEXIFY_LEN(strlen(srcStr));
-    if (dataLen == 0) {
+    if (dataLen == 0 || dataLen > JSON_DATA_MAX_LEN) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     uint8_t *data = (uint8_t *)IotcMalloc(dataLen);

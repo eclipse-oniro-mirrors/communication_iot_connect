@@ -29,6 +29,7 @@ static int32_t ClearRegInfo(char *in)
 
     char reqDevId[DEVICE_ID_MAX_STR_LEN + 1];
     int32_t ret = UtilsJsonGetString(req, STR_JSON_DEVID, reqDevId, sizeof(reqDevId));
+    IotcJsonDelete(req);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "get req devId err %d", ret);
 
     DevAuthInfo authInfo = {0};
