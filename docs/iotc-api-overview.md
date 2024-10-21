@@ -196,7 +196,7 @@
 | 成员| 描述 |
 | --- | --- |
 | const IotcBleGattProfileSvc *svc | ble gatt服务 |
-| uint8_t svcNum | ble gatt 服务数量 |
+| uint32_t svcNum | ble gatt 服务数量 |
 
 **IotcBleGattProfileSvc：**
 
@@ -204,7 +204,7 @@
 | --- | --- |
 | const char *uuid | ble gatt 服务 uuid |
 | const IotcBleGattProfileChar *character | ble gatt 属性 |
-| uint8_t charNum | ble gatt 属性数量 |
+| uint32_t charNum | ble gatt 属性数量 |
 
 **IotcBleGattProfileChar：**
 
@@ -217,7 +217,7 @@
 | writeFunc | ble gatt 写回调 |
 | indicateFunc | ble gatt 指示回调 |
 | const IotcBleGattProfileDesc *desc | 描述特征列表 |
-| uint8_t descNum | 描述特征列表数量 |
+| uint32_t descNum | 描述特征列表数量 |
 
 **IotcBleGattProfileDesc：**
 

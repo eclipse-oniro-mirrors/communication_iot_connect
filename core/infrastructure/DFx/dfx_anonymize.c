@@ -36,6 +36,8 @@
 #define MAC_UNIT_INDEX_1 1
 #define MAC_UNIT_INDEX_2 2
 #define MAC_UNIT_INDEX_3 3
+#define MAC_UNIT_INDEX_4 4
+#define MAC_UNIT_INDEX_5 5
 
 typedef struct {
     int32_t lowerLen;
@@ -135,9 +137,9 @@ static int32_t MacAnonymizeStr(char *srcAndDst, uint32_t bufLen)
         ch = strtok_s(NULL, ":", &context);
     }
     CHECK_RETURN_LOGW(index == MAC_UNIT_NUM, IOTC_ERR_PARAM_INVALID, "index=%u", index);
-    CHECK_RETURN_LOGW(sprintf_s(srcAndDst, bufLen, "%s:%s:%s:%s:**:**",
+    CHECK_RETURN_LOGW(sprintf_s(srcAndDst, bufLen, "%s:%s:%s:**:**:%s",
         macUnit[MAC_UNIT_INDEX_0], macUnit[MAC_UNIT_INDEX_1],
-        macUnit[MAC_UNIT_INDEX_2], macUnit[MAC_UNIT_INDEX_3]) > 0,
+        macUnit[MAC_UNIT_INDEX_2], macUnit[MAC_UNIT_INDEX_5]) > 0,
         IOTC_ERR_SECUREC_SPRINTF, "bufLen=%u", bufLen);
     return IOTC_OK;
 }
@@ -183,7 +185,8 @@ int32_t DfxAnonymizeStrWithBuffer(const char *src, AnonymizeType type, char *dst
     if (src != dstBuf) {
         CHECK_RETURN_LOGW(strcpy_s(dstBuf, bufLen, src) == EOK, IOTC_ERR_SECUREC_STRCPY, "bufLen=%u", bufLen);
     }
-    for (uint32_t i = 0; i < sizeof(ANONYMIZE_FUNC_TBL) / sizeof(AnonymizeStrFunc); i++) {
+    uint32_t anonymizeFuncTblSize = sizeof(ANONYMIZE_FUNC_TBL) / sizeof(AnonymizeStrFunc);
+    for (uint32_t i = 0; i < anonymizeFuncTblSize; i++) {
         if (ANONYMIZE_FUNC_TBL[i].type == type) {
             return ANONYMIZE_FUNC_TBL[i].anonymizeStr(dstBuf, bufLen);
         }

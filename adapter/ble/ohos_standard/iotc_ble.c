@@ -148,7 +148,7 @@ static uint32_t AdapterPemissionToOhosPermission(uint32_t permission)
 static uint32_t AdapterPropertyToOhosProperty(uint32_t property)
 {
     uint32_t ohosProperty = 0;
-    
+
     if (property & IOTC_ADPT_BLE_CHAR_PROP_BROADCAST) {
         ohosProperty |= OHOS_GATT_CHARACTER_PROPERTY_BIT_BROADCAST;
     }
@@ -354,7 +354,7 @@ void RegisterServerCb(int32_t status, int32_t serverId, BtUuid *appUuid)
     g_regGattAppResult.serverId = serverId;
     if (memcpy_s(g_regGattAppResult.uuid, sizeof(g_regGattAppResult.uuid),
         appUuid->uuid, appUuid->uuidLen) != EOK) {
-        IOTC_LOGE("memcpy_s err len1=%d, len2=%d", sizeof(g_regGattAppResult.uuid), appUuid->uuidLen);
+        IOTC_LOGE("memcpy_s err len1=%u, len2=%d", sizeof(g_regGattAppResult.uuid), appUuid->uuidLen);
         return;
     }
     g_regGattAppResult.uuidLen = appUuid->uuidLen;
@@ -369,7 +369,7 @@ void ServiceAddCb(int32_t status, int32_t serverId, BtUuid *uuid, int32_t srvcHa
     g_addGattSvcResult.srvcHandle = srvcHandle;
     if (memcpy_s(g_addGattSvcResult.uuid, sizeof(g_addGattSvcResult.uuid),
         uuid->uuid, uuid->uuidLen) != EOK) {
-        IOTC_LOGE("memcpy_s err len1=%d, len2=%d", sizeof(g_addGattSvcResult.uuid), uuid->uuidLen);
+        IOTC_LOGE("memcpy_s err len1=%u, len2=%d", sizeof(g_addGattSvcResult.uuid), uuid->uuidLen);
         return;
     }
     g_addGattSvcResult.uuidLen = uuid->uuidLen;
@@ -387,7 +387,7 @@ void CharacteristicAddCb(int32_t status, int32_t serverId, BtUuid *uuid,
     g_addGattCharResult.characteristicHandle = characteristicHandle;
     if (memcpy_s(g_addGattCharResult.uuid, sizeof(g_addGattCharResult.uuid),
         uuid->uuid, uuid->uuidLen) != EOK) {
-        IOTC_LOGE("memcpy_s err len1=%d, len2=%d", sizeof(g_addGattCharResult.uuid), uuid->uuidLen);
+        IOTC_LOGE("memcpy_s err len1=%u, len2=%d", sizeof(g_addGattCharResult.uuid), uuid->uuidLen);
         return;
     }
     g_addGattCharResult.uuidLen = uuid->uuidLen;
@@ -404,7 +404,7 @@ void DescriptorAddCb(int32_t status, int32_t serverId, BtUuid *uuid, int32_t srv
     g_addGattDescResult.descriptorHandle = descriptorHandle;
     if (memcpy_s(g_addGattDescResult.uuid, sizeof(g_addGattDescResult.uuid),
         uuid->uuid, uuid->uuidLen) != EOK) {
-        IOTC_LOGE("memcpy_s err len1=%d, len2=%d", sizeof(g_addGattDescResult.uuid), uuid->uuidLen);
+        IOTC_LOGE("memcpy_s err len1=%u, len2=%d", sizeof(g_addGattDescResult.uuid), uuid->uuidLen);
         return;
     }
     g_addGattDescResult.uuidLen = uuid->uuidLen;
@@ -430,6 +430,10 @@ static void RequestWriteCb(BtReqWriteCbPara writeCbPara)
     IOTC_LOGD("request write cb:connId=%d, transId=%d, attrHandle=%d, offset=%d, length=%d, needRsp=%d, isPrep=%d",
         writeCbPara.connId, writeCbPara.transId, writeCbPara.attrHandle, writeCbPara.offset,
         writeCbPara.length, writeCbPara.needRsp, writeCbPara.isPrep);
+    if (g_gattEventHandler == NULL) {
+        IOTC_LOGE("no event handler");
+        return;
+    }
     IotcAdptBleGattEventParam eventParam;
     eventParam.reqWrite.connId =writeCbPara.connId;
     eventParam.reqWrite.attrHandle = writeCbPara.attrHandle;
@@ -775,7 +779,7 @@ static int32_t AddGattDescs(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *c
             return ret;
         }
     }
-    for (uint8_t i = 0; i < character->descNum; i++) {
+    for (uint32_t i = 0; i < character->descNum; i++) {
         ret = AddGattDesc(svc, &character->desc[i]);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add gatt desc err ret=%d", ret);
@@ -793,7 +797,7 @@ static int32_t AddGattDescs(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *c
 static int32_t AddGattChars(IotcAdptBleGattService *svc)
 {
     int32_t ret = 0;
-    for (uint8_t i = 0; i < svc->charNum; i++) {
+    for (uint32_t i = 0; i < svc->charNum; i++) {
         ret = AddGattChar(svc, &svc->character[i]);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add gatt char err ret=%d", ret);
@@ -888,7 +892,6 @@ int32_t IotcBleRegisterGattCb(const IotcAdptBleGattCallback callback)
         return IOTC_ERROR;
     }
     IOTC_LOGI("gatts reg success");
-    IOTC_LOGD("gatt reg start");
     ret = BleGattRegisterCallbacks(&g_bleGattCb);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("register gap callback ret=%d", ret);
@@ -967,7 +970,7 @@ int32_t IotcBleStopAdv(void)
     return IOTC_OK;
 }
 
-int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint8_t svcNum)
+int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
 {
     if ((svc == NULL) || (svcNum == 0)) {
         IOTC_LOGE("invalid param");
@@ -979,7 +982,7 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint8_t svcNum)
         IOTC_LOGE("start reg gatt app err ret=%d", ret);
         return ret;
     }
-    for (uint8_t i = 0; i < svcNum; i++) {
+    for (uint32_t i = 0; i < svcNum; i++) {
         ret = StartGattService(&svc[i]);
         if (ret != IOTC_OK) {
             IOTC_LOGE("start gatt service err ret=%d", ret);
@@ -1057,7 +1060,7 @@ int32_t IotcBleGetBleMac(uint8_t *mac, uint32_t len)
 
 int32_t IotcBleDisconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
 {
-    if ((bdAddr == NULL) || (addrLen > OHOS_BD_ADDR_LEN)) {
+    if ((bdAddr == NULL) || (addrLen > OHOS_BD_ADDR_LEN) || (addrLen == 0)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
     }

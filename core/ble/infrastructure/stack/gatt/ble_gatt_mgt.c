@@ -61,21 +61,21 @@ bool BleIsPair(void)
     return g_isBlePair;
 }
 
-static void PrintBleGattCharDescList(IotcAdptBleGattCharDesc *desc, uint8_t num)
+static void PrintBleGattCharDescList(IotcAdptBleGattCharDesc *desc, uint32_t num)
 {
     (void)desc;
     (void)num;
-    for (uint8_t i = 0; i < num; i++) {
+    for (uint32_t i = 0; i < num; i++) {
         IOTC_LOGI("desc[%u|%u]:descHandle:%u,uuid:%s,permission:%u",
             num, i, desc[i].descHandle, desc[i].uuid, desc[i].permission);
     }
 }
 
-static void PrintBleGattsCharList(IotcAdptBleGattsChar *character, uint8_t num)
+static void PrintBleGattsCharList(IotcAdptBleGattsChar *character, uint32_t num)
 {
     (void)character;
     (void)num;
-    for (uint8_t i = 0; i < num; i++) {
+    for (uint32_t i = 0; i < num; i++) {
         IOTC_LOGI("char[%u|%u]:charHandle:%u,uuid:%s,permission:%u,property:%u,descNum:%u",
             num, i, character[i].charHandle, character[i].uuid,
             character[i].permission, character[i].property, character[i].descNum);
@@ -83,11 +83,11 @@ static void PrintBleGattsCharList(IotcAdptBleGattsChar *character, uint8_t num)
     }
 }
 
-void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint8_t num)
+void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint32_t num)
 {
     (void)svc;
     (void)num;
-    for (uint8_t i = 0; i < num; i++) {
+    for (uint32_t i = 0; i < num; i++) {
         IOTC_LOGI("svc[%u|%u]:svcHandle:%u,uuid:%s,charNum:%u",
             num, i, svc[i].svcHandle, svc[i].uuid, svc[i].charNum);
         PrintBleGattsCharList(svc[i].character, svc[i].charNum);
@@ -206,7 +206,7 @@ static int32_t ProfileCharCopyToAdapterChar(const IotcBleGattProfileChar *in, Io
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(desc, descMallocSize, 0, descMallocSize);
-    for (uint8_t i = 0; i < in->descNum; i++) {
+    for (uint32_t i = 0; i < in->descNum; i++) {
         desc[i].uuid = in->desc[i].uuid;
         desc[i].permission = ProfilePermissionToAdapterPermission(in->desc[i].permission);
         desc[i].readFunc = in->desc[i].readFunc;
@@ -227,7 +227,7 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, IotcA
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(character, charMallocSize, 0, charMallocSize);
-    for (uint8_t i = 0; i < in->charNum; i++) {
+    for (uint32_t i = 0; i < in->charNum; i++) {
         int32_t ret = ProfileCharCopyToAdapterChar(&in->character[i], &character[i]);
         if (ret != IOTC_OK) {
             IOTC_LOGE("copy ret=%d", ret);
@@ -242,17 +242,17 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, IotcA
     return IOTC_OK;
 }
 
-static void GattServiceDestroy(IotcAdptBleGattService **svcAddr, uint8_t svcNum)
+static void GattServiceDestroy(IotcAdptBleGattService **svcAddr, uint32_t svcNum)
 {
     if ((svcAddr == NULL) || (*svcAddr == NULL) || (svcNum == 0)) {
         return;
     }
     IotcAdptBleGattService *svc = *svcAddr;
-    for (uint8_t i = 0; i < svcNum; i++) {
+    for (uint32_t i = 0; i < svcNum; i++) {
         if (svc[i].character == NULL) {
             continue;
         }
-        for (uint8_t j = 0; j < svc[i].charNum; j++) {
+        for (uint32_t j = 0; j < svc[i].charNum; j++) {
             if (svc[i].character[j].desc == NULL) {
                 continue;
             }
@@ -361,7 +361,7 @@ BleGattMgtApp *GetBleGattMgtApp(void)
 
 static int32_t GetSeviceHandle(const char *svcUuid, int32_t *handle)
 {
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         if (strcmp(svcUuid, GetBleGattMgtApp()->svc[i].uuid) != 0) {
             continue;
         }
@@ -374,11 +374,11 @@ static int32_t GetSeviceHandle(const char *svcUuid, int32_t *handle)
 
 static int32_t GetCharHandle(const char *svcUuid, const char *charUuid, int32_t *handle)
 {
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         if (strcmp(svcUuid, GetBleGattMgtApp()->svc[i].uuid) != 0) {
             continue;
         }
-        for (uint8_t j = 0; j < GetBleGattMgtApp()->svc[i].charNum; j++) {
+        for (uint32_t j = 0; j < GetBleGattMgtApp()->svc[i].charNum; j++) {
             if (strcmp(charUuid, GetBleGattMgtApp()->svc[i].character[j].uuid) != 0) {
                 continue;
             }
@@ -392,11 +392,11 @@ static int32_t GetCharHandle(const char *svcUuid, const char *charUuid, int32_t 
 
 static int32_t GetCharProperty(const char *svcUuid, const char *charUuid, uint32_t *property)
 {
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         if (strcmp(svcUuid, GetBleGattMgtApp()->svc[i].uuid) != 0) {
             continue;
         }
-        for (uint8_t j = 0; j < GetBleGattMgtApp()->svc[i].charNum; j++) {
+        for (uint32_t j = 0; j < GetBleGattMgtApp()->svc[i].charNum; j++) {
             if (strcmp(charUuid, GetBleGattMgtApp()->svc[i].character[j].uuid) != 0) {
                 continue;
             }
@@ -408,13 +408,13 @@ static int32_t GetCharProperty(const char *svcUuid, const char *charUuid, uint32
     return IOTC_CORE_BLE_INVALID_CHAR_UUID;
 }
 
-static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptBleGattsChar *character, uint8_t charNum)
+static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptBleGattsChar *character, uint32_t charNum)
 {
-    for (uint8_t i = 0; i < charNum; i++) {
+    for (uint32_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
             return true;
         }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
+        for (uint32_t j = 0; j < character[i].descNum; j++) {
             if (character[i].desc[j].descHandle == attrHandle) {
                 return true;
             }
@@ -425,7 +425,7 @@ static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptBleGattsChar 
 
 static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
 {
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         if (IsAttrHandleInCharacterTbl(attrHandle,
             GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum)) {
             *serverId =  GetBleGattMgtApp()->svc[i].serverId;
@@ -436,13 +436,13 @@ static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
 }
 
 static IotcAdptBleGattReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
-    IotcAdptBleGattsChar *character, uint8_t charNum)
+    IotcAdptBleGattsChar *character, uint32_t charNum)
 {
-    for (uint8_t i = 0; i < charNum; i++) {
+    for (uint32_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
             return character[i].readFunc;
         }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
+        for (uint32_t j = 0; j < character[i].descNum; j++) {
             if (character[i].desc[j].descHandle == attrHandle) {
                 return character[i].desc[j].readFunc;
             }
@@ -454,7 +454,7 @@ static IotcAdptBleGattReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
 static IotcAdptBleGattReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
 {
     IotcAdptBleGattReadFunc res = NULL;
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         res = FindReadFuncFromCharacterTbl(attrHandle,
             GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
         if (res != NULL) {
@@ -465,13 +465,13 @@ static IotcAdptBleGattReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
 }
 
 static IotcAdptBleGattWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
-    IotcAdptBleGattsChar *character, uint8_t charNum)
+    IotcAdptBleGattsChar *character, uint32_t charNum)
 {
-    for (uint8_t i = 0; i < charNum; i++) {
+    for (uint32_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
             return character[i].writeFunc;
         }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
+        for (uint32_t j = 0; j < character[i].descNum; j++) {
             if (character[i].desc[j].descHandle == attrHandle) {
                 return character[i].desc[j].writeFunc;
             }
@@ -483,7 +483,7 @@ static IotcAdptBleGattWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle
 static IotcAdptBleGattWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
 {
     IotcAdptBleGattWriteFunc res = NULL;
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->svcNum; i++) {
         res = FindWriteFuncFromCharacterTbl(attrHandle,
             GetBleGattMgtApp()->svc[i].character, GetBleGattMgtApp()->svc[i].charNum);
         if (res != NULL) {
@@ -537,7 +537,7 @@ int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
 void BleGattDisconnectAll(void)
 {
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
-    for (uint8_t i = 0; i < GetBleGattMgtApp()->connNum; i++) {
+    for (uint32_t i = 0; i < GetBleGattMgtApp()->connNum; i++) {
         int32_t ret = IotcBleDisconnectGatt(peerDevInfoList[i].peerAddr,
             IOTC_ADPT_BLE_ADDR_LEN);
         if (ret != IOTC_OK) {

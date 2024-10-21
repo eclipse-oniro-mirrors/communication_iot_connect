@@ -296,7 +296,7 @@ void DfxDelNoDogTaskRecord(void)
     LIST_FOR_EACH_ITEM_SAFE(item, next, &GetWatchDogCtx()->watchDogList) {
         RecordNode *node = CONTAINER_OF(item, RecordNode, list);
         if (node->id == id) {
-            IOTC_LOGN("NoDog[%s/%p] del succ", NON_NULL_STR(node->name), UtilsGetTaskIdShort(node->id));
+            IOTC_LOGN("NoDog[%s/%u] del succ", NON_NULL_STR(node->name), UtilsGetTaskIdShort(node->id));
             LIST_REMOVE(item);
             IotcFree(node);
             return;

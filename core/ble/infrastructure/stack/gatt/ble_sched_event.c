@@ -131,7 +131,7 @@ static void BleEventStartSvcResultHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptBleGattService *svcList = GetBleGattMgtApp()->svc;
-    uint8_t svcNum = GetBleGattMgtApp()->svcNum;
+    uint32_t svcNum = GetBleGattMgtApp()->svcNum;
     if (svcList == NULL) {
         IOTC_LOGE("no init svc list");
         return;
@@ -139,7 +139,7 @@ static void BleEventStartSvcResultHandler(int32_t event, void *param)
     IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     if (eventParam->startSvc.status != IOTC_ADPT_BLE_STATUS_SUCCESS) {
         IOTC_LOGE("start svc fail");
-        for (uint8_t i = 0; i < svcNum; i++) {
+        for (uint32_t i = 0; i < svcNum; i++) {
             if (svcList[i].svcHandle != eventParam->startSvc.svcHandle) {
                 continue;
             }

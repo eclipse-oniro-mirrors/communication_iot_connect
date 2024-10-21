@@ -84,18 +84,18 @@ typedef struct {
     /** BLE GATT服务指示函数类型 */
     int32_t (*indicateFunc)(uint8_t *buff, uint32_t len);
     const IotcBleGattProfileDesc *desc;
-    uint8_t descNum;
+    uint32_t descNum;
 } IotcBleGattProfileChar;
 
 typedef struct {
     const char *uuid;
     const IotcBleGattProfileChar *character;
-    uint8_t charNum;
+    uint32_t charNum;
 } IotcBleGattProfileSvc;
 
 typedef struct {
     const IotcBleGattProfileSvc *svc;
-    uint8_t svcNum;
+    uint32_t svcNum;
 } IotcBleGattProfileSvcList;
 
 typedef enum {
