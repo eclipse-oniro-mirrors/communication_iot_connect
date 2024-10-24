@@ -33,6 +33,7 @@
 #define MAX_SCAN_TIMES 4
 #define DEF_SCAN_TIMEOUT 15
 #define MS_PER_SECOND 1000
+#define MAX_CONN_NUM 32
 
 static bool g_isRegisterWifiEvent = false;
 static bool g_isStaScanSuccess = false;
@@ -904,6 +905,7 @@ int32_t IotcStartSoftAp(const uint8_t *ssid, uint32_t ssidLen, const uint8_t *pw
 
     config.channelNum = HOTSPOT_DEFAULT_CHANNEL;
     config.band = HOTSPOT_BAND_TYPE_2G;
+    config.maxConn = MAX_CONN_NUM;
     ret = SetHotspotConfig(&config);
     (void)memset_s(&config, sizeof(HotspotConfig), 0, sizeof(HotspotConfig));
     if (ret != WIFI_SUCCESS) {
