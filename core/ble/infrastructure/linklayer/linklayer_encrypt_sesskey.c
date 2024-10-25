@@ -88,6 +88,7 @@ int32_t LinkLayerSessKeyEncrypt(const uint8_t *data, uint32_t dataLen, uint8_t *
         goto ERROR_EXIT;
     }
     /* 重新设置svcHeader中的body长度, 2字节 */
+    CHECK_RETURN(svcHeaderLen >= SVC_PAYLOAD_LEN_LEN, IOTC_CORE_BLE_LL_ERR_BODY);
     uint32_t pos = svcHeaderLen - SVC_PAYLOAD_LEN_LEN;
     out[pos++] = totalBodyLen & 0xFF;
     out[pos++] = (totalBodyLen >> BITS_PER_BYTE) & 0xFF;
@@ -143,6 +144,7 @@ int32_t LinkLayerSessKeyDecrypt(uint8_t *data, uint32_t *dataLen)
         goto EXIT;
     }
     /* 重新设置svcHeader中的body长度, 2字节 */
+    CHECK_RETURN(svcHeaderLen >= SVC_PAYLOAD_LEN_LEN, IOTC_CORE_BLE_LL_ERR_BODY);
     uint32_t pos = svcHeaderLen - SVC_PAYLOAD_LEN_LEN;
     out[pos++] = decBodyLen & 0xFF;
     out[pos++] = (decBodyLen >> BITS_PER_BYTE) & 0xFF;

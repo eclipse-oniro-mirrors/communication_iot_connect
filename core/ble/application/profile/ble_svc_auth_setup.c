@@ -28,9 +28,8 @@ static int32_t SaveAuthSetupInfo(char *in)
     IotcJsonDelete(req);
     if (ret != IOTC_OK) {
         IOTC_LOGW("auth info process error %d", ret);
-        return ret;
     }
-    return IOTC_OK;
+    return ret;
 }
 
 int32_t GetBleSvcAuthSetup(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
