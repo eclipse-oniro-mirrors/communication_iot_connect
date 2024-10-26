@@ -456,8 +456,8 @@ static int32_t GetMsgSubList(ServiceNode *svcNode, int32_t msgId,
     }
     *respMsg = (ServiceMessage *)IotcCalloc(*num, sizeof(ServiceMessage));
     if (*respMsg == NULL) {
-        IotcFree(*respMsg);
-        *respMsg = NULL;
+        IotcFree(*subHandler);
+        *subHandler = NULL;
         IOTC_LOGW("calloc error %u", *num);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
@@ -483,7 +483,7 @@ static int32_t ResponseMessageSort(ServiceMessage *resp, uint32_t num, uint32_t 
     uint32_t index = num;
     uint32_t finalNum = 0;
     int32_t ret;
-    /*  */
+
     for (uint32_t i = 0; i < num; ++i) {
         if (resp[i].msg == NULL) {
             if (index == num) {
@@ -557,7 +557,7 @@ int32_t ServiceProxySendMessage(const ServiceRequestInfo *req, ServiceMessage **
         return ret;
     }
 
-    ServiceMessage reqMsg = { srcSvc->serviceId, req->msgId, SERVICE_MESSAGE_TYPE_REQUEST, req->req, NULL};
+    ServiceMessage reqMsg = { srcSvc->serviceId, req->msgId, SERVICE_MESSAGE_TYPE_REQUEST, req->req, NULL };
     UNLOCK_CTX(ctx);
     SendMsgToSubHandler(&reqMsg, subHandler, respMsg, num);
     UTILS_FREE_2_NULL(subHandler);
@@ -568,7 +568,7 @@ int32_t ServiceProxySendMessage(const ServiceRequestInfo *req, ServiceMessage **
 
     ret = ResponseMessageSort(respMsg, num, respNum);
     if (ret != IOTC_OK || *respNum == 0) {
-        IOTC_LOGD("msg resp sort %d/%d", ret, *respNum);
+        IOTC_LOGD("msg resp sort %d/%u", ret, *respNum);
         ServiceProxyFreeResponseMessage(respMsg, num);
         *respNum = 0;
         return ret;
@@ -602,7 +602,7 @@ static void ServiceAsyncHandler(void *userData)
     } else {
         IOTC_LOGW("send message error %d", ret);
     }
- 
+
     if (asyncParam->freeHandler != NULL) {
         asyncParam->freeHandler(asyncParam->reqInfo.req);
     }

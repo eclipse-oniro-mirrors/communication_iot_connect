@@ -55,7 +55,7 @@ int32_t SecurityRandomInit(void)
         IOTC_LOGW("drbg init error");
         return IOTC_ADAPTER_CRYPTO_ERR_DRBG_INIT;
     }
-    
+
     int32_t ret = UtilsCreateMutexLocal(&g_mutexLocal);
     if (ret != IOTC_OK) {
         IOTC_LOGW("mutex local create error %d", ret);

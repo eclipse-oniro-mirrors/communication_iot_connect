@@ -150,7 +150,7 @@ int32_t ModelGetDevProtType(void)
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len)
 {
     CHECK_RETURN_LOGW(buf != NULL && len != 0 && len >= SECURITY_UDID_LEN, IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     char strBuf[IOTC_MANU_NAME_STR_MAX_LEN + IOTC_MODEL_STR_MAX_LEN + IOTC_SN_STR_MAX_LEN + 1] = {0};
     int32_t ret = sprintf_s(strBuf, sizeof(strBuf), "%s%s%s",
         ModelGetDevManuName(), ModelGetDevModel(), ModelGetDevSn());

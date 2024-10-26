@@ -45,12 +45,15 @@ static void MsgInfoHandler(EventSourceMsg **msgInfo, uint32_t *msgInfoLen)
     }
 
     if (*msgInfoLen != (*msgInfo)->len + sizeof(EventSourceMsg)) {
-        IOTC_LOGF("invalid msg %u/%u", *msgInfoLen, (*msgInfo)->len);
+        IOTC_LOGW("invalid msg len %u/%u", *msgInfoLen, (*msgInfo)->len);
+    } else {
+        if ((*msgInfo)->handler != NULL) {
+            (*msgInfo)->handler((*msgInfo)->msg, (*msgInfo)->len);
+        } else {
+            IOTC_LOGW("invalid msg handler");
+        }
     }
 
-    if ((*msgInfo)->handler != NULL) {
-        (*msgInfo)->handler((*msgInfo)->msg, (*msgInfo)->len);
-    }
     UTILS_FREE_2_NULL(*msgInfo);
     *msgInfoLen = 0;
 }

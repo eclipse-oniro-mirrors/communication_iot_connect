@@ -129,7 +129,7 @@ int32_t SecuritySessKeyGenAuthKey(SessKeyContext *ctx, uint8_t authKey[SESS_AUTH
 {
     CHECK_RETURN_LOGW(ctx != NULL && authKey != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     int32_t ret;
     if (UTILS_IS_BIT_SET(ctx->bitMap, SESS_KEY_BIT_AUTH_KEY_CREATED)) {
         ret = memcpy_s(authKey, SESS_AUTH_KEY_LEN, ctx->authKey, SESS_AUTH_KEY_LEN);
