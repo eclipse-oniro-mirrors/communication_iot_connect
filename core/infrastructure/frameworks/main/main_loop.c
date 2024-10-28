@@ -206,7 +206,7 @@ void FwkMainLoopEntry(uint32_t taskSize)
     } else {
         IOTC_LOGE("loop no entry %s", NON_NULL_STR(loops[0].name));
     }
-    
+
     if (!UtilsGlobalMutexLock()) {
         IotcFree(loops);
         return;
@@ -219,7 +219,7 @@ void FwkMainLoopEntry(uint32_t taskSize)
         return;
     }
 
-    if (g_mainLoopCtx.stop != NULL) {
+    if (g_mainLoopCtx.stop == NULL) {
         g_mainLoopCtx.stop = IotcSemCreate(0);
     }
     UtilsGlobalMutexUnlock();

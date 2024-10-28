@@ -165,7 +165,7 @@ void EventLoopReset(EventLoop *loop)
         EventSourceFree(eventNode->source);
         IotcFree(eventNode);
     }
-    
+
     EventLoopStaticInit(loop);
 }
 

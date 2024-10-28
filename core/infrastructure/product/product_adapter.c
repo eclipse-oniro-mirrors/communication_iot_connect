@@ -50,7 +50,7 @@ static int32_t RegisterAllHooks(const ProductHooks *hooks)
         if ((_src)->_member != NULL) { \
             (_dst)->_member = (_src)->_member; \
         }; \
-    } while (0) \
+    } while (0)
 
 int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy)
 {

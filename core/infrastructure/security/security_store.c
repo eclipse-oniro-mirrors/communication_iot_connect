@@ -332,7 +332,7 @@ int32_t SecurityStoreGetLen(int32_t key, uint32_t *len)
     if (ret == IOTC_OK) {
         *len = storeItem->len;
     }
-    
+
     STORE_CTX_UNLOCK();
     return ret;
 }
