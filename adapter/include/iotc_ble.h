@@ -247,7 +247,7 @@ typedef struct {
 typedef struct {
     const char *uuid;
     IotcAdptBleGattsChar *character;
-    uint8_t charNum;
+    uint32_t charNum;
     int32_t svcHandle;
     int32_t serverId;
 } IotcAdptBleGattService;
@@ -306,7 +306,7 @@ int32_t IotcBleStopAdv(void);
  * @param svcNum [IN] 服务数量
  * @return 0成功，非0失败
  */
-int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint8_t svcNum);
+int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum);
 
 /**
  * @brief 停止GATT服务

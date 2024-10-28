@@ -147,11 +147,11 @@ static uint32_t GetOhosUuidType(const char *uuid)
     return OHOS_UUID_TYPE_NULL;
 }
 
-static uint8_t GetSvcAttrNum(IotcAdptBleGattService *svc)
+static uint32_t GetSvcAttrNum(IotcAdptBleGattService *svc)
 {
-    uint8_t attrCnt = 1;
+    uint32_t attrCnt = 1;
     attrCnt += svc->charNum;
-    for (uint8_t i = 0; i < svc->charNum; i++) {
+    for (uint32_t i = 0; i < svc->charNum; i++) {
         attrCnt += svc->character[i].descNum;
     }
     return attrCnt;
@@ -209,7 +209,6 @@ static BtGattCallbacks g_bleGattCb = {
     .advDisableCb = AdvStopCompleteCb,
     .securityRespondCb = SecurityRespondCb,
 };
-
 
 static void ConnectServerCb(int32_t connId, int32_t serverId, const BdAddr *bdAddr)
 {
@@ -418,26 +417,26 @@ static int32_t AdapterDescToOhosDesc(IotcAdptBleGattCharDesc *in, BleGattAttr *t
     return IOTC_OK;
 }
 
-static int32_t AdapterServiceCopyToOhosGattAttr(IotcAdptBleGattService *svc, BleGattAttr *attrList, uint8_t attrNum)
+static int32_t AdapterServiceCopyToOhosGattAttr(IotcAdptBleGattService *svc, BleGattAttr *attrList, uint32_t attrNum)
 {
     if (svc->uuid == NULL) {
         IOTC_LOGE("uuid is null");
         return IOTC_ERROR;
     }
-    uint8_t attrCnt = 0;
+    uint32_t attrCnt = 0;
     if (AdapterSvcToOhosSvc(svc, &attrList[attrCnt]) != IOTC_OK) {
         IOTC_LOGE("svc copy err");
         return IOTC_ERROR;
     }
     attrCnt++;
-    for (uint8_t i = 0; i < svc->charNum; i++) {
+    for (uint32_t i = 0; i < svc->charNum; i++) {
         if (AdapterCharToOhosChar(&svc->character[i], &attrList[attrCnt]) != IOTC_OK) {
             IOTC_LOGE("char copy err");
             return IOTC_ERROR;
         }
         svc->character[i].charHandle = attrCnt;
         attrCnt++;
-        for (uint8_t j = 0; j < svc->character[i].descNum; j++) {
+        for (uint32_t j = 0; j < svc->character[i].descNum; j++) {
             if (AdapterDescToOhosDesc(&svc->character[i].desc[j], &attrList[attrCnt])) {
                 IOTC_LOGE("desc copy err");
                 return IOTC_ERROR;
@@ -451,9 +450,9 @@ static int32_t AdapterServiceCopyToOhosGattAttr(IotcAdptBleGattService *svc, Ble
 
 static void RefreshHandle(IotcAdptBleGattService *svc)
 {
-    for (uint8_t i = 0; i < svc->charNum; i++) {
+    for (uint32_t i = 0; i < svc->charNum; i++) {
         svc->character[i].charHandle += svc->svcHandle;
-        for (uint8_t j = 0; j < svc->character[i].descNum; j++) {
+        for (uint32_t j = 0; j < svc->character[i].descNum; j++) {
             svc->character[i].desc[j].descHandle += svc->svcHandle;
         }
     }
@@ -503,7 +502,6 @@ int32_t IotcBleRegisterGattCb(const IotcAdptBleGattCallback callback)
         return IOTC_ERROR;
     }
     IOTC_LOGI("gatts reg success");
-    IOTC_LOGD("gatt reg start");
     ret = BleGattRegisterCallbacks(&g_bleGattCb);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("register gap callback ret=%d", ret);
@@ -575,14 +573,14 @@ int32_t IotcBleStopAdv(void)
     return IOTC_OK;
 }
 
-int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint8_t svcNum)
+int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
 {
     if ((svc == NULL) || (svcNum == 0)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
     }
-    for (uint8_t i = 0; i < svcNum; i++) {
-        uint8_t attrNum = GetSvcAttrNum(svc + i);
+    for (uint32_t i = 0; i < svcNum; i++) {
+        uint32_t attrNum = GetSvcAttrNum(svc + i);
         BleGattAttr attrList[attrNum];
         (void)memset_s(&attrList, attrNum * sizeof(BleGattAttr), 0, attrNum * sizeof(BleGattAttr));
         if (AdapterServiceCopyToOhosGattAttr(svc + i, attrList, attrNum) != IOTC_OK) {
@@ -658,7 +656,7 @@ int32_t IotcBleGetBleMac(uint8_t *mac, uint32_t len)
 
 int32_t IotcBleDisconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
 {
-    if ((bdAddr == NULL) || (addrLen > OHOS_BD_ADDR_LEN)) {
+    if ((bdAddr == NULL) || (addrLen > OHOS_BD_ADDR_LEN) || (addrLen == 0)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
     }

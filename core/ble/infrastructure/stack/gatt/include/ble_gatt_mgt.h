@@ -36,7 +36,7 @@ typedef struct {
 typedef struct {
     BlePeerDevInfo *peerDevInfo;
     uint8_t connNum;
-    uint8_t svcNum;
+    uint32_t svcNum;
     IotcAdptBleGattService *svc;
     uint8_t startedSvcNum;
 } BleGattMgtApp;
@@ -55,7 +55,7 @@ BleGattMgtApp *GetBleGattMgtApp(void);
 bool BleIsPair(void);
 void BleSetPair(bool isBlePair);
 int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
-void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint8_t num);
+void PrintBleGattServiceList(IotcAdptBleGattService *svc, uint32_t num);
 int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 int32_t BleScheduleEventInit(void);
