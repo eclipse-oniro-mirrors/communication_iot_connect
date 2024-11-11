@@ -30,6 +30,7 @@
 #include "iotc_svc.h"
 #include "dev_info.h"
 #include "product_adapter.h"
+#include "utils_common.h"
 
 #define ADV_NAME_MOULD "Hi-AAAAABBBBB-XYYYYMMNNNN"
 #define UNREG_ADV_NAME_HEAD "Hi"
@@ -508,6 +509,7 @@ static int32_t GenAdvName(BleAdvNameValue *value)
         IOTC_LOGE("sprintf_s");
         return IOTC_ERROR;
     }
+    UtilsReplaceCharacters(customName, ' ', '_');
     if (sprintf_s(value->buf, sizeof(value->buf), "%s-%.10s-%s%s%s%s",
         head, customName, ADV_NAME_VER, devInfo->prodId, devInfo->subProdId, advSn) <= 0) {
         IOTC_LOGE("sprintf_s");

@@ -20,7 +20,7 @@ static uint8_t g_logLevel = IOT_CONF_LOG_DEFAULT_LEVEL;
 
 void IotcSetLogLevel(uint8_t level)
 {
-    if (level >  IOTC_LOG_LEVEL_MAX) {
+    if (level > IOTC_LOG_LEVEL_MAX) {
         IOTC_LOGW("invalid log level %u", level);
         return;
     }

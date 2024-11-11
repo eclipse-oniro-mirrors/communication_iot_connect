@@ -252,7 +252,7 @@ bool UtilsIsValidStrArrayCheck(const UtilsStrCheckItem *array, uint32_t num)
     }
     for (uint32_t i = 0; i < num; ++i) {
         if (!UtilsIsValidStr(array[i].str, array[i].minLen, array[i].maxLen)) {
-            IOTC_LOGW("invalid str %u", i);
+            IOTC_LOGW("invalid str %u,%s,%u,%u", i, NON_NULL_STR(array[i].str), array[i].minLen, array[i].maxLen);
             return false;
         }
     }
@@ -307,4 +307,17 @@ int32_t UtilsGetMacStr(const uint8_t *mac, uint32_t macLen, char *macStr, uint32
         mac[MAC_UINT_INDEX_2], mac[MAC_UINT_INDEX_1], mac[MAC_UINT_INDEX_0]) > 0,
         IOTC_ERR_SECUREC_SPRINTF, "sprintf_s err");
     return IOTC_OK;
+}
+
+void UtilsReplaceCharacters(char *src, char m, char t)
+{
+    CHECK_V_RETURN(src != NULL);
+
+    char *p = src;
+    while (*p != '\0') {
+        if (*p == m) {
+            *p = t;
+        }
+        p++;
+    }
 }

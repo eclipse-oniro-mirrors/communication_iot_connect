@@ -104,7 +104,7 @@ int32_t TransBufferInit(void)
 
     if (ctx->recvBuf == NULL) {
         ctx->recvBuf = UtilsBufferCtxNew(ctx->recvRes, ctx->recvMax);
-        if (ctx->sendBuf == NULL) {
+        if (ctx->recvBuf == NULL) {
             IOTC_LOGW("create recv buffer error %u/%u", ctx->recvRes, ctx->recvMax);
             UtilsBufferCtxFree(ctx->sendBuf);
             ctx->sendBuf = NULL;

@@ -23,7 +23,6 @@
 #include "iotc_md.h"
 
 #define DEFAULT_SUB_PRO_ID "00"
-#define NON_NULL_EMPTY_STR(_str) (((_str) != NULL) ? (_str) : ('\0'))
 
 static IotcDeviceInfo g_deviceInfo;
 

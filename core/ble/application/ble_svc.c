@@ -33,6 +33,8 @@
 #include "ble_linklayer.h"
 #include "ble_common.h"
 #include "ble_svc_netcfg_status.h"
+#include "event_bus.h"
+#include "iotc_event.h"
 
 static const char *BLE_SERVICE_NAME = "BLE";
 
@@ -197,8 +199,10 @@ static int32_t BleServiceStart(int32_t instanceId, ServiceFinishCallback onFinis
     ret = BleServiceInit(ctx);
     if (ret != IOTC_OK) {
         BleServiceStopInner();
+        return ret;
     }
 
+    EventBusPublishAsync(IOTC_CORE_COMM_BLE_SVC_START, NULL, 0, NULL);
     return ret;
 }
 

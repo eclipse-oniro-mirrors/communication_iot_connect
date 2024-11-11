@@ -117,6 +117,26 @@ static int32_t OptionSetDevTrngCallback(va_list args)
     return IOTC_OK;
 }
 
+static bool CheckDevInfoProtType(const int8_t protType)
+{
+    CHECK_RETURN_LOGE(protType == IOTC_PROT_TYPE_WIFI ||
+                      protType == IOTC_PROT_TYPE_Z_WAVE ||
+                      protType == IOTC_PROT_TYPE_ZIGBEE ||
+                      protType == IOTC_PROT_TYPE_BLE ||
+                      protType == IOTC_PROT_TYPE_PLC ||
+                      protType == IOTC_PROT_TYPE_BLE_MESH ||
+                      protType == IOTC_PROT_TYPE_NFC ||
+                      protType == IOTC_PROT_TYPE_ETHERNET ||
+                      protType == IOTC_PROT_TYPE_MOBILE ||
+                      protType == IOTC_PROT_TYPE_USB ||
+                      protType == IOTC_PROT_TYPE_PLC_AND_WIFI ||
+                      protType == IOTC_PROT_TYPE_BLE_AND_WIFI ||
+                      protType == IOTC_PROT_TYPE_HIBEACON ||
+                      protType == IOTC_PROT_TYPE_VIRTUAL,
+                      false, "param invalid");
+    return true;
+}
+
 static bool CheckDevInfo(const IotcDeviceInfo *devInfo)
 {
     UtilsStrCheckItem devInfoCheck[] = {
@@ -145,6 +165,10 @@ static bool CheckDevInfo(const IotcDeviceInfo *devInfo)
     if (devInfo->subProdId != NULL &&
         !(strlen(devInfo->subProdId) == 0 || strlen(devInfo->subProdId) == IOTC_OH_SUB_PRO_ID_STR_LEN)) {
         IOTC_LOGW("sub pro id invalid");
+        return false;
+    }
+    if (!CheckDevInfoProtType(devInfo->protType)) {
+        IOTC_LOGW("prot type invalid");
         return false;
     }
     return true;
@@ -235,6 +259,7 @@ static const FwkInitUnit OH_DEVICE_INIT[] = {
 
 int32_t IotcOhDevInit(void)
 {
+    CHECK_MAIN_RUNNING_RETURN();
     int32_t ret = IotcOhOptionRegister(DEVICE_OPTION_TABLE, ARRAY_SIZE(DEVICE_OPTION_TABLE));
     if (ret != IOTC_OK) {
         IOTC_LOGW("set dev option error %d", ret);

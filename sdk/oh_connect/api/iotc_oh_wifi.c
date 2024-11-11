@@ -135,7 +135,7 @@ static int32_t OptionSetWifiSendBufferSize(va_list args)
 {
     uint32_t resSize = va_arg(args, uint32_t);
     uint32_t maxSize = va_arg(args, uint32_t);
-    if (maxSize ==0 || maxSize < resSize) {
+    if (resSize == 0 || maxSize == 0 || maxSize < resSize) {
         IOTC_LOGW("buffer size error %u/%u", maxSize, resSize);
         return IOTC_ERR_PARAM_INVALID;
     }
@@ -149,7 +149,7 @@ static int32_t OptionSetWifiRecvBufferSize(va_list args)
 {
     uint32_t resSize = va_arg(args, uint32_t);
     uint32_t maxSize = va_arg(args, uint32_t);
-    if (maxSize ==0 || maxSize < resSize) {
+    if (resSize == 0 || maxSize == 0 || maxSize < resSize) {
         IOTC_LOGW("buffer size error %u/%u", maxSize, resSize);
         return IOTC_ERR_PARAM_INVALID;
     }
@@ -162,6 +162,10 @@ static int32_t OptionSetWifiRecvBufferSize(va_list args)
 static int32_t OptionSetWifiNetcfgMode(va_list args)
 {
     int32_t mode = va_arg(args, int32_t);
+    if (mode >= IOTC_NET_CONFIG_MODE_MAX) {
+        IOTC_LOGW("mode error %d", mode);
+        return IOTC_ERR_PARAM_INVALID;
+    }
     SetNetCfgMode((IotcNetConfigMode)mode);
     IOTC_LOGN("set netcfg mode %d", mode);
     return IOTC_OK;

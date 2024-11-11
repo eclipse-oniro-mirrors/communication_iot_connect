@@ -272,7 +272,11 @@ static void ConnectServerCb(int32_t connId, int32_t serverId, const BdAddr *bdAd
         g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_CONNECT, &eventParam) != IOTC_OK) {
         IOTC_LOGE("doing gatt event");
     }
-    g_advId = INVALID_ADV_ID; /* 蓝牙连接后系统会自动关闭蓝牙广播 */
+    /* 蓝牙连接后系统不会自动关闭蓝牙广播 */
+    if (g_advId != INVALID_ADV_ID) {
+        (void)BleStopAdv(g_advId);
+        g_advId = INVALID_ADV_ID;
+    }
 }
 
 static void DisconnectServerCb(int32_t connId, int32_t serverId, const BdAddr *bdAddr)
@@ -921,8 +925,8 @@ int32_t IotcBleStartAdv(const IotcAdptBleAdvParam *advParam, const IotcAdptBleAd
     StartAdvRawData ohosAdvData = {0};
     ohosAdvData.advData = (uint8_t *)advData->advData;
     ohosAdvData.advDataLen = advData->advDataLen;
-    ohosAdvData.rspData = NULL;
-    ohosAdvData.rspDataLen = 0;
+    ohosAdvData.rspData = (uint8_t *)advData->rspData;
+    ohosAdvData.rspDataLen = advData->rspDataLen;
     BleAdvParams ohosAdvParam = {0};
     ohosAdvParam.minInterval = advParam->advMinInt;
     ohosAdvParam.maxInterval = advParam->advMaxInt;
@@ -994,7 +998,7 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
 
 int32_t IotcBleStopGattsService(int32_t serverId, uint32_t svcHandle)
 {
-    int32_t ret = BleGattsStopService(serverId, svcHandle);
+    int32_t ret = BleGattsDeleteService(serverId, svcHandle);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("gatt stop service ret=%d", ret);
         return IOTC_ERROR;
@@ -1079,7 +1083,17 @@ int32_t IotcBleDisconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
 
 int32_t IotcBleDeInitStack(void)
 {
-    int32_t ret = DisableBtStack();
+    int32_t ret = 0;
+    IotcBleStopAdv();
+    if (g_regGattAppResult.has && g_regGattAppResult.serverId >= 0) {
+        ret = BleGattsUnRegister(g_regGattAppResult.serverId);
+        g_regGattAppResult.has = false;
+        if (ret != OHOS_BT_STATUS_SUCCESS) {
+            IOTC_LOGE("gatts unregsiter ret=%d", ret);
+            return IOTC_ERROR;
+        }
+    }
+    ret = DisableBtStack();
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("disable bt stack ret=%d", ret);
         return IOTC_ERROR;

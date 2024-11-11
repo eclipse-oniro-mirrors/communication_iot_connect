@@ -242,6 +242,14 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcBleGattProfileSvc *in, IotcA
     return IOTC_OK;
 }
 
+static void GattStopStaredService(void)
+{
+    for (uint32_t i = 0; i < g_bleGattApp.startedSvcNum; i++) {
+        (void)IotcBleStopGattsService(g_bleGattApp.svc[i].serverId, g_bleGattApp.svc[i].svcHandle);
+    }
+    g_bleGattApp.startedSvcNum = 0;
+}
+
 static void GattServiceDestroy(IotcAdptBleGattService **svcAddr, uint32_t svcNum)
 {
     if ((svcAddr == NULL) || (*svcAddr == NULL) || (svcNum == 0)) {
@@ -345,6 +353,7 @@ int32_t BleGattMgtInit(void)
 
 void BleGattMgtDestroy(void)
 {
+    GattStopStaredService();
     GattServiceDestroy(&g_bleGattApp.svc, g_bleGattApp.svcNum);
     g_bleGattApp.svcNum = 0;
     if (GetBleGattMgtApp()->peerDevInfo != NULL) {

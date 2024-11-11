@@ -69,7 +69,8 @@ static int32_t DeviceReportCallback(const IotcCharState state[], uint32_t num)
 
 static int32_t DeviceServiceStart(int32_t instanceId, ServiceFinishCallback onFinish, void *param)
 {
-    CHECK_RETURN_LOGW(onFinish != NULL && param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    NOT_USED(param);
+    CHECK_RETURN_LOGW(onFinish != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     DeviceContext *ctx = GetDeviceManagerContext();
     ctx->instanceId = instanceId;
     ctx->onFinish = onFinish;

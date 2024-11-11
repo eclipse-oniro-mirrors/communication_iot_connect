@@ -1,7 +1,18 @@
-## Combo Connect DEMO 说明
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Combo Connect DEMO适用于使用BLE辅助配网、端云连接、局域网本地控制的设备，DEMO示例代码：
-```
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -12,6 +23,11 @@ Combo Connect DEMO适用于使用BLE辅助配网、端云连接、局域网本�
 #include "securec.h"
 #include "cJSON.h"
 #include "iotc_conf.h"
+#include "iotc_event.h"
+#include "iotc_errcode.h"
+#include <gtest/gtest.h>
+#include "securec.h"
+#include "cJSON.h"
 
 #define DEMO_LOG(...) do { \
         printf("DEMO[%s:%u]", __func__, __LINE__); \
@@ -29,9 +45,9 @@ static const IotcDeviceInfo DEV_INFO = {
     .subProdId = "",
     .model = "MODEL",
     .devTypeId = "1234",
-    .devTypeName = "Dev Type Name",
+    .devTypeName = "DevTypeName",
     .manuId = "123",
-    .manuName = "Manu Name",
+    .manuName = "ManuName",
     .fwv = "1.0.0",
     .hwv = "1.0.0",
     .swv = "1.0.0",
@@ -44,6 +60,7 @@ static const IotcDeviceInfo DEV_INFO = {
  */
 static const IotcServiceInfo SVC_INFO[] = {
     {"switch", "switch"},
+    {"report", "report"},
 };
 
 /**
@@ -64,12 +81,12 @@ const uint8_t AC_KEY[IOTC_AC_KEY_LEN] = {
 
 /**
  * [MUST] MODIFY ME
- * CA_CERT为云测根证书列表
+ * g_caCert为云测根证书列表
  */
 static const char *CERT1 = "-----BEGIN CERTIFICATE-----\r\n" \
     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n" \
     "-----END CERTIFICATE-----\r\n";
-static const char *CA_CERT[] = {CERT1};
+static const char *g_caCert[] = {CERT1};
 
 /**
  * [MUST] MODIFY ME
@@ -80,6 +97,80 @@ static const char *CA_CERT[] = {CERT1};
  * 产品可以参考该DEMO并实现自己的服务函数添加到SVC_MAP中
  */
 static bool g_switch = false;
+static bool g_report = false;
+
+enum {
+    STEP_1 = 0, /* putcharstate switch-on 1 */
+    STEP_2, /* putcharstate switch-on 0 */
+    STEP_3, /* putcharstate report-on 0 */
+    STEP_MAX,
+};
+
+static int32_t g_step[STEP_MAX] = {0};
+
+static void ClearStep(void)
+{
+    memset_s(&g_step, sizeof(g_step), 0, sizeof(g_step));
+}
+
+static bool CheckStepFinish(void)
+{
+    for (uint32_t i = 0; i < STEP_MAX; i++) {
+        if (g_step[i] == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void ReportTest(void)
+{
+    IotcCharState reportInfo;
+    (void)memset_s(&reportInfo, sizeof(reportInfo), 0, sizeof(reportInfo));
+    reportInfo.svcId = SVC_INFO[1].svcId;
+    reportInfo.data = "{\"on\":1}";
+    reportInfo.len = strlen(reportInfo.data);
+    IotcOhDevReportCharState(&reportInfo, sizeof(reportInfo) / sizeof(reportInfo));
+}
+
+static void PutCharStatePutReport(cJSON *json)
+{
+    cJSON *item = cJSON_GetObjectItem(json, "on");
+    if (item == NULL || !cJSON_IsNumber(item)) {
+        cJSON_Delete(json);
+        DEMO_LOG("get on error");
+        return;
+    }
+
+    int32_t on = cJSON_GetNumberValue(item);
+    DEMO_LOG("switch report put %d=>%d", g_switch, on);
+    g_report = on == 0 ? false : true;
+    if (on == 0) {
+        g_step[STEP_3] = 1;
+    } else if (on == 1) {
+        
+    }
+}
+
+static void PutCharStatePutOn(cJSON *json)
+{
+    cJSON *item = cJSON_GetObjectItem(json, "on");
+    if (item == NULL || !cJSON_IsNumber(item)) {
+        cJSON_Delete(json);
+        DEMO_LOG("get on error");
+        return;
+    }
+
+    int32_t on = cJSON_GetNumberValue(item);
+    DEMO_LOG("switch on put %d=>%d", g_switch, on);
+    g_switch = on == 0 ? false : true;
+    if (on == 0) {
+        g_step[STEP_2] = 1;
+    } else {
+        g_step[STEP_1] = 1;
+    }
+}
 
 static int32_t SwitchPutCharState(const IotcServiceInfo *svc, const char *data, uint32_t len)
 {
@@ -93,16 +184,7 @@ static int32_t SwitchPutCharState(const IotcServiceInfo *svc, const char *data, 
         return -1;
     }
 
-    cJSON *item = cJSON_GetObjectItem(json, "on");
-    if (item == NULL || !cJSON_IsNumber(item)) {
-        cJSON_Delete(json);
-        DEMO_LOG("get on error");
-        return -1;
-    }
-
-    int32_t on = cJSON_GetNumberValue(item);
-    DEMO_LOG("switch on put %d=>%d", g_switch, on);
-    g_switch = on == 0 ? false : true;
+    PutCharStatePutOn(json);
 
     cJSON_Delete(json);
     return 0;
@@ -120,13 +202,11 @@ static int32_t SwitchGetCharState(const IotcServiceInfo *svc, char **data, uint3
         DEMO_LOG("create obj error");
         return -1;
     }
-
     if (cJSON_AddNumberToObject(json, "on", g_switch) == NULL) {
         cJSON_Delete(json);
         DEMO_LOG("add num error");
         return -1;
     }
-
     *data = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
     if (*data == NULL) {
@@ -134,6 +214,52 @@ static int32_t SwitchGetCharState(const IotcServiceInfo *svc, char **data, uint3
         return -1;
     }
     DEMO_LOG("switch on get %d", g_switch);
+    *len = strlen(*data);
+    return 0;
+}
+
+static int32_t ReportPutCharState(const IotcServiceInfo *svc, const char *data, uint32_t len)
+{
+    if (data == NULL || len == 0) {
+        DEMO_LOG("param invalid");
+        return -1;
+    }
+    cJSON *json = cJSON_Parse(data);
+    if (json == NULL) {
+        DEMO_LOG("parse error");
+        return -1;
+    }
+
+    PutCharStatePutReport(json);
+
+    cJSON_Delete(json);
+    return 0;
+}
+
+static int32_t ReportGetCharState(const IotcServiceInfo *svc, char **data, uint32_t *len)
+{
+    if (data == NULL || *data != NULL) {
+        DEMO_LOG("param invalid");
+        return -1;
+    }
+
+    cJSON *json = cJSON_CreateObject();
+    if (json == NULL) {
+        DEMO_LOG("create obj error");
+        return -1;
+    }
+    if (cJSON_AddNumberToObject(json, "on", g_report) == NULL) {
+        cJSON_Delete(json);
+        DEMO_LOG("add num error");
+        return -1;
+    }
+    *data = cJSON_PrintUnformatted(json);
+    cJSON_Delete(json);
+    if (*data == NULL) {
+        DEMO_LOG("json print error");
+        return -1;
+    }
+    DEMO_LOG("report on get %d", g_report);
     *len = strlen(*data);
     return 0;
 }
@@ -152,6 +278,7 @@ const struct SvcMap {
     int32_t (*getCharState)(const IotcServiceInfo *svc, char **data, uint32_t *len);
 } SVC_MAP[] = {
     {&SVC_INFO[0], SwitchPutCharState, SwitchGetCharState},
+    {&SVC_INFO[1], ReportPutCharState, ReportGetCharState},
 };
 
 /**
@@ -220,7 +347,7 @@ static int32_t GetCharState(const IotcCharState state[], char *out[], uint32_t l
  */
 static int32_t ReportAll(void)
 {
-    IotcCharState reportInfo[sizeof(SVC_MAP) / sizeof(SVC_MAP[0])] = {0};
+    IotcCharState reportInfo[sizeof(SVC_MAP) / sizeof(SVC_MAP[0])];
     int32_t ret;
     for (uint32_t i = 0; i < (sizeof(SVC_MAP) / sizeof(SVC_MAP[0])); ++i) {
         reportInfo[i].svcId = SVC_MAP[i].svc->svcId;
@@ -290,8 +417,8 @@ static int32_t GetRootCA(const char **ca[], uint32_t *num)
         return -1;
     }
 
-    *ca = CA_CERT;
-    *num = sizeof(CA_CERT) / sizeof(CA_CERT[0]);
+    *ca = g_caCert;
+    *num = sizeof(g_caCert) / sizeof(g_caCert[0]);
     return 0;
 }
 
@@ -312,25 +439,18 @@ static int32_t NoticeReboot(IotcRebootReason res)
             DEMO_LOG("set option %d error %d", (option), (ret)); \
             return ret; \
         } \
-    } while (0);
+    } while (0)
 
 /**
  * [MUST] USE ME
  * IotcOhDemoEntry为iot connect业务入口，开发者应在业务进程启动时调用
  */
-int32_t IotcOhDemoEntry(void)
+static int32_t IotcOhDemoEntry(void)
 {
     /* 初始化设备信息模块 */
     int32_t ret = IotcOhDevInit();
     if (ret != 0) {
         DEMO_LOG("init device error %d", ret);
-        return ret;
-    }
-
-    /* 初始化BLE发现控制模块 */
-    ret = IotcOhBleEnable();
-    if (ret != 0) {
-        DEMO_LOG("enable ble connect error %d", ret);
         return ret;
     }
 
@@ -354,7 +474,7 @@ int32_t IotcOhDemoEntry(void)
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_DEV_INFO, &DEV_INFO);
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_SVC_INFO, SVC_INFO, sizeof(SVC_INFO) / sizeof(SVC_INFO[0]));
     /* 配置配网模式，根据业务场景选择 */
-    SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_WIFI_NETCFG_MODE, IOTC_NET_CONFIG_MODE_BLE_SUP);
+    SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_WIFI_NETCFG_MODE, IOTC_NET_CONFIG_MODE_SOFTAP);
     /* 配置配网超时时间 */
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_WIFI_NETCFG_TIMEOUT, (10 * 60 * 1000));
 
@@ -372,7 +492,7 @@ int32_t IotcOhDemoEntry(void)
  * [SHOULD] USE ME
  * IotcOhDemoExit为iot connect业务退出函数，开发者应在不使用相关业务并需要释放iot connect资源时调用
  */
-void IotcOhDemoExit(void)
+static void IotcOhDemoExit(void)
 {
     int32_t ret = IotcOhStop();
     if (ret != 0) {
@@ -384,64 +504,73 @@ void IotcOhDemoExit(void)
         DEMO_LOG("iotc wifi disable error %d", ret);
     }
 
-    ret = IotcOhBleDisable();
-    if (ret != 0) {
-        DEMO_LOG("iotc ble disable error %d", ret);
-    }
-
     ret = IotcOhDevDeinit();
     if (ret != 0) {
         DEMO_LOG("iotc dev info deinit error %d", ret);
     }
 }
 
-/**
- * [MUST] USE ME
- * IotcOhDemoRestore为iot connect恢复出厂函数，开发者应在设备被重置时调用
- */
-void IotcOhDemoRestore(void)
+using namespace testing::ext;
+
+class IotcWifiOnlyDctsTest : public testing::Test {
+public:
+    IotcWifiOnlyDctsTest()
+    {}
+    ~IotcWifiOnlyDctsTest()
+    {}
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp() override
+    {}
+    void TearDown() override
+    {}
+};
+
+void IotcWifiOnlyDctsTest::SetUpTestCase(void)
 {
-    DEMO_LOG("restore");
-    IotcOhRestore();
+    /* Is Bluetooth turned on */
+}
+
+void IotcWifiOnlyDctsTest::TearDownTestCase(void)
+{
+}
+
+#define ONE_THOUSAND 1000
+
+static int32_t WaitStepFinish(void)
+{
+    bool report = false;
+    uint32_t cnt = 60 * 1000;
+    while (cnt > 0) {
+        if (!report && g_step[STEP_2] == 1) {
+            usleep(ONE_THOUSAND * ONE_THOUSAND);
+            ReportTest();
+            report = true;
+        }
+        if (CheckStepFinish()) {
+            usleep(ONE_THOUSAND * ONE_THOUSAND);
+            return IOTC_OK;
+        }
+        cnt--;
+        usleep(ONE_THOUSAND);
+    }
+    return IOTC_ERROR;
 }
 
 /**
- * [MUST] USE ME
- * IotcOhDemoReport为设备数据变化上报的DEMO函数，开发者应在设备服务发生主动变化时调用该接口上报
+ * @tc.name: IotcWifiOnlyDctsTest001
+ * @tc.desc: Test iot connect ble.
+ * @tc.in: Test module, Test number, Test levels.
+ * @tc.out: Zero
+ * @tc.type: FUNC
+ * @tc.require: 1
  */
-void IotcOhDemoReport(const char *sid)
+HWTEST_F(IotcWifiOnlyDctsTest, IotcWifiOnlyDctsTest001, TestSize.Level1)
 {
-    DEMO_LOG("report");
-    if (sid == NULL) {
-        DEMO_LOG("report sid null");
-        return;
-    }
-    IotcCharState reportInfo = {0};
-    int32_t ret = -1;
-    for (uint32_t i = 0; i < (sizeof(SVC_MAP) / sizeof(SVC_MAP[0])); ++i) {
-        if (SVC_MAP[i].svc->svcId == NULL || SVC_MAP[i].getCharState == NULL ||
-            strcmp(sid, SVC_MAP[i].svc->svcId) != 0) {
-            continue;
-        }
-        reportInfo.svcId = SVC_MAP[i].svc->svcId;
-        ret = SVC_MAP[i].getCharState(SVC_MAP[i].svc, (char **)&reportInfo.data, &reportInfo.len);
-        if (ret != 0) {
-            DEMO_LOG("get char sid:%s error %d", sid, ret);
-        }
-        break;
-    }
-    if (ret == 0) {
-        ret = IotcOhDevReportCharState(&reportInfo, 1);
-        if (ret != 0) {
-            DEMO_LOG("report char sid:%s error %d", sid, ret);
-        } else {
-            DEMO_LOG("report char sid:%s success", sid);
-        }
-    }
-
-    if (reportInfo.data != NULL) {
-        cJSON_free((char *)reportInfo.data);
-    }
-    return;
+    ClearStep();
+    int32_t ret = IotcOhDemoEntry();
+    EXPECT_TRUE(ret == IOTC_OK);
+    ret = WaitStepFinish();
+    EXPECT_TRUE(ret == IOTC_OK);
+    IotcOhDemoExit();
 }
-```

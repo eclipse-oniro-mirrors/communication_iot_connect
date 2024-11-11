@@ -34,6 +34,7 @@ static const FwkInitUnit OH_COMM[] = {
     {FWK_INIT_LVL_BIZ, "config", IotcOhStoreDataInit, IotcOhStoreDataDeinit},
 };
 static uint32_t g_taskSize = IOTC_CONF_OH_DEFAULT_TASK_SIZE;
+static bool g_isCommOptionReg = false;
 
 static int32_t OptionSetLogLevel(va_list args)
 {
@@ -146,6 +147,7 @@ int32_t IotcOhStop(void)
     FwkUnregInitUnit(OH_COMM);
     FwkUnregInitUnit(CoreInfrastructureGetInitUnit());
     IotcOhOptionUnregister(COMM_OPTION_TABLE);
+    g_isCommOptionReg = false;
     return IOTC_OK;
 }
 
@@ -188,14 +190,13 @@ int32_t IotcOhSetOption(int32_t option, ...)
     CHECK_MAIN_RUNNING_RETURN();
 
     int32_t ret;
-    static bool isCommOptionReg = false;
-    if (!isCommOptionReg) {
+    if (!g_isCommOptionReg) {
         ret = IotcOhOptionRegister(COMM_OPTION_TABLE, ARRAY_SIZE(COMM_OPTION_TABLE));
         if (ret != IOTC_OK) {
             IOTC_LOGW("reg comm option error %d", ret);
             return ret;
         }
-        isCommOptionReg = true;
+        g_isCommOptionReg = true;
     }
 
     va_list args;

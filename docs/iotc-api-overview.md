@@ -59,8 +59,13 @@
 
 **函数原型：**
 `int32_t IotcOhSetOption(int32_t option, ...);`
+
 **说明：**
 配置部件运行时的参数
+
+**返回值：**
+类型：`int32_t`
+值：`0`成功，其他失败，详见`iotc_errcode.h`
 
 **参数列表：**
 
@@ -253,6 +258,18 @@
 | IOTC_BLE_GATT_PERMISSION_WRITE_ENCRYPTED_MITM | 中间人保护可写 |
 | IOTC_BLE_GATT_PERMISSION_WRITE_SIGNED | 签名可写 |
 | IOTC_BLE_GATT_PERMISSION_WRITE_SIGNED_MITM | 中间人保护签名可写 |
+
+#### 2.9 BLE Connect资源释放
+
+**函数原型：**
+`int32_t IotcOhBleRelease(void)`
+
+**说明：**
+BLE 资源释放，用于释放调用`IotcOhBleEnable`时申请的资源，该接口在iot connect运行时调用。
+
+**返回值：**
+类型：`int32_t`
+值：`0`成功，其他失败，详见`iotc_errcode.h`
 
 ### 3. Wi-Fi Connect 能力
 

@@ -74,7 +74,6 @@ if (defined(ohos_lite)) {
       "-Wall",
       "-Werror",
       "-fPIC",
-      "-std=c99",
     ]
     cflags_cc = cflags
     defines = iotc_def
@@ -96,5 +95,14 @@ if (defined(ohos_lite)) {
     ]
     subsystem_name = "communication"
     part_name = "iot_connect"
+  }
+
+  group("unittest") {
+    testonly = true
+
+    deps = [
+      "test/xts/acts:acts",
+      "test/xts/dcts:dcts",
+    ]
   }
 }

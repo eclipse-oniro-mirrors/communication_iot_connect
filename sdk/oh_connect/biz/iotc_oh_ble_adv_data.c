@@ -20,6 +20,7 @@
 #include "iotc_svc_ble.h"
 #include "iotc_svc_dev.h"
 #include "dev_info.h"
+#include "utils_common.h"
 
 #define ADV_NAME_MOULD "OH-AAAAABBBBB-XYYYYYNNNNMPP"
 #define UNREG_ADV_NAME_HEAD "Oh"
@@ -121,7 +122,7 @@ static int32_t GenAdvName(BleAdvNameValue *value)
         IOTC_LOGE("sprintf error %d", ret);
         return IOTC_ERR_SECUREC_SPRINTF;
     }
-
+    UtilsReplaceCharacters(customName, ' ', '_');
     ret = sprintf_s(value->buf, sizeof(value->buf), "%s-%.10s-%s%s%s",
         head, customName, ADV_NAME_VER, devInfo->prodId, advSn);
     if ((ret <= 0) || (ret + BLE_NETCFG_CAPCITY_SIZE) > sizeof(value->buf)) {

@@ -17,6 +17,7 @@ import("../../iotc.gni")
 group("unittest") {
   testonly = true
   deps = [
-    "unittest:unittest",
+    "acts:acts",
+    "dcts:dcts",
   ]
 }

@@ -7,7 +7,7 @@ Wi-Fi Connect DEMO适用于使用SoftAP配网、端云连接、局域网本地�
 #include <stdbool.h>
 #include "iotc_oh_wifi.h"
 #include "iotc_oh_ble.h"
-#include "iotc_oh_connect.h"
+#include "iotc_oh_sdk.h"
 #include "iotc_oh_device.h"
 #include "securec.h"
 #include "cJSON.h"
@@ -68,7 +68,7 @@ const uint8_t AC_KEY[IOTC_AC_KEY_LEN] = {
  */
 static const char *CERT1 = "-----BEGIN CERTIFICATE-----\r\n" \
     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n" \
-    "-----END CERTIFICATE-----\r\n"
+    "-----END CERTIFICATE-----\r\n";
 static const char *CA_CERT[] = {CERT1};
 
 /**
