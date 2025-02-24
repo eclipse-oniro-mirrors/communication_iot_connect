@@ -40,7 +40,7 @@ iotc_adapter_dep = []
 
 if (iot_connect_feature_ble_support) {
   if (defined(ohos_lite)) {
-    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/iotc_ble.c"]
+    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/iotc_ble.c"]  
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_standard/iotc_ble.c"]
   }
@@ -49,7 +49,12 @@ if (iot_connect_feature_ble_support) {
     iotc_adapter_inc += ["//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/bluetooth/realtek/sdk/example/bt_harmony_adapter"]
   } else {
     iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
-    iotc_adapter_inc += ["//third_party/mbedtls/include"]
+    if (board_hi3863) {
+      iotc_adapter_inc += ["//device/soc/hisilicon/hi3863v100/sdk_liteos/open_source/mbedtls/mbedtls_v3.1.0/include"]
+    } else {
+      iotc_adapter_inc += ["//third_party/mbedtls/include"]
+    }
+    
   }
 }
 
@@ -79,7 +84,13 @@ if (defined(ohos_lite)) {
     iotc_adapter_inc += ["//kernel/liteos_m/kal/cmsis"]
     iotc_adapter_src += ["$iotc_adapter_path/os/cmsis2/iotc_os.c"]
     iotc_adapter_src += ["$iotc_adapter_path/kv/oh_lite/iotc_kv.c"]
-    iotc_adapter_src += ["$iotc_adapter_path/log/printf/iotc_log.c"]
+    if (board_hi3863) {
+      iotc_adapter_src += ["$iotc_adapter_path/log/hilog_m/iotc_log.c"]
+      iotc_adapter_inc += ["//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite"]
+    } else {
+      iotc_adapter_src += ["$iotc_adapter_path/log/printf/iotc_log.c"]
+    }
+    iotc_adapter_def += ["IOTC_CONF_LITEOS_M_SUPPORT=1"]
     if (board_name == "rtl8720") {
       iotc_adapter_inc += [
         "//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/network/ssl/mbedtls-2.16.4/include",
@@ -90,8 +101,22 @@ if (defined(ohos_lite)) {
         "//third_party/cJSON:cjson_static",
         "//third_party/mbedtls:mbedtls",
       ]
-      iotc_adapter_inc += ["//third_party/mbedtls/include"]
+      if (board_hi3863) {
+         # device/soc/hisilicon/hi3863v100/sdk_liteos/open_source/mbedtls/mbedtls_v3.1.0/include/mbedtls/ctr_drbg.h
+        iotc_adapter_inc += ["//device/soc/hisilicon/hi3863v100/sdk_liteos/open_source/mbedtls/mbedtls_v3.1.0/include"]
+      } else {
+        iotc_adapter_inc += ["//third_party/mbedtls/include"]
+      }      
+     
     }
+
+    if (board_hi3863) {
+      iotc_adapter_def += ["IOTC_CONF_LITEOS_M_LOG_PRINTF=1"]
+      iotc_adapter_dep -=[
+        "//third_party/cJSON:cjson_static",
+      ]
+    }
+
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/os/posix/iotc_os.c"]
     iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]

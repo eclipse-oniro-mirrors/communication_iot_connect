@@ -105,14 +105,15 @@ static const OptionItem COMM_OPTION_TABLE[] = {
 
 int32_t IotcOhMain(void)
 {
-    IOTC_LOGN("iotc main in");
+    IOTC_LOGI("iotc main in ----");
     CHECK_MAIN_RUNNING_RETURN();
+    IOTC_LOGI("iotc main in ---- OH_COMM");
     int32_t ret = FwkRegInitUnitArray(OH_COMM);
     if (ret != IOTC_OK) {
         IOTC_LOGE("reg init unit error %d", ret);
         return ret;
-    }
-
+    }    
+    IOTC_LOGI("iotc main in ---- core");
     ret = FwkRegInitUnits(CoreInfrastructureGetInitUnit(),
         CoreInfrastructureGetInitUnitSize(), CoreInfrastructureGetInitName());
     if (ret != IOTC_OK) {
@@ -120,7 +121,7 @@ int32_t IotcOhMain(void)
         IOTC_LOGE("reg comm init unit error %d", ret);
         return ret;
     }
-
+    IOTC_LOGI("iotc main g_taskSize ----%d", g_taskSize);
     ret = IotcFwkMain(g_taskSize);
     if (ret != IOTC_OK) {
         FwkUnregInitUnit(CoreInfrastructureGetInitUnit());

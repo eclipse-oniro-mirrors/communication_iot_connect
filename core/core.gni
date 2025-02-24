@@ -17,6 +17,7 @@ import("wifi/core_wifi.gni")
 import("infrastructure/core_inf.gni")
 import("device/core_dev.gni")
 import("ble/core_ble.gni")
+import("sle/core_sle.gni")
 
 iotc_core_src = iotc_core_infrastructure_src + iotc_core_device_src
 iotc_core_inc = iotc_core_infrastructure_inc + iotc_core_device_inc
@@ -26,6 +27,12 @@ if (iot_connect_feature_ble_support) {
   iotc_core_inc += iotc_core_ble_inc
   iotc_core_src += iotc_core_ble_src
   iotc_core_def += iotc_core_ble_def
+}
+
+if(iot_connect_feature_sle_support) {
+  iotc_core_inc += iotc_core_sle_inc
+  iotc_core_src += iotc_core_sle_src
+  iotc_core_def += iotc_core_sle_def
 }
 
 if (iot_connect_feature_wifi_support) {

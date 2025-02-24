@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef SLE_SSAP_MGT_H
+#define SLE_SSAP_MGT_H
+
+#include <stdint.h>
+#include "iotc_sle.h"
+#include "iotc_sle_def.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define SLE_DEV_NAME "IotcBT"
+#define SLE_DEFAULT_MAX_CONN_NUM 1
+#define SLE_MTU_SIZE 500
+
+typedef struct {
+    uint32_t connId;
+    uint32_t serverId;
+    uint8_t peerAddr[IOTC_ADPT_SLE_ADDR_LEN];
+} SlePeerDevInfo;
+
+typedef struct {
+    SlePeerDevInfo *peerDevInfo;
+    uint8_t connNum;
+    uint8_t svcNum;
+    IotcAdptSleSsapService *svc;
+    uint8_t startedSvcNum;
+} SleSsapMgtApp;
+
+typedef struct {
+    const char *svcUuid;
+    const char *charUuid;
+    uint32_t valueLen;
+    uint8_t *value;
+} SleIndicateParam;
+
+int32_t SleAddSsapSvc(const IotcSleSsapProfileSvc *svc);
+int32_t SleSsapMgtInit(void);
+void SleSsapMgtDestroy(void);
+SleSsapMgtApp *GetSleSsapMgtApp(void);
+bool SleIsPair(void);
+void SleSetPair(bool isSlePair);
+int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
+void PrintSleSsapServiceList(IotcAdptSleSsapService *svc, uint8_t num);
+int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
+    const uint8_t *value, uint32_t valueLen);
+int32_t SleScheduleEventInit(void);
+void SleSsapDisconnectAll(void);
+int32_t SetSleConnectParam(void);
+int32_t SleSsapReqRead(int32_t connId, int32_t attrHandle, int32_t transId);
+int32_t SleSsapReqWrite(int32_t connId, int32_t attrHandle, int32_t transId, uint8_t *value, int32_t valueLen);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* SLE_SSAP_MGT_H */

@@ -49,7 +49,7 @@ IotcTaskId *IotcTaskCreate(IotcTaskParam *param)
     attr.name = param->name;
     attr.priority = prioMap[param->prio];
     attr.stack_size = param->stackSize;
-
+    IOTC_LOGI("-----osThreadNew name:%s stack_size:%d",attr.name, attr.stack_size);
     return (IotcTaskId *)osThreadNew((osThreadFunc_t)param->func, param->arg, &attr);
 }
 

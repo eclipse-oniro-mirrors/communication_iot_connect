@@ -25,6 +25,7 @@
     "syscap":[],
     "features": [
       "iot_connect_feature_ble_support",
+      "iot_connect_feature_sle_support",
       "iot_connect_feature_wifi_support",
       "iot_connect_feature_ailife_support"
     ],

@@ -654,6 +654,7 @@ static int32_t WaitAddGattServiceResult(IotcAdptBleGattService *svc)
 
 static int32_t AddGattChar(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *charcter)
 {
+    IOTC_LOGI("AddGattChar");
     BtUuid characUuid;
     characUuid.uuid =  ConvertUuid(charcter->uuid);
     if (characUuid.uuid == NULL) {
@@ -662,6 +663,7 @@ static int32_t AddGattChar(IotcAdptBleGattService *svc, IotcAdptBleGattsChar *ch
     }
     characUuid.uuidLen = strlen(characUuid.uuid);
     (void)memset_s(&g_addGattCharResult, sizeof(g_addGattCharResult), 0, sizeof(g_addGattCharResult));
+    IOTC_LOGI("AddGattChar - BleGattsAddCharacteristic");
     int32_t ret = BleGattsAddCharacteristic(svc->serverId, svc->svcHandle, characUuid,
         AdapterPropertyToOhosProperty(charcter->property),
         AdapterPemissionToOhosPermission(charcter->permission) |
@@ -838,6 +840,7 @@ static int32_t StartRegGattApp(void)
 
 static int32_t StartGattService(IotcAdptBleGattService *svc)
 {
+    IOTC_LOGI("StartGattService start");
     int32_t ret = AddGattService(svc);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add gatt service err ret=%d", ret);
@@ -848,6 +851,7 @@ static int32_t StartGattService(IotcAdptBleGattService *svc)
         IOTC_LOGE("wait add gatt service err ret=%d", ret);
         return ret;
     }
+    IOTC_LOGI("AddGattChars start");
     ret = AddGattChars(svc);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add gatt chars err ret=%d", ret);

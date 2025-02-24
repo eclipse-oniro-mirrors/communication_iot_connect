@@ -28,22 +28,26 @@ struct UtilsExMutex {
 
 UtilsExMutex *UtilsCreateExMutex(void)
 {
+    IOTC_LOGI("---- UtilsCreateExMutex start  ----%u",sizeof(UtilsExMutex));
     UtilsExMutex *mutex = IotcMalloc(sizeof(UtilsExMutex));
+    // UtilsExMutex *mutex = IotcCalloc(0,sizeof(UtilsExMutex));
     if (mutex == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
     }
-
+    IOTC_LOGI("---- UtilsCreateExMutex IotcMalloc ");
     (void)memset_s(mutex, sizeof(UtilsExMutex), 0, sizeof(UtilsExMutex));
 
     mutex->func = "INIT";
     mutex->mutexId = IotcMutexCreate();
+    IOTC_LOGI("---- UtilsCreateExMutex end");
     if (mutex->mutexId != NULL) {
         return mutex;
     }
     IOTC_LOGW("create mutex error");
 
     UtilsDestroyExMutex(&mutex);
+    IOTC_LOGI("---- UtilsCreateExMutex error");
     return NULL;
 }
 

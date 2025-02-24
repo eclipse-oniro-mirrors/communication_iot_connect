@@ -15,6 +15,7 @@
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_ble.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_sle.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_connect.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_device.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_wifi.c

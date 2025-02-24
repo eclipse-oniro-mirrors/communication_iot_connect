@@ -182,6 +182,7 @@ static void StartTaskForLoop(const FwkLoop *loops, uint32_t cnt, uint32_t taskSi
 
 void FwkMainLoopEntry(uint32_t taskSize)
 {
+    IOTC_LOGI("FwkMainLoopEntry start");
     if (!UtilsGlobalMutexLock()) {
         IOTC_LOGE("global lock error");
         return;

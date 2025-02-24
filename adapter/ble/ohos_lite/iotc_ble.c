@@ -382,6 +382,7 @@ static int32_t AdapterSvcToOhosSvc(IotcAdptBleGattService *in, BleGattAttr *to)
 
 static int32_t AdapterCharToOhosChar(IotcAdptBleGattsChar *in, BleGattAttr *to)
 {
+    IOTC_LOGI("AdapterCharToOhosChar start");
     if (in->uuid == NULL) {
         IOTC_LOGE("uuid is null");
         return IOTC_ERROR;
@@ -517,6 +518,7 @@ int32_t IotcBleSetBleName(const char *name)
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
     }
+    IOTC_LOGI("IotcBleSetBleName name:%s",name);
     int32_t ret = SetDeviceName(name, strlen(name));
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("set name ret=%d", ret);
@@ -578,9 +580,11 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
     if ((svc == NULL) || (svcNum == 0)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
-    }
-    for (uint32_t i = 0; i < svcNum; i++) {
-        uint32_t attrNum = GetSvcAttrNum(svc + i);
+    } 
+    IOTC_LOGI("IotcBleStartGattsService svcNum:%u", svcNum);
+    for (uint8_t i = 0; i < svcNum; i++) {
+        uint8_t attrNum = GetSvcAttrNum(svc + i);
+        IOTC_LOGI(" attrNum:%u", attrNum);
         BleGattAttr attrList[attrNum];
         (void)memset_s(&attrList, attrNum * sizeof(BleGattAttr), 0, attrNum * sizeof(BleGattAttr));
         if (AdapterServiceCopyToOhosGattAttr(svc + i, attrList, attrNum) != IOTC_OK) {
@@ -590,6 +594,8 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
         BleGattService srvcInfo = {0};
         srvcInfo.attrNum = attrNum;
         srvcInfo.attrList = attrList;
+        //print uuid
+        IOTC_LOGI("IotcBleStartGattsService i:%u, uuid:%s  svcHandle:%d", i, svc[i].uuid, &svc[i].svcHandle );
         int32_t ret = BleGattsStartServiceEx(&svc[i].svcHandle, &srvcInfo);
         if (ret != OHOS_BT_STATUS_SUCCESS) {
             IOTC_LOGE("gatt start service ret=%d", ret);

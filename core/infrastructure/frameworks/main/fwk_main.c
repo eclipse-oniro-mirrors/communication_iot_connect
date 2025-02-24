@@ -58,30 +58,38 @@ static void IotcFwkMainTaskBody(void *arg)
 {
     NOT_USED(arg);
     IOTC_LOGN("iotc main task entry");
-
+    uint32_t test_value = 100;
+    IOTC_LOGI("------- test_value:%d", test_value);
     do {
         /* 复位通知 */
         MainTaskBehaviorNotice(&g_resetSem);
-
+        test_value = 101;
+        IOTC_LOGN("MainTaskBehaviorNotice finish ------- test_value:%d", test_value);
         /* 全局初始化 */
         if (FwkInitAll(FWK_INIT_FAILED_RETURN) != IOTC_OK) {
+            IOTC_LOGN("FwkInitAll finish");
             IotcSleepMs(UTILS_SEC_TO_MS(FWK_INIT_BLOCK_SLEEP_TIME_SEC));
             continue;
         }
+        IOTC_LOGN("continue finish");
         EventBusPublishAsync(IOTC_CORE_COMM_EVENT_MAIN_INITIALIZED, NULL, 0, NULL);
-
+        IOTC_LOGN("EventBusPublishAsync finish");
         /* 主业务循环 */
         FwkMainLoopEntry(g_stackSize);
-
+        IOTC_LOGN("FwkMainLoopEntry finish");
         if (g_existsFlag) {
+            IOTC_LOGN("g_existsFlag is true");
             EventBusPublishSync(IOTC_CORE_COMM_EVENT_MAIN_RESET, NULL, 0);
         } else {
             EventBusPublishSync(IOTC_CORE_COMM_EVENT_MAIN_QUIT, NULL, 0);
         }
+        IOTC_LOGN("EventBusPublishSync finish");
         /* 全局去初始化 */
         FwkDeinitAll();
+        IOTC_LOGN("FwkDeinitAll finish");
     } while (g_existsFlag);
 
+    IOTC_LOGN("do while finish");
     /* 退出通知 */
     g_mainTaskId = NULL;
     MainTaskBehaviorNotice(&g_exitSem);
@@ -90,12 +98,12 @@ static void IotcFwkMainTaskBody(void *arg)
 
 int32_t IotcFwkMain(uint32_t stackSize)
 {
-    IOTC_LOGN("iotc main");
+    IOTC_LOGI("iotc main --- ");
     if (stackSize == 0) {
         return IOTC_ERR_PARAM_INVALID;
     }
     g_stackSize = stackSize;
-
+    IOTC_LOGI("iotc main task stackSize:%d",stackSize);
     IotcTaskParam task = {
         .arg = NULL,
         .func = IotcFwkMainTaskBody,
@@ -103,9 +111,10 @@ int32_t IotcFwkMain(uint32_t stackSize)
         .prio = IOTC_TASK_PRIORITY_MID,
         .stackSize = stackSize,
     };
-
+    IOTC_LOGI("iotc main task --- ");
     MainTaskExistsFlagChange(true);
     g_mainTaskId = IotcTaskCreate(&task);
+    IOTC_LOGI("iotc main task g_mainTaskId:%d",g_mainTaskId);
     if (g_mainTaskId == NULL) {
         IOTC_LOGF("create iotc main task error %u", task.stackSize);
         MainTaskExistsFlagChange(false);
