@@ -17,7 +17,7 @@
 #include "utils_assert.h"
 #include "security_speke.h"
 #include "event_bus_sub.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "iotc_errcode.h"
 #include "iotc_event.h"
 #include "iotc_svc_dev.h"

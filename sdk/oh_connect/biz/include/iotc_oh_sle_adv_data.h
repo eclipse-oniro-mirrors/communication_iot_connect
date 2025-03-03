@@ -12,21 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_LINKLAYER_SEND_H
-#define SLE_LINKLAYER_SEND_H
+#ifndef SLE_ADV_DATA_OHOS_H
+#define SLE_ADV_DATA_OHOS_H
 
 #include <stdint.h>
+#include "iotc_sle.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t LinkLayerBtDataSend(const uint8_t *buff, uint32_t len);
-
-int32_t LinkLayerSendBtPkg(const uint8_t *buff, uint32_t len);
+int32_t IotcOhGetSleAdvData(IotcAdptSleAdvData *advData);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_LINKLAYER_SEND_H */
+#endif /* SLE_ADV_DATA_OHOS_H */

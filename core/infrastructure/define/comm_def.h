@@ -97,6 +97,7 @@ typedef struct {
 #define STR_JSON_DEVICE_INFO "deviceInfo"
 #define STR_JSON_MAC "mac"
 #define STR_JSON_BLE_MAC "bleMac"
+#define STR_JSON_SLE_MAC "sleMac"
 #define STR_JSON_HIV "hiv"
 #define STR_JSON_VENDOR "vendor"
 #define STR_JSON_SID "sid"

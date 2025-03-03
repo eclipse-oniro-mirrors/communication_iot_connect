@@ -22,7 +22,7 @@
 #include "sched_executor.h"
 #include "sle_session_mngr.h"
 #include "sle_profile.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "iotc_svc_dev.h"
 #include "iotc_errcode.h"
 #include "product_adapter.h"

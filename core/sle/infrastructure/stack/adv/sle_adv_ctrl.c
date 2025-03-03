@@ -58,29 +58,29 @@ static int32_t StartSleAdvTimer(uint32_t ms)
 static int32_t CopyAdvInfo2Adapter(const IotcSleAdvParam *advPara, const IotcSleAdvData *advData,
     IotcAdptSleAdvParam *adapterAdvParam, IotcAdptSleAdvData *adapterAdvData)
 {
-    CHECK_RETURN_LOGW(advData->advData != NULL && advData->advDataLen != 0 &&
-        advData->rspData && advData->rspDataLen != 0,
+    CHECK_RETURN_LOGW(advData->announceData != NULL && advData->announceDataLen != 0 &&
+        advData->seekRspData && advData->seekRspDataLen != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    adapterAdvParam->advType = (IotcAdptSleAdvType)advPara->advType;
-    adapterAdvParam->advMinInt = advPara->minInterval;
-    adapterAdvParam->advMaxInt = advPara->maxInterval;
-    adapterAdvParam->channelMap = advPara->channelMap;
+    adapterAdvParam->announceMode = (IotcAdptSleAdvType)advPara->announceMode;
+    adapterAdvParam->announceIntervalMin = advPara->announceIntervalMin;
+    adapterAdvParam->announceIntervalMax = advPara->announceIntervalMax;
+    adapterAdvParam->announceChannelMap = advPara->announceChannelMap;
 
-    int32_t ret = memcpy_s(adapterAdvData->advData, sizeof(adapterAdvData->advData),
-        advData->advData, advData->advDataLen);
+    int32_t ret = memcpy_s(adapterAdvData->announceData, sizeof(adapterAdvData->announceData),
+        advData->announceData, advData->announceDataLen);
     if (ret != EOK) {
-        IOTC_LOGW("memcpy error %d/%u", ret, advData->advDataLen);
+        IOTC_LOGW("memcpy error %d/%u", ret, advData->announceDataLen);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    ret = memcpy_s(adapterAdvData->rspData, sizeof(adapterAdvData->rspData), advData->rspData, advData->rspDataLen);
+    ret = memcpy_s(adapterAdvData->seekRspData, sizeof(adapterAdvData->seekRspData), advData->seekRspData, advData->seekRspDataLen);
     if (ret != EOK) {
-        IOTC_LOGW("memcpy error %d/%u", ret, advData->rspDataLen);
+        IOTC_LOGW("memcpy error %d/%u", ret, advData->seekRspDataLen);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    adapterAdvData->advDataLen = advData->advDataLen;
-    adapterAdvData->rspDataLen = advData->rspDataLen;
+    adapterAdvData->announceDataLen = advData->announceDataLen;
+    adapterAdvData->seekRspDataLen = advData->seekRspDataLen;
     return IOTC_OK;
 }
 

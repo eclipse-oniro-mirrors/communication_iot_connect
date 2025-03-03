@@ -19,6 +19,7 @@
 #include "utils_assert.h"
 #include "iotc_sle.h"
 #include "sle_common.h"
+// #include "ble_common.h"
 #include "iotc_def.h"
 #include "iotc_svc_dev.h"
 #include "utils_combo.h"
@@ -307,7 +308,7 @@ static uint32_t GenExtendNearbyBase(SleCustomAdvValue *value)
         return 0;
     }
     value->extend.nearby.base.subProIdType = NEARBY_TYPE_SUB_PROID;
-    value->extend.nearby.base.subProId = GetSubProIdInt();
+    value->extend.nearby.base.subProId = GetSleSubProIdInt();
     value->extend.nearby.base.advPowerType = NEARBY_TYPE_ADV_POWER;
     if (ProductGetSurfacePower(&value->extend.nearby.base.advPower) != IOTC_OK) {
         IOTC_LOGN("set default power");
@@ -432,7 +433,7 @@ static uint32_t GenExtendOnehop(SleCustomAdvValue *value)
         IOTC_LOGE("memcpy_s");
         return 0;
     }
-    value->extend.onehop.subProId = GetSubProIdInt();
+    value->extend.onehop.subProId = GetSleSubProIdInt();
     if (ProductGetSurfacePower(&value->extend.onehop.advPower) != IOTC_OK) {
         IOTC_LOGN("set defalut power");
         value->extend.onehop.advPower = DEFAULT_ADV_TX_POWER;
@@ -487,16 +488,16 @@ static int32_t GenAdvName(SleAdvNameValue *value)
     int32_t snLen = strlen(devInfo->sn);
     if (snLen < ADV_NAME_SN_LEN) {
         IOTC_LOGW("set mac to adv sn");
-        uint8_t mac[IOTC_ADPT_SLE_ADDR_LEN] = {0};
-        if (IotcSleGetSleMac(mac, IOTC_ADPT_SLE_ADDR_LEN) != IOTC_OK) {
-            IOTC_LOGE("get sle mac");
-            return IOTC_ERROR;
-        }
-        if (sprintf_s(advSn, sizeof(advSn), "%02X%02X",
-            mac[IOTC_ADPT_SLE_ADDR_LEN - ONE_BYTE], mac[IOTC_ADPT_SLE_ADDR_LEN - TWO_BYTE]) <= 0) {
-            IOTC_LOGE("sprintf_s");
-            return IOTC_ERROR;
-        }
+        // IotcAdptSleAddr* mac = IotSleGetLocalSleAddress();
+        // if(mac == NULL){
+        //     IOTC_LOGE("get sle mac");
+        //     return IOTC_ERROR;
+        // }
+        // if (sprintf_s(advSn, sizeof(advSn), "%02X%02X",
+        //     mac->addr[IOTC_ADPT_SLE_ADDR_LEN - ONE_BYTE], mac->addr[IOTC_ADPT_SLE_ADDR_LEN - TWO_BYTE]) <= 0) {
+        //     IOTC_LOGE("sprintf_s");
+        //     return IOTC_ERROR;
+        // }
     } else {
         if (sprintf_s(advSn, sizeof(advSn), "%s", GET_STR_TAIL(devInfo->sn, ADV_NAME_SN_LEN)) <= 0) {
             IOTC_LOGE("sprintf_s");
@@ -539,29 +540,29 @@ static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAdvData *advData)
     (void)memset_s(advData, sizeof(IotcAdptSleAdvData), 0, sizeof(IotcAdptSleAdvData));
 
     int32_t len = 0;
-    len = AdvFlagsCopyToBuf(&advData->advData[advData->advDataLen], sizeof(advData->advData) - advData->advDataLen);
+    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceDataLen], sizeof(advData->announceData) - advData->announceDataLen);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    advData->advDataLen += len;
+    advData->announceDataLen += len;
     if (SleGetAdvType() != IOTC_SLE_ADV_TYPE_ONLY_NAME) {
-        len = CustomAdvCopyToBuf(&advData->advData[advData->advDataLen],
-            sizeof(advData->advData) - advData->advDataLen);
+        len = CustomAdvCopyToBuf(&advData->announceData[advData->announceDataLen],
+            sizeof(advData->announceData) - advData->announceDataLen);
         if (len < 0) {
             IOTC_LOGE("copy");
             return IOTC_ERR_SECUREC_MEMCPY;
         }
-        advData->advDataLen += len;
+        advData->announceDataLen += len;
     }
 
     len = 0;
-    len = RspAdvCopyToBuf(&advData->rspData[advData->rspDataLen], sizeof(advData->rspData) - advData->rspDataLen);
+    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen], sizeof(advData->seekRspData) - advData->seekRspDataLen);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    advData->rspDataLen += len;
+    advData->seekRspDataLen += len;
     return IOTC_OK;
 }
 
@@ -584,17 +585,4 @@ void SleSetAdvType(SleSvcAdvDataType type)
 {
     g_sleAdvType = type;
     IOTC_LOGN("set adv type to %d", type);
-}
-
-int32_t RegCustomAdvDataCb(CustomAdvDataCb cb)
-{
-    CHECK_RETURN_LOGW(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-
-    if (!UtilsGlobalMutexLock()) {
-        IOTC_LOGW("glock error");
-        return IOTC_ERR_TIMEOUT;
-    }
-    g_customAdvDataCb = cb;
-    UtilsGlobalMutexUnlock();
-    return IOTC_OK;
 }

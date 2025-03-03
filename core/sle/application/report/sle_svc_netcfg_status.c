@@ -18,7 +18,7 @@
 #include "utils_common.h"
 #include "utils_json.h"
 #include "event_bus_sub.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "sle_profile.h"
 #include "iotc_event.h"
 #include "comm_def.h"

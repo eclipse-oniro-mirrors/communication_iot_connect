@@ -15,6 +15,7 @@
 #include "utils_combo.h"
 
 static bool g_bleFlag = false;
+static bool g_sleFlag = false;
 static bool g_wifiFlag = false;
 
 void UtilsComboSetBleFlag(bool flag)
@@ -27,12 +28,20 @@ void UtilsComboSetWifiFlag(bool flag)
     g_wifiFlag = flag;
 }
 
+
+void UtilsComboSetSleFlag(bool flag)
+{
+    g_sleFlag = flag;
+}
+
 ComboType UtilsGetComboType(void)
 {
     if (g_bleFlag && g_wifiFlag) {
         return COMBO_TYPE_COMBO;
     } else if (g_bleFlag) {
         return COMBO_TYPE_BLE_ONLY;
+    } else if (g_sleFlag) {
+        return COMBO_TYPE_SLE_ONLY;
     } else if (g_wifiFlag) {
         return COMBO_TYPE_WIFI_ONLY;
     } else {

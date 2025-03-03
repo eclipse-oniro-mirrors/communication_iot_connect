@@ -12,23 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_LINKLAYER_RECV_H
-#define SLE_LINKLAYER_RECV_H
-
+#include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// #define IotcPrintf(...) { HILOG_INFO(HILOG_MODULE_APP,__VA_ARGS__); }; 
+// #define IotcPrintf(...) { printf(__VA_ARGS__); }; 
 
-int32_t LinkLayerRecvPkgInsert(uint8_t token, uint8_t pkgNum, uint8_t pkgIdx, const uint8_t *data, uint32_t dataLen);
 
-int32_t LinkLayerRecvCompleteCheck(uint8_t token, bool *isComplete);
-
-int32_t LinkLayerRecvMergePkgs(uint8_t token, uint8_t **outData, uint32_t *outDataLen);
-
-#ifdef __cplusplus
+void IotcLogOutputImpl(uint8_t level, const char *fileName,
+    const char *funcName, uint32_t line, const char *fmt, ...)
+{
+    const char *tag[6] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
+    if (funcName != NULL) {
+        printf("%s:%s:%u, ", tag[level - 1], funcName, line);
+    } else {
+        printf("%s:%s:%u, ", tag[level - 1], fileName != NULL ? fileName : "NULL", line);
+    }
 }
-#endif
 
-#endif /* SLE_LINKLAYER_RECV_H */

@@ -40,7 +40,7 @@ static int32_t InitRecvSeq(const IotcJson *req, uint32_t *recvSeq)
 
 static int32_t CheckUidHash(const IotcJson *req)
 {
-    char uidHash[SLE_UID_HASH_LEN + 1] = { 0 };
+    char uidHash[BLE_UID_HASH_LEN + 1] = { 0 };
     int32_t ret = UtilsJsonGetString(req, STR_JSON_UIDHASH, uidHash, sizeof(uidHash));
     CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_GET_NUM, "get uid hash err");
 

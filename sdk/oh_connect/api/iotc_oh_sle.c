@@ -17,12 +17,12 @@
 #include "utils_common.h"
 #include "utils_combo.h"
 #include "sle_profile.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "utils_assert.h"
 #include "iotc_conf.h"
 #include "sle_adv.h"
 #include "sle_adv_ctrl.h"
-#include "sle_gatt_mgt.h"
+#include "sle_ssap_mgt.h"
 #include "iotc_oh_sle_adv_data.h"
 #include "sched_executor.h"
 #include "fwk_main.h"
@@ -146,14 +146,14 @@ static int32_t OptionSetSleStartUpAdvTimeout(va_list args)
     return IOTC_OK;
 }
 
-static int32_t OptionSetSleGattProfileSvcList(va_list args)
+static int32_t OptionSetSleSsapProfileSvcList(va_list args)
 {
-    const IotcSleGattProfileSvcList *svcList = va_arg(args, const IotcSleGattProfileSvcList *);
+    const IotcSleSsapProfileSvcList *svcList = va_arg(args, const IotcSleSsapProfileSvcList *);
     CHECK_RETURN_LOGE(svcList != NULL && svcList->svc != NULL && svcList->svcNum != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
     int32_t ret;
     for (uint32_t i = 0; i < svcList->svcNum; ++i) {
-        ret = SleAddGattSvc(svcList->svc + i);
+        ret = SleAddSsapSvc(svcList->svc + i);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add gatt svc error %d %u", ret, i);
             return ret;
@@ -169,7 +169,7 @@ static const OptionItem SLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_SLE_RECV_NETCFG_CALLBACK, OptionSetSleRecvNetcfgCallback },
     { IOTC_OH_OPTION_SLE_RECV_CUSTOM_DATA_CALLBACK, OptionSetSleRecvCustomSecDataCallback },
     { IOTC_OH_OPTION_SLE_START_UP_ADV_TIMEOUT, OptionSetSleStartUpAdvTimeout },
-    { IOTC_OH_OPTION_SLE_GATT_PROFILE_SVC_LIST, OptionSetSleGattProfileSvcList },
+    { IOTC_OH_OPTION_SLE_GATT_PROFILE_SVC_LIST, OptionSetSleSsapProfileSvcList },
 };
 
 int32_t IotcOhSleEnable(void)
