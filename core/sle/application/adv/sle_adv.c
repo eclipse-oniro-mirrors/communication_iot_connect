@@ -23,7 +23,7 @@
 #include "iotc_event.h"
 #include "iotc_errcode.h"
 
-static int32_t AiLifeSleGetAdvInfoCallback(IotcAdptSleAdvParam *advPara, IotcAdptSleAdvData *advData)
+static int32_t AiLifeSleGetAdvInfoCallback(IotcAdptSleAnnounceParam *advPara, IotcAdptSleAnnounceData *advData)
 {
     CHECK_RETURN_LOGW(advPara != NULL && advData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 

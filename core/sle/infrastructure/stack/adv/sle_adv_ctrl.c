@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "sle_adv_ctrl.h"
-#include "iotc_sle.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
@@ -22,12 +21,13 @@
 #include "utils_mutex_global.h"
 #include "iotc_os.h"
 #include "utils_common.h"
+#include "iotc_sle_def.h"
 
 static int32_t g_advTimerId = EVENT_SOURCE_INVALID_TIMER_FD;
 static SleGetAdvInfoCallback g_sleAdvCtrlCb = NULL;
 static uint32_t g_advStartTime = 0;
 static uint32_t g_advDuration = 0;
-
+static uint8_t anounceId = 0;
 static void AdvCtrlTimerCb(int32_t id, void *userData)
 {
     (void)id;
@@ -55,33 +55,33 @@ static int32_t StartSleAdvTimer(uint32_t ms)
     return IOTC_OK;
 }
 
-static int32_t CopyAdvInfo2Adapter(const IotcSleAdvParam *advPara, const IotcSleAdvData *advData,
-    IotcAdptSleAdvParam *adapterAdvParam, IotcAdptSleAdvData *adapterAdvData)
+static int32_t CopyAdvInfo2Adapter(const IotcAdptSleAnnounceParam *advPara, const IotcAdptSleAnnounceData *advData,
+    IotcAdptSleAnnounceParam *adapterAdvParam, IotcAdptSleAnnounceData *adapterAdvData)
 {
-    CHECK_RETURN_LOGW(advData->announceData != NULL && advData->announceDataLen != 0 &&
-        advData->seekRspData && advData->seekRspDataLen != 0,
+    CHECK_RETURN_LOGW(advData->announceData != NULL && advData->announceLength != 0 &&
+        advData->responceData && advData->responceLength != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    adapterAdvParam->announceMode = (IotcAdptSleAdvType)advPara->announceMode;
-    adapterAdvParam->announceIntervalMin = advPara->announceIntervalMin;
-    adapterAdvParam->announceIntervalMax = advPara->announceIntervalMax;
-    adapterAdvParam->announceChannelMap = advPara->announceChannelMap;
+    adapterAdvParam->mode = advPara->mode;
+    adapterAdvParam->annonceIntervalMin = advPara->annonceIntervalMin;
+    adapterAdvParam->annonceIntervalMax = advPara->annonceIntervalMax;
+    adapterAdvParam->channelMap = advPara->channelMap;
 
     int32_t ret = memcpy_s(adapterAdvData->announceData, sizeof(adapterAdvData->announceData),
-        advData->announceData, advData->announceDataLen);
+        advData->announceData, advData->announceLength);
     if (ret != EOK) {
-        IOTC_LOGW("memcpy error %d/%u", ret, advData->announceDataLen);
+        IOTC_LOGW("memcpy error %d/%u", ret, advData->announceLength);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    ret = memcpy_s(adapterAdvData->seekRspData, sizeof(adapterAdvData->seekRspData),
-        advData->seekRspData, advData->seekRspDataLen);
+    ret = memcpy_s(adapterAdvData->responceData, sizeof(adapterAdvData->responceData), 
+                   advData->responceData, advData->responceLength);
     if (ret != EOK) {
-        IOTC_LOGW("memcpy error %d/%u", ret, advData->seekRspDataLen);
+        IOTC_LOGW("memcpy error %d/%u", ret, advData->responceLength);
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    adapterAdvData->announceDataLen = advData->announceDataLen;
-    adapterAdvData->seekRspDataLen = advData->seekRspDataLen;
+    adapterAdvData->announceLength = advData->announceLength;
+    adapterAdvData->responceLength = advData->responceLength;
     return IOTC_OK;
 }
 
@@ -103,11 +103,12 @@ static void StopSleAdvTimer(void)
     }
 }
 
-static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAdvParam *advPara,
-    const IotcAdptSleAdvData *advData, uint32_t ms)
+static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
+    const IotcAdptSleAnnounceData *advData, uint32_t ms)
 {
     StopSleAdvTimer();
-    int32_t ret = IotcSleStartAdv(advPara, advData);
+
+    int32_t ret = IotcStartAnnounce(anounceId, advData,advPara);
     if (ret != IOTC_OK) {
         IOTC_LOGE("start sle adv err %d", ret);
         return ret;
@@ -116,12 +117,12 @@ static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAdvParam *advPara,
     return StartSleAdvTimer(ms);
 }
 
-int32_t SleAdvCtrlStartSpecific(const IotcSleAdvParam *advPara, const IotcSleAdvData *advData, uint32_t ms)
+int32_t SleAdvCtrlStartSpecific(const IotcAdptSleAnnounceParam *advPara, const IotcAdptSleAnnounceData *advData, uint32_t ms)
 {
     CHECK_RETURN_LOGW(advPara != NULL && advData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    IotcAdptSleAdvData adapterAdvData = {0};
-    IotcAdptSleAdvParam adapterAdvParam = {0};
+    IotcAdptSleAnnounceData adapterAdvData = {0};
+    IotcAdptSleAnnounceParam adapterAdvParam = {0};
     int32_t ret = CopyAdvInfo2Adapter(advPara, advData, &adapterAdvParam, &adapterAdvData);
     if (ret != IOTC_OK) {
         IOTC_LOGW("copy adv date error %d", ret);
@@ -142,8 +143,8 @@ int32_t SleAdvCtrlStart(uint32_t ms)
         return IOTC_ERR_CALLBACK_NULL;
     }
 
-    IotcAdptSleAdvData advData = {0};
-    IotcAdptSleAdvParam advPara = {0};
+    IotcAdptSleAnnounceData advData = {0};
+    IotcAdptSleAnnounceParam advPara = {0};
 
     int32_t ret = advInfoCb(&advPara, &advData);
     if (ret != IOTC_OK) {
@@ -157,7 +158,7 @@ int32_t SleAdvCtrlStart(uint32_t ms)
 int32_t SleAdvCtrlStop(void)
 {
     StopSleAdvTimer();
-    int32_t ret = IotcSleStopAdv();
+    int32_t ret = IotcStopAnnounce(anounceId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("stop adv error %d", ret);
         return ret;
@@ -184,7 +185,7 @@ int32_t SleAdvCtrlResume(void)
 
 int32_t SleAdvCtrlUpdate(void)
 {
-    int32_t ret = IotcSleStopAdv();
+    int32_t ret = IotcStopAnnounce(anounceId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("stop adv error %d", ret);
         return ret;

@@ -16,7 +16,7 @@
 #define SLE_ADV_DATA_H
 
 #include <stdint.h>
-#include "iotc_sle.h"
+#include "iotc_sle_announce.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +28,7 @@ extern "C" {
  * @param advData [OUT] 广播数据
  * @return 0 成功，非0 失败
  */
-int32_t GetSleAdvData(IotcAdptSleAdvData *advData);
+int32_t GetSleAdvData(IotcAdptSleAnnounceData *advData);
 
 #ifdef __cplusplus
 }

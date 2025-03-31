@@ -18,21 +18,21 @@
 #include "iotc_log.h"
 #include "utils_assert.h"
 
-static const IotcAdptSleAdvParam g_advParam = {
+static const IotcAdptSleAnnounceParam g_advParam = {
     // .advType = IOTC_ADPT_SLE_ADV_TYPE_IND,
-    .announceMode = IOTC_ADPT_SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE,
-    .announceIntervalMin = 0x20,
-    .announceIntervalMax = 0x40,
+    .mode = 0x03,//  SleAnnounceModeType
+    .annonceIntervalMin = 0x20,
+    .annonceIntervalMax = 0x40,
     // .ownerAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,
     // .directAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,
     // .directAddr = NULL,
-    .announceChannelMap = IOTC_ADPT_SLE_CHNL_ALL,
+    .channelMap = 7,
 };
 
-int32_t GetSleAdvParam(IotcAdptSleAdvParam *advParam)
+int32_t GetSleAdvParam(IotcAdptSleAnnounceParam *advParam)
 {
     CHECK_RETURN_LOGW(advParam != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    if (memcpy_s(advParam, sizeof(IotcAdptSleAdvParam), &g_advParam, sizeof(IotcAdptSleAdvParam)) != EOK) {
+    if (memcpy_s(advParam, sizeof(IotcAdptSleAnnounceParam), &g_advParam, sizeof(IotcAdptSleAnnounceParam)) != EOK) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }

@@ -17,7 +17,7 @@
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 #include "utils_assert.h"
-#include "iotc_sle.h"
+#include "iotc_sle_server.h"
 #include "sle_common.h"
 #include "iotc_def.h"
 #include "iotc_svc_dev.h"
@@ -523,41 +523,41 @@ static int32_t RspAdvCopyToBuf(uint8_t *out, uint32_t outSize)
     return adv.len + 1;
 }
 
-static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAdvData *advData)
+static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAnnounceData *advData)
 {
     CHECK_RETURN_LOGW(advData != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    (void)memset_s(advData, sizeof(IotcAdptSleAdvData), 0, sizeof(IotcAdptSleAdvData));
+    (void)memset_s(advData, sizeof(IotcAdptSleAnnounceData), 0, sizeof(IotcAdptSleAnnounceData));
 
     int32_t len = 0;
-    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceDataLen],
-        sizeof(advData->announceData) - advData->announceDataLen);
+    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceLength], 
+         sizeof(advData->announceData) - advData->announceLength);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    advData->announceDataLen += len;
+    advData->announceLength += len;
     if (SleGetAdvType() != IOTC_SLE_ADV_TYPE_ONLY_NAME) {
-        len = CustomAdvCopyToBuf(&advData->announceData[advData->announceDataLen],
-            sizeof(advData->announceData) - advData->announceDataLen);
+        len = CustomAdvCopyToBuf(&advData->announceData[advData->announceLength],
+            sizeof(advData->announceData) - advData->announceLength);
         if (len < 0) {
             IOTC_LOGE("copy");
             return IOTC_ERR_SECUREC_MEMCPY;
         }
-        advData->announceDataLen += len;
+        advData->announceLength += len;
     }
 
     len = 0;
-    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen],
-        sizeof(advData->seekRspData) - advData->seekRspDataLen);
+    len = RspAdvCopyToBuf(&advData->responceData[advData->responceLength], 
+        sizeof(advData->responceData) - advData->responceLength);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    advData->seekRspDataLen += len;
+    advData->responceLength += len;
     return IOTC_OK;
 }
 
-int32_t GetSleAdvData(IotcAdptSleAdvData *advData)
+int32_t GetSleAdvData(IotcAdptSleAnnounceData *advData)
 {
     if (!UtilsGlobalMutexLock()) {
         IOTC_LOGW("glock error");

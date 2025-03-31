@@ -12,25 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_ADV_H
-#define SLE_ADV_H
+#include "sle_disc_ctrl.h"
+#include "iotc_sle_server.h"
+#include "securec.h"
+#include "iotc_errcode.h"
+#include "iotc_log.h"
+#include "iotc_os.h"
+#include "utils_common.h"
 
-#include <stdint.h>
-#include "iotc_svc_sle.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int32_t SleAdvInit(void);
-
-void SleSetAdvType(SleSvcAdvDataType type);
-
-typedef int32_t (*CustomAdvDataCb)(IotcAdptSleAnnounceData *advData);
-int32_t RegCustomAdvDataCb(CustomAdvDataCb cb);
-
-#ifdef __cplusplus
+int32_t SleSeekCtrlParamSet(const IotcAdptSleSeekParam *param)
+{
+    return IotcSleSetSeekParam(param);
 }
-#endif
 
-#endif /* SLE_ADV_H */
+int32_t SleSeekCtrlStart(void)
+{
+    return IotcSleStartSeek();
+}
+
+int32_t SleSeekCtrlStop(void)
+{
+    return IotcSleStoptSeek();
+}

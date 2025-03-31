@@ -12,14 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef IOTC_SLE_H
-#define IOTC_SLE_H
+#ifndef IOTC_SLE_DEF_H
+#define IOTC_SLE_DEF_H
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "iotc_def.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

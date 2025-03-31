@@ -12,23 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_ADV_CTRL_H
-#define SLE_ADV_CTRL_H
+#ifndef SLE_DISC_CTRL_H
+#define SLE_DISC_CTRL_H
 
 #include <stdint.h>
-#include "iotc_sle_announce.h"
+#include "iotc_sle_server.h"
+#include "iotc_sle_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef int32_t (*SleGetAdvInfoCallback)(IotcAdptSleAnnounceParam *advPara, IotcAdptSleAnnounceData *advData);
-int32_t SleRegAdvAdvInfoCallback(SleGetAdvInfoCallback cb);
-int32_t SleAdvCtrlStartSpecific(const IotcAdptSleAnnounceParam *advPara, const IotcAdptSleAnnounceData *advData, uint32_t ms);
-int32_t SleAdvCtrlStart(uint32_t ms);
-int32_t SleAdvCtrlStop(void);
-int32_t SleAdvCtrlResume(void);
-int32_t SleAdvCtrlUpdate(void);
+int32_t SleSeekCtrlParamSet(const IotcAdptSleSeekParam *param);
+int32_t SleSeekCtrlStart(void);
+int32_t SleSeekCtrlStop(void);
 
 #ifdef __cplusplus
 }
