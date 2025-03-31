@@ -150,7 +150,7 @@ int32_t IotcOhGetSleAdvData(IotcAdptSleAnnounceData *advData)
 
     int32_t len = 0;
     len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceLength],
-                 sizeof(advData->announceData) - advData->announceLength);
+                            sizeof(advData->announceData) - advData->announceLength);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;

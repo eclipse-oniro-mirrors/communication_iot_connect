@@ -529,8 +529,8 @@ static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAnnounceData *advData)
     (void)memset_s(advData, sizeof(IotcAdptSleAnnounceData), 0, sizeof(IotcAdptSleAnnounceData));
 
     int32_t len = 0;
-    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceLength], 
-         sizeof(advData->announceData) - advData->announceLength);
+    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceLength],
+        sizeof(advData->announceData) - advData->announceLength);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;

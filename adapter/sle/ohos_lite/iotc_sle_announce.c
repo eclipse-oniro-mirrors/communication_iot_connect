@@ -25,12 +25,12 @@ static IotcAdptSleAnnounceCallback g_announceEventHandler = NULL;
 
 uint8_t IotcInitSleAnnounceService(void)
 {
-   uint8_t ret = InitSleAnnounceService();
+    uint8_t ret = InitSleAnnounceService();
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcInitSleAnnounceService=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcAddAnnounce(uint8_t *announceId)
@@ -40,25 +40,25 @@ uint8_t IotcAddAnnounce(uint8_t *announceId)
         return IOTC_ERROR;
     }
 
-   uint8_t ret = AddAnnounce(announceId);
+    uint8_t ret = AddAnnounce(announceId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcAddAnnounce=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 static void iotcAnnounceStateChangeCB(uint8_t announceId, uint8_t announceState, bool isTerminaled)
 {
-      IOTC_LOGD("iotAnnounceStateChangeCB %d",announceState);
-      IotcAdptSleAnnounceEventParam eventParam;
-      eventParam.announceStateChnage.announceId = announceId;
-      eventParam.announceStateChnage.announceState = announceState;
-      eventParam.announceStateChnage.isTerminaled = isTerminaled;
-      if (g_announceEventHandler != NULL &&
-          g_announceEventHandler(IOTC_ADPT_SLE_ANNOUNCE_STATE_CHANGE, &eventParam) != IOTC_OK) {
-          IOTC_LOGE("SLE MtuChangeCb handle error");
-      }
+    IOTC_LOGD("iotAnnounceStateChangeCB %d", announceState);
+    IotcAdptSleAnnounceEventParam eventParam;
+    eventParam.announceStateChnage.announceId = announceId;
+    eventParam.announceStateChnage.announceState = announceState;
+    eventParam.announceStateChnage.isTerminaled = isTerminaled;
+    if (g_announceEventHandler != NULL &&
+        g_announceEventHandler(IOTC_ADPT_SLE_ANNOUNCE_STATE_CHANGE, &eventParam) != IOTC_OK) {
+        IOTC_LOGE("SLE MtuChangeCb handle error");
+    }
 
 }
 
@@ -74,7 +74,7 @@ uint8_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
         IOTC_LOGE("IotcRegisterAnnounceCallbacks ret=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcStartAnnounce(uint8_t announceId,const IotcAdptSleAnnounceData *advData,const IotcAdptSleAnnounceParam *advParam)
@@ -90,7 +90,7 @@ uint8_t IotcStartAnnounce(uint8_t announceId,const IotcAdptSleAnnounceData *advD
     iotcAdvData.responceLength = advData->responceLength;
 
     int32_t ret = 0;
-    if(advParam != NULL){
+    if (advParam != NULL) {
         SleAnnounceParam iotcAdvParam = {0};
         iotcAdvParam.handle = advParam->handle;
         iotcAdvParam.mode = advParam->mode;
@@ -119,7 +119,7 @@ uint8_t IotcStartAnnounce(uint8_t announceId,const IotcAdptSleAnnounceData *advD
         ret = StartAnnounce(announceId,&iotcAdvData,&iotcAdvParam);
     } else {
         ret = StartAnnounce(announceId,&iotcAdvData,NULL);
-    }  
+    }
     if (ret != IOTC_OK) {
         IOTC_LOGE("start adv ret=%d", ret);
         return ret;
@@ -158,7 +158,7 @@ uint8_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
         IOTC_LOGE("IotcUnregisterAnnounceCallbacks ret=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcDeinitSleAnnounceService(void)

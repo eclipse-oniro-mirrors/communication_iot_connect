@@ -30,6 +30,8 @@ extern "C" {
 /* UUID最大长度 */
 #define IOTC_ADPT_SLE_UUID_MAX_LEN 16
 
+#define IOTC_ADPT_SLE_LINK_KEY_LEN    16
+
 /* sle接口执行结果 */
 typedef enum {
     IOTC_ADPT_SLE_STATUS_SUCCESS = 0,
@@ -356,7 +358,7 @@ typedef union {
         uint16_t conn_id;
         IotcAdptSleAddr addr;
         IotcAdptSleAcbState conn_state;
-        IotcAdptSlePairState pair_state;
+        IotcAdptSlePairState pairState;
         IotcAdptSleDiscReason disc_reason;
     } sleConnectStateChanged;
     struct {
@@ -463,12 +465,15 @@ typedef union {
     } reqWrite;
 } IotcAdptSleSsapEventParam;
 
-
-
 #define IOTC_ADPT_SLE_SSAP_READ_BUF_SIZE 520
 typedef int32_t(*IotcAdptSleSsapReadFunc)(uint8_t *buff, uint32_t *len);
 typedef int32_t(*IotcAdptSleSsapWriteFunc)(uint8_t *buff, uint32_t len);
 typedef int32_t(*IotcAdptSleSsapCallback)(IotcAdptSleSsapEvent event, const IotcAdptSleSsapEventParam *param);
+typedef int32_t(*IotcAdptSleAnnounceSeekCallback)(
+    IotcAdptSleAnnounceSeekEvent event, 
+    const IotcAdptSleAnnounceSeekEventParam *param
+);
+typedef int32_t(*IotcAdptSleConnectionCallback)(IotcAdptSleConnectionEvent event, const IotcAdptSleConnectionEventParam *param);
 
 /* 发送indication或notification参数 */
 typedef struct {
@@ -685,8 +690,6 @@ uint8_t IotcSsapsDeleteAllServices(uint8_t serviceId);
  * @return SleErrorCode
  */
 uint8_t IotcSsapsRemoveSsapServer(uint8_t serverId);
-
-
 
 /**
  * @brief Add a Ssap server

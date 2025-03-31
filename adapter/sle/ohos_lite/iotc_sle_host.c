@@ -25,7 +25,7 @@ uint8_t IotcInitSleHostService(void)
         IOTC_LOGE("IotcInitSleHostServiceret=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 
@@ -36,7 +36,7 @@ uint8_t IotcDeinitSleHostService(void)
         IOTC_LOGE("IotcInitSleHostServiceret=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcSleEnable(void)
@@ -46,7 +46,7 @@ uint8_t IotcSleEnable(void)
         IOTC_LOGE("IotcSleEnable=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcSleDisable(void)
@@ -56,7 +56,7 @@ uint8_t IotcSleDisable(void)
         IOTC_LOGE("IotcSleEnable=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+     return IOTC_OK;
 }
 
 uint8_t IotcSleSetSleName(const char *name)
@@ -70,7 +70,7 @@ uint8_t IotcSleSetSleName(const char *name)
         IOTC_LOGE("set name ret=%d", ret);
         return ret;
     }
-    return IOTC_OK;
+     return IOTC_OK;
 }
 
 IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
@@ -85,16 +85,16 @@ IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
     }
     IotcAdptSleDeviceAddr* addr =(IotcAdptSleDeviceAddr*)malloc(sizeof(IotcAdptSleDeviceAddr));
     // 将 sleAddr 的内容赋值给 addr
-    if(memcpy(addr, sleAddr, sizeof(IotcAdptSleDeviceAddr)) != 0){
+    if(memcpy_s(addr, sizeof(IotcAdptSleDeviceAddr), sleAddr, sizeof(IotcAdptSleDeviceAddr)) == 0){
         return addr;
     }  
-   return NULL;  
+    return NULL;
 }
 
 
 
 
-static void sleFlowMonitorEventCb(float flow)
+static void SleFlowMonitorEventCb(float flow)
 {
   
 }
@@ -118,7 +118,7 @@ uint8_t IotcSleRegisterHostCallbacks()
         IOTC_LOGE("IotcSleRegisterHostCallbacks ret=%d", ret);
         return ret;
     }
-    return IOTC_OK;
+     return IOTC_OK;
 }
 
 uint8_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback)
@@ -127,10 +127,10 @@ uint8_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback)
         IOTC_LOGE("UnregisterHostCallbacks invalid param");
         return IOTC_ERROR;
     }
-    uint8_t ret=UnregisterHostCallbacks(&hostCallback);
-      if (ret != IOTC_OK) {
+    uint8_t ret = UnregisterHostCallbacks(&hostCallback);
+    if (ret != IOTC_OK) {
         IOTC_LOGE("IotcUnregisterHostCallbacksret=%d", ret);
         return ret;
     }
-    return IOTC_OK;
+     return IOTC_OK;
 }

@@ -37,14 +37,14 @@ static IotcAdptSleConnectionCallback g_sleConnectionEventHandler = NULL;
 
 uint8_t IotcSsapsAddProperty(uint8_t serviceId, uint16_t serviceHandle, IotcAdptSleSsapsPropertyInfo *property, uint16_t *handle)
 {
-  if (property == NULL || handle == NULL) {
+    if (property == NULL || handle == NULL) {
         IOTC_LOGE("IotcSsapsAddProperty Invalid input parameters");
         return IOTC_ERROR;
     }
     SsapsPropertyParam  param = {0};
     SleUuid uuid = {0};
     uuid.len = property->uuid.len;
-     if (memcpy_s(uuid.uuid, sizeof(uuid.uuid), property->uuid.uuid, property->uuid.len) != EOK) {
+    if (memcpy_s(uuid.uuid, sizeof(uuid.uuid), property->uuid.uuid, property->uuid.len) != EOK) {
         IOTC_LOGE("IotcSsapsAddProperty memcpy_s failed: UUID data copy error");
         return IOTC_ERROR;
     }
@@ -54,7 +54,7 @@ uint8_t IotcSsapsAddProperty(uint8_t serviceId, uint16_t serviceHandle, IotcAdpt
     param.value = property->value;
     param.valueLen = property->valueLen;
 
-    int32_t ret = AddProperty(serviceId,serviceHandle,&param,handle);
+    int32_t ret = AddProperty(serviceId, serviceHandle, &param, handle);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcAddSsapServer ret=%d", ret);
         return ret;
@@ -62,7 +62,13 @@ uint8_t IotcSsapsAddProperty(uint8_t serviceId, uint16_t serviceHandle, IotcAdpt
     return IOTC_OK;
 }
 
-uint8_t IotcSsapsAddDescriptor(uint8_t serverId, uint16_t serviceHandle, uint16_t propHandle, const IotcAdptSleSsapsDescInfo *descParam, uint16_t *descHandle)
+uint8_t IotcSsapsAddDescriptor(
+    uint8_t serverId, 
+    uint16_t serviceHandle, 
+    uint16_t propHandle, 
+    const IotcAdptSleSsapsDescInfo *descParam, 
+    uint16_t *descHandle
+)
 {
    if (descParam == NULL || descHandle == NULL) {
         IOTC_LOGE("IotcSsapsAddDescriptor Invalid input parameters");
@@ -82,7 +88,7 @@ uint8_t IotcSsapsAddDescriptor(uint8_t serverId, uint16_t serviceHandle, uint16_
     param.valueLen = descParam->valueLen;
     param.type = descParam->type;
 
-    int32_t ret = AddDescriptor(serverId,serviceHandle,propHandle,&param,descHandle);
+    int32_t ret = AddDescriptor(serverId, serviceHandle, propHandle, &param, descHandle);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcAddSsapServer ret=%d", ret);
         return ret;
@@ -155,9 +161,13 @@ uint8_t IotcSleSendSsapsIndicate(uint8_t serverId, uint16_t connectId, const Iot
     return IOTC_OK;
 }
 
-uint8_t IotcSleSendSsapsIndicateByUuid(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateByUuidParam *param)
+uint8_t IotcSleSendSsapsIndicateByUuid(
+    uint8_t serverId, 
+    uint16_t connectId, 
+    const IotcAdptSleSendIndicateByUuidParam *param
+)
 {
-      if ((param == NULL) || (param->value == NULL) || (param->valueLen == 0)) {
+    if ((param == NULL) || (param->value == NULL) || (param->valueLen == 0)) {
         IOTC_LOGE("IotcSleSendSsapsIndicate invalid param");
         return IOTC_ERROR;
     }
@@ -170,7 +180,7 @@ uint8_t IotcSleSendSsapsIndicateByUuid(uint8_t serverId, uint16_t connectId, con
     indParam.value = param->value;
     SleUuid uuid = {0};
     uuid.len = &param->uuid.len;
-     if (memcpy_s(uuid.uuid, sizeof(uuid.uuid), param->uuid.uuid, param->uuid.len) != EOK) {
+    if (memcpy_s(uuid.uuid, sizeof(uuid.uuid), param->uuid.uuid, param->uuid.len) != EOK) {
         IOTC_LOGE("IotcSsapsAddProperty memcpy_s failed: UUID data copy error");
         return IOTC_ERROR;
     }
@@ -183,8 +193,8 @@ uint8_t IotcSleSendSsapsIndicateByUuid(uint8_t serverId, uint16_t connectId, con
     return IOTC_OK;
 }
 
-uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId,const IotcAdptSleResponseParam *param)
-{     
+uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
+{
     if ((param == NULL)) {
        IOTC_LOGE("IotcSleSendSsapsResponse invalid param");
         return IOTC_ERROR;
@@ -194,7 +204,7 @@ uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId,const Iotc
     resParam.status  = param->status;
     resParam.valueLen = param->valueLen;
     resParam.value = param->value;
-    uint8_t ret = SendResponse(serverId,connectId,param);
+    uint8_t ret = SendResponse(serverId, connectId, param);
     if(ret != IOTC_OK) {
         IOTC_LOGE("IotcSleSendSsapsResponse ret=%d", ret);
         return ret;
@@ -243,13 +253,12 @@ static void WriteRequestCb(int32_t errCode, uint8_t serverId, uint16_t connectId
       g_gattEventHandler(IOTC_ADPT_SLE_SSAP_EVENT_REQ_WRITE, &eventParam) != IOTC_OK) {
         IOTC_LOGE("SLE WriteRequestCb handle error");
     }
-
 }
 
 static void MtuChangeCb(int32_t errCode, uint8_t serverId, uint16_t connectId, const SsapMtuInfo *mtuInfo)
 {
     IOTC_LOGD("SLE  MtuChangeCb:errCode:%d,serverId:%d,conn_id=%d", errCode, serverId, connectId);
-      if (mtuInfo == NULL) {
+    if (mtuInfo == NULL) {
         IOTC_LOGE("SLE  MtuChangeCb mtuInfo null");
         return;
     }
@@ -272,10 +281,7 @@ static SleSsapsCallbacks g_sleSsapsCb = {
 
 uint8_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
 {
-    // if ((callback == NULL)) {
-    //    IOTC_LOGE("IotcSleSsapsRegisterServer invalid param");
-    //     return IOTC_ERROR;
-    // }
+
      g_gattEventHandler = callback;
     int32_t ret = RegisterSsapServerCallbacks(&g_sleSsapsCb);
     if (ret != IOTC_OK) {
@@ -287,10 +293,7 @@ uint8_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
 
 uint8_t IotcSleSsapsUnregisterServer(const IotcAdptSleSsapCallback callback)
 {
-    // if ((callback == NULL)) {
-    //    IOTC_LOGE("IotcSleSsapsUnregisterServer invalid param");
-    //     return IOTC_ERROR;
-    // }
+
      g_gattEventHandler = callback;
     int32_t ret = UnregisterSsapServerCallbacks(&g_sleSsapsCb);
     if (ret != IOTC_OK) {
@@ -337,7 +340,7 @@ uint8_t IotcSsapsDeleteAllServices(uint8_t serviceId)
 
 uint8_t IotcSsapsRemoveSsapServer(uint8_t serverId)
 {
-   int32_t ret =  RemoveSsapServer(serverId);
+    int32_t ret =  RemoveSsapServer(serverId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcSsapsRemoveSsapServer ret=%d", ret);
         return ret;
@@ -347,10 +350,10 @@ uint8_t IotcSsapsRemoveSsapServer(uint8_t serverId)
 
 uint8_t IotcAddSsapSetServerMtuInfo(uint8_t serverId, const IotcAdptSleMtuInfo *mtuInfo)
 {
-   SsapMtuInfo  info = {0};
-   info.mtuSize = mtuInfo->mtuSize;
-   info.version = mtuInfo->version;
-   int32_t ret =  SetServerMtuInfo(serverId, &info);
+    SsapMtuInfo  info = {0};
+    info.mtuSize = mtuInfo->mtuSize;
+    info.version = mtuInfo->version;
+    int32_t ret =  SetServerMtuInfo(serverId, &info);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcAddSsapSetServerMtuInfo ret=%d", ret);
         return ret;
@@ -375,10 +378,7 @@ static SleConnectCallbacks g_SleConnectionCb = {
 
 int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback callback)
 {
-    // if (callback == NULL) {
-    //     IOTC_LOGE("invalid param");
-    //     return IOTC_ERR_PARAM_INVALID;
-    // }
+
     g_sleConnectionEventHandler = callback;
     int32_t ret = RegisterConnectCallbacks(&g_SleConnectionCb);
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {

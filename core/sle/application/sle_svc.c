@@ -39,24 +39,12 @@ static const char *SLE_SERVICE_NAME = "SLE";
 
 static void SleStackDeinit(void)
 {
-    
     SleSsapDisconnectAll();
-    // int32_t ret = IotcDeinitSleHostService();
-    // IOTC_LOGI("IotcDeinitSleHostService %d", ret);
-    //  ret = IotcSleDisable();
-    //  IOTC_LOGI("IotcSleDisable %d", ret);
-     
-    // IOTC_LOGI("IotcSleRegisterHostCallbacks %d", ret);
-
-    // if (ret != IOTC_OK) {
-    //     IOTC_LOGW("stack deinit error %d", ret);
-    // }
     SleSsapMgtDestroy();
 }
 
 static int32_t SleStackInit(void)
-{   
-
+{
     int32_t ret = SetSleConnectParam();
     if (ret != IOTC_OK) {
         IOTC_LOGE("set connect param error %d", ret);
@@ -66,8 +54,8 @@ static int32_t SleStackInit(void)
     // ret = IotcInitSleSsapsService();
     IOTC_LOGI("IotcInitSleHostService %d", ret);
 
-     ret = IotcSleEnable();
-     IOTC_LOGI("IotcSleEnable %d", ret);
+    ret = IotcSleEnable();
+    IOTC_LOGI("IotcSleEnable %d", ret);
      
     ret = IotcSleRegisterHostCallbacks();
 

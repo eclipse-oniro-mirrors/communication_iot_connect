@@ -35,9 +35,7 @@ extern "C" {
 //  */
 // typedef void (*IotcAdpSleAnnounceStateChangeCallback)(uint8_t announceId, uint8_t announceState, bool isTerminaled);
 
-// typedef struct {
-//     IotcAdpSleAnnounceStateChangeCallback OnSleAnnounceStateChangeCb;
-// } IotcAdpSleAnnounceCallbacks;
+
 
 typedef enum {
     IOTC_ADPT_SLE_ANNOUNCE_NONCONN_NONSCAN_MODE      = 0x00,
@@ -158,7 +156,11 @@ uint8_t IotcRemoveAnnounce(uint8_t announceId);
  *   @note    dataLen mast less then SLE_ANNOUNCE_DATA_ANN_MAX_LENGTH or SLE_ANNOUNCE_DATA_MAX_RSP_LENGTH
  *   @attention if announceParam is not NULL, all params of announceParam should be set by user
  */
-uint8_t IotcStartAnnounce(uint8_t announceId, const IotcAdptSleAnnounceData *data, const IotcAdptSleAnnounceParam *announceParam);
+uint8_t IotcStartAnnounce(
+    uint8_t announceId, 
+    const IotcAdptSleAnnounceData *data, 
+    const IotcAdptSleAnnounceParam *announceParam
+);
 
 /**
  *   @brief   Stop announce

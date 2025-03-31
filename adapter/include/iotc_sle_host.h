@@ -28,8 +28,8 @@ extern "C" {
 #define IOTC_ADPT_SLE_ADDR_LEN 6
 
 typedef struct {
-    uint8_t type;                         
-    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];                                                
+    uint8_t type;
+    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN]; 
 } IotcAdptSleDeviceAddr;
 
 /**

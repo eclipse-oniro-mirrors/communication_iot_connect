@@ -77,7 +77,10 @@ static const ConnectionEventToScheduleEvent EVENT_COVERT_MAP[] = {
     },
 };
 
-static int32_t SleConnectionEventHandler(IotcAdptSleConnectionEvent discEvent, const IotcAdptSleConnectionEventParam *param)
+static int32_t SleConnectionEventHandler(
+    IotcAdptSleConnectionEvent discEvent, 
+    const IotcAdptSleConnectionEventParam *param
+)
 {
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
     for (uint32_t i = 0; i < ARRAY_SIZE(EVENT_COVERT_MAP); i++) {

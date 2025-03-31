@@ -94,7 +94,10 @@ static const AnnounceSeekEventToScheduleEvent EVENT_COVERT_MAP[] = {
     },
 };
 
-static int32_t SleAnnounceSeekEventHandler(IotcAdptSleAnnounceSeekEvent discEvent, const IotcAdptSleAnnounceSeekEventParam *param)
+static int32_t SleAnnounceSeekEventHandler(
+    IotcAdptSleAnnounceSeekEvent discEvent, 
+    const IotcAdptSleAnnounceSeekEventParam *param
+)
 {
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
     for (uint32_t i = 0; i < ARRAY_SIZE(EVENT_COVERT_MAP); i++) {
@@ -103,7 +106,10 @@ static int32_t SleAnnounceSeekEventHandler(IotcAdptSleAnnounceSeekEvent discEven
         }
 
         IotcAdptSleAnnounceSeekEventParam *eventParam =
-            (IotcAdptSleAnnounceSeekEventParam *)UtilsMallocCopy((const uint8_t *)param, sizeof(IotcAdptSleAnnounceSeekEventParam));
+            (IotcAdptSleAnnounceSeekEventParam *)UtilsMallocCopy(
+                (const uint8_t *)param, 
+                sizeof(IotcAdptSleAnnounceSeekEventParam)
+            );
         if (eventParam == NULL) {
             IOTC_LOGW("malloc error");
             return IOTC_ADAPTER_MEM_ERR_MALLOC;

@@ -163,8 +163,6 @@ static void SleEventStopSvcResultHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-<<<<<<< HEAD
-=======
     if (eventParam->stopSvc.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("stop svc fail");
         if (IotcSleStopSsapsService(eventParam->stopSvc.serverId, eventParam->stopSvc.svcHandle) != IOTC_OK) {
@@ -172,7 +170,6 @@ static void SleEventStopSvcResultHandler(int32_t event, void *param)
         }
         return;
     }
->>>>>>> 85bd969... 完善接口
     GetSleSsapMgtApp()->startedSvcNum--;
     if (GetSleSsapMgtApp()->startedSvcNum == 0) {
         IOTC_LOGN("all svc stop success");
@@ -198,10 +195,7 @@ static void SleEventStartAdvResultHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    // if (eventParam->startAdv.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-    //     IOTC_LOGE("start adv fail");
-    //     return;
-    // }
+
     IOTC_LOGN("start adv success");
 }
 
@@ -210,9 +204,7 @@ static void SleEventReqReadHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    // int32_t ret = SleSsapReqRead(eventParam->reqRead.connId,
-    //     eventParam->reqRead.attrHandle, eventParam->reqRead.transId);
-    // IOTC_LOGN("req read ret=%d", ret);
+
 }
 
 static void SleEventReqWriteHandler(int32_t event, void *param)
@@ -220,8 +212,14 @@ static void SleEventReqWriteHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    int32_t ret = SleSsapReqWrite(eventParam->reqWrite.serverId, eventParam->reqWrite.connectId,
-        eventParam->reqWrite.requestId, eventParam->reqWrite.type,eventParam->reqWrite.value, eventParam->reqWrite.valueLen);
+    int32_t ret = SleSsapReqWrite(
+        eventParam->reqWrite.serverId, 
+        eventParam->reqWrite.connectId,
+        eventParam->reqWrite.requestId, 
+        eventParam->reqWrite.type,
+        eventParam->reqWrite.value, 
+        eventParam->reqWrite.valueLen
+    );
     IOTC_LOGN("req write ret=%d", ret);
 }
 
@@ -230,10 +228,7 @@ static void SleEventStopAdvResultHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    // if (eventParam->stopAdv.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-    //     IOTC_LOGE("stop adv fail");
-    //     return;
-    // }
+
     IOTC_LOGN("stop adv success");
 }
 

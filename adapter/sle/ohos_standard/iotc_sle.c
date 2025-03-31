@@ -48,7 +48,7 @@ static int32_t SleSetAnnounceData(uint8_t announceId, const IotcAdptSleAnnounceD
 }
 
 static int32_t SleSetAnnounceParam(uint8_t announceId, const IotcAdptSleAnnounceParam *param)
-{ 
+{
     sle_announce_param_t param_sdk;
     param_sdk.announce_handle = param->handle,
     param_sdk.announce_mode = param->mode,
@@ -64,11 +64,16 @@ static int32_t SleSetAnnounceParam(uint8_t announceId, const IotcAdptSleAnnounce
     param_sdk.conn_supervision_timeout = param->connectTimeout,
     param_sdk.ext_param = (void*)param->extParam,
     param_sdk.own_addr.type = (uint8_t)param->ownAddr.type;
-    memcpy(param_sdk.own_addr.addr, param->ownAddr.addr, sizeof(param_sdk.own_addr.addr));
+    if (memcpy_s(param_sdk.own_addr.addr, sizeof(param_sdk.own_addr.addr), param->ownAddr.addr, sizeof(param_sdk.own_addr.addr)) != 0) {
+        IOTC_LOGE("memcpy_s failed");
+        return IOTC_ERROR;
+    }
     param_sdk.peer_addr.type = (uint8_t)param->peerAddr.type;
-    memcpy(param_sdk.peer_addr.addr, param->peerAddr.addr, sizeof(param_sdk.peer_addr.addr));
+    if (memcpy_s(param_sdk.peer_addr.addr, sizeof(param_sdk.peer_addr.addr), param->peerAddr.addr, sizeof(param_sdk.peer_addr.addr)) != 0) {
+        IOTC_LOGE("memcpy_s failed");
+        return IOTC_ERROR;
+    }
     return sle_set_announce_param(announceId, &param_sdk);
-
 }
 
 static int32_t SleStartAnnounce(uint8_t announceId)
@@ -95,7 +100,7 @@ uint64_t sle_clock_gettime_us_kh_lite(void)
     return ((uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL);
 }
 
-extern uint8_t gle_tx_acb_data_num_get(void);
+
 static int32_t sle_notify_indicate_sync(uint8_t serverId, uint16_t connectId, ssaps_ntf_ind_t *param)
 {
     int32_t ret = -1;
@@ -130,10 +135,10 @@ static int32_t sle_notify_indicate_sync(uint8_t serverId, uint16_t connectId, ss
     return ret;
 }
 
-pthread_mutex_t send_mutex_server;
+pthread_mutex_t g_sendMutexServer;
 static int32_t SsapsNotifyIndicate(uint8_t serverId, uint16_t connectId, const SsapsNtfInd *param)
 {
-    pthread_mutex_lock(&send_mutex_server);
+    pthread_mutex_lock(&g_sendMutexServer);
     ssaps_ntf_ind_t param_sdk = {
         .handle = param->handle,
         .type = (uint8_t)param->type,
@@ -141,7 +146,7 @@ static int32_t SsapsNotifyIndicate(uint8_t serverId, uint16_t connectId, const S
         .value = param->value,
     };
     int32_t ret = sle_notify_indicate_sync(serverId, connectId, &param_sdk);
-    pthread_mutex_unlock(&send_mutex_server);
+    pthread_mutex_unlock(&g_sendMutexServer);
     return ret;
 }
 
@@ -150,7 +155,10 @@ static int32_t SlePairRemoteDevice(const IotcAdptSleAddr *addr)
     sle_addr_t addr_sdk = {
         .type = (uint8_t)addr->type,
     };
-    memcpy(&addr_sdk.addr, addr->addr, sizeof(addr_sdk.addr));
+    if (memcpy_s(&addr_sdk.addr, sizeof(addr_sdk.addr), addr->addr, sizeof(addr_sdk.addr)) != 0) {
+        IOTC_LOGE("memcpy_s failed");
+        return IOTC_ERROR;
+    }
     return sle_pair_remote_device(&addr_sdk);
 }
 
@@ -161,7 +169,7 @@ static int32_t EnableSle(void)
 
 static int32_t DisableSle(void)
 {
-     return disable_sle();
+    return disable_sle();
 }
 
 static int32_t SleSetLocalName(const uint8_t *name, uint8_t len)
@@ -169,7 +177,7 @@ static int32_t SleSetLocalName(const uint8_t *name, uint8_t len)
     return sle_set_local_name(name, len);
 }
 
-static void AddServiceCb (uint8_t server_id, sle_uuid_t *uuid, uint16_t handle, uint32_t status)
+static void AddServiceCb(uint8_t server_id, sle_uuid_t *uuid, uint16_t handle, uint32_t status)
 {
      IOTC_LOGD("SLE AddServiceCb:status:%d,serverId:%d,Handle=%d", status, server_id, handle);
 }
@@ -219,7 +227,7 @@ static void ReadRequestCb(uint8_t server_id, uint16_t conn_id, ssaps_req_read_cb
 static void WriteRequestCb(uint8_t server_id, uint16_t conn_id, ssaps_req_write_cb_t *write_cb_para,
     uint32_t status)
 {
-     IOTC_LOGD("SLE  WriteRequestCb:status:%d,serverId:%d,conn_id=%d", status, server_id, conn_id);
+    IOTC_LOGD("SLE  WriteRequestCb:status:%d,serverId:%d,conn_id=%d", status, server_id, conn_id);
 
 }
 
@@ -599,28 +607,28 @@ static uint32_t SleStopSeek(void)
 {
     uint32_t ret = sle_stop_seek();
     IOTC_LOGI("sle_stop_seek ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 static uint32_t SleConnectRemoteDevice(const sle_addr_t *addr)
 {
     uint32_t ret = sle_connect_remote_device(addr);
     IOTC_LOGI("sle_connect_remote_device ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 static uint32_t SleDisconnectRemoteDevice(const sle_addr_t *addr)
 {
     uint32_t ret = sle_disconnect_remote_device(addr);
     IOTC_LOGI("sle_disconnect_remote_device ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 static uint32_t SleDefaultConnectionParamSet(sle_default_connect_param_t *set_param)
 {
     uint32_t ret = sle_default_connection_param_set(set_param);
     IOTC_LOGI("sle_default_connection_param_set ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 /***************************************************************************************************/
@@ -718,7 +726,7 @@ int32_t IotcSleStartAdv(const IotcAdptSleAnnounceParam *advParam, const IotcAdpt
     }
 
     int32_t ret = SleSetAnnounceData(g_announceId, advData);
-     if (ret != ERRCODE_SLE_SUCCESS) {
+    if (ret != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("start adv set data=%d", ret);
         return ret;
     }
@@ -766,7 +774,7 @@ int32_t IotcSleStartSsapsService(IotcAdptSleSsapService *svc, uint8_t svcNum)
         IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
-    for (uint8_t i = 0; i < svcNum; i++) {    
+    for (uint8_t i = 0; i < svcNum; i++) {
         int32_t ret = SsapsStartService(svc[i].serverId, svc[i].svcHandle);
         if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
             IOTC_LOGE("gatt start service ret=%d", ret);

@@ -62,7 +62,7 @@ int32_t SleScheduleEventInit(void);
 void SleSsapDisconnectAll(void);
 int32_t SetSleConnectParam(void);
 int32_t SleSsapReqRead(int32_t connId, int32_t attrHandle, int32_t transId);
-int32_t SleSsapReqWrite(uint8_t serverId, uint16_t connectId, uint16_t requestId, uint8_t type,uint8_t *value, int32_t valueLen);
+int32_t SleSsapReqWrite(uint8_t serverId, uint16_t connectId, uint16_t requestId, uint8_t type, uint8_t *value, int32_t valueLen);
 
 #ifdef __cplusplus
 }

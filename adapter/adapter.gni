@@ -66,12 +66,12 @@ if (iot_connect_feature_sle_support) {
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_standard/iotc_sle.c"]
   }
-   iotc_adapter_def += ["IOTC_CONF_SLE_SUPPORT=1"]
-   iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
-   iotc_adapter_inc += ["//third_party/mbedtls/include"]
-   iotc_adapter_inc += ["//foundation/communication/nearlink/sle/interface/c_interface"]
-   iotc_adapter_inc += ["//foundation/communication/nearlink/sle/sle_utils/defines"]
-   iotc_adapter_inc += ["//foundation/communication/nearlink/sle/sle_utils/hilog"]
+    iotc_adapter_def += ["IOTC_CONF_SLE_SUPPORT=1"]
+    iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
+    iotc_adapter_inc += ["//third_party/mbedtls/include"]
+    iotc_adapter_inc += ["//foundation/communication/nearlink/sle/interface/c_interface"]
+    iotc_adapter_inc += ["//foundation/communication/nearlink/sle/sle_utils/defines"]
+    iotc_adapter_inc += ["//foundation/communication/nearlink/sle/sle_utils/hilog"]
 }
 
 if (iot_connect_feature_wifi_support) {
