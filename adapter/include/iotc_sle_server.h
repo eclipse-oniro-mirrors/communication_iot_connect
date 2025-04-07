@@ -32,7 +32,6 @@ extern "C" {
 
 #define IOTC_ADPT_SLE_LINK_KEY_LEN    16
 
-/* sle接口执行结果 */
 typedef enum {
     IOTC_ADPT_SLE_STATUS_SUCCESS = 0,
     IOTC_ADPT_SLE_STATUS_FAIL = 1

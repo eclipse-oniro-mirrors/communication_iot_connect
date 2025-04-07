@@ -144,7 +144,7 @@ static void SleEventStartSvcResultHandler(int32_t event, void *param)
                 continue;
             }
             
-            if (IotcSleSsapsStartService(&svcList[i], 1) != IOTC_OK) {
+            if (IotcSleSsapsStartService(svcList[i].serverId, svcList[i].svcHandle) != IOTC_OK) {
                 IOTC_LOGE("start svc err");
             }
             return;
@@ -235,7 +235,7 @@ static void SleEventStopAdvResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
+    // IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
     // if (eventParam->stopAdv.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
     //     IOTC_LOGE("stop adv fail");
     //     return;
