@@ -360,7 +360,7 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("ssap peer dev info init err ret=%d", ret);
     }
     IOTC_LOGI(" ---> start service:%s", g_SleSsapApp.svc[0].uuid);
-    ret = IotcSleStartServiceEx(GetSleSsapMgtApp()->svc, GetSleSsapMgtApp()->svcNum);
+    ret = IotcSleSsapsStartServiceExt(GetSleSsapMgtApp()->svc, GetSleSsapMgtApp()->svcNum);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add sle svc ret=%d", ret);
         return ret;

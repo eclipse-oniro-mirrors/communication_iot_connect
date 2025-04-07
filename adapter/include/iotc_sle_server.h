@@ -654,6 +654,7 @@ uint8_t IotcDeinitSleSsapsService(void);
  */
 uint8_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle);
 
+int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum);
 
 /**
  * @brief 发送SSAP数据
