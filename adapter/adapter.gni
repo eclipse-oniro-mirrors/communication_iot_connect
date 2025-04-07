@@ -68,6 +68,7 @@ if (iot_connect_feature_sle_support) {
     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_lite/iotc_sle_server.c"]
     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_lite/iotc_sle_host.c"]
     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_lite/iotc_sle_announce.c"]
+     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_lite/iotc_sle_ext.c"]
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_standard/iotc_sle.c"]
   }

@@ -27,7 +27,7 @@ int32_t SleAdvInit(void);
 void SleSetAdvType(SleSvcAdvDataType type);
 
 typedef int32_t (*CustomAdvDataCb)(IotcAdptSleAnnounceData *advData);
-int32_t RegCustomAdvDataCb(CustomAdvDataCb cb);
+int32_t RegSleCustomAdvDataCb(CustomAdvDataCb cb);
 
 #ifdef __cplusplus
 }

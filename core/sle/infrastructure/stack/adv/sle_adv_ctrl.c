@@ -106,14 +106,32 @@ static void StopSleAdvTimer(void)
 static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
     const IotcAdptSleAnnounceData *advData, uint32_t ms)
 {
+    IOTC_LOGE("SleAdapterAdvCtrlStart");
     StopSleAdvTimer();
-
-    int32_t ret = IotcStartAnnounce(anounceId, advData, advPara);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("start sle adv err %d", ret);
+    int32_t ret = IotcInitSleAnnounceService();
+    if (ret != 0) {
+        IOTC_LOGE("SleAdapterAdvCtrlStart adv service ret=%d", ret);
         return ret;
     }
 
+    ret = IotcRegisterAnnounceCallbacks(NULL);
+    if (ret != 0) {
+        IOTC_LOGE("SleAdapterAdvCtrlStart register adv cb ret=%d", ret);
+        return ret;
+    }
+
+    ret = IotcAddAnnounce(&anounceId);
+    if (ret != 0) {
+        IOTC_LOGE("SleAdapterAdvCtrlStart add adv  ret=%d", ret);
+        return ret;
+    }
+    IOTC_LOGI("SleAdapterAdvCtrlStart  anounce param connect max:%d,min:%d",advPara->connectIntervalMax,advPara->connectIntervalMin);
+    ret = IotcStartAnnounce(anounceId, advData,NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("SleAdapterAdvCtrlStart start sle adv err %d", ret);
+        return ret;
+    }
+    IOTC_LOGE("SleAdapterAdvCtrlStart start adv success");
     return StartSleAdvTimer(ms);
 }
 

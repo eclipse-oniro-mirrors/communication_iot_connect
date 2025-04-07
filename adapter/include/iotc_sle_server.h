@@ -39,6 +39,7 @@ typedef enum {
 } IotcAdptSleStatus;
 
 
+/* sle接口执行结果 */
 typedef enum {
     IOTC_ADPT_SLE_PAIR_NONE    = 0x01,    /*!< @if Eng Pair state of none
                                      @else   未配对状态 @endif */
