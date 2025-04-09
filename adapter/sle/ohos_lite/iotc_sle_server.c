@@ -475,11 +475,9 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
     return IOTC_OK;
 }
 
-
 int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
 {     
-    IOTC_LOGI("IotcSleSendSsapsResponse");
-    if ((param == NULL)) {
+    if (param == NULL) {
         IOTC_LOGE("IotcSleSendSsapsResponse invalid param");
         return IOTC_ERROR;
     }
@@ -495,6 +493,7 @@ int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const Iot
     }
     return IOTC_OK;
 }
+
 static void ReadRequestCb(int32_t errCode, uint8_t serverId, uint16_t connectId, const SsapsReqReadCbParam *readCbPara)
 {
     IOTC_LOGD("SLE  ReadRequestCb:errCode:%d,serverId:%d,conn_id=%d", errCode, serverId, connectId);
@@ -671,9 +670,7 @@ static void SleConnectStateChangedCallback(uint16_t connectId, const SleDeviceAd
     param.sleConnectStateChanged.conn_state = (IotcAdptSleAcbState)connState;
     param.sleConnectStateChanged.pair_state = (IotcAdptSlePairState)pairState;
     param.sleConnectStateChanged.disc_reason = (IotcAdptSleDiscReason)discReason;
-      IOTC_LOGD("SLE ConnectStateChanged handle:");
     if (g_sleConnectionEventHandler != NULL) {
-        IOTC_LOGD("SLE ConnectStateChanged handle2:");
         int32_t ret = g_sleConnectionEventHandler(IOTC_ADPT_SLE_CONNECT_STATE_CHANGED_EVENT, &param);
         IOTC_LOGD("SLE ConnectStateChanged cb:ret:%d", ret);
     }
