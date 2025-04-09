@@ -324,6 +324,18 @@ static void SleEventConnectStateChangeHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    
+
+    if (GetSleSsapMgtApp()->connNum >= SLE_DEFAULT_MAX_CONN_NUM) {
+        IOTC_LOGE("connect num overflow=%u", GetSleSsapMgtApp()->connNum);
+        return;
+    }
+    if(eventParam->sleConnectStateChanged.conn_state == IOTC_ADPT_SLE_ACB_STATE_CONNECTED){
+       GetSleSsapMgtApp()->connNum++;
+    }
+    if(eventParam->sleConnectStateChanged.conn_state == IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED){
+       GetSleSsapMgtApp()->connNum--;
+    }    
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED, param, sizeof(eventParam->sleConnectStateChanged));
 }
 
