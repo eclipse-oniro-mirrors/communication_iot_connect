@@ -461,7 +461,7 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
     indParam.valueLen = param->valueLen;
     indParam.value = param->value;
     SleUuid uuid = {0};
-    uuid.len = &param->uuid.len;
+    uuid.len = param->uuid.len;
     if (memcpy_s(uuid.uuid, sizeof(uuid.uuid), param->uuid.uuid, param->uuid.len) != EOK) {
         IOTC_LOGE("IotcSsapsAddProperty memcpy_s failed: UUID data copy error");
         return IOTC_ERROR;
@@ -475,22 +475,9 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
     return IOTC_OK;
 }
 
-int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
-{
-    if (param == NULL) {
-        IOTC_LOGE("IotcSleSendSsapsResponse invalid param");
-        return IOTC_ERROR;
-    }
-    SsapsSendRspParam resParam = {0};
-    resParam.requestId = param->requestId;
-    resParam.status  = param->status;
-    resParam.valueLen = param->valueLen;
-    resParam.value = param->value;
-    int32_t ret = SendResponse(serverId, connectId, &resParam);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("IotcSleSendSsapsResponse ret=%d", ret);
-        return ret;
-    }
+int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId,const IotcAdptSleResponseParam *param)
+{     
+    (void)param;
     return IOTC_OK;
 }
 
