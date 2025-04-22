@@ -522,7 +522,16 @@ static void WriteRequestCb(
     eventParam.reqWrite.needRsp = writeCbPara->needRsp;
     eventParam.reqWrite.needAuthorize = writeCbPara ->needAuthorize;
     eventParam.reqWrite.valueLen = writeCbPara ->valueLen;
-    eventParam.reqWrite.value = writeCbPara ->value;
+    eventParam.reqWrite.value  = IotcCalloc(writeCbPara ->valueLen, sizeof(uint8_t));
+    if (eventParam.reqWrite.value == NULL ) {
+        IOTC_LOGE("SLE  WriteRequestCb memory fail");
+        return;
+    }
+    if (memcpy_s(eventParam.reqWrite.value, writeCbPara ->valueLen, writeCbPara->value, writeCbPara ->valueLen) != EOK) {
+        IotcFree(eventParam.reqWrite.value);
+        IOTC_LOGE("SLE  WriteRequestCb copy fail");
+        return;
+    }
     if (g_gattEventHandler != NULL &&
       g_gattEventHandler(IOTC_ADPT_SLE_SSAP_EVENT_REQ_WRITE, &eventParam) != IOTC_OK) {
         IOTC_LOGE("SLE WriteRequestCb handle error");

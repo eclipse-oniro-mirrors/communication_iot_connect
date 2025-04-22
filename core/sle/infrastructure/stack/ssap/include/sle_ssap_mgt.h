@@ -23,9 +23,11 @@
 extern "C" {
 #endif
 
-#define SLE_DEV_NAME "IotcBT"
-#define SLE_DEFAULT_MAX_CONN_NUM 1
-#define SLE_MTU_SIZE 500
+#define SLE_DEFAULT_MAX_CONN_NUM    10
+#define SLE_CONN_HEAD_NODE          11
+#define SLE_MTU_SIZE                500
+extern const uint8_t g_sle_server_id;
+extern const uint8_t g_sle_handle;
 
 typedef struct {
     uint32_t connId;

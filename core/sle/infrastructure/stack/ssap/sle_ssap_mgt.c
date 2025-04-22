@@ -688,6 +688,8 @@ int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
         IOTC_LOGE("no connect");
         return IOTC_CORE_SLE_NO_CONNECT;
     }
+    const  g_sle_handle = handle;
+    const  g_sle_server_id = serverId;
     IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d,serviceId:%d", requestId, valueLen, serverId);
     IotcAdptSleResponseParam param;
     int32_t ret = GetAttrHandleServerId(handle, &serverId);

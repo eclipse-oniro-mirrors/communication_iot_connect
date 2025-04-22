@@ -31,9 +31,9 @@
 #include "dev_info.h"
 #include "product_adapter.h"
 
-#define ADV_NAME_MOULD "Hi-AAAAABBBBB-XYYYYMMNNNN"
-#define UNREG_ADV_NAME_HEAD "Hi"
-#define REGED_ADV_NAME_HEAD "HI"
+#define ADV_NAME_MOULD "Oh-AAAAABBBBB-XYYYYMMNNNN"
+#define UNREG_ADV_NAME_HEAD "Oh"
+#define REGED_ADV_NAME_HEAD "OH"
 #define ADV_NAME_VER "1"
 #define DEFAULT_ADV_TX_POWER 0xF8
 
@@ -487,6 +487,16 @@ static int32_t GenAdvName(SleAdvNameValue *value)
     int32_t snLen = strlen(devInfo->sn);
     if (snLen < ADV_NAME_SN_LEN) {
         IOTC_LOGW("set mac to adv sn");
+        IotcAdptSleDeviceAddr* mac = IotcGetHostAddress();
+        if(mac == NULL){
+            IOTC_LOGE("get sle mac");
+            return IOTC_ERROR;
+        }
+        if (sprintf_s(advSn, sizeof(advSn), "%02X%02X",
+            mac->addr[IOTC_ADPT_SLE_ADDR_LEN - ONE_BYTE], mac->addr[IOTC_ADPT_SLE_ADDR_LEN - TWO_BYTE]) <= 0) {
+            IOTC_LOGE("sprintf_s");
+            return IOTC_ERROR;
+        }
     } else {
         if (sprintf_s(advSn, sizeof(advSn), "%s", GET_STR_TAIL(devInfo->sn, ADV_NAME_SN_LEN)) <= 0) {
             IOTC_LOGE("sprintf_s");
