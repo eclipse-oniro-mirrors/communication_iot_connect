@@ -41,26 +41,3 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint
     }
     return ret;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

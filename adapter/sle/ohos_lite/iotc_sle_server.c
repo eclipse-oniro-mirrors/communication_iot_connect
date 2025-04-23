@@ -569,13 +569,13 @@ uint8_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
     //    IOTC_LOGE("IotcSleSsapsRegisterServer invalid param");
     //     return IOTC_ERROR;
     // }
-     int32_t ret=IotcInitSleSsapsService();
+    int32_t ret=IotcInitSleSsapsService();
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcInitSleSsapsService ret=%d", ret);
         return ret;
     }
-     g_gattEventHandler = callback;
-     ret = RegisterSsapServerCallbacks(&g_sleSsapsCb);
+    g_gattEventHandler = callback;
+    ret = RegisterSsapServerCallbacks(&g_sleSsapsCb);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcSleSsapsRegisterServer ret =%d", ret);
         return ret;
