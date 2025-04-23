@@ -396,8 +396,6 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
         IOTC_LOGE("IotcSleSsapsStartService invalid param");
         return IOTC_ERROR;
     } 
-    // int32_t ret = IotcInitSleSsapsService();
-    // IOTC_LOGI(" ---> init service :%d", ret);
 
     IOTC_LOGI("IotcSleSsapsStartService svcNum:%u", svcNum);
     for (uint8_t i = 0; i < svcNum; i++) {
