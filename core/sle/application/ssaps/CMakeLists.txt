@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(adv)
-add_subdirectory(base)
-add_subdirectory(ssap)
-add_subdirectory(profile)
-add_subdirectory(report)
-add_subdirectory(ssaps)
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sle_ssap_data_svc.c
     PARENT_SCOPE
 )
 

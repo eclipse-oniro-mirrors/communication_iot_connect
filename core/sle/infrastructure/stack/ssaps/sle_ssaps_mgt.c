@@ -13,7 +13,6 @@
 * limitations under the License.
 */
 
-
 #include "sle_ssap_mgt.h"
 #include "iotc_errcode.h"
 #include "securec.h"
@@ -30,12 +29,12 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint
         return IOTC_CORE_SLE_NO_CONNECT;
     }
     IotcAdptSleSendIndicateParam param;
-    param.handle = g_sle_handle;
+    param.handle = GetSleSsapMgtApp()->handle;
     param.type   = 0;
     param.value  = (uint8_t *)value;
     param.valueLen = valueLen;
 
-   int32_t ret = IotcSleSendSsapsIndicate(g_sle_server_id, connId, &param);
+   int32_t ret = IotcSleSendSsapsIndicate(GetSleSsapMgtApp()->serverId, connId, &param);
     if(ret != IOTC_OK)
     {
        IOTC_LOGE("send response msg err ret=%d", ret);

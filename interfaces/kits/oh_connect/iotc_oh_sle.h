@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "iotc_sle_def.h"
+#include "iotc_def.h"
 
 #ifdef __cplusplus
 extern "C" {

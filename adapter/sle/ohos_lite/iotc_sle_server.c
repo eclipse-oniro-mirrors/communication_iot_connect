@@ -184,6 +184,7 @@ uint8_t IotcInitSleSsapsService(void)
 
 uint8_t IotcAddSsapServer(const IotcSleUuidAddr *appUuid, uint8_t *serverId)
 {
+
     if (appUuid == NULL || appUuid->len == 0 || appUuid->len > UUID_LEN) {
         IOTC_LOGE("IotcAddSsapServer Invalid input parameters");
         return IOTC_ERROR;
@@ -394,7 +395,9 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
     if ((svc == NULL) || (svcNum == 0)) {
         IOTC_LOGE("IotcSleSsapsStartService invalid param");
         return IOTC_ERROR;
-    }
+    } 
+    // int32_t ret = IotcInitSleSsapsService();
+    // IOTC_LOGI(" ---> init service :%d", ret);
 
     IOTC_LOGI("IotcSleSsapsStartService svcNum:%u", svcNum);
     for (uint8_t i = 0; i < svcNum; i++) {
@@ -564,8 +567,17 @@ static SleSsapsCallbacks g_sleSsapsCb = {
 
 uint8_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
 {
-    g_gattEventHandler = callback;
-    int32_t ret = RegisterSsapServerCallbacks(&g_sleSsapsCb);
+    // if ((callback == NULL)) {
+    //    IOTC_LOGE("IotcSleSsapsRegisterServer invalid param");
+    //     return IOTC_ERROR;
+    // }
+     int32_t ret=IotcInitSleSsapsService();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("IotcInitSleSsapsService ret=%d", ret);
+        return ret;
+    }
+     g_gattEventHandler = callback;
+     ret = RegisterSsapServerCallbacks(&g_sleSsapsCb);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcSleSsapsRegisterServer ret =%d", ret);
         return ret;

@@ -26,8 +26,7 @@ extern "C" {
 #define SLE_DEFAULT_MAX_CONN_NUM    10
 #define SLE_CONN_HEAD_NODE          11
 #define SLE_MTU_SIZE                500
-extern const uint8_t g_sle_server_id;
-extern const uint8_t g_sle_handle;
+
 
 typedef struct {
     uint32_t connId;
@@ -41,6 +40,8 @@ typedef struct {
     uint8_t svcNum;
     IotcAdptSleSsapService *svc;
     uint8_t startedSvcNum;
+    uint8_t handle;
+    uint8_t serverId;
 } SleSsapMgtApp;
 
 typedef struct {
