@@ -91,23 +91,6 @@ int32_t SleRegAdvAdvInfoCallback(SleGetAdvInfoCallback cb)
 
     (void)UtilsGlobalMutexLock();
     g_sleAdvCtrlCb = cb;
-    UtilsGlobalMutexUnlock();
-    return IOTC_OK;
-}
-
-static void StopSleAdvTimer(void)
-{
-    if (g_advTimerId >= 0) {
-        SchedTimerRemove(g_advTimerId);
-        g_advTimerId = EVENT_SOURCE_INVALID_TIMER_FD;
-    }
-}
-
-static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
-    const IotcAdptSleAnnounceData *advData, uint32_t ms)
-{
-    IOTC_LOGE("SleAdapterAdvCtrlStart");
-    StopSleAdvTimer();
     int32_t ret = IotcInitSleAnnounceService();
     if (ret != 0) {
         IOTC_LOGE("SleAdapterAdvCtrlStart adv service ret=%d", ret);
@@ -125,9 +108,26 @@ static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
         IOTC_LOGE("SleAdapterAdvCtrlStart add adv  ret=%d", ret);
         return ret;
     }
-    IOTC_LOGI("SleAdapterAdvCtrlStart  anounce param connect max:%d, min:%d",
-        advPara->connectIntervalMax, advPara->connectIntervalMin);
-    ret = IotcStartAnnounce(anounceId, advData, NULL);
+    IOTC_LOGI("SleAdapterAdvCtrlStart  add success");
+    UtilsGlobalMutexUnlock();
+    return IOTC_OK;
+}
+
+static void StopSleAdvTimer(void)
+{
+    if (g_advTimerId >= 0) {
+        SchedTimerRemove(g_advTimerId);
+        g_advTimerId = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+}
+
+static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
+    const IotcAdptSleAnnounceData *advData, uint32_t ms)
+{
+    IOTC_LOGE("SleAdapterAdvCtrlStart");
+    StopSleAdvTimer();
+    
+    ret = IotcStartAnnounce(anounceId, advData,NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGE("SleAdapterAdvCtrlStart start sle adv err %d", ret);
         return ret;
