@@ -73,7 +73,7 @@ int32_t SleScanServiceStart(void)
 int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
     if (devId == NULL || data == NULL) {
-        IOTC_LOGE("%s: SleSendCustomSecDataService Invalid input parameters (devId=%p, data=%p)", devId, data);
+        IOTC_LOGE("SleSendCustomSecDataService Invalid input parameters (devId=%p, data=%p)", devId, data);
         return IOTC_ERR_PARAM_INVALID;
     }
 
