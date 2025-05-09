@@ -63,7 +63,7 @@ int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
     }
 
     ret = EventBusSubscribe(SleConnectStateCallback, IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "svc subscribe sle connect state change err:%d", ret);
+    IOTC_LOGI("svc subscribe sle connect state change result:%d", ret);
     return IOTC_OK;
 }
 int32_t SleScanServiceStart(void)
