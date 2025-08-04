@@ -35,6 +35,8 @@ if (defined(ohos_lite)) {
       iotc_device_level = "mini"
       board_hi3863 = true
     }
+    iot_connect_ble_support = true
+    iot_connect_sle_support = true
   } else {
     declare_args() {
       iotc_device_level = "small"

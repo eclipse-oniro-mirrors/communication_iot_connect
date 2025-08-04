@@ -47,6 +47,13 @@ if (defined(ohos_lite)) {
     } else {
       iotc_def += ["IOTC_CONF_LOG_BUILD_LEVEL=2"]
     }
+
+    if(board_hi3863){
+      iotc_def += [
+        "HI3863_SDK_CONFIG_PATH=iotc",
+      ]
+    }
+
     static_library("iotc_static") {
       sources = iotc_src
       include_dirs = iotc_inc

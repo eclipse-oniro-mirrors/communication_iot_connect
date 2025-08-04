@@ -72,6 +72,13 @@ typedef struct {
 
 #define WIFI_CLOUD_TLS_PORT 5683
 #define WIFI_CLOUD_TCP_PORT 5685
+#define STA_CLOUD_TCP_PORT 5893
+#ifdef HI3863_SDK_CONFIG_PATH
+#define SDK_CONFIG_PATH "iotc"
+#define HI3863_SDK_CONFIG_JSON_PATH "authInfo"
+#else
+#define SDK_CONFIG_PATH "/data/app/iotc"
+#endif
 
 #define STR_NETINFO_SSID "ssid"
 #define STR_NETINFO_PASSWORD "password"
