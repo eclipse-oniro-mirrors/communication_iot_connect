@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (c) 2025 Huawei Device Co., Ltd.
 
      Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,9 +50,7 @@
         <licensefile>LICENSE</licensefile>
         <policylist>
             <policy name="projectPolicy" desc="">
-                <policyitem type="copyright" name="Huawei Technologies Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Huawei Technologies"/>
                 <policyitem type="copyright" name="Huawei Device Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Huawei Device"/>
-                <policyitem type="copyright" name="Unisoc (Shanghai) Technologies Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Huawei Device"/>
                 <policyitem type="copyright" name="Shanghai Revoview Technologies Inc." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed By Revoview"/>
                 <policyitem type="copyright" name="HiHope Open Source Organization." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by HiHope Company"/>
                 <policyitem type="copyright" name="Archermind Technology Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Archermind"/>
@@ -59,7 +58,6 @@
                 <policyitem type="copyright" name="NXP" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by NXP Company"/>
                 <policyitem type="copyright" name="Broadcom Corporation" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Broadcom Corporation"/>
                 <policyitem type="license" name="GPL" path=".*" desc="linux kernel adapter codes"/>
-                <policyitem type="license" name="BSD" path=".*" desc="huawei codes"/>
 	        </policy>
         </policylist>
         <filefilterlist>
