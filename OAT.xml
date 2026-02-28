@@ -1,0 +1,143 @@
+<!-- Copyright (c) 2025 Huawei Device Co., Ltd.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+    This is the configuration file template for OpenHarmony OSS Audit Tool, please copy it to your project root dir and modify it refer to OpenHarmony/tools_oat/README.
+    All configurations in this file will be merged to OAT-Default.xml, if you have any questions or concerns, please create issue in OpenHarmony/tools_oat and @jalenchen or chenyaxun.
+
+    licensefile:
+    1.If the project don't have "LICENSE" in root dir, please define all the license files in this project in , OAT will check license files according to this rule.
+
+    policylist:
+    1. policy: If the OAT-Default.xml policies do not meet your requirements, please add policies here.
+    2. policyitem: The fields type, name, path, desc is required, and the fields rule, group, filefilter is optional,the default value is:
+    <policyitem type="" name="" path="" desc="" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter"/>
+    3. policyitem type:
+        "compatibility" is used to check license compatibility in the specified path;
+        "license" is used to check source license header in the specified path;
+        "copyright" is used to check source copyright header in the specified path;
+        "import" is used to check source dependency in the specified path, such as import ... ,include ...
+        "filetype" is used to check file type in the specified path, supported file types: archive, binary
+        "filename" is used to check whether the specified file exists in the specified path(projectroot means the root dir of the project), supported file names: LICENSE, README, README.OpenSource
+    4. policyitem name: This field is used for define the license, copyright, "*" means match all, the "!" prefix means could not match this value. For example, "!GPL" means can not use GPL license.
+    5. policyitem path: This field is used for define the source file scope to apply this policyitem, the "!" prefix means exclude the files. For example, "!.*/lib/.*" means files in lib dir will be exclude while process this policyitem.
+    6. policyitem rule and group: These two fields are used together to merge policy results. "may" policyitems in the same group means any one in this group passed, the result will be passed.
+    7. policyitem filefilter: Used to bind filefilter which define filter rules.
+    7. policyitem desc: Used to describe the reason of this policy item, committers will check this while merging the code.
+    8. filefilter: Filter rules, the type filename is used to filter file name, the type filepath is used to filter file path.
+
+    Note:If the text contains special characters, please escape them according to the following rules:
+    " == &quot;
+    & == &amp;
+    ' == &apos;
+    < == &lt;
+    > == &gt;
+-->
+
+<configuration>
+    <oatconfig>
+        <licensefile>LICENSE</licensefile>
+        <policylist>
+            <policy name="projectPolicy" desc="">
+                <policyitem type="copyright" name="Huawei Technologies Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Huawei Technologies"/>
+                <policyitem type="copyright" name="Huawei Device Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Huawei Device"/>
+                <policyitem type="copyright" name="Unisoc (Shanghai) Technologies Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Huawei Device"/>
+                <policyitem type="copyright" name="Shanghai Revoview Technologies Inc." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed By Revoview"/>
+                <policyitem type="copyright" name="HiHope Open Source Organization." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by HiHope Company"/>
+                <policyitem type="copyright" name="Archermind Technology Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Archermind"/>
+                <policyitem type="copyright" name="Shenzhen Kaihong DID Co., Ltd." path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Kaihong"/>
+                <policyitem type="copyright" name="NXP" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by NXP Company"/>
+                <policyitem type="copyright" name="Broadcom Corporation" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by Broadcom Corporation"/>
+                <policyitem type="license" name="GPL" path=".*" desc="linux kernel adapter codes"/>
+                <policyitem type="license" name="BSD" path=".*" desc="huawei codes"/>
+	        </policy>
+        </policylist>
+        <filefilterlist>
+            <filefilter name="defaultFilter" desc="Files not to check">
+                <filteritem type="filepath" name="LICENSE" desc="license file"/>
+                <filteritem type="filepath" name="wukong100/cfg/fstab.uis7885" desc="配置文件，不能加其他注释"/>
+                <filteritem type="filepath" name="wukong100/updater/config/fstab.updater" desc="配置文件，不能加其他注释"/>
+                <filteritem type="filepath" name="wukong100/kernel/mkboot/bin/dtbTool" desc="打包工具，不能加其他注释"/>
+                <filteritem type="filepath" name="wukong100/kernel/mkboot/bin/mkbootimg" desc="打包工具，不能加其他注释"/>
+                <filteritem type="filepath" name="wukong100/kernel/mkboot/bin/mkdtimg" desc="打包工具，不能加其他注释"/>
+                <filteritem type="filepath" name="wukong100/kernel/mkboot/lib64/libc++.so" desc="打包工具，不能加其他注释"/>
+            </filefilter>
+            <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
+                <!--filteritem type="filename" name="*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="abcdefg/.*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
+            </filefilter>
+            <filefilter name="copyrightPolicyFilter" desc="Filters for copyright header policies">
+                <!--filteritem type="filename" name="*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="abcdefg/.*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
+            </filefilter>
+            <filefilter name="licenseFileNamePolicyFilter" desc="Filters for LICENSE file policies">
+                <!--filteritem type="filename" name="*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="abcdefg/.*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
+            </filefilter>
+            <filefilter name="readmeFileNamePolicyFilter" desc="Filters for README file policies">
+                <!--filteritem type="filename" name="*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
+            </filefilter>
+            <filefilter name="readmeOpenSourcefileNamePolicyFilter" desc="Filters for README.OpenSource file policies">
+                <!--filteritem type="filename" name="*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="abcdefg/.*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
+            </filefilter>
+            <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
+                <filteritem type="filepath" name="wukong100/updater/resources/images/icon/.*.png" desc="升级服务应用的资源文件"/>
+                <filteritem type="filepath" name="wukong100/updater/resources/images/progress/.*.png" desc="升级服务应用的资源文件"/>
+                <filteritem type="filepath" name="wukong100/updater/resources/images/warn/.*.png" desc="升级服务应用的资源文件"/>
+                <filteritem type="filepath" name="wukong100/updater/resources/pages/.*.json" desc="升级服务应用的资源文件"/>
+                <filteritem type="filepath" name="wukong100/updater/resources/string/.*.json" desc="升级服务应用的资源文件"/>
+                <filteritem type="filepath" name="p7885/modules/audio/*.ko" desc="内核audio ko文件"/>
+                <filteritem type="filepath" name="p7885/modules/input/touchscreen/*.ko" desc="内核touchscreen ko文件"/>
+                <filteritem type="filepath" name="p7885/modules/vpu/*.ko" desc="vpu ko文件"/>
+                <filteritem type="filepath" name="p7885/modules/ws73/*.ko" desc="ws73 ko文件"/>
+                <filteritem type="filepath" name="p7885/modules/ws73/*.bin" desc="ws73 bin文件"/>
+                <filteritem type="filepath" name="p7885/hardware/location/*.gpg" desc="location bin加密文件"/>
+                <filteritem type="filepath" name="p7885/pac/ImageFiles/*.gpg" desc="uboot bin加密文件"/>
+                <filteritem type="filepath" name="p7885/pac/ImageFiles/logo.*" desc="开机logo"/>
+                <filteritem type="filepath" name="p7885/pac/ImageFiles/*.bin" desc="开机logo"/>
+                <filteritem type="filepath" name="p7885/pac/ImageFiles/Script/UpdatedPacCRC_Linux" desc="打包脚本"/>
+                <filteritem type="filepath" name="p7885/modules/*.gpg" desc="driver ko加密文件"/>
+                <filteritem type="filepath" name="p7885/hardware/audio/param/audio_structure" desc="音频通话降噪路由文件"/>
+                <filteritem type="filepath" name="p7885/hardware/audio/param/cvs" desc="音频通话降噪路由文件"/>
+                <filteritem type="filepath" name="p7885/hardware/audio/param/dsp_smartamp" desc="音频通话降噪路由文件"/>
+                <filteritem type="filepath" name="p7885/hardware/audio/param/dsp_vbc" desc="音频通话降噪路由文件"/>
+                <filteritem type="filename" name="*.ko" desc="ko"/>
+                <filteritem type="filename" name="*.gpg" desc="gpg"/>
+                <filteritem type="filename" name="*.bin" desc="bin"/>
+                <filteritem type="filename" name="*.png" desc="png"/>
+                <filteritem type="filename" name="*.jpg" desc="jpg"/>
+                <filteritem type="filename" name="*.bmp" desc="bmp"/>
+                <filteritem type="filename" name="*.a|*.so|*.bin|*.img|*.db|*.p7s" desc="Temp files"/>
+                <!--filteritem type="filename" name="*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
+                <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
+            </filefilter>
+
+        </filefilterlist>
+        <licensematcherlist>
+            <!--licensematcher name="uvwxyz License" desc="If the scanning result is InvalidLicense, you can define matching rules here. Note that quotation marks must be escaped.">
+                <licensetext name="
+                    uvwxyz license textA xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+				 " desc=""/>
+                <licensetext name="
+                    uvwxyz license textB xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+				 " desc=""/>
+            </licensematcher-->
+        </licensematcherlist>
+    </oatconfig>
+</configuration>
