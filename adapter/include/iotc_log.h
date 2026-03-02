@@ -41,15 +41,15 @@ uint8_t IotcGetLogLevel(void);
     do { \
         printf(__VA_ARGS__); \
         printf("\n"); \
-    } while (0) 
+    } while (0)
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_DEBUG
 #if IOTC_CONF_LITEOS_M_LOG_PRINTF
-#define IOTC_LOGD(...)\
-    do { \
-        IotcLogOutputImpl(IOTC_LOG_LEVEL_DEBUG, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__); \
-        IotcPrintf(__VA_ARGS__);\
-    } while(0)
+#define IOTC_LOGD(...) \
+    do {
+        IotcLogOutputImpl(IOTC_LOG_LEVEL_DEBUG, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__);
+        IotcPrintf(__VA_ARGS__);
+    } while (0)
 #else
 #define IOTC_LOGD(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_DEBUG, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #endif //IOTC_CONF_LITEOS_M_LOG_PRINTF
@@ -59,11 +59,11 @@ uint8_t IotcGetLogLevel(void);
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_INFO
 #if IOTC_CONF_LITEOS_M_LOG_PRINTF
-#define IOTC_LOGI(...)\
+#define IOTC_LOGI(...) \
     do { \
         IotcLogOutputImpl(IOTC_LOG_LEVEL_INFO, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__); \
-        IotcPrintf(__VA_ARGS__);\
-    } while(0)
+        IotcPrintf(__VA_ARGS__); \
+    } while (0)
 #else
 #define IOTC_LOGI(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_INFO, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #endif //IOTC_CONF_LITEOS_M_LOG_PRINTF
@@ -73,11 +73,11 @@ uint8_t IotcGetLogLevel(void);
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_NOTICE
 #if IOTC_CONF_LITEOS_M_LOG_PRINTF
-#define IOTC_LOGN(...)\
-    do { \
-        IotcLogOutputImpl(IOTC_LOG_LEVEL_NOTICE, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__); \
-        IotcPrintf(__VA_ARGS__);\
-    } while(0)
+#define IOTC_LOGN(...) \
+    do {
+        IotcLogOutputImpl(IOTC_LOG_LEVEL_NOTICE, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__);
+        IotcPrintf(__VA_ARGS__);
+    } while (0)
 #else
 #define IOTC_LOGN(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_NOTICE, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #endif
@@ -87,11 +87,11 @@ uint8_t IotcGetLogLevel(void);
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_WARN
 #if IOTC_CONF_LITEOS_M_LOG_PRINTF
-#define IOTC_LOGW(...)\
+#define IOTC_LOGW(...) \
     do { \
         IotcLogOutputImpl(IOTC_LOG_LEVEL_WARN, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__); \
-        IotcPrintf(__VA_ARGS__);\
-    } while(0)
+        IotcPrintf(__VA_ARGS__); \
+    } while (0)
 #else
 #define IOTC_LOGW(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_WARN, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #endif
@@ -101,11 +101,11 @@ uint8_t IotcGetLogLevel(void);
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_ERROR
 #if IOTC_CONF_LITEOS_M_LOG_PRINTF
-#define IOTC_LOGE(...)\
-    do { \
-        IotcLogOutputImpl(IOTC_LOG_LEVEL_ERROR, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__); \
-        IotcPrintf(__VA_ARGS__);\
-    } while(0)
+#define IOTC_LOGE(...) \
+    do {
+        IotcLogOutputImpl(IOTC_LOG_LEVEL_ERROR, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__);
+        IotcPrintf(__VA_ARGS__);
+    } while (0)
 #else
 #define IOTC_LOGE(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_ERROR, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #endif
@@ -115,11 +115,11 @@ uint8_t IotcGetLogLevel(void);
 
 #if IOTC_CONF_LOG_BUILD_LEVEL >= IOTC_LOG_LEVEL_FATAL
 #if IOTC_CONF_LITEOS_M_LOG_PRINTF
-#define IOTC_LOGF(...)\
-    do { \
-        IotcLogOutputImpl(IOTC_LOG_LEVEL_FATAL, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__); \
-        IotcPrintf(__VA_ARGS__);\
-    } while(0)
+#define IOTC_LOGF(...) \
+    do {
+        IotcLogOutputImpl(IOTC_LOG_LEVEL_FATAL, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__);
+        IotcPrintf(__VA_ARGS__);
+    } while (0)
 #else
 #define IOTC_LOGF(...) IotcLogOutputImpl(IOTC_LOG_LEVEL_FATAL, IOTC_FILE_NAME, IOTC_FUNC_NAME, __LINE__, __VA_ARGS__)
 #endif

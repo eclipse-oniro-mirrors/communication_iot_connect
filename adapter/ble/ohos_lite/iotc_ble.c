@@ -518,7 +518,7 @@ int32_t IotcBleSetBleName(const char *name)
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
     }
-    IOTC_LOGI("IotcBleSetBleName name:%s",name);
+    IOTC_LOGI("IotcBleSetBleName name:%s", name);
     int32_t ret = SetDeviceName(name, strlen(name));
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("set name ret=%d", ret);
@@ -580,7 +580,7 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
     if ((svc == NULL) || (svcNum == 0)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERROR;
-    } 
+    }
     IOTC_LOGI("IotcBleStartGattsService svcNum:%u", svcNum);
     for (uint8_t i = 0; i < svcNum; i++) {
         uint8_t attrNum = GetSvcAttrNum(svc + i);
@@ -595,7 +595,7 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
         srvcInfo.attrNum = attrNum;
         srvcInfo.attrList = attrList;
         //print uuid
-        IOTC_LOGI("IotcBleStartGattsService i:%u, uuid:%s  svcHandle:%d", i, svc[i].uuid, &svc[i].svcHandle );
+        IOTC_LOGI("IotcBleStartGattsService i:%u, uuid:%s  svcHandle:%d", i, svc[i].uuid, &svc[i].svcHandle);
         int32_t ret = BleGattsStartServiceEx(&svc[i].svcHandle, &srvcInfo);
         if (ret != OHOS_BT_STATUS_SUCCESS) {
             IOTC_LOGE("gatt start service ret=%d", ret);

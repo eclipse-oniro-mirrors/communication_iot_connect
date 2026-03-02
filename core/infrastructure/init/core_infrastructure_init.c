@@ -36,7 +36,7 @@ static const FwkInitUnit CORE_COMM[] = {
     {FWK_INIT_LVL_DEP, "fwk_loop", FwkMainLoopInit, FwkMainLoopDeinit},
     {FWK_INIT_LVL_DEP, "fwk_event", EventBusInit, EventBusDeinit},
     {FWK_INIT_LVL_DEP, "event_pub", IotcPublicEventListenerInit, IotcPublicEventListenerDeinit},
-    {FWK_INIT_LVL_DEP, "random", SecurityRandomInit, SecurityRandomDeinit},//内存错误
+    {FWK_INIT_LVL_DEP, "random", SecurityRandomInit, SecurityRandomDeinit},
     {FWK_INIT_LVL_DEP, "service", ServiceManagerInit, ServiceManagerDeinit},
     {FWK_INIT_LVL_DEP, "watch_dog", DfxWatchDogInit, DfxWatchDogDeinit},
     {FWK_INIT_LVL_DEP, "sched_executor", SchedAsyncExecutorInit, SchedAsyncExecutorDeinit},

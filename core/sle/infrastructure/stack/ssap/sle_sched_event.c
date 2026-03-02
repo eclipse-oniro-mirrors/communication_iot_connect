@@ -254,7 +254,7 @@ int32_t SleScheduleEventInit(void)
     SleSchedMsg msg;
     msg.event = SLE_EVENT_START;
     msg.param = NULL;
-    msg.free = NULL;
+    msg.freeFunc = NULL;
     int32_t ret = SleSchedMsgQueueSend(&msg, 0);
     if (ret != IOTC_OK) {
         IOTC_LOGF("send start event error %d", ret);
@@ -289,8 +289,8 @@ static void SleSchedEventSourceMsgHandler(const uint8_t *msg, uint32_t len)
             break;
         }
     } while (0);
-    if (schedMsg->param != NULL && schedMsg->free != NULL) {
-        schedMsg->free(schedMsg->param);
+    if (schedMsg->param != NULL && schedMsg->freeFunc != NULL) {
+        schedMsg->freeFunc(schedMsg->param);
     }
 }
 

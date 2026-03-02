@@ -30,6 +30,7 @@ static IotcSemId *g_exitSem = NULL;
 static IotcTaskId *g_mainTaskId = NULL;
 static uint32_t g_stackSize = 0;
 #define API_MAX_BLOCK_SLEEP_TIME_SEC UTILS_SEC_TO_MS(30)
+#define TEST_VALUE_AFTER_RESET 101
 
 static void MainTaskBehaviorNotice(IotcSemId **sem)
 {
@@ -63,7 +64,7 @@ static void IotcFwkMainTaskBody(void *arg)
     do {
         /* 复位通知 */
         MainTaskBehaviorNotice(&g_resetSem);
-        test_value = 101;
+        test_value = TEST_VALUE_AFTER_RESET;
         IOTC_LOGN("MainTaskBehaviorNotice finish ------- test_value:%d", test_value);
         /* 全局初始化 */
         if (FwkInitAll(FWK_INIT_FAILED_RETURN) != IOTC_OK) {
@@ -103,7 +104,7 @@ int32_t IotcFwkMain(uint32_t stackSize)
         return IOTC_ERR_PARAM_INVALID;
     }
     g_stackSize = stackSize;
-    IOTC_LOGI("iotc main task stackSize:%d",stackSize);
+    IOTC_LOGI("iotc main task stackSize:%d", stackSize);
     IotcTaskParam task = {
         .arg = NULL,
         .func = IotcFwkMainTaskBody,
@@ -114,7 +115,7 @@ int32_t IotcFwkMain(uint32_t stackSize)
     IOTC_LOGI("iotc main task --- ");
     MainTaskExistsFlagChange(true);
     g_mainTaskId = IotcTaskCreate(&task);
-    IOTC_LOGI("iotc main task g_mainTaskId:%d",g_mainTaskId);
+    IOTC_LOGI("iotc main task g_mainTaskId:%d", g_mainTaskId);
     if (g_mainTaskId == NULL) {
         IOTC_LOGF("create iotc main task error %u", task.stackSize);
         MainTaskExistsFlagChange(false);

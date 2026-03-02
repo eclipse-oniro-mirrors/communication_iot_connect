@@ -18,7 +18,7 @@
 #include "iotc_log.h"
 #include "iotc_errcode.h"
 
-static void IotcPrintfImpl(const char *fmt, ...)
+static void IotcPrintf(const char *fmt, ...)
 {
     if (fmt == NULL) {
         return;
@@ -39,14 +39,14 @@ void IotcLogOutputImpl(uint8_t level, const char *fileName,
 
     const char *tag[IOTC_LOG_LEVEL_DEBUG] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
     if (funcName != NULL) {
-        IotcPrintfImpl("%s:%s:%u, ", tag[level - 1], funcName, line);
+        IotcPrintf("%s:%s:%u, ", tag[level - 1], funcName, line);
     } else {
-        IotcPrintfImpl("%s:%s:%u, ", tag[level - 1], fileName != NULL ? fileName : "NULL", line);
+        IotcPrintf("%s:%s:%u, ", tag[level - 1], fileName != NULL ? fileName : "NULL", line);
     }
 
     va_list ap;
     va_start(ap, fmt);
     vprintf(fmt, ap);
     va_end(ap);
-    IotcPrintfImpl("\n");
+    IotcPrintf("\n");
 }

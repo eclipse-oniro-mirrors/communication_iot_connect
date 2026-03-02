@@ -252,7 +252,8 @@ bool UtilsIsValidStrArrayCheck(const UtilsStrCheckItem *array, uint32_t num)
     }
     for (uint32_t i = 0; i < num; ++i) {
         if (!UtilsIsValidStr(array[i].str, array[i].minLen, array[i].maxLen)) {
-            IOTC_LOGW("invalid str %u minLen:%d  maxLen:%d str:%s \0", i, array[i].minLen, array[i].maxLen, array[i].str);
+            IOTC_LOGW("invalid str %u minLen:%d  maxLen:%d str:%s \\0",
+                i, array[i].minLen, array[i].maxLen, array[i].str);
             return false;
         }
     }

@@ -39,7 +39,7 @@ typedef enum {
 typedef struct {
     int32_t event;
     void *param;
-    void (*free)(void *param);
+    void (*freeFunc)(void *param);
 } SleSchedMsg;
 
 int32_t SleSchedMsgQueueSend(const SleSchedMsg *msg, uint32_t timeout);

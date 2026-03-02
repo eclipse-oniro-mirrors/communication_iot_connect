@@ -112,7 +112,7 @@ int32_t IotcOhMain(void)
     if (ret != IOTC_OK) {
         IOTC_LOGE("reg init unit error %d", ret);
         return ret;
-    }    
+    }
     IOTC_LOGI("iotc main in ---- core");
     ret = FwkRegInitUnits(CoreInfrastructureGetInitUnit(),
         CoreInfrastructureGetInitUnitSize(), CoreInfrastructureGetInitName());

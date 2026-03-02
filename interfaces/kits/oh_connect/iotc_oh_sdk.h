@@ -26,7 +26,7 @@ extern "C" {
 typedef enum {
     IOTC_OPTION_TYPE_SDK = 0,
     IOTC_OPTION_TYPE_WIFI,
-    IOTC_OPTION_TYPE_BLE,    
+    IOTC_OPTION_TYPE_BLE,
     IOTC_OPTION_TYPE_SLE,
     IOTC_OPTION_TYPE_DEVICE,
 } IotcOhOptionType;

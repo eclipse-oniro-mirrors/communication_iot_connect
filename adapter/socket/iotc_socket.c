@@ -352,7 +352,6 @@ static int32_t SetSocketOptionDisableReuseAddr(int32_t fd, const void *value, ui
 
 static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, bool isAdd)
 {
-
 #if IOTC_CONF_LITEOS_M_SUPPORT
     return IOTC_ERR_NOT_SUPPORT;
 #else

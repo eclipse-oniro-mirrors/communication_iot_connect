@@ -28,9 +28,8 @@ struct UtilsExMutex {
 
 UtilsExMutex *UtilsCreateExMutex(void)
 {
-    IOTC_LOGI("---- UtilsCreateExMutex start  ----%u",sizeof(UtilsExMutex));
+    IOTC_LOGI("---- UtilsCreateExMutex start  ----%u", sizeof(UtilsExMutex));
     UtilsExMutex *mutex = IotcMalloc(sizeof(UtilsExMutex));
-    // UtilsExMutex *mutex = IotcCalloc(0,sizeof(UtilsExMutex));
     if (mutex == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;

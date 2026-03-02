@@ -816,7 +816,7 @@ void ServiceManagerDeinit(void)
     ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &ctx->serviceList) {
         ServiceNode *node = CONTAINER_OF(item, ServiceNode, node);
-        IOTC_LOGI("for each node name:%s",node->name);
+        IOTC_LOGI("for each node name:%s", node->name);
         LIST_REMOVE(item);
         ServiceNodeFree(node);
     }

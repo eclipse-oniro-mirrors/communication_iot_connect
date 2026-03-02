@@ -187,7 +187,6 @@ void FwkMainLoopEntry(uint32_t taskSize)
         IOTC_LOGE("global lock error");
         return;
     }
-
     uint32_t cnt;
     FwkLoop *loops = GetLoopArray(&cnt);
     UtilsGlobalMutexUnlock();
@@ -195,31 +194,25 @@ void FwkMainLoopEntry(uint32_t taskSize)
         IOTC_LOGW("no reg main loop");
         return;
     }
-
     /* 第1个loop当前线程执行，其余单独起线程执行 */
     if (cnt > 1) {
-        /* 移除第1个 */
         StartTaskForLoop(loops + 1, cnt - 1, taskSize);
     }
-
     if (loops[0].entry != NULL) {
         LoopTask(&loops[0]);
     } else {
         IOTC_LOGE("loop no entry %s", NON_NULL_STR(loops[0].name));
     }
-
     if (!UtilsGlobalMutexLock()) {
         IotcFree(loops);
         return;
     }
-
     if (LIST_EMPTY(&g_mainLoopCtx.loopList)) {
         UtilsGlobalMutexUnlock();
         IotcFree(loops);
         IOTC_LOGN("main loop exit no wait");
         return;
     }
-
     if (g_mainLoopCtx.stop == NULL) {
         g_mainLoopCtx.stop = IotcSemCreate(0);
     }
@@ -239,7 +232,6 @@ void FwkMainLoopEntry(uint32_t taskSize)
     IotcFree(loops);
     IotcSemDestroy(g_mainLoopCtx.stop);
     g_mainLoopCtx.stop = NULL;
-    return;
 }
 
 void FwkMainLoopExit(void)

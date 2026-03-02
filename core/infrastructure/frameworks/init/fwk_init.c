@@ -69,7 +69,7 @@ static int32_t InitAllUnit(void)
         ListEntry *item = NULL;
         LIST_FOR_EACH_ITEM(item, &g_initList) {
             InitUnitNode *node = CONTAINER_OF(item, InitUnitNode, node);
-            IOTC_LOGI("InitAllUnit LIST_FOR_EACH_ITEM loop InitUnitNode name:%s",node->name);
+            IOTC_LOGI("InitAllUnit LIST_FOR_EACH_ITEM loop InitUnitNode name:%s", node->name);
             ret = DoInitTargetLevelUnitNode(node, level);
             if (ret != IOTC_OK) {
                 return ret;
@@ -93,7 +93,7 @@ int32_t FwkInitAll(FwkInitPolicy policy)
     if (policy == FWK_INIT_FAILED_DEINIT_ALL) {
         FwkDeinitAll();
     }
-    IOTC_LOGN("FwkInitAll end ret:%d",ret);
+    IOTC_LOGN("FwkInitAll end ret:%d", ret);
     return ret;
 }
 
