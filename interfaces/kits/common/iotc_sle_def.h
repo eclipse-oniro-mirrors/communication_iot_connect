@@ -126,13 +126,13 @@ typedef struct {
 /* SLE的广播参数 */
 typedef struct {
     /** 广播类型 */
-    IotcSleAdvType announceMode;//advType;
+    IotcSleAdvType announceMode; // advType;
     /** 最小广播间隔，0.625ms的倍数，最短间隔设置为20ms */
-    uint32_t announceIntervalMin;//minInterval;
+    uint32_t announceIntervalMin; // minInterval;
     /** 最大广播间隔，0.625ms的倍数，最长间隔不超过100ms */
-    uint32_t announceIntervalMax;//maxInterval;
+    uint32_t announceIntervalMax; // maxInterval;
     /** bit[0:2] => 37,38,39信道 */
-    uint8_t announceChannelMap;//channelMap;
+    uint8_t announceChannelMap; // channelMap;
 } IotcSleAdvParam;
 
 #ifdef __cplusplus

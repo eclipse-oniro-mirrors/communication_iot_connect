@@ -15,11 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-
-// #define IotcPrintf(...) { HILOG_INFO(HILOG_MODULE_APP,__VA_ARGS__); }; 
-// #define IotcPrintf(...) { printf(__VA_ARGS__); }; 
-
-
 void IotcLogOutputImpl(uint8_t level, const char *fileName,
     const char *funcName, uint32_t line, const char *fmt, ...)
 {

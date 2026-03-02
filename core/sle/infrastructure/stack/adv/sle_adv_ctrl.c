@@ -73,7 +73,8 @@ static int32_t CopyAdvInfo2Adapter(const IotcSleAdvParam *advPara, const IotcSle
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    ret = memcpy_s(adapterAdvData->seekRspData, sizeof(adapterAdvData->seekRspData), advData->seekRspData, advData->seekRspDataLen);
+    ret = memcpy_s(adapterAdvData->seekRspData, sizeof(adapterAdvData->seekRspData),
+        advData->seekRspData, advData->seekRspDataLen);
     if (ret != EOK) {
         IOTC_LOGW("memcpy error %d/%u", ret, advData->seekRspDataLen);
         return IOTC_ERR_SECUREC_MEMCPY;

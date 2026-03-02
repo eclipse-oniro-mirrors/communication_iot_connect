@@ -73,10 +73,10 @@ typedef enum {
 
 /* sle_announce_mode_t
 设备公开类型。 Enumerator
-SLE_ANNOUNCE_MODE_NONCONN_NONSCAN  不可连接不可扫描。 
-SLE_ANNOUNCE_MODE_CONNECTABLE_NONSCAN  可连接不可扫描。 
-SLE_ANNOUNCE_MODE_NONCONN_SCANABLE  不可连接可扫描。 
-SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE  可连接可扫描。 
+SLE_ANNOUNCE_MODE_NONCONN_NONSCAN  不可连接不可扫描。
+SLE_ANNOUNCE_MODE_CONNECTABLE_NONSCAN  可连接不可扫描。
+SLE_ANNOUNCE_MODE_NONCONN_SCANABLE  不可连接可扫描。
+SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE  可连接可扫描。
 SLE_ANNOUNCE_MODE_CONNECTABLE_DIRECTED  可连接可扫描定向。 */
 /* 广播类型 */
 typedef enum {
@@ -130,17 +130,9 @@ typedef enum {
 
 /* 广播地址*/
 typedef struct {
-    uint8_t type;                         
-    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];                                                
+    uint8_t type;
+    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];
 } IotcAdptSleAddr;
-
-// typedef struct {
-//     uint8_t len;                /*!< @if Eng uuid len
-//                                      @else   UUID 长度 @endif */
-//     uint8_t uuid[IOTC_ADPT_SLE_UUID_MAX_LEN]; /*!< @if Eng uuid
-//                                      @else   UUID字段 @endif */
-// } IotcAdptUuidAddr;
-
 
 /* 广播等级 */
 typedef enum {
@@ -169,7 +161,7 @@ typedef enum {
 } IotcAdptSleAnnounceRole;
 
 typedef struct {
-     uint8_t  announceHandle;              /*!< @if Eng announce handle
+    uint8_t  announceHandle;              /*!< @if Eng announce handle
                                                  @else   设备公开句柄，取值范围[0, 0xFF] @endif */
     uint8_t  announceMode;                /*!< @if Eng announce mode { @ref SleAnnounceModeType }
                                                  @else   设备公开类型， { @ref SleAnnounceModeType } @endif */
@@ -187,9 +179,9 @@ typedef struct {
                                                  @else   最大设备公开周期, 0x000020~0xffffff, 单位125us @endif */
     uint8_t  announceChannelMap;         /*!< @if Eng announce channel map
                                                  @else   设备公开信道, 0:76, 1:77, 2:78 @endif */
-    
-    uint8_t announce_tx_power;
-    
+
+    uint8_t announceTxPower;
+
     IotcAdptSleAddr ownAddr;                    /*!< @if Eng own address
                                                  @else   本端地址 @endif */
     IotcAdptSleAddr peerAddr;                   /*!< @if Eng peer address
@@ -235,15 +227,15 @@ typedef struct {
  * @endif
  */
 typedef struct {
-    uint16_t request_id;  /*!< @if Eng Request id.
+    uint16_t requestId;  /*!< @if Eng Request id.
                                @else   请求id。 @endif */
     uint16_t handle;      /*!< @if Eng Properity handle of the read request.
                                @else   请求读的属性句柄。 @endif */
     uint8_t type;         /*!< @if Eng property type { @ref ssap_property_type_t }.
                                @else   属性类型。 @endif  { @ref ssap_property_type_t } */
-    bool need_rsp;        /*!< @if Eng Whether response is needed.
+    bool needRsp;        /*!< @if Eng Whether response is needed.
                                @else   是否需要发送响应。 @endif */
-    bool need_authorize;  /*!< @if Eng Whether authorize is needed.
+    bool needAuthorize;  /*!< @if Eng Whether authorize is needed.
                                @else   是否授权。 @endif */
 } IotcAdptSleReqRead;
 
@@ -255,7 +247,7 @@ typedef struct {
  * @endif
  */
 typedef struct {
-    uint32_t mtu_size; /*!< @if Eng mtu size
+    uint32_t mtuSize; /*!< @if Eng mtu size
         ·                   @else   mtu大小 @endif */
     uint16_t version;  /*!< @if Eng version
                             @else   版本 @endif */
@@ -269,15 +261,15 @@ typedef struct {
  * @endif
  */
 typedef struct {
-    uint16_t request_id;  /*!< @if Eng Request id.
+    uint16_t requestId;  /*!< @if Eng Request id.
                                @else   请求id。 @endif */
     uint16_t handle;      /*!< @if Eng Properity handle of the write request.
                                @else   请求写的属性句柄。 @endif */
     uint8_t type;         /*!< @if Eng property type { @ref ssap_property_type_t }.
                                @else   属性类型。 @endif  { @ref ssap_property_type_t } */
-    bool need_rsp;        /*!< @if Eng Whether response is needed.
+    bool needRsp;        /*!< @if Eng Whether response is needed.
                                @else   是否需要发送响应。 @endif */
-    bool need_authorize;  /*!< @if Eng Whether authorize is needed.
+    bool needAuthorize;  /*!< @if Eng Whether authorize is needed.
                                @else   是否授权。 @endif */
     uint16_t length;      /*!< @if Eng Length of write request data.
                                @else   请求写的数据长度。 @endif */
@@ -393,7 +385,6 @@ typedef struct {
 } IotcAdptSleResponseParam;
 
 
-
 typedef struct {
     const char *uuid;
     uint32_t permission;
@@ -460,7 +451,7 @@ int32_t IotcSleSetBleName(const char *name);
  * @param advData [IN] 广播数据
  * @return 0成功，非0失败
  */
-int32_t IotcSleStartAdv(const IotcAdptSleAdvParam *advParam,const IotcAdptSleAdvData *advData);
+int32_t IotcSleStartAdv(const IotcAdptSleAdvParam *advParam, const IotcAdptSleAdvData *advData);
 
 /**
  * @brief 停止广播

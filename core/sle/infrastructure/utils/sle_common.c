@@ -47,21 +47,6 @@ char *GetSleMacStr(void)
 {
     static char macStr[MAC_STR_MAX_LEN];
     (void)memset_s(macStr, sizeof(macStr), 0, sizeof(macStr));
-    // IotcAdptSleAddr* mac = IotSleGetLocalSleAddress();
-    // uint8_t mac[IOTC_ADPT_SLE_ADDR_LEN] = {0};
-    //IotSleGetLocalSleAddress  if (IotcSleGetSleMac(mac, IOTC_ADPT_SLE_ADDR_LEN) != IOTC_OK) {
-    // if (mac == NULL) {
-    //     IOTC_LOGE("get mac");
-    //     (void)memset_s(macStr, sizeof(macStr), 0, sizeof(macStr));
-    //     return macStr;
-    // }
-    // if (sprintf_s(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-    //     mac->addr[MAC_INDEX_0], mac->addr[MAC_INDEX_1], mac->addr[MAC_INDEX_2],
-    //     mac->addr[MAC_INDEX_3], mac->addr[MAC_INDEX_4], mac->addr[MAC_INDEX_5]) <= 0) {
-    //     (void)memset_s(macStr, sizeof(macStr), 0, sizeof(macStr));
-    //     IOTC_LOGE("sprintf_s");
-    //     return macStr;
-    // }
     return macStr;
 }
 

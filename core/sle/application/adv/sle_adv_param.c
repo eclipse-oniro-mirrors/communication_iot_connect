@@ -20,7 +20,7 @@
 
 static const IotcAdptSleAdvParam g_advParam = {
     // .advType = IOTC_ADPT_SLE_ADV_TYPE_IND,
-    .announceMode = IOTC_ADPT_SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE,//  SleAnnounceModeType
+    .announceMode = IOTC_ADPT_SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE,
     .announceIntervalMin = 0x20,
     .announceIntervalMax = 0x40,
     // .ownerAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,

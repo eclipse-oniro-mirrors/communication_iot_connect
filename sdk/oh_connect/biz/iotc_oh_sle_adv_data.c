@@ -87,8 +87,6 @@ static int32_t AdvFlagsCopyToBuf(uint8_t *out, uint32_t outSize)
     return sizeof(adv);
 }
 
-
-
 static int32_t GenAdvName(SleAdvNameValue *value)
 {
     const char *head = DevSvcProxyGetBindStatus() == DEV_BIND_STATUS_BIND ? REGED_ADV_NAME_HEAD : UNREG_ADV_NAME_HEAD;
@@ -151,7 +149,10 @@ int32_t IotcOhGetSleAdvData(IotcAdptSleAdvData *advData)
     (void)memset_s(advData, sizeof(IotcAdptSleAdvData), 0, sizeof(IotcAdptSleAdvData));
 
     int32_t len = 0;
-    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceDataLen], sizeof(advData->announceData) - advData->announceDataLen);
+    len = AdvFlagsCopyToBuf(
+        &advData->announceData[advData->announceDataLen],
+        sizeof(advData->announceData) - advData->announceDataLen
+    );
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
@@ -159,7 +160,8 @@ int32_t IotcOhGetSleAdvData(IotcAdptSleAdvData *advData)
     advData->announceDataLen += len;
 
     len = 0;
-    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen], sizeof(advData->seekRspData) - advData->seekRspDataLen);
+    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen],
+        sizeof(advData->seekRspData) - advData->seekRspDataLen);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;

@@ -20,7 +20,7 @@ iotc_interface_path = "${iotc_root_path}/interfaces"
 
 declare_args() {
   iot_connect_feature_ble_support = true
-  iot_connect_feature_sle_support = true
+  iot_connect_feature_sle_support = false
   iot_connect_feature_wifi_support = false
   iot_connect_feature_ailife_support = false
   iotc_mbedtls_v2_support = false

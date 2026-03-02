@@ -19,7 +19,6 @@
 #include "utils_assert.h"
 #include "iotc_sle.h"
 #include "sle_common.h"
-// #include "ble_common.h"
 #include "iotc_def.h"
 #include "iotc_svc_dev.h"
 #include "utils_combo.h"
@@ -488,16 +487,6 @@ static int32_t GenAdvName(SleAdvNameValue *value)
     int32_t snLen = strlen(devInfo->sn);
     if (snLen < ADV_NAME_SN_LEN) {
         IOTC_LOGW("set mac to adv sn");
-        // IotcAdptSleAddr* mac = IotSleGetLocalSleAddress();
-        // if(mac == NULL){
-        //     IOTC_LOGE("get sle mac");
-        //     return IOTC_ERROR;
-        // }
-        // if (sprintf_s(advSn, sizeof(advSn), "%02X%02X",
-        //     mac->addr[IOTC_ADPT_SLE_ADDR_LEN - ONE_BYTE], mac->addr[IOTC_ADPT_SLE_ADDR_LEN - TWO_BYTE]) <= 0) {
-        //     IOTC_LOGE("sprintf_s");
-        //     return IOTC_ERROR;
-        // }
     } else {
         if (sprintf_s(advSn, sizeof(advSn), "%s", GET_STR_TAIL(devInfo->sn, ADV_NAME_SN_LEN)) <= 0) {
             IOTC_LOGE("sprintf_s");
@@ -540,7 +529,8 @@ static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAdvData *advData)
     (void)memset_s(advData, sizeof(IotcAdptSleAdvData), 0, sizeof(IotcAdptSleAdvData));
 
     int32_t len = 0;
-    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceDataLen], sizeof(advData->announceData) - advData->announceDataLen);
+    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceDataLen],
+        sizeof(advData->announceData) - advData->announceDataLen);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
@@ -557,7 +547,8 @@ static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAdvData *advData)
     }
 
     len = 0;
-    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen], sizeof(advData->seekRspData) - advData->seekRspDataLen);
+    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen],
+        sizeof(advData->seekRspData) - advData->seekRspDataLen);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
