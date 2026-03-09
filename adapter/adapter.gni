@@ -17,9 +17,14 @@ import("../iotc.gni")
 
 iotc_adapter_inc = [
   "$iotc_adapter_path/include",
-  "//third_party/cJSON",
-  "//third_party/bounds_checking_function/include",
 ]
+
+if (defined(ohos_lite)) {
+  iotc_adapter_inc += [
+    "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
+  ]
+}
 
 iotc_adapter_src = [
   "$iotc_adapter_path/crypto/mbedtls/iotc_aes.c",
@@ -47,7 +52,7 @@ if (iot_connect_feature_ble_support) {
   iotc_adapter_def += ["IOTC_CONF_BLE_SUPPORT=1"]
   if (board_name == "rtl8720") {
     iotc_adapter_inc += ["//device/realtek/rtl8720/sdk-ameba-v7.1d/component/common/bluetooth/realtek/sdk/example/bt_harmony_adapter"]
-  } else {
+  } else if (defined(ohos_lite)) {
     iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
     if (board_hi3863) {
       iotc_adapter_inc += ["//device/soc/hisilicon/hi3863v100/sdk_liteos/open_source/mbedtls/mbedtls_v3.1.0/include"]
@@ -89,8 +94,6 @@ if (iot_connect_feature_wifi_support) {
   iotc_adapter_def += ["IOTC_CONF_WIFI_SUPPORT=1"]
   if (defined(ohos_lite)) {
     iotc_adapter_inc += ["//foundation/communication/wifi_lite/interfaces/wifiservice"]
-  } else {
-    iotc_adapter_inc += ["//foundation/communication/wifi/wifi/interfaces/kits/c"]
   }
 }
 

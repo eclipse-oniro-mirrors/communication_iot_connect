@@ -76,6 +76,10 @@ if (defined(ohos_lite)) {
       "-fPIC",
     ]
     cflags_cc = cflags
+    cflags_c = cflags + [
+      "-iquote" + rebase_path("//foundation/communication/bluetooth/interfaces/inner_api/include/c_header", root_build_dir),
+      "-iquote" + rebase_path("//foundation/communication/wifi/wifi/interfaces/kits/c", root_build_dir),
+    ]
     defines = iotc_def
   }
 
@@ -83,12 +87,11 @@ if (defined(ohos_lite)) {
     sources = iotc_src
     public_configs = [":iotc_config"]
     deps = iotc_dep
-    deps += [
-      "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/mbedtls:mbedtls_shared",
-      "//third_party/cJSON:cjson",
-    ]
+    deps += []
     external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "mbedtls:mbedtls_shared",
+      "cJSON:cjson",
       "wifi:wifi_sdk",
       "bluetooth:btframework",
       "hilog:libhilog",
