@@ -11,7 +11,7 @@
   "author": {},
   "homePage": "https://gitee.com/openharmony",
   "repository": "https://gitee.com/openharmony/communication_iot_connect",
-  "supplier":"Organization: OpenHarmony",
+  "supplier": "Organization: OpenHarmony",
   "license": "Apache License 2.0",
   "component": {
     "name": "iot_connect",
@@ -22,7 +22,7 @@
       "standard"
     ],
     "hisysevent_config": [],
-    "syscap":[],
+    "syscap": [],
     "features": [
       "iot_connect_feature_ble_support",
       "iot_connect_feature_wifi_support",
@@ -32,23 +32,21 @@
     "ram": "",
     "deps": {
       "components": [
+        "bounds_checking_function",
         "wifi",
         "hilog",
-        "bluetooth"
-      ],
-      "third_party": [
-        "bounds_checking_function",
+        "bluetooth",
         "cJSON",
         "mbedtls"
       ]
     },
     "build": {
-      "group_type":{
-        "base_group":[
+      "group_type": {
+        "base_group": [
           "//foundation/communication/iot_connect:iotc_shared"
         ],
-        "fwk_group":[],
-        "service_group":[]
+        "fwk_group": [],
+        "service_group": []
       },
       "inner_kits": [
         {

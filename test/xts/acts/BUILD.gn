@@ -27,15 +27,14 @@ if (defined(ohos_lite)) {
       "$iotc_interface_path/kits/common",
       "$iotc_interface_path/kits/oh_connect",
       "$iotc_core_path/core/infrastructure/utils/include",
-      "//third_party/bounds_checking_function/include",
     ]
     deps = [
-      "//foundation/communication/iot_connect:iotc_shared",
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/cJSON:cjson",
-      "//third_party/googletest:gtest_main",
+      "../../..:iotc_shared",
     ]
     external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson",
+      "googletest:gtest_main",
       "c_utils:utils",
       "hilog:libhilog",
     ]
@@ -47,15 +46,14 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "$iotc_interface_path/kits/common",
       "$iotc_interface_path/kits/oh_connect",
-      "//third_party/bounds_checking_function/include",
     ]
     deps = [
-      "//foundation/communication/iot_connect:iotc_shared",
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/cJSON:cjson",
-      "//third_party/googletest:gtest_main",
+      "../../..:iotc_shared",
     ]
     external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson",
+      "googletest:gtest_main",
       "c_utils:utils",
       "hilog:libhilog",
     ]
@@ -67,15 +65,14 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "$iotc_interface_path/kits/common",
       "$iotc_interface_path/kits/oh_connect",
-      "//third_party/bounds_checking_function/include",
     ]
     deps = [
-      "//foundation/communication/iot_connect:iotc_shared",
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/cJSON:cjson",
-      "//third_party/googletest:gtest_main",
+      "../../..:iotc_shared",
     ]
     external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson",
+      "googletest:gtest_main",
       "c_utils:utils",
       "hilog:libhilog",
     ]
@@ -87,15 +84,14 @@ if (defined(ohos_lite)) {
     include_dirs = [
       "$iotc_interface_path/kits/common",
       "$iotc_interface_path/kits/oh_connect",
-      "//third_party/bounds_checking_function/include",
     ]
     deps = [
-      "//foundation/communication/iot_connect:iotc_shared",
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/cJSON:cjson",
-      "//third_party/googletest:gtest_main",
+      "../../..:iotc_shared",
     ]
     external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson",
+      "googletest:gtest_main",
       "c_utils:utils",
       "hilog:libhilog",
     ]
