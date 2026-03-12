@@ -38,9 +38,11 @@ static ListEntry g_initList = LIST_DECLARE_INIT(&g_initList);
 
 static int32_t DoInitTargetLevelUnitNode(InitUnitNode *node, int32_t level)
 {
+    IOTC_LOGI("DoInitTargetLevelUnitNode start");
     int32_t ret;
     for (uint32_t i = 0; i < node->num; ++i) {
         const FwkInitUnit *cur = &node->units[i];
+        IOTC_LOGI("for FwkInitUnit i:%lu/%d cur name:%s", i, node->num, cur->name);
         if (cur->level != level || UtilsIsBitSet(node->initMap, i)) {
             continue;
         }
@@ -55,16 +57,19 @@ static int32_t DoInitTargetLevelUnitNode(InitUnitNode *node, int32_t level)
         }
         UtilsBitMapSet(node->initMap, i);
     }
+    IOTC_LOGI("DoInitTargetLevelUnitNode end");
     return IOTC_OK;
 }
 
 static int32_t InitAllUnit(void)
 {
+    IOTC_LOGI("InitAllUnit start  -----");
     int32_t ret;
     for (int32_t level = FWK_INIT_LVL_MIN; level <= FWK_INIT_LVL_MAX; level++) {
         ListEntry *item = NULL;
         LIST_FOR_EACH_ITEM(item, &g_initList) {
             InitUnitNode *node = CONTAINER_OF(item, InitUnitNode, node);
+            IOTC_LOGI("InitAllUnit LIST_FOR_EACH_ITEM loop InitUnitNode name:%s", node->name);
             ret = DoInitTargetLevelUnitNode(node, level);
             if (ret != IOTC_OK) {
                 return ret;
@@ -88,6 +93,7 @@ int32_t FwkInitAll(FwkInitPolicy policy)
     if (policy == FWK_INIT_FAILED_DEINIT_ALL) {
         FwkDeinitAll();
     }
+    IOTC_LOGN("FwkInitAll end ret:%d", ret);
     return ret;
 }
 
@@ -109,6 +115,7 @@ static void DoDeinitTargetLevelUnitNode(InitUnitNode *node, int32_t level)
 
 void FwkDeinitAll(void)
 {
+    IOTC_LOGN("FwkDeinitAll start ");
     for (int32_t level = FWK_INIT_LVL_MAX; level >= FWK_INIT_LVL_MIN; level--) {
         ListEntry *item = NULL;
         LIST_FOR_EACH_ITEM(item, &g_initList) {
@@ -119,6 +126,7 @@ void FwkDeinitAll(void)
             DoDeinitTargetLevelUnitNode(node, level);
         }
     }
+    IOTC_LOGN("FwkDeinitAll end ");
 }
 
 int32_t FwkRegInitUnits(const FwkInitUnit *units, uint32_t num, const char *mdlName)

@@ -790,27 +790,36 @@ void ServiceManagerRegisterExecutor(ServiceAsyncExecutor executor)
 
 int32_t ServiceManagerInit(void)
 {
+    IOTC_LOGI("ServiceManagerInit start");
     ServiceManagerContext *ctx = GetSvcMngrCtx();
     (void)memset_s(ctx, sizeof(ServiceManagerContext), 0, sizeof(ServiceManagerContext));
+    IOTC_LOGI("ServiceManagerInit memset ------");
     LIST_INIT(&ctx->serviceList);
+    IOTC_LOGI("ServiceManagerInit LIST_INIT ------");
     ctx->mutex = UtilsCreateExMutex();
+    IOTC_LOGI("ServiceManagerInit UtilsCreateExMutex ------");
     if (ctx->mutex == NULL) {
         IOTC_LOGW("create mutex error");
         return IOTC_CORE_COMM_UTILS_ERR_EX_MUTEX_CREATE;
     }
+    IOTC_LOGI("ServiceManagerInit mutex ------");
     ctx->instanceIdBase = SecurityRandomUint32() % UINT16_MAX;
+    IOTC_LOGI("ServiceManagerInit end");
     return IOTC_OK;
 }
 
 void ServiceManagerDeinit(void)
 {
+    IOTC_LOGI("ServiceManagerDeinit start");
     ServiceManagerContext *ctx = GetSvcMngrCtx();
     ListEntry *item = NULL;
     ListEntry *next = NULL;
     LIST_FOR_EACH_ITEM_SAFE(item, next, &ctx->serviceList) {
         ServiceNode *node = CONTAINER_OF(item, ServiceNode, node);
+        IOTC_LOGI("for each node name:%s", node->name);
         LIST_REMOVE(item);
         ServiceNodeFree(node);
     }
     UtilsDestroyExMutex(&ctx->mutex);
+    IOTC_LOGI("ServiceManagerDeinit end");
 }

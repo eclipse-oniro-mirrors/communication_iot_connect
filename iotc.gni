@@ -20,8 +20,9 @@ iotc_interface_path = "${iotc_root_path}/interfaces"
 
 declare_args() {
   iot_connect_feature_ble_support = true
-  iot_connect_feature_wifi_support = true
-  iot_connect_feature_ailife_support = true
+  iot_connect_feature_sle_support = false
+  iot_connect_feature_wifi_support = false
+  iot_connect_feature_ailife_support = false
   iotc_mbedtls_v2_support = false
   iotc_mbedtls_psk_support = false
   iotc_mbedtls_ccm_support = false
@@ -32,6 +33,7 @@ if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     declare_args() {
       iotc_device_level = "mini"
+      board_hi3863 = true
     }
   } else {
     declare_args() {
@@ -40,6 +42,7 @@ if (defined(ohos_lite)) {
   }
 } else {
   declare_args() {
+    board_hi3863 = false
     board_name = "l2"
     ohos_kernel_type = "linux"
     iotc_device_level = "standard"

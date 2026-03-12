@@ -333,6 +333,7 @@ int32_t BleGattMgtInit(void)
         return ret;
     }
     PrintBleGattServiceList(g_bleGattApp.svc, g_bleGattApp.svcNum);
+    IOTC_LOGI(" ---> uuid:%s", g_bleGattApp.svc[0].uuid);
     ret = BleGattEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("gatt event init err ret=%d", ret);
@@ -343,6 +344,7 @@ int32_t BleGattMgtInit(void)
         IOTC_LOGE("gatt peer dev info init err ret=%d", ret);
         return ret;
     }
+    IOTC_LOGI(" ---> GetBleGattMgtApp uuid:%s ", GetBleGattMgtApp()->svc[0].uuid);
     ret = IotcBleStartGattsService(GetBleGattMgtApp()->svc, GetBleGattMgtApp()->svcNum);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add gatt svc ret=%d", ret);

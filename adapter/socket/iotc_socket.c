@@ -25,7 +25,7 @@
 #include "iotc_mem.h"
 #include "iotc_log.h"
 
-#if !IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
+#if IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
 #include <sys/time.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -352,6 +352,9 @@ static int32_t SetSocketOptionDisableReuseAddr(int32_t fd, const void *value, ui
 
 static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, bool isAdd)
 {
+#if IOTC_CONF_LITEOS_M_SUPPORT
+    return IOTC_ERR_NOT_SUPPORT;
+#else
     if (value == NULL || len < sizeof(IotcSocketMultiAddr)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
@@ -374,6 +377,7 @@ static int32_t SetSocketMultiGroup(int32_t fd, const void *value, uint32_t len, 
         return IOTC_ADAPTER_SOCKET_ERR_SET_OPT;
     }
     return IOTC_OK;
+#endif
 }
 
 static int32_t SetSocketOptionAddMultiGroup(int32_t fd, const void *value, uint32_t len)
