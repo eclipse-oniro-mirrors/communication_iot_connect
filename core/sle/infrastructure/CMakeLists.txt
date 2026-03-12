@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(linklayer)
+
 add_subdirectory(stack)
 add_subdirectory(utils)
 

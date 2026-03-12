@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 char *GetSleMacStr(void);
-uint8_t GetSubProIdInt(void);
+uint8_t GetSleSubProIdInt(void);
 void SetSleStartUpAdvTimeout(uint32_t ms);
 uint32_t GetSleStartUpAdvTimeout(void);
 

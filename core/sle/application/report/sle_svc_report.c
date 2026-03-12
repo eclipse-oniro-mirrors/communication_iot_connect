@@ -18,7 +18,7 @@
 #include "utils_common.h"
 #include "utils_assert.h"
 #include "utils_json.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "sle_profile.h"
 #include "sle_session_mngr.h"
 #include "service_proxy.h"

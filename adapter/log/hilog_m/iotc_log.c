@@ -12,21 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_LINKLAYER_SEND_H
-#define SLE_LINKLAYER_SEND_H
-
+#include <stddef.h>
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int32_t LinkLayerBtDataSend(const uint8_t *buff, uint32_t len);
-
-int32_t LinkLayerSendBtPkg(const uint8_t *buff, uint32_t len);
-
-#ifdef __cplusplus
+#include <stdio.h>
+void IotcLogOutputImpl(uint8_t level, const char *fileName,
+    const char *funcName, uint32_t line, const char *fmt, ...)
+{
+    const char *tag[6] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
+    if (funcName != NULL) {
+        printf("%s:%s:%u, ", tag[level - 1], funcName, line);
+    } else {
+        printf("%s:%s:%u, ", tag[level - 1], fileName != NULL ? fileName : "NULL", line);
+    }
 }
-#endif
 
-#endif /* SLE_LINKLAYER_SEND_H */

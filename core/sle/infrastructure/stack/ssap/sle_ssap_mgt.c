@@ -374,42 +374,6 @@ static int32_t GetSeviceHandle(const char *svcUuid, int32_t *handle)
     return IOTC_CORE_SLE_INVALID_SVC_UUID;
 }
 
-static int32_t GetCharHandle(const char *svcUuid, const char *charUuid, int32_t *handle)
-{
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (strcmp(svcUuid, GetSleSsapMgtApp()->svc[i].uuid) != 0) {
-            continue;
-        }
-        for (uint8_t j = 0; j < GetSleSsapMgtApp()->svc[i].charNum; j++) {
-            if (strcmp(charUuid, GetSleSsapMgtApp()->svc[i].character[j].uuid) != 0) {
-                continue;
-            }
-            *handle = GetSleSsapMgtApp()->svc[i].character[j].charHandle;
-            return IOTC_OK;
-        }
-    }
-    IOTC_LOGE("no find char");
-    return IOTC_CORE_SLE_INVALID_CHAR_UUID;
-}
-
-static int32_t GetCharProperty(const char *svcUuid, const char *charUuid, uint32_t *property)
-{
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (strcmp(svcUuid, GetSleSsapMgtApp()->svc[i].uuid) != 0) {
-            continue;
-        }
-        for (uint8_t j = 0; j < GetSleSsapMgtApp()->svc[i].charNum; j++) {
-            if (strcmp(charUuid, GetSleSsapMgtApp()->svc[i].character[j].uuid) != 0) {
-                continue;
-            }
-            *property = GetSleSsapMgtApp()->svc[i].character[j].property;
-            return IOTC_OK;
-        }
-    }
-    IOTC_LOGE("no find char");
-    return IOTC_CORE_SLE_INVALID_CHAR_UUID;
-}
-
 static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptSleSsapsChar *character, uint8_t charNum)
 {
     for (uint8_t i = 0; i < charNum; i++) {
@@ -505,34 +469,17 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
     }
     IotcAdptSleSendIndicateParam param;
     (void)memset_s(&param, sizeof(param), 0, sizeof(param));
-    uint32_t property = 0;
-    int32_t ret = GetSeviceHandle(svcUuid, &param.svcHandle);
+    int32_t ret = GetSeviceHandle(svcUuid, (int32_t*)(&param.handle));
     if (ret != IOTC_OK) {
         IOTC_LOGE("get svc handle err ret=%d", ret);
         return ret;
     }
-    ret = GetCharHandle(svcUuid, charUuid, &param.charHandle);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get char handle err ret=%d", ret);
-        return ret;
-    }
-    ret = GetCharProperty(svcUuid, charUuid, &property);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get char property err ret=%d", ret);
-        return ret;
-    }
-    ret = GetAttrHandleServerId(param.charHandle, &param.serverId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get server id err ret=%d", ret);
-        return ret;
-    }
     param.connId = GetSleSsapMgtApp()->peerDevInfo[0].connId;
-    param.needConfirm = ((property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_INDICATE) != 0) ? true : false;
     param.valueLen = valueLen;
     param.value = (uint8_t *)value;
     ret = IotcSleSendSsapsIndicate(&param);
-    IOTC_LOGN("send indicate msg ret=%d svcHandle=%d,charHandle=%d,valueLen=%u",
-        ret, param.svcHandle, param.charHandle, param.valueLen);
+    IOTC_LOGN("send indicate msg ret=%d handle=%d,valueLen=%u",
+        ret, param.handle, param.valueLen);
     return ret;
 }
 

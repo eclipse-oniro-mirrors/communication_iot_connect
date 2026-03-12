@@ -16,7 +16,7 @@
 #include "sle_ssap_mgt.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "utils_assert.h"
 #include "utils_common.h"
 #include "sched_executor.h"

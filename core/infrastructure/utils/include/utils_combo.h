@@ -26,11 +26,14 @@ typedef enum {
     COMBO_TYPE_COMBO = 0,
     COMBO_TYPE_WIFI_ONLY,
     COMBO_TYPE_BLE_ONLY,
+    COMBO_TYPE_SLE_ONLY,
 } ComboType;
 
 void UtilsComboSetBleFlag(bool flag);
 
 void UtilsComboSetWifiFlag(bool flag);
+
+void UtilsComboSetSleFlag(bool flag);
 
 ComboType UtilsGetComboType(void);
 

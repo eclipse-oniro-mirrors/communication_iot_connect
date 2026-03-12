@@ -20,7 +20,7 @@
 #include "security_random.h"
 #include "iotc_aes.h"
 #include "event_bus_sub.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "securec.h"
 #include "iotc_svc_dev.h"
 #include "iotc_errcode.h"

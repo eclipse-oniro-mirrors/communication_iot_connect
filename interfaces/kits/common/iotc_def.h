@@ -53,6 +53,10 @@ typedef enum {
     IOTC_NET_CONFIG_MODE_BLE_SUP,
     /* ble代理注册 */
     IOTC_NET_CONFIG_MODE_BLE_AGT,
+    /* sle辅助配网 */
+    IOTC_NET_CONFIG_MODE_SLE_SUP,
+    /* sle代理注册 */
+    IOTC_NET_CONFIG_MODE_SLE_AGT,
     IOTC_NET_CONFIG_MODE_MAX,
 } IotcNetConfigMode;
 

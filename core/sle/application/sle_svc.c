@@ -30,7 +30,7 @@
 #include "sle_ssap_mgt.h"
 #include "iotc_sle.h"
 #include "sle_adv_ctrl.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "sle_common.h"
 #include "sle_svc_netcfg_status.h"
 

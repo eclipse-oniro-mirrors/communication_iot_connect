@@ -16,7 +16,7 @@
 #define SLE_SVC_DEVICE_INFO_H
 
 #include <stdint.h>
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 
 #ifdef __cplusplus
 extern "C" {

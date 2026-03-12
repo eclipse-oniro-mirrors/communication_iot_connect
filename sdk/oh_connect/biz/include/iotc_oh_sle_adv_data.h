@@ -12,23 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_LINKLAYER_RECV_H
-#define SLE_LINKLAYER_RECV_H
+#ifndef SLE_ADV_DATA_OHOS_H
+#define SLE_ADV_DATA_OHOS_H
 
 #include <stdint.h>
+#include "iotc_sle.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t LinkLayerRecvPkgInsert(uint8_t token, uint8_t pkgNum, uint8_t pkgIdx, const uint8_t *data, uint32_t dataLen);
-
-int32_t LinkLayerRecvCompleteCheck(uint8_t token, bool *isComplete);
-
-int32_t LinkLayerRecvMergePkgs(uint8_t token, uint8_t **outData, uint32_t *outDataLen);
+int32_t IotcOhGetSleAdvData(IotcAdptSleAdvData *advData);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_LINKLAYER_RECV_H */
+#endif /* SLE_ADV_DATA_OHOS_H */

@@ -14,24 +14,6 @@
 
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_encrypt_sesskey.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_encrypt_speke.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_encrypt.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_process.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_recv.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_send.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/linklayer_service.c
-    PARENT_SCOPE
-)
-
-set(IOTC_INC_LIST
-    ${IOTC_INC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    PARENT_SCOPE
-)
-
-set(IOTC_TEST_INC_LIST
-    ${IOTC_TEST_INC_LIST}
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_sle.c
     PARENT_SCOPE
 )

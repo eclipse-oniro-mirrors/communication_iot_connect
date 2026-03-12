@@ -25,7 +25,7 @@
 #include "utils_assert.h"
 #include "iotc_json.h"
 #include "utils_common.h"
-#include "sle_linklayer.h"
+#include "ble_linklayer.h"
 #include "iotc_errcode.h"
 
 #define SLE_SVC_NET_CFG_VER_IDX 80

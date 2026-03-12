@@ -163,13 +163,6 @@ static void SleEventStopSvcResultHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    if (eventParam->stopSvc.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("stop svc fail");
-        if (IotcSleStopSsapsService(eventParam->stopSvc.serverId, eventParam->stopSvc.svcHandle) != IOTC_OK) {
-            IOTC_LOGE("stop svc err");
-        }
-        return;
-    }
     GetSleSsapMgtApp()->startedSvcNum--;
     if (GetSleSsapMgtApp()->startedSvcNum == 0) {
         IOTC_LOGN("all svc stop success");

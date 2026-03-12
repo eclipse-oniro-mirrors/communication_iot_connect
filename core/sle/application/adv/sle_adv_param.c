@@ -19,13 +19,14 @@
 #include "utils_assert.h"
 
 static const IotcAdptSleAdvParam g_advParam = {
-    .advType = IOTC_ADPT_SLE_ADV_TYPE_IND,
-    .advMinInt = 0x20,
-    .advMaxInt = 0x40,
-    .ownerAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,
-    .directAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,
-    .directAddr = NULL,
-    .channelMap = IOTC_ADPT_SLE_CHNL_ALL,
+    // .advType = IOTC_ADPT_SLE_ADV_TYPE_IND,
+    .announceMode = IOTC_ADPT_SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE,
+    .announceIntervalMin = 0x20,
+    .announceIntervalMax = 0x40,
+    // .ownerAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,
+    // .directAddrType = IOTC_ADPT_SLE_ADV_ADDR_PUBLIC,
+    // .directAddr = NULL,
+    .announceChannelMap = IOTC_ADPT_SLE_CHNL_ALL,
 };
 
 int32_t GetSleAdvParam(IotcAdptSleAdvParam *advParam)

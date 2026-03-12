@@ -15,6 +15,7 @@
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_ble_adv_data.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_sle_adv_data.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_option.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_oh_softap_name.c
     PARENT_SCOPE
