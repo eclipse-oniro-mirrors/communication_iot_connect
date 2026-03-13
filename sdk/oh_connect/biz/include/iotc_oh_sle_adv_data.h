@@ -16,13 +16,13 @@
 #define SLE_ADV_DATA_OHOS_H
 
 #include <stdint.h>
-#include "iotc_sle.h"
+#include "iotc_sle_announce.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t IotcOhGetSleAdvData(IotcAdptSleAdvData *advData);
+int32_t IotcOhGetSleAdvData(IotcAdptSleAnnounceData *advData);
 
 #ifdef __cplusplus
 }

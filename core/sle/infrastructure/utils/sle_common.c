@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "iotc_sle.h"
+#include "iotc_sle_server.h"
 #include "securec.h"
 #include "iotc_log.h"
 #include "utils_assert.h"

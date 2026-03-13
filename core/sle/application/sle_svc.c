@@ -28,7 +28,8 @@
 #include "sle_svc_report.h"
 #include "utils_assert.h"
 #include "sle_ssap_mgt.h"
-#include "iotc_sle.h"
+#include "iotc_sle_host.h"
+#include "iotc_sle_server.h"
 #include "sle_adv_ctrl.h"
 #include "ble_linklayer.h"
 #include "sle_common.h"
@@ -39,10 +40,6 @@ static const char *SLE_SERVICE_NAME = "SLE";
 static void SleStackDeinit(void)
 {
     SleSsapDisconnectAll();
-    int32_t ret = IotcSleDeInitStack();
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("stack deinit error %d", ret);
-    }
     SleSsapMgtDestroy();
 }
 
@@ -53,7 +50,15 @@ static int32_t SleStackInit(void)
         IOTC_LOGE("set connect param error %d", ret);
         return ret;
     }
-    ret = IotcSleInitStack();
+    ret = IotcInitSleHostService();
+    IOTC_LOGI("IotcInitSleHostService %d", ret);
+
+    ret = IotcSleEnable();
+    IOTC_LOGI("IotcSleEnable %d", ret);
+     
+    ret = IotcSleRegisterHostCallbacks();
+
+    IOTC_LOGI("IotcSleRegisterHostCallbacks %d", ret);
     if (ret != IOTC_OK) {
         IOTC_LOGE("init stack error %d", ret);
         return ret;
@@ -130,12 +135,13 @@ static int32_t SleServiceInit(SleSvcCtx *ctx)
         return ret;
     }
 
+    IOTC_LOGW("sle enable cb %d", ret);
     ret = SleScheduleEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("sle event init error %d", ret);
         return ret;
     }
-
+ 
     ret = SleSsapInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("ssap init error %d", ret);

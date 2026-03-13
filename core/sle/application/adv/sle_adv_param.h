@@ -16,7 +16,7 @@
 #define SLE_ADV_PARAM_H
 
 #include <stdint.h>
-#include "iotc_sle.h"
+#include "iotc_sle_announce.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +28,7 @@ extern "C" {
  * @param advParam [OUT] 广播参数
  * @return 0 成功，非0 失败
  */
-int32_t GetSleAdvParam(IotcAdptSleAdvParam *advParam);
+int32_t GetSleAdvParam(IotcAdptSleAnnounceParam *advParam);
 
 #ifdef __cplusplus
 }

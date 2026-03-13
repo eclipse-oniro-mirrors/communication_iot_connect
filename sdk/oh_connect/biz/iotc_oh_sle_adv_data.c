@@ -143,29 +143,27 @@ static int32_t RspAdvCopyToBuf(uint8_t *out, uint32_t outSize)
     return adv.len + 1;
 }
 
-int32_t IotcOhGetSleAdvData(IotcAdptSleAdvData *advData)
+int32_t IotcOhGetSleAdvData(IotcAdptSleAnnounceData *advData)
 {
     CHECK_RETURN_LOGW(advData != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    (void)memset_s(advData, sizeof(IotcAdptSleAdvData), 0, sizeof(IotcAdptSleAdvData));
+    (void)memset_s(advData, sizeof(IotcAdptSleAnnounceData), 0, sizeof(IotcAdptSleAnnounceData));
 
     int32_t len = 0;
-    len = AdvFlagsCopyToBuf(
-        &advData->announceData[advData->announceDataLen],
-        sizeof(advData->announceData) - advData->announceDataLen
-    );
+    len = AdvFlagsCopyToBuf(&advData->announceData[advData->announceLength],
+                            sizeof(advData->announceData) - advData->announceLength);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    advData->announceDataLen += len;
+    advData->announceLength += len;
 
     len = 0;
-    len = RspAdvCopyToBuf(&advData->seekRspData[advData->seekRspDataLen],
-        sizeof(advData->seekRspData) - advData->seekRspDataLen);
+    len = RspAdvCopyToBuf(&advData->responceData[advData->responceLength],
+                          sizeof(advData->responceData) - advData->responceLength);
     if (len < 0) {
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    advData->seekRspDataLen += len;
+    advData->responceLength += len;
     return IOTC_OK;
 }

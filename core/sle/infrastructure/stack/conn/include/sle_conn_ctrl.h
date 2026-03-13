@@ -12,25 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_ADV_H
-#define SLE_ADV_H
+#ifndef SLE_CONN_CTRL_H
+#define SLE_CONN_CTRL_H
 
 #include <stdint.h>
-#include "iotc_svc_sle.h"
+#include "iotc_sle_server.h"
+#include "iotc_sle_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t SleAdvInit(void);
-
-void SleSetAdvType(SleSvcAdvDataType type);
-
-typedef int32_t (*CustomAdvDataCb)(IotcAdptSleAnnounceData *advData);
-int32_t RegCustomAdvDataCb(CustomAdvDataCb cb);
+int32_t SleCtrlConnectRemoteDevice(const IotcAdptSleAddr *addr);
+int32_t SleCtrlDisconnectRemoteDevice(const IotcAdptSleAddr *addr);
+int32_t SleCtrlDefaultConnectionParamSet(const IotcAdptSleDefaultConnectParam *param);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_ADV_H */
+#endif /* SLE_ADV_CTRL_H */

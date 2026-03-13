@@ -16,16 +16,18 @@
 #define SLE_ADV_CTRL_H
 
 #include <stdint.h>
-#include "iotc_sle.h"
-#include "iotc_sle_def.h"
+#include "iotc_sle_announce.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef int32_t (*SleGetAdvInfoCallback)(IotcAdptSleAdvParam *advPara, IotcAdptSleAdvData *advData);
+typedef int32_t (*SleGetAdvInfoCallback)(IotcAdptSleAnnounceParam *advPara, IotcAdptSleAnnounceData *advData);
 int32_t SleRegAdvAdvInfoCallback(SleGetAdvInfoCallback cb);
-int32_t SleAdvCtrlStartSpecific(const IotcSleAdvParam *advPara, const IotcSleAdvData *advData, uint32_t ms);
+int32_t SleAdvCtrlStartSpecific(
+    const IotcAdptSleAnnounceParam *advPara,
+    const IotcAdptSleAnnounceData *advData,
+    uint32_t ms);
 int32_t SleAdvCtrlStart(uint32_t ms);
 int32_t SleAdvCtrlStop(void);
 int32_t SleAdvCtrlResume(void);

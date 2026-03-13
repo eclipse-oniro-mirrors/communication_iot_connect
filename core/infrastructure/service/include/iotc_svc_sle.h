@@ -15,8 +15,8 @@
 #ifndef IOTC_SERVICE_SLE_H
 #define IOTC_SERVICE_SLE_H
 #include <stdint.h>
-#include "iotc_sle.h"
-#include "iotc_sle_def.h"
+#include "iotc_sle_announce.h"
+#include "iotc_sle_server.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +38,7 @@ typedef enum {
     IOTC_SLE_ADV_TYPE_CUSTOM,                /* 用户自定义广播 */
 } SleSvcAdvDataType;
 
-typedef int32_t (*SleSvcCustomAdvDataCallback)(IotcAdptSleAdvData *advData);
+typedef int32_t (*SleSvcCustomAdvDataCallback)(IotcAdptSleAnnounceData *advData);
 typedef int32_t (*SleStartAdv)(uint32_t ms);
 typedef int32_t (*SleStopAdv)(void);
 typedef void (*SleSetAdvDataType)(SleSvcAdvDataType type);

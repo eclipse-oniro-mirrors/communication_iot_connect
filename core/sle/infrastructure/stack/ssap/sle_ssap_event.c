@@ -14,7 +14,7 @@
  */
 #include "sle_ssap_event.h"
 #include "sle_ssap_mgt.h"
-#include "iotc_sle.h"
+#include "iotc_sle_server.h"
 #include "sle_sched_event.h"
 #include "sched_msg_queue.h"
 #include "securec.h"
@@ -180,5 +180,5 @@ int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
 
 int32_t SleSsapEventInit(void)
 {
-    return IotcSleRegisterSsapCb(SleSsapEventHandler);
+    return IotcSleSsapsRegisterServer(SleSsapEventHandler);
 }
