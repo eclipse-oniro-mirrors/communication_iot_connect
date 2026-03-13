@@ -102,7 +102,6 @@ typedef union {
         uint8_t announceState;
         bool isTerminaled;
     } announceStateChnage;
-   
 } IotcAdptSleAnnounceEventParam;
 
 typedef enum {

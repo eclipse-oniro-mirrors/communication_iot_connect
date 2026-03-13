@@ -76,6 +76,52 @@ uint8_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
     return IOTC_OK;
 }
 
+static int32_t HandleAdvParam(const IotcAdptSleAnnounceParam *advParam, SleAnnounceParam *iotcAdvParam)
+{
+    if (advParam == NULL || iotcAdvParam == NULL) {
+        return IOTC_ERROR;
+    }
+    
+    iotcAdvParam->handle = advParam->handle;
+    iotcAdvParam->mode = advParam->mode;
+    iotcAdvParam->role = advParam->role;
+    iotcAdvParam->level = advParam->level;
+    iotcAdvParam->channelMap = advParam->channelMap;
+    iotcAdvParam->annonceIntervalMin = advParam->annonceIntervalMin;
+    iotcAdvParam->annonceIntervalMax = advParam->annonceIntervalMax;
+    iotcAdvParam->txPower = advParam->txPower;
+    iotcAdvParam->connectIntervalMin = advParam->connectIntervalMin;
+    iotcAdvParam->connectIntervalMax = advParam->connectIntervalMax;
+    iotcAdvParam->connectLatency = advParam->connectLatency;
+    iotcAdvParam->connectTimeout = advParam->connectTimeout;
+    
+    SleDeviceAddress ownAddr = {0};
+    ownAddr.addrType = advParam->ownAddr.type;
+    if (memcpy_s(
+        ownAddr.addr,
+        sizeof(ownAddr.addr),
+        advParam->ownAddr.addr,
+        sizeof(advParam->ownAddr.addr)
+        ) != EOK) {
+        IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
+    }
+    iotcAdvParam->ownAddr = ownAddr;
+    
+    SleDeviceAddress peerAddr = {0};
+    peerAddr.addrType = advParam->peerAddr.type;
+    if (memcpy_s(
+        peerAddr.addr,
+        sizeof(peerAddr.addr),
+        advParam->peerAddr.addr,
+        sizeof(advParam->peerAddr.addr)
+        ) != EOK) {
+        IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
+    }
+    iotcAdvParam->peerAddr = peerAddr;
+    
+    return IOTC_OK;
+}
+
 uint8_t IotcStartAnnounce(
     uint8_t announceId,
     const IotcAdptSleAnnounceData *advData,
@@ -95,41 +141,11 @@ uint8_t IotcStartAnnounce(
     int32_t ret = 0;
     if (advParam != NULL) {
         SleAnnounceParam iotcAdvParam = {0};
-        iotcAdvParam.handle = advParam->handle;
-        iotcAdvParam.mode = advParam->mode;
-        iotcAdvParam.role = advParam->role;
-        iotcAdvParam.level = advParam->level;
-        iotcAdvParam.channelMap = advParam->channelMap;
-        iotcAdvParam.annonceIntervalMin = advParam->annonceIntervalMin;
-        iotcAdvParam.annonceIntervalMax = advParam->annonceIntervalMax;
-        iotcAdvParam.txPower = advParam->txPower;
-        iotcAdvParam.connectIntervalMin = advParam->connectIntervalMin;
-        iotcAdvParam.connectIntervalMax = advParam->connectIntervalMax;
-        iotcAdvParam.connectLatency = advParam->connectLatency;
-        iotcAdvParam.connectTimeout = advParam->connectTimeout;
-        SleDeviceAddress ownAddr = {0};
-        ownAddr.addrType = advParam->ownAddr.type;
-        if (memcpy_s(
-            ownAddr.addr, 
-            sizeof(ownAddr.addr), 
-            advParam->ownAddr.addr, 
-            sizeof(advParam->ownAddr.addr)
-        ) != EOK) {
-            IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
+        if (HandleAdvParam(advParam, &iotcAdvParam) == IOTC_OK) {
+            ret = StartAnnounce(announceId, &iotcAdvData, &iotcAdvParam);
+        } else {
+            return IOTC_ERROR;
         }
-        iotcAdvParam.ownAddr = ownAddr;
-        SleDeviceAddress peerAddr = {0};
-        peerAddr.addrType = advParam->peerAddr.type;
-        if (memcpy_s(
-            peerAddr.addr, 
-            sizeof(peerAddr.addr), 
-            advParam->peerAddr.addr, 
-            sizeof(advParam->peerAddr.addr)
-        ) != EOK) {
-            IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
-        }
-        iotcAdvParam.peerAddr = peerAddr;
-        ret = StartAnnounce(announceId, &iotcAdvData, &iotcAdvParam);
     } else {
         ret = StartAnnounce(announceId, &iotcAdvData, NULL);
     }
@@ -165,8 +181,7 @@ uint8_t IotcStopAnnounce(uint8_t announceId)
 uint8_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
 {
     g_announceEventHandler = callback;
-    uint8_t ret =  ret = UnregisterAnnounceCallbacks(&g_sleAnnounceUtCbs);;
-
+    uint8_t ret = UnregisterAnnounceCallbacks(&g_sleAnnounceUtCbs);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcUnregisterAnnounceCallbacks ret=%d", ret);
         return ret;
@@ -181,5 +196,5 @@ uint8_t IotcDeinitSleAnnounceService(void)
         IOTC_LOGE("IotcDeinitSleAnnounceService=%d", ret);
         return ret;
     }
-   return IOTC_OK;
+    return IOTC_OK;
 }

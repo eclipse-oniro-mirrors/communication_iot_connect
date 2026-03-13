@@ -399,7 +399,6 @@ static SleConnectCallbacks g_SleConnectionCb = {
 
 int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback callback)
 {
-
     g_sleConnectionEventHandler = callback;
     int32_t ret = RegisterConnectCallbacks(&g_SleConnectionCb);
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {

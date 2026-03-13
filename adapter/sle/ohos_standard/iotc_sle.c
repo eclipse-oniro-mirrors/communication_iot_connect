@@ -36,7 +36,6 @@ static IotcAdptSleConnectionCallback g_sleConnectionEventHandler = NULL;
 
 static int32_t SleSetAnnounceData(uint8_t announceId, const IotcAdptSleAnnounceData *advData)
 {
-
     sle_announce_data_t data_sdk = {
         .announce_data_len = advData->announceLength,
         .seek_rsp_data_len = advData->responceLength,
@@ -66,7 +65,7 @@ static int32_t SleSetAnnounceParam(uint8_t announceId, const IotcAdptSleAnnounce
     if (memcpy_s(
         param_sdk.own_addr.addr, sizeof(param_sdk.own_addr.addr),
         param->ownAddr.addr, sizeof(param_sdk.own_addr.addr)
-    ) != 0) {
+        ) != 0) {
         IOTC_LOGE("memcpy_s failed");
         return IOTC_ERROR;
     }

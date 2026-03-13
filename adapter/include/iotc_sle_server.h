@@ -371,7 +371,7 @@ typedef union {
         IotcAdptSleConnectionParamUpdateReq param;
     } sleConnectParamUpdateReq;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleAddr addr;
         IotcAdptSleStatus status;
         IotcAdptSleAuthInfoEvt evt;
@@ -442,11 +442,11 @@ typedef union {
     } indicateConf;
     /* 设置MTU */
     struct  {
-     IotcAdptSleStatus status;
-    uint8_t serverId;
-    uint16_t connectId;
-    uint32_t mtuSize;
-    uint16_t version;
+        IotcAdptSleStatus status;
+        uint8_t serverId;
+        uint16_t connectId;
+        uint32_t mtuSize;
+        uint16_t version;
     } setMtu;
     /* 请求读 */
     struct  {
@@ -672,7 +672,11 @@ uint8_t IotcSleSendSsapsIndicate(
  * @param param [IN] 参数
  * @return 0成功，非0失败
  */
-uint8_t IotcSleSendSsapsIndicateByUuid(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateByUuidParam *param);
+uint8_t IotcSleSendSsapsIndicateByUuid(
+    uint8_t serverId,
+    uint16_t connectId,
+    const IotcAdptSleSendIndicateByUuidParam *param
+);
 
 /**
  * @brief 发送SSAP数据

@@ -78,7 +78,7 @@ static const ConnectionEventToScheduleEvent EVENT_COVERT_MAP[] = {
 };
 
 static int32_t SleConnectionEventHandler(
-    IotcAdptSleConnectionEvent discEvent, 
+    IotcAdptSleConnectionEvent discEvent,
     const IotcAdptSleConnectionEventParam *param
 )
 {
@@ -90,7 +90,7 @@ static int32_t SleConnectionEventHandler(
 
         IotcAdptSleConnectionEventParam *eventParam =
             (IotcAdptSleConnectionEventParam *)UtilsMallocCopy(
-                (const uint8_t *)param, 
+                (const uint8_t *)param,
                 sizeof(IotcAdptSleConnectionEventParam)
             );
         if (eventParam == NULL) {

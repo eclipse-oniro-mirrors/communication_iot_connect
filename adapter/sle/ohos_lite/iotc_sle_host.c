@@ -91,8 +91,6 @@ IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
 }
 
 
-
-
 static void SleFlowMonitorEventCb(float flow)
 {
 }

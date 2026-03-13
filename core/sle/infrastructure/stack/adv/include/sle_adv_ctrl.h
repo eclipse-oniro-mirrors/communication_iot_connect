@@ -25,8 +25,8 @@ extern "C" {
 typedef int32_t (*SleGetAdvInfoCallback)(IotcAdptSleAnnounceParam *advPara, IotcAdptSleAnnounceData *advData);
 int32_t SleRegAdvAdvInfoCallback(SleGetAdvInfoCallback cb);
 int32_t SleAdvCtrlStartSpecific(
-    const IotcAdptSleAnnounceParam *advPara, 
-    const IotcAdptSleAnnounceData *advData, 
+    const IotcAdptSleAnnounceParam *advPara,
+    const IotcAdptSleAnnounceData *advData,
     uint32_t ms);
 int32_t SleAdvCtrlStart(uint32_t ms);
 int32_t SleAdvCtrlStop(void);
