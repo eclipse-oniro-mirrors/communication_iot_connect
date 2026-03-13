@@ -32,6 +32,7 @@ static uint8_t g_desc_val[]  = {0x55, 0x66, 0x77, 0x88};
 #define INVALID_SERVER_ID 0
 #define EXT_ADV_OR_SCAN_RSP_DATA_LEN 251
 #define MAX_READ_REQ_LEN 200
+#define SLE_DELAY_SECONDS 10
 
 static uint16_t g_services_handle[BLE_MAX_SERVICES_NUMS] = {0};
 static uint16_t g_server_request_id = 0;
@@ -59,23 +60,22 @@ static char g_hilink_group_uuid[HILINK_SERVICE_NUM + HILINK_CHARA_NUM][OHOS_SLE_
     {0x15, 0xF1, 0xE6, 0x02, 0xA2, 0x77, 0x43, 0xFC, 0xA4, 0x84, 0xDD, 0x39, 0xEF, 0x8A, 0x91, 0x00},
     {0x15, 0xF1, 0xE6, 0x01, 0xA2, 0x77, 0x43, 0xFC, 0xA4, 0x84, 0xDD, 0x39, 0xEF, 0x8A, 0x91, 0x00}
 };
-static char g_hilink_cccd_uuid[UUID16_LEN] = {0x29, 0x02};
+static char g_hilinkCccdUuid[UUID16_LEN] = {0x29, 0x02};
 
 typedef struct {
-    int conn_id;
-    int attr_handle;  /* The handle of the attribute to be read */
+    int connId;
+    int attrHandle;  /* The handle of the attribute to be read */
     SleServiceRead read;
     SleServiceWrite write;
     SleServiceIndicate indicate;
-} hilink_sle_func;
-hilink_sle_func g_charas_func[10] = {{0}};     /* 设置最大Service数量10 */
+} HilinkSleFunc;
+HilinkSleFunc g_charasFunc[10] = {{0}};     /* 设置最大Service数量10 */
 static uint8_t g_chara_cnt = 0;
 
-static void hilnk_group_add(void)
+static void HilnkGroupAdd(void)
 {
     g_hilink_group_cnt++;
 }
-
 
 static uint8_t sle_uuid_server_init(void)
 {
@@ -94,7 +94,7 @@ static uint8_t sle_uuid_server_init(void)
         IOTC_LOGE("%s sle ext create server fail:%d", ret);
         return ret;
     }
-    sleep(10);
+    sleep(SLE_DELAY_SECONDS);
     IOTC_LOGE("sle ext create server success");
     return ret;
 }
@@ -138,7 +138,6 @@ static void convert_uuid(uint8_t *uuid_input, SleUuidType type, IotcSleUuid *uui
 
 static uint32_t perm_bt_to_bluez(uint32_t permissions)
 {
-
     uint32_t perm = 0;
     if (permissions & IOTC_SLE_SSAP_PERMISSION_READ) {
         perm |= IOTC_SLE_SSAP_PERMISSION_READ;
@@ -147,7 +146,7 @@ static uint32_t perm_bt_to_bluez(uint32_t permissions)
         perm |= (IOTC_SLE_SSAP_PERMISSION_READ | IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED_MITM);
     }
     if (permissions & IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED_MITM) {
-        perm |= (IOTC_SLE_SSAP_PERMISSION_READ | 
+        perm |= (IOTC_SLE_SSAP_PERMISSION_READ |
             IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED_MITM | IOTC_SLE_SSAP_PERMISSION_WRITE_ENCRYPTED);
     }
     if (permissions & IOTC_SLE_SSAP_PERMISSION_WRITE) {
@@ -166,20 +165,189 @@ static uint32_t perm_bt_to_bluez(uint32_t permissions)
 
 static void set_chara_func(SleAttr *attr, uint8_t is_indicate)
 {
-    g_charas_func[g_chara_cnt].conn_id = 0;
+    g_charasFunc[g_chara_cnt].connId = 0;
     if (is_indicate == 0) {
         if (attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR) {
-            g_charas_func[g_chara_cnt].attr_handle = g_cb_chara_handle;
+            g_charasFunc[g_chara_cnt].attrHandle = g_cb_chara_handle;
         } else {
-            g_charas_func[g_chara_cnt].attr_handle = g_cb_desc_handle;
+            g_charasFunc[g_chara_cnt].attrHandle = g_cb_desc_handle;
         }
-        g_charas_func[g_chara_cnt].read       = attr->func.read;
-        g_charas_func[g_chara_cnt].write      = attr->func.write;
-        g_charas_func[g_chara_cnt].indicate   = attr->func.indicate;
+        g_charasFunc[g_chara_cnt].read       = attr->func.read;
+        g_charasFunc[g_chara_cnt].write      = attr->func.write;
+        g_charasFunc[g_chara_cnt].indicate   = attr->func.indicate;
     } else {
-        g_charas_func[g_chara_cnt].attr_handle = g_cb_desc_handle;
+        g_charasFunc[g_chara_cnt].attrHandle = g_cb_desc_handle;
     }
     g_chara_cnt++;
+}
+
+static int32_t ProcessServiceAttribute(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle)
+{
+    int32_t ret = IOTC_OK;
+    IotcSleUuidAddr service_uuid = {0};
+    service_uuid.len = sle_uuid->uuidLen;
+    (void)memcpy_s(service_uuid.uuid, sle_uuid->uuidLen, (uint8_t *)sle_uuid->uuid, sle_uuid->uuidLen);
+    IOTC_LOGE("sle ext begin create service");
+    ret = IotcSsapsAddService(g_server_id, &service_uuid, true, service_handle);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle ext add service fail:%d", ret);
+    }
+    g_srvc_handle = *service_handle;
+    HilnkGroupAdd();
+    IOTC_LOGE("sle ext create service success");
+    return ret;
+}
+
+static int32_t ProcessCharAttribute(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *properties,
+    uint16_t *props_handle)
+{
+    int32_t ret = IOTC_OK;
+    IotcSleUuidAddr service_uuid = {0};
+    service_uuid.len = sle_uuid->uuidLen;
+    (void)memcpy_s(service_uuid.uuid, sle_uuid->uuidLen, (uint8_t *)sle_uuid->uuid, sle_uuid->uuidLen);
+    *properties = attr->properties;
+    IotcAdptSleSsapsPropertyInfo propertyParam = {0};
+    propertyParam.uuid = service_uuid;
+    propertyParam.permissions = perm_bt_to_bluez(attr->permission);
+    propertyParam.operateIndication = attr->properties;
+    propertyParam.valueLen = sizeof(g_chara_val);
+    propertyParam.value = g_chara_val;
+    IOTC_LOGE("sle ext begin add props %d", attr->properties);
+    ret = IotcSsapsAddProperty(g_server_id, g_srvc_handle, &propertyParam, props_handle);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle ext add property fail:%d", ret);
+    }
+    HilnkGroupAdd();
+    return ret;
+}
+
+static int32_t ProcessDescAttribute(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t props_handle,
+    uint16_t *desc_handle)
+{
+    int32_t ret = IOTC_OK;
+    IotcSleUuidAddr service_uuid = {0};
+    service_uuid.len = sle_uuid->uuidLen;
+    (void)memcpy_s(service_uuid.uuid, sle_uuid->uuidLen, (uint8_t *)sle_uuid->uuid, sle_uuid->uuidLen);
+    IotcAdptSleSsapsDescInfo descriptor = {0};
+    descriptor.uuid = service_uuid;
+    descriptor.permissions = perm_bt_to_bluez(attr->permission);
+    descriptor.valueLen = sizeof(g_desc_val);
+    descriptor.value = g_desc_val;
+    IOTC_LOGI("sle ext begin add desc");
+    ret = IotcSsapsAddDescriptor(g_server_id, g_srvc_handle, props_handle, &descriptor, desc_handle);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle ext add descriptor fail:%d", ret);
+    }
+    g_cb_desc_handle = *desc_handle;
+    HilnkGroupAdd();
+    return ret;
+}
+
+static int32_t ProcessAttributePost(SleAttr *attr, uint16_t props_handle, uint8_t *is_indicate)
+{
+    if ((attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) || (attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
+        set_chara_func(attr, 0);
+    }
+
+    if ((attr->properties & IOTC_ADPT_SLE_CHAR_PROP_INDICATE) ||
+        (attr->properties &IOTC_ADPT_SLE_CHAR_PROP_NOTIFY)) {
+        *is_indicate = 1;
+        g_indicate_handle = g_cb_chara_handle;
+    }
+    return IOTC_OK;
+}
+
+static int32_t ProcessAttribute(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
+    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+{
+    int32_t ret = IOTC_OK;
+    switch (attr->attrType) {
+        case OHOS_SLE_ATTRIB_TYPE_SERVICE:
+            ret = ProcessServiceAttribute(attr, sle_uuid, service_handle);
+            break;
+        case OHOS_SLE_ATTRIB_TYPE_CHAR:
+            ret = ProcessCharAttribute(attr, sle_uuid, properties, props_handle);
+            break;
+        case OHOS_SLE_ATTRIB_TYPE_CHAR_VALUE:
+            break;
+        case OHOS_SLE_ATTRIB_TYPE_CHAR_CLIENT_CONFIG:
+            break;
+        case OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR:
+            ret = ProcessDescAttribute(attr, sle_uuid, *props_handle, desc_handle);
+            break;
+        default:
+            IOTC_LOGE("sle ext unknow");
+    }
+
+    if ((attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) || (attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
+        set_chara_func(attr, 0);
+    }
+
+    if ((attr->properties & IOTC_ADPT_SLE_CHAR_PROP_INDICATE) ||
+        (attr->properties &IOTC_ADPT_SLE_CHAR_PROP_NOTIFY)) {
+        *is_indicate = 1;
+        g_indicate_handle = g_cb_chara_handle;
+    }
+    return ret;
+}
+
+static int32_t ProcessAttributeEx(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
+    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+{
+    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+}
+
+static int32_t ProcessAttributeWrapper(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
+    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+{
+    int32_t ret = ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+    if (ret != IOTC_OK) {
+        return ret;
+    }
+    return ProcessAttributePost(attr, *props_handle, is_indicate);
+}
+
+static int32_t ProcessAttributeSimple(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
+    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+{
+    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+}
+
+static int32_t ProcessAttributeShort(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
+    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+{
+    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+}
+
+static int32_t ProcessAttributeMinimal(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
+    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+{
+    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+}
+
+static int32_t HandleIndicate(uint16_t properties, uint16_t props_handle, uint16_t *desc_handle)
+{
+    int32_t ret = IOTC_OK;
+    IotcSleUuid sle_uuid = {0};
+    IOTC_LOGI("sle ext indicate");
+    sle_uuid.uuid = g_hilinkCccdUuid;
+    sle_uuid.uuidLen = sizeof(g_hilinkCccdUuid);
+    IotcSleUuidAddr service_uuid = {0};
+    service_uuid.len = sle_uuid.uuidLen;
+    (void)memcpy_s(service_uuid.uuid, sle_uuid.uuidLen, (uint8_t *)sle_uuid.uuid, sle_uuid.uuidLen);
+    IotcAdptSleSsapsDescInfo descriptor = {0};
+    
+    descriptor.uuid = service_uuid;
+    descriptor.permissions = perm_bt_to_bluez(IOTC_SLE_SSAP_PERMISSION_READ | IOTC_SLE_SSAP_PERMISSION_WRITE);
+    descriptor.operateInd = properties;
+    descriptor.valueLen = sizeof(g_desc_val);
+    descriptor.value = g_desc_val;
+    ret = IotcSsapsAddDescriptor(g_server_id, g_srvc_handle, props_handle, &descriptor, desc_handle);
+    if (ret == IOTC_OK) {
+        set_chara_func(NULL, 1);
+        g_cb_desc_handle = *desc_handle;
+    }
+    return ret;
 }
 
 int32_t  IotcSleStartServiceEx(int *srvcHandle, SleService *srvcInfo)
@@ -203,102 +371,17 @@ int32_t  IotcSleStartServiceEx(int *srvcHandle, SleService *srvcInfo)
     for (unsigned int i = 0; i < srvcInfo->attrNum; i++) {
         SleAttr *attr = &(srvcInfo->attrList[i]);
         convert_uuid(attr->uuid, attr->uuidType, &sle_uuid);
-        switch (attr->attrType) {
-            case OHOS_SLE_ATTRIB_TYPE_SERVICE:
-                {
-                IotcSleUuidAddr service_uuid = {0};
-                service_uuid.len = sle_uuid.uuidLen;
-                (void)memcpy_s(service_uuid.uuid, sle_uuid.uuidLen, (uint8_t *)sle_uuid.uuid, sle_uuid.uuidLen);
-                IOTC_LOGE("sle ext begin create service");
-                ret = IotcSsapsAddService(g_server_id, &service_uuid, true, &service_handle);
-                if (ret != IOTC_OK) {
-                    IOTC_LOGE("sle ext add service fail:%d", ret);
-                }
-                g_srvc_handle = service_handle;
-                hilnk_group_add();
-                 IOTC_LOGE("sle ext create service success");
-                }
-               
-                break;
-            case OHOS_SLE_ATTRIB_TYPE_CHAR:
-                {
-                IotcSleUuidAddr service_uuid = {0};
-                service_uuid.len = sle_uuid.uuidLen;
-                (void)memcpy_s(service_uuid.uuid, sle_uuid.uuidLen, (uint8_t *)sle_uuid.uuid, sle_uuid.uuidLen);
-                properties = attr->properties;
-                IotcAdptSleSsapsPropertyInfo propertyParam = {0};
-                propertyParam.uuid = service_uuid;
-                propertyParam.permissions = perm_bt_to_bluez(attr->permission);
-                propertyParam.operateIndication = attr->properties;
-                propertyParam.valueLen = sizeof(g_chara_val);
-                propertyParam.value = g_chara_val;
-                 IOTC_LOGE("sle ext begin add props %d",attr->properties);
-                ret = IotcSsapsAddProperty(g_server_id, g_srvc_handle,
-                    &propertyParam, &props_handle);
-                if (ret != IOTC_OK) {
-                    IOTC_LOGE("sle ext add property fail:%d", ret);
-                }
-                hilnk_group_add();
-                }
-
-                break;
-            case OHOS_SLE_ATTRIB_TYPE_CHAR_VALUE:
-                break;
-            case OHOS_SLE_ATTRIB_TYPE_CHAR_CLIENT_CONFIG:
-                break;
-            case OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR:
-                {
-                IotcSleUuidAddr service_uuid = {0};
-                service_uuid.len = sle_uuid.uuidLen;
-                (void)memcpy_s(service_uuid.uuid, sle_uuid.uuidLen, (uint8_t *)sle_uuid.uuid, sle_uuid.uuidLen);
-               IotcAdptSleSsapsDescInfo descriptor={0};
-               descriptor.uuid = service_uuid;
-               descriptor.permissions = perm_bt_to_bluez(attr->permission);
-               descriptor.valueLen = sizeof(g_desc_val);
-               descriptor.value = g_desc_val;
-               IOTC_LOGI("sle ext begin add desc");
-               ret = IotcSsapsAddDescriptor(g_server_id, g_srvc_handle,props_handle, &descriptor, &desc_handle);
-                if (ret != IOTC_OK) {
-                    IOTC_LOGE("sle ext add descriptor fail:%d", ret);
-                }
-                g_cb_desc_handle = desc_handle;
-                hilnk_group_add();
-                }
-
-                break;
-            default:
-                IOTC_LOGE("sle ext unknow");
-        }
-
-        if ((attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) || (attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
-            set_chara_func(attr, 0);
-        }
-
-        if ((attr->properties & IOTC_ADPT_SLE_CHAR_PROP_INDICATE) ||
-            (attr->properties &IOTC_ADPT_SLE_CHAR_PROP_NOTIFY)) {
-            is_indicate = 1;
-            g_indicate_handle = g_cb_chara_handle;
+        ret = ProcessAttribute(attr, &sle_uuid, &service_handle, &props_handle,
+            &desc_handle, &properties, &is_indicate);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("sle ext process attribute fail:%d", ret);
         }
     }
 
     if (is_indicate) {
-        IOTC_LOGI("sle ext indicate");
-        sle_uuid.uuid = g_hilink_cccd_uuid;
-        sle_uuid.uuidLen = sizeof(g_hilink_cccd_uuid);
-        IotcSleUuidAddr service_uuid = {0};
-        service_uuid.len = sle_uuid.uuidLen;
-        (void)memcpy_s(service_uuid.uuid, sle_uuid.uuidLen, (uint8_t *)sle_uuid.uuid, sle_uuid.uuidLen);
-        IotcAdptSleSsapsDescInfo descriptor={0};
-        
-        descriptor.uuid = service_uuid;
-        descriptor.permissions = perm_bt_to_bluez(IOTC_SLE_SSAP_PERMISSION_READ|IOTC_SLE_SSAP_PERMISSION_WRITE);
-        descriptor.operateInd = properties;
-        descriptor.valueLen = sizeof(g_desc_val);
-        descriptor.value = g_desc_val;
-        ret = IotcSsapsAddDescriptor(g_server_id, g_srvc_handle,props_handle, &descriptor, &desc_handle);
-        if (ret == IOTC_OK) {
-            set_chara_func(NULL, is_indicate);
-            g_cb_desc_handle = desc_handle;
+        ret = HandleIndicate(properties, props_handle, &desc_handle);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("sle ext handle indicate fail:%d", ret);
         }
     }
 

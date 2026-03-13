@@ -350,7 +350,7 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("sle conn init err ret=%d", ret);
         return ret;
     }
-       ret = SleSsapClinetEventInit();
+    ret = SleSsapClinetEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("sle ssap client init err ret=%d", ret);
         return ret;
@@ -365,7 +365,7 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("add sle svc ret=%d", ret);
         return ret;
     }
-     IOTC_LOGI(" ---> start service success");
+    IOTC_LOGI(" ---> start service success");
     return IOTC_OK;
 }
 
@@ -608,7 +608,7 @@ int32_t SetSleConnectParam(void)
     return IotcSleSetConnectParam(&param);
 }
 
-int32_t SleSsapReqRead(uint8_t serverId,uint16_t connId, uint16_t attrHandle, int16_t requestId)
+int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, int16_t requestId)
 {
     if ((GetSleSsapMgtApp()->connNum == 0) || (GetSleSsapMgtApp()->peerDevInfo == NULL)) {
         IOTC_LOGE("no connect");
@@ -620,7 +620,7 @@ int32_t SleSsapReqRead(uint8_t serverId,uint16_t connId, uint16_t attrHandle, in
     param.requestId = requestId;
     param.value = IotcCalloc(1, IOTC_ADPT_SLE_SSAP_READ_BUF_SIZE);
     if (param.value == NULL) {
-        uint8_t ret = IotcSleSendSsapsResponse(serverId,connId,&param);
+        uint8_t respRet = IotcSleSendSsapsResponse(serverId, connId, &param);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
     IotcAdptSleSsapReadFunc func = FindAttrHandleReadFunc(attrHandle);
@@ -628,7 +628,7 @@ int32_t SleSsapReqRead(uint8_t serverId,uint16_t connId, uint16_t attrHandle, in
         IOTC_LOGE("no find read func");
         IotcFree(param.value);
         param.value = NULL;
-        ret = IotcSleSendSsapsResponse(serverId,connId,&param);
+        ret = IotcSleSendSsapsResponse(serverId, connId, &param);
         return IOTC_ERROR;
     }
     param.valueLen = IOTC_ADPT_SLE_SSAP_READ_BUF_SIZE;
@@ -638,10 +638,10 @@ int32_t SleSsapReqRead(uint8_t serverId,uint16_t connId, uint16_t attrHandle, in
         IotcFree(param.value);
         param.value = NULL;
         param.valueLen = 0;
-        ret = IotcSleSendSsapsResponse(serverId,connId,&param);
+        ret = IotcSleSendSsapsResponse(serverId, connId, &param);
         return IOTC_ERROR;
     }
-    ret = IotcSleSendSsapsResponse(serverId,connId,&param);
+    ret = IotcSleSendSsapsResponse(serverId, connId, &param);
     if (ret != IOTC_OK) {
         IOTC_LOGE("response err ret=%d", ret);
         IotcFree(param.value);

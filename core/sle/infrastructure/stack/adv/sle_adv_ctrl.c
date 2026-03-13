@@ -125,8 +125,9 @@ static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
         IOTC_LOGE("SleAdapterAdvCtrlStart add adv  ret=%d", ret);
         return ret;
     }
-    IOTC_LOGI("SleAdapterAdvCtrlStart  anounce param connect max:%d,min:%d",advPara->connectIntervalMax,advPara->connectIntervalMin);
-    ret = IotcStartAnnounce(anounceId, advData,NULL);
+    IOTC_LOGI("SleAdapterAdvCtrlStart  anounce param connect max:%d, min:%d",
+        advPara->connectIntervalMax, advPara->connectIntervalMin);
+    ret = IotcStartAnnounce(anounceId, advData, NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGE("SleAdapterAdvCtrlStart start sle adv err %d", ret);
         return ret;
