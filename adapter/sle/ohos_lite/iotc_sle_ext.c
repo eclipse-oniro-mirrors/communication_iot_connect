@@ -288,7 +288,8 @@ static int32_t ProcessAttribute(ProcessAttributeParam *param)
             IOTC_LOGE("sle ext unknow");
     }
 
-    if ((param->attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) || (param->attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
+    if ((param->attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) ||
+        (param->attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
         set_chara_func(param->attr, 0);
     }
 
