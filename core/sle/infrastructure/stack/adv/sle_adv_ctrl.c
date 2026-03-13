@@ -73,7 +73,7 @@ static int32_t CopyAdvInfo2Adapter(const IotcAdptSleAnnounceParam *advPara, cons
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    ret = memcpy_s(adapterAdvData->responceData, sizeof(adapterAdvData->responceData), 
+    ret = memcpy_s(adapterAdvData->responceData, sizeof(adapterAdvData->responceData),
                    advData->responceData, advData->responceLength);
     if (ret != EOK) {
         IOTC_LOGW("memcpy error %d/%u", ret, advData->responceLength);
@@ -117,7 +117,11 @@ static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
     return StartSleAdvTimer(ms);
 }
 
-int32_t SleAdvCtrlStartSpecific(const IotcAdptSleAnnounceParam *advPara, const IotcAdptSleAnnounceData *advData, uint32_t ms)
+int32_t SleAdvCtrlStartSpecific(
+    const IotcAdptSleAnnounceParam *advPara,
+    const IotcAdptSleAnnounceData *advData,
+    uint32_t ms
+)
 {
     CHECK_RETURN_LOGW(advPara != NULL && advData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 

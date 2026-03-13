@@ -56,7 +56,7 @@ uint8_t IotcSleDisable(void)
         IOTC_LOGE("IotcSleEnable=%d", ret);
         return ret;
     }
-     return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcSleSetSleName(const char *name)
@@ -65,29 +65,28 @@ uint8_t IotcSleSetSleName(const char *name)
         IOTC_LOGE("IotcSleSetSleName invalid param");
         return IOTC_ERROR;
     }
-    uint8_t ret = SetHostName(&name, sizeof(name));
+    uint8_t ret = SetHostName(&name, sizeof(*name));
     if (ret != IOTC_OK) {
         IOTC_LOGE("set name ret=%d", ret);
         return ret;
     }
-     return IOTC_OK;
+    return IOTC_OK;
 }
 
 IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
 {
-
     SleDeviceAddress* sleAddr = (SleDeviceAddress*)malloc(sizeof(SleDeviceAddress));
     uint8_t ret = GetHostAddress(sleAddr);
-      if (ret != IOTC_OK) {
+    if (ret != IOTC_OK) {
         IOTC_LOGE("set name ret=%d", ret);
         free(sleAddr);
         return NULL;
     }
-    IotcAdptSleDeviceAddr* addr =(IotcAdptSleDeviceAddr*)malloc(sizeof(IotcAdptSleDeviceAddr));
+    IotcAdptSleDeviceAddr* addr = (IotcAdptSleDeviceAddr*)malloc(sizeof(IotcAdptSleDeviceAddr));
     // 将 sleAddr 的内容赋值给 addr
-    if(memcpy_s(addr, sizeof(IotcAdptSleDeviceAddr), sleAddr, sizeof(IotcAdptSleDeviceAddr)) == 0){
+    if (memcpy_s(addr, sizeof(IotcAdptSleDeviceAddr), sleAddr, sizeof(IotcAdptSleDeviceAddr)) == 0) {
         return addr;
-    }  
+    }
     return NULL;
 }
 
@@ -96,12 +95,11 @@ IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
 
 static void SleFlowMonitorEventCb(float flow)
 {
-  
 }
 
 static void sleHostStateChangeCb(SleDeviceState state)
 {
-  IOTC_LOGI("sle OnSleHostStateChangeCb ret=%d", state);
+    IOTC_LOGI("sle OnSleHostStateChangeCb ret=%d", state);
 }
 
 static SleHostCallbacks  g_host_cb = {
@@ -110,15 +108,14 @@ static SleHostCallbacks  g_host_cb = {
 };
 
 
-
 uint8_t IotcSleRegisterHostCallbacks()
 {
-      int32_t ret = RegisterHostCallbacks(&g_host_cb);
+    int32_t ret = RegisterHostCallbacks(&g_host_cb);
     if (!ret) {
         IOTC_LOGE("IotcSleRegisterHostCallbacks ret=%d", ret);
         return ret;
     }
-     return IOTC_OK;
+    return IOTC_OK;
 }
 
 uint8_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback)
@@ -132,5 +129,5 @@ uint8_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback)
         IOTC_LOGE("IotcUnregisterHostCallbacksret=%d", ret);
         return ret;
     }
-     return IOTC_OK;
+    return IOTC_OK;
 }

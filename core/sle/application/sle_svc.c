@@ -51,7 +51,6 @@ static int32_t SleStackInit(void)
         return ret;
     }
     ret = IotcInitSleHostService();
-    // ret = IotcInitSleSsapsService();
     IOTC_LOGI("IotcInitSleHostService %d", ret);
 
     ret = IotcSleEnable();
@@ -136,7 +135,7 @@ static int32_t SleServiceInit(SleSvcCtx *ctx)
         return ret;
     }
 
-   IOTC_LOGW("sle enable cb %d", ret);
+    IOTC_LOGW("sle enable cb %d", ret);
     ret = SleScheduleEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("sle event init error %d", ret);

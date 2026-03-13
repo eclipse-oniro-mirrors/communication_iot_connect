@@ -547,7 +547,7 @@ static int32_t GetSleAilifeAdvDataInner(IotcAdptSleAnnounceData *advData)
     }
 
     len = 0;
-    len = RspAdvCopyToBuf(&advData->responceData[advData->responceLength], 
+    len = RspAdvCopyToBuf(&advData->responceData[advData->responceLength],
         sizeof(advData->responceData) - advData->responceLength);
     if (len < 0) {
         IOTC_LOGE("copy");

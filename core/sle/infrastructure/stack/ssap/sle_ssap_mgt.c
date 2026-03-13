@@ -469,10 +469,6 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
         return ret;
     }
 
-
-
-
-
     return ret;
 }
 
@@ -506,33 +502,28 @@ int32_t SleSsapReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
     IotcAdptSleResponseParam param;
     (void)memset_s(&param, sizeof(param), 0, sizeof(param));
 
-
-
-
     return IOTC_OK;
 }
 
 
-int32_t SleSsapReqWrite(
-    uint8_t serverId, 
-    uint16_t connectId, 
-    uint16_t requestId, 
-    uint8_t type,
-    uint8_t *value, 
-    int32_t valueLen
-)
+int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
 {
+    if (param == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERROR;
+    }
+
     if ((GetSleSsapMgtApp()->connNum == 0) || (GetSleSsapMgtApp()->peerDevInfo == NULL)) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_SLE_NO_CONNECT;
     }
 
-    IotcAdptSleResponseParam param;
-    param.requestId = requestId;
-    param.status = type;
-    param.value = value;
-    param.valueLen = valueLen;
-    uint8_t ret = IotcSleSendSsapsResponse(serverId, connectId, &param);
+    IotcAdptSleResponseParam respParam;
+    respParam.requestId = param->requestId;
+    respParam.status = param->type;
+    respParam.value = param->value;
+    respParam.valueLen = param->valueLen;
+    uint8_t ret = IotcSleSendSsapsResponse(param->serverId, param->connectId, &respParam);
 
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);

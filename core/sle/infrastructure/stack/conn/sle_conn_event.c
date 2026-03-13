@@ -89,7 +89,10 @@ static int32_t SleConnectionEventHandler(
         }
 
         IotcAdptSleConnectionEventParam *eventParam =
-            (IotcAdptSleConnectionEventParam *)UtilsMallocCopy((const uint8_t *)param, sizeof(IotcAdptSleConnectionEventParam));
+            (IotcAdptSleConnectionEventParam *)UtilsMallocCopy(
+                (const uint8_t *)param, 
+                sizeof(IotcAdptSleConnectionEventParam)
+            );
         if (eventParam == NULL) {
             IOTC_LOGW("malloc error");
             return IOTC_ADAPTER_MEM_ERR_MALLOC;

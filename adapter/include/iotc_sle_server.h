@@ -137,8 +137,8 @@ typedef struct {
 } IotcAdptSleSetPhy;
 
 typedef struct {
-    uint8_t type;                         
-    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];                                                
+    uint8_t type;
+    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];
 } IotcAdptSleAddr;
 /**
  * @if Eng
@@ -245,8 +245,8 @@ typedef struct {
  * @endif
  */
 typedef struct {
-    uint32_t mtuSize; 
-    uint16_t version;  
+    uint32_t mtuSize;
+    uint16_t version;
 } IotcAdptSleMtuInfo;
 
 /**
@@ -257,7 +257,7 @@ typedef struct {
  * @endif
  */
 typedef struct {
-      uint16_t requestId;
+    uint16_t requestId;
     uint16_t handle;
     uint8_t type;
     bool needRsp;
@@ -305,10 +305,9 @@ typedef enum {
 } IotcAdptSleConnectionEvent;
 
 typedef struct {
-    uint8_t len;                
+    uint8_t len;
     uint8_t uuid[16];
-    
-}IotcSleUuidAddr;
+} IotcSleUuidAddr;
 
 typedef union {
     struct {
@@ -355,19 +354,19 @@ typedef union {
 
 typedef union {
     struct {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleAddr addr;
-        IotcAdptSleAcbState conn_state;
+        IotcAdptSleAcbState connState;
         IotcAdptSlePairState pairState;
-        IotcAdptSleDiscReason disc_reason;
+        IotcAdptSleDiscReason discReason;
     } sleConnectStateChanged;
     struct {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleStatus status;
         IotcAdptSleConnectionParamUpdateEvt param;
     } sleConnectParamUpdate;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleStatus status;
         IotcAdptSleConnectionParamUpdateReq param;
     } sleConnectParamUpdateReq;
@@ -378,14 +377,24 @@ typedef union {
         IotcAdptSleAuthInfoEvt evt;
     } sleAuthComplete;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
+        IotcAdptSleAddr addr;
+        IotcAdptSleStatus status;
+    } sleConnect;
+    struct  {
+        uint16_t connId;
         IotcAdptSleAddr addr;
         IotcAdptSleStatus status;
     } slePairComplete;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         int8_t rssi;
         IotcAdptSleStatus status;
+    } sleRssiUpdate;
+    struct  {
+        uint8_t status;
+        IotcAdptSleAddr addr;
+        uint8_t rate;
     } sleReadRssi;
     struct  {
         uint8_t status;
@@ -393,7 +402,7 @@ typedef union {
         uint8_t rate;
     } sleLowLatency;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleStatus status;
         IotcAdptSleSetPhy param;
     } sleSetPhy;
@@ -401,7 +410,7 @@ typedef union {
 
 /* SSAPS事件参数列表 */
 typedef union {
-      struct ConnSvc {
+    struct ConnSvc {
         int32_t connId;
         int32_t serverId;
         uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
@@ -433,13 +442,12 @@ typedef union {
     } indicateConf;
     /* 设置MTU */
     struct  {
-     IotcAdptSleStatus status;    
+     IotcAdptSleStatus status;
     uint8_t serverId;
     uint16_t connectId;
-    uint32_t mtuSize; 
-    uint16_t version;  
+    uint32_t mtuSize;
+    uint16_t version;
     } setMtu;
- 
     /* 请求读 */
     struct  {
     uint8_t serverId;
@@ -470,10 +478,13 @@ typedef int32_t(*IotcAdptSleSsapReadFunc)(uint8_t *buff, uint32_t *len);
 typedef int32_t(*IotcAdptSleSsapWriteFunc)(uint8_t *buff, uint32_t len);
 typedef int32_t(*IotcAdptSleSsapCallback)(IotcAdptSleSsapEvent event, const IotcAdptSleSsapEventParam *param);
 typedef int32_t(*IotcAdptSleAnnounceSeekCallback)(
-    IotcAdptSleAnnounceSeekEvent event, 
+    IotcAdptSleAnnounceSeekEvent event,
     const IotcAdptSleAnnounceSeekEventParam *param
 );
-typedef int32_t(*IotcAdptSleConnectionCallback)(IotcAdptSleConnectionEvent event, const IotcAdptSleConnectionEventParam *param);
+typedef int32_t(*IotcAdptSleConnectionCallback)(
+    IotcAdptSleConnectionEvent event,
+    const IotcAdptSleConnectionEventParam *param
+);
 
 /* 发送indication或notification参数 */
 typedef struct {
@@ -506,8 +517,6 @@ typedef struct {
     uint16_t valueLen;
     uint8_t *value;
 } IotcAdptSleResponseParam;
-
-
 
 typedef struct {
     const char *uuid;
@@ -652,7 +661,10 @@ uint8_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle);
  * @param param [IN] 参数
  * @return 0成功，非0失败
  */
-uint8_t IotcSleSendSsapsIndicate(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateParam *param);
+uint8_t IotcSleSendSsapsIndicate(
+    uint8_t serverId,
+    uint16_t connectId,
+    const IotcAdptSleSendIndicateParam *param);
 
 /**
  * @brief 发送SSAP数据
@@ -671,9 +683,20 @@ uint8_t IotcSleSendSsapsIndicateByUuid(uint8_t serverId, uint16_t connectId, con
 uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param);
 
 
-uint8_t IotcSsapsAddProperty(uint8_t serviceId, uint16_t serviceHandle, IotcAdptSleSsapsPropertyInfo *property, uint16_t *handle);
+uint8_t IotcSsapsAddProperty(
+    uint8_t serviceId,
+    uint16_t serviceHandle,
+    IotcAdptSleSsapsPropertyInfo *property,
+    uint16_t *handle
+);
 
-uint8_t IotcSsapsAddDescriptor(uint8_t serverId, uint16_t serviceHandle, uint16_t propHandle, const IotcAdptSleSsapsDescInfo *descParam, uint16_t *descHandle);
+uint8_t IotcSsapsAddDescriptor(
+    uint8_t serverId,
+    uint16_t serviceHandle,
+    uint16_t propHandle,
+    const IotcAdptSleSsapsDescInfo *descParam,
+    uint16_t *descHandle
+);
 
 uint8_t IotcSsapsAddService(uint8_t serviceId, IotcSleUuidAddr *serviceUuid, bool isPrimary, uint16_t *handle);
 

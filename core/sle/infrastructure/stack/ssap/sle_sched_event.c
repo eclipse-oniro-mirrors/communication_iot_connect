@@ -204,7 +204,6 @@ static void SleEventReqReadHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-
 }
 
 static void SleEventReqWriteHandler(int32_t event, void *param)
@@ -212,14 +211,15 @@ static void SleEventReqWriteHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    int32_t ret = SleSsapReqWrite(
-        eventParam->reqWrite.serverId, 
-        eventParam->reqWrite.connectId,
-        eventParam->reqWrite.requestId, 
-        eventParam->reqWrite.type,
-        eventParam->reqWrite.value, 
-        eventParam->reqWrite.valueLen
-    );
+    SleSsapWriteParam writeParam = {
+        .serverId = eventParam->reqWrite.serverId,
+        .connectId = eventParam->reqWrite.connectId,
+        .requestId = eventParam->reqWrite.requestId,
+        .type = eventParam->reqWrite.type,
+        .value = eventParam->reqWrite.value,
+        .valueLen = eventParam->reqWrite.valueLen
+    };
+    int32_t ret = SleSsapReqWrite(&writeParam);
     IOTC_LOGN("req write ret=%d", ret);
 }
 

@@ -95,7 +95,7 @@ static const AnnounceSeekEventToScheduleEvent EVENT_COVERT_MAP[] = {
 };
 
 static int32_t SleAnnounceSeekEventHandler(
-    IotcAdptSleAnnounceSeekEvent discEvent, 
+    IotcAdptSleAnnounceSeekEvent discEvent,
     const IotcAdptSleAnnounceSeekEventParam *param
 )
 {
@@ -107,7 +107,7 @@ static int32_t SleAnnounceSeekEventHandler(
 
         IotcAdptSleAnnounceSeekEventParam *eventParam =
             (IotcAdptSleAnnounceSeekEventParam *)UtilsMallocCopy(
-                (const uint8_t *)param, 
+                (const uint8_t *)param,
                 sizeof(IotcAdptSleAnnounceSeekEventParam)
             );
         if (eventParam == NULL) {

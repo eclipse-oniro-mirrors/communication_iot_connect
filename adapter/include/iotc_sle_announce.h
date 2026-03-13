@@ -35,8 +35,6 @@ extern "C" {
 //  */
 // typedef void (*IotcAdpSleAnnounceStateChangeCallback)(uint8_t announceId, uint8_t announceState, bool isTerminaled);
 
-
-
 typedef enum {
     IOTC_ADPT_SLE_ANNOUNCE_NONCONN_NONSCAN_MODE      = 0x00,
     IOTC_ADPT_SLE_ANNOUNCE_CONNECTABLE_NONSCAN_MODE  = 0x01,
@@ -111,7 +109,9 @@ typedef enum {
     IOTC_ADPT_SLE_ANNOUNCE_STATE_CHANGE,
 } IotcAdptSleAnnounceEvent;
 
-typedef int32_t(*IotcAdptSleAnnounceCallback)(IotcAdptSleAnnounceEvent event, const IotcAdptSleAnnounceEventParam *param);
+typedef int32_t (*IotcAdptSleAnnounceCallback)(
+    IotcAdptSleAnnounceEvent event,
+    const IotcAdptSleAnnounceEventParam *param);
 /**
  *   @brief   Init SleAnnounceService sync
  *
@@ -157,8 +157,8 @@ uint8_t IotcRemoveAnnounce(uint8_t announceId);
  *   @attention if announceParam is not NULL, all params of announceParam should be set by user
  */
 uint8_t IotcStartAnnounce(
-    uint8_t announceId, 
-    const IotcAdptSleAnnounceData *data, 
+    uint8_t announceId,
+    const IotcAdptSleAnnounceData *data,
     const IotcAdptSleAnnounceParam *announceParam
 );
 

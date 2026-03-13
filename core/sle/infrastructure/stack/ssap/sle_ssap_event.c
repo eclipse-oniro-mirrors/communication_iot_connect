@@ -181,5 +181,4 @@ int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
 int32_t SleSsapEventInit(void)
 {
     return IotcSleSsapsRegisterServer(SleSsapEventHandler);
-    
 }

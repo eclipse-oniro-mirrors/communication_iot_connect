@@ -44,7 +44,6 @@ static int32_t SleSetAnnounceData(uint8_t announceId, const IotcAdptSleAnnounceD
         .seek_rsp_data = advData->responceData,
     };
     return sle_set_announce_data(announceId, &data_sdk);
-
 }
 
 static int32_t SleSetAnnounceParam(uint8_t announceId, const IotcAdptSleAnnounceParam *param)
@@ -64,12 +63,16 @@ static int32_t SleSetAnnounceParam(uint8_t announceId, const IotcAdptSleAnnounce
     param_sdk.conn_supervision_timeout = param->connectTimeout,
     param_sdk.ext_param = (void*)param->extParam,
     param_sdk.own_addr.type = (uint8_t)param->ownAddr.type;
-    if (memcpy_s(param_sdk.own_addr.addr, sizeof(param_sdk.own_addr.addr), param->ownAddr.addr, sizeof(param_sdk.own_addr.addr)) != 0) {
+    if (memcpy_s(
+        param_sdk.own_addr.addr, sizeof(param_sdk.own_addr.addr),
+        param->ownAddr.addr, sizeof(param_sdk.own_addr.addr)
+    ) != 0) {
         IOTC_LOGE("memcpy_s failed");
         return IOTC_ERROR;
     }
     param_sdk.peer_addr.type = (uint8_t)param->peerAddr.type;
-    if (memcpy_s(param_sdk.peer_addr.addr, sizeof(param_sdk.peer_addr.addr), param->peerAddr.addr, sizeof(param_sdk.peer_addr.addr)) != 0) {
+    if (memcpy_s(param_sdk.peer_addr.addr, sizeof(param_sdk.peer_addr.addr),
+                 param->peerAddr.addr, sizeof(param_sdk.peer_addr.addr)) != 0) {
         IOTC_LOGE("memcpy_s failed");
         return IOTC_ERROR;
     }
@@ -105,15 +108,16 @@ static int32_t sle_notify_indicate_sync(uint8_t serverId, uint16_t connectId, ss
 {
     int32_t ret = -1;
     int sflag = 0;
-    uint64_t kht_before_get_jiffies = 0, kht_after_get_jiffies = 0;
+    uint64_t kht_before_get_jiffies = 0;
+    uint64_t kht_after_get_jiffies = 0;
     uint64_t after_us = 0;
     uint32_t wait_min_time_us = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125);  // 最少等待1个发送间隔(可以是连接间隔)
     int retry = 2000; // 最多等待2000个连接间隔时间
     kht_before_get_jiffies = sle_clock_gettime_us_kh_lite();
     after_us = kht_before_get_jiffies + wait_min_time_us; // 防止溢出回卷, 等待超时时间
 
-    while (1) {
-        if (sflag == 0 && gle_tx_acb_data_num_get() > 0) {
+    while (sflag == 0 && retry > 0) {
+        if (gle_tx_acb_data_num_get() > 0) {
             ret = ssaps_notify_indicate(serverId, connectId, param);
             sflag = 1;
         }
@@ -122,14 +126,11 @@ static int32_t sle_notify_indicate_sync(uint8_t serverId, uint16_t connectId, ss
         if ((int)(kht_after_get_jiffies - after_us) < 0) { // 这里至少等待1个连接间隔(或发送间隔)
             sched_yield();
         } else {
-            if (sflag == 0 && (--retry) > 0) {
+            retry--;
+            if (sflag == 0 && retry > 0) {
                 after_us += wait_min_time_us; // 没有发出去包的话 这里要继续等待下一个连接间隔(或发送间隔)
                 sched_yield();
-                continue;
             }
-            // 超过最大等待时间,没有发送出去, 失败退出
-            // 或者发送出去了, 成功返回
-            break;
         }
     }
     return ret;
@@ -179,7 +180,7 @@ static int32_t SleSetLocalName(const uint8_t *name, uint8_t len)
 
 static void AddServiceCb(uint8_t server_id, sle_uuid_t *uuid, uint16_t handle, uint32_t status)
 {
-     IOTC_LOGD("SLE AddServiceCb:status:%d,serverId:%d,Handle=%d", status, server_id, handle);
+    IOTC_LOGD("SLE AddServiceCb:status:%d,serverId:%d,Handle=%d", status, server_id, handle);
 }
 
 static void AddPropertyCb(uint8_t server_id, sle_uuid_t *uuid, uint16_t service_handle,
@@ -215,7 +216,6 @@ static void ServiceStartCb(uint8_t server_id, uint16_t handle, uint32_t status)
 static void DeleteAllServiceCb(uint8_t server_id, uint32_t status)
 {
     IOTC_LOGD("SLE DeleteAllServiceCb:status:%d,serverId:%d", status, server_id);
-
 }
 
 static void ReadRequestCb(uint8_t server_id, uint16_t conn_id, ssaps_req_read_cb_t *read_cb_para,
@@ -228,7 +228,6 @@ static void WriteRequestCb(uint8_t server_id, uint16_t conn_id, ssaps_req_write_
     uint32_t status)
 {
     IOTC_LOGD("SLE  WriteRequestCb:status:%d,serverId:%d,conn_id=%d", status, server_id, conn_id);
-
 }
 
 static void MtuChangeCb(uint8_t server_id, uint16_t conn_id, ssap_exchange_info_t *info, uint32_t status)
@@ -631,7 +630,6 @@ static uint32_t SleDefaultConnectionParamSet(sle_default_connect_param_t *set_pa
     return ret;
 }
 
-/***************************************************************************************************/
 
 int32_t IotcSleInitStack(void)
 {
@@ -665,8 +663,7 @@ int32_t IotcSleRegisterSsapCb(const IotcAdptSleSsapCallback callback)
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleSsapEventHandler = callback;
-    //TODO 注册回调
-    int32_t ret =  SsapsRegisterCallbacks(&g_sleSsapsCb);
+    int32_t ret = SsapsRegisterCallbacks(&g_sleSsapsCb);
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("register ssap callback ret=%d", ret);
         return IOTC_ERROR;
@@ -825,7 +822,6 @@ int32_t IotcSleDisconnectSsap(const uint8_t *bdAddr, uint32_t addrLen)
         IOTC_LOGE("memcpy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    //TODO  type?
     int32_t ret = SlePairRemoteDevice(&iotcAddr);
     if (ret != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("gatt disconnect ret=%d", ret);

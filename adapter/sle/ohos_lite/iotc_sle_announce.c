@@ -59,7 +59,6 @@ static void iotcAnnounceStateChangeCB(uint8_t announceId, uint8_t announceState,
         g_announceEventHandler(IOTC_ADPT_SLE_ANNOUNCE_STATE_CHANGE, &eventParam) != IOTC_OK) {
         IOTC_LOGE("SLE MtuChangeCb handle error");
     }
-
 }
 
 static SleAnnounceCallbacks g_sleAnnounceUtCbs = {
@@ -77,7 +76,11 @@ uint8_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
     return IOTC_OK;
 }
 
-uint8_t IotcStartAnnounce(uint8_t announceId,const IotcAdptSleAnnounceData *advData,const IotcAdptSleAnnounceParam *advParam)
+uint8_t IotcStartAnnounce(
+    uint8_t announceId,
+    const IotcAdptSleAnnounceData *advData,
+    const IotcAdptSleAnnounceParam *advParam
+)
 {
     if ((advData == NULL)) {
         IOTC_LOGE("invalid param");
@@ -106,19 +109,29 @@ uint8_t IotcStartAnnounce(uint8_t announceId,const IotcAdptSleAnnounceData *advD
         iotcAdvParam.connectTimeout = advParam->connectTimeout;
         SleDeviceAddress ownAddr = {0};
         ownAddr.addrType = advParam->ownAddr.type;
-        if (memcpy_s(ownAddr.addr, sizeof(ownAddr.addr),advParam->ownAddr.addr, sizeof(advParam->ownAddr.addr)) != EOK) {
-        IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
+        if (memcpy_s(
+            ownAddr.addr, 
+            sizeof(ownAddr.addr), 
+            advParam->ownAddr.addr, 
+            sizeof(advParam->ownAddr.addr)
+        ) != EOK) {
+            IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
         }
         iotcAdvParam.ownAddr = ownAddr;
         SleDeviceAddress peerAddr = {0};
         peerAddr.addrType = advParam->peerAddr.type;
-        if (memcpy_s(peerAddr.addr, sizeof(peerAddr.addr),advParam->peerAddr.addr, sizeof(advParam->peerAddr.addr)) != EOK) {
-        IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
+        if (memcpy_s(
+            peerAddr.addr, 
+            sizeof(peerAddr.addr), 
+            advParam->peerAddr.addr, 
+            sizeof(advParam->peerAddr.addr)
+        ) != EOK) {
+            IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
         }
         iotcAdvParam.peerAddr = peerAddr;
-        ret = StartAnnounce(announceId,&iotcAdvData,&iotcAdvParam);
+        ret = StartAnnounce(announceId, &iotcAdvData, &iotcAdvParam);
     } else {
-        ret = StartAnnounce(announceId,&iotcAdvData,NULL);
+        ret = StartAnnounce(announceId, &iotcAdvData, NULL);
     }
     if (ret != IOTC_OK) {
         IOTC_LOGE("start adv ret=%d", ret);
