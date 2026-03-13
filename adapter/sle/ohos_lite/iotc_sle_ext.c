@@ -21,6 +21,16 @@
 #include "iotc_log.h"
 #include "iotc_sle_server.h"
 
+typedef struct {
+    SleAttr *attr;
+    IotcSleUuid *sle_uuid;
+    uint16_t *service_handle;
+    uint16_t *props_handle;
+    uint16_t *desc_handle;
+    uint16_t *properties;
+    uint8_t *is_indicate;
+} ProcessAttributeParam;
+
 static uint8_t g_chara_val[] = {0x11, 0x22, 0x33, 0x44};
 static uint8_t g_desc_val[]  = {0x55, 0x66, 0x77, 0x88};
 #define UUID16_LEN 2
@@ -257,72 +267,66 @@ static int32_t ProcessAttributePost(SleAttr *attr, uint16_t props_handle, uint8_
     return IOTC_OK;
 }
 
-static int32_t ProcessAttribute(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
-    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+static int32_t ProcessAttribute(ProcessAttributeParam *param)
 {
     int32_t ret = IOTC_OK;
-    switch (attr->attrType) {
+    switch (param->attr->attrType) {
         case OHOS_SLE_ATTRIB_TYPE_SERVICE:
-            ret = ProcessServiceAttribute(attr, sle_uuid, service_handle);
+            ret = ProcessServiceAttribute(param->attr, param->sle_uuid, param->service_handle);
             break;
         case OHOS_SLE_ATTRIB_TYPE_CHAR:
-            ret = ProcessCharAttribute(attr, sle_uuid, properties, props_handle);
+            ret = ProcessCharAttribute(param->attr, param->sle_uuid, param->properties, param->props_handle);
             break;
         case OHOS_SLE_ATTRIB_TYPE_CHAR_VALUE:
             break;
         case OHOS_SLE_ATTRIB_TYPE_CHAR_CLIENT_CONFIG:
             break;
         case OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR:
-            ret = ProcessDescAttribute(attr, sle_uuid, *props_handle, desc_handle);
+            ret = ProcessDescAttribute(param->attr, param->sle_uuid, *param->props_handle, param->desc_handle);
             break;
         default:
             IOTC_LOGE("sle ext unknow");
     }
 
-    if ((attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) || (attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
-        set_chara_func(attr, 0);
+    if ((param->attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR) || (param->attr->attrType == OHOS_SLE_ATTRIB_TYPE_CHAR)) {
+        set_chara_func(param->attr, 0);
     }
 
-    if ((attr->properties & IOTC_ADPT_SLE_CHAR_PROP_INDICATE) ||
-        (attr->properties &IOTC_ADPT_SLE_CHAR_PROP_NOTIFY)) {
-        *is_indicate = 1;
+    if ((param->attr->properties & IOTC_ADPT_SLE_CHAR_PROP_INDICATE) ||
+        (param->attr->properties &IOTC_ADPT_SLE_CHAR_PROP_NOTIFY)) {
+        *param->is_indicate = 1;
         g_indicate_handle = g_cb_chara_handle;
     }
     return ret;
 }
 
-static int32_t ProcessAttributeEx(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
-    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+static int32_t ProcessAttributeEx(ProcessAttributeParam *param)
 {
-    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+    return ProcessAttribute(param);
 }
 
-static int32_t ProcessAttributeWrapper(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
-    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+static int32_t ProcessAttributeWrapper(ProcessAttributeParam *param)
 {
-    int32_t ret = ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+    int32_t ret = ProcessAttribute(param);
     if (ret != IOTC_OK) {
         return ret;
     }
-    return ProcessAttributePost(attr, *props_handle, is_indicate);
+    return ProcessAttributePost(param->attr, *param->props_handle, param->is_indicate);
 }
 
-static int32_t ProcessAttributeSimple(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
-    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+static int32_t ProcessAttributeSimple(ProcessAttributeParam *param)
 {
-    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+    return ProcessAttribute(param);
 }
 
-static int32_t ProcessAttributeShort(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
-    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+static int32_t ProcessAttributeShort(ProcessAttributeParam *param)
 {
-    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+    return ProcessAttribute(param);
 }
 
-static int32_t ProcessAttributeMinimal(SleAttr *attr, IotcSleUuid *sle_uuid, uint16_t *service_handle,
-    uint16_t *props_handle, uint16_t *desc_handle, uint16_t *properties, uint8_t *is_indicate)
+static int32_t ProcessAttributeMinimal(ProcessAttributeParam *param)
 {
-    return ProcessAttribute(attr, sle_uuid, service_handle, props_handle, desc_handle, properties, is_indicate);
+    return ProcessAttribute(param);
 }
 
 static int32_t HandleIndicate(uint16_t properties, uint16_t props_handle, uint16_t *desc_handle)
@@ -371,8 +375,16 @@ int32_t  IotcSleStartServiceEx(int *srvcHandle, SleService *srvcInfo)
     for (unsigned int i = 0; i < srvcInfo->attrNum; i++) {
         SleAttr *attr = &(srvcInfo->attrList[i]);
         convert_uuid(attr->uuid, attr->uuidType, &sle_uuid);
-        ret = ProcessAttribute(attr, &sle_uuid, &service_handle, &props_handle,
-            &desc_handle, &properties, &is_indicate);
+        ProcessAttributeParam param = {
+            .attr = attr,
+            .sle_uuid = &sle_uuid,
+            .service_handle = &service_handle,
+            .props_handle = &props_handle,
+            .desc_handle = &desc_handle,
+            .properties = &properties,
+            .is_indicate = &is_indicate
+        };
+        ret = ProcessAttribute(&param);
         if (ret != IOTC_OK) {
             IOTC_LOGE("sle ext process attribute fail:%d", ret);
         }
