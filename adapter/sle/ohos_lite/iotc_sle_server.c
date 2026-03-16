@@ -411,7 +411,7 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
         srvcInfo.attrList = attrList;
         //print uuid
         IOTC_LOGI("IotcBleStartGattsService uuid:%s  svcHandle:%d", svc[i].uuid, &svc[i].svcHandle);
-    
+
         int32_t ret = IotcSleStartServiceEx(&svc[i].svcHandle, &srvcInfo);
         if (ret != IOTC_OK) {
             IOTC_LOGE("sle start service ret=%d", ret);
@@ -475,7 +475,7 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
     return IOTC_OK;
 }
 
-int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId,const IotcAdptSleResponseParam *param)
+int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
 {     
     (void)param;
     return IOTC_OK;

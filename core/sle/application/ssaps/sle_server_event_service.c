@@ -51,7 +51,7 @@ int32_t SleScanServiceStart(void)
 {
     return IOTC_OK;
 }
-int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType,const uint8_t *data, uint32_t len)
+int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
     NOT_USED(devId);
     NOT_USED(protType);
@@ -60,13 +60,10 @@ int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType,const ui
     return IOTC_OK;
 }
 
-
-
 int32_t SleAdvServiceStart(uint32_t ms)
 {
     int32_t ret = SleAdvCtrlStart(ms);
-    if(ret != IOTC_OK)
-    {
+    if (ret != IOTC_OK) {
         IOTC_LOGW("start sle adv error %d", ret);
         return ret;
     }
@@ -76,8 +73,7 @@ int32_t SleAdvServiceStart(uint32_t ms)
 int32_t SleAdvServiceStop(void)
 {
     int32_t ret = SleAdvCtrlStop();
-    if(ret != IOTC_OK)
-    {
+    if (ret != IOTC_OK) {
         IOTC_LOGW("stop sle adv error %d", ret);
         return ret;
     }
@@ -85,7 +81,7 @@ int32_t SleAdvServiceStop(void)
 }
 void SleAdvSetType(SleSvcAdvDataType type)
 {
-    SleSetAdvType( type);
+    SleSetAdvType(type);
 }
 
 
