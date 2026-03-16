@@ -711,19 +711,18 @@ int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
     return IOTC_OK;
 }
 
-int32_t SleSsapReqWriteNotification(uint8_t serverId, uint16_t connectId, uint8_t type,
-    uint8_t *value, int32_t valueLen, uint16_t handle)
+int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *param)
 {
     if (GetSleSsapMgtApp()->connNum == 0) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_SLE_NO_CONNECT;
     }
-    IotcAdptSleSsapWriteFunc func = ServiceIdFindAttrHandleNotifyFunc(serverId);
+    IotcAdptSleSsapWriteFunc func = ServiceIdFindAttrHandleNotifyFunc(param->serverId);
     if (func == NULL) {
         IOTC_LOGE("no find write func");
         return IOTC_ERROR;
     }
-    ret = func(value, valueLen);
+    int32_t ret = func(param->value, param->valueLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;

@@ -476,7 +476,7 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
 }
 
 int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
-{     
+{
     (void)param;
     return IOTC_OK;
 }
