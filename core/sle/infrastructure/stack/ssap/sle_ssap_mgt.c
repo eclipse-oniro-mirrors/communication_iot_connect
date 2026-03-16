@@ -332,8 +332,7 @@ int32_t SleSsapMgtInit(void)
     PrintSleSsapServiceList(g_SleSsapApp.svc, g_SleSsapApp.svcNum);
     IOTC_LOGI(" ---> uuid:%s", g_SleSsapApp.svc[0].uuid);
     ret = IotcInitSleSsapsService();
-
-    ret = IotcSleSsapsRegisterServer(NULL);
+   
     IOTC_LOGI(" ---> init service :%d", ret);
     ret = SleSsapEventInit();
     if (ret != IOTC_OK) {
@@ -656,32 +655,22 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
 
 int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
 {
-    if (param == NULL) {
-        IOTC_LOGE("invalid param");
-        return IOTC_ERROR;
-    }
-
-    if ((GetSleSsapMgtApp()->connNum == 0) || (GetSleSsapMgtApp()->peerDevInfo == NULL)) {
+    if ((GetSleSsapMgtApp()->connNum == 0)) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_SLE_NO_CONNECT;
     }
-
-    IotcAdptSleResponseParam respParam;
-    respParam.requestId = param->requestId;
-    respParam.status = param->type;
-    respParam.value = param->value;
-    respParam.valueLen = param->valueLen;
-    uint8_t ret = IotcSleSendSsapsResponse(param->serverId, param->connectId, &respParam);
+    IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d", param->requestId, param->valueLen);
+    uint8_t ret = IotcSleSendSsapsResponse(param->serverId, param->connectId, &param);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;
     }
-    IotcAdptSleSsapWriteFunc func = FindAttrHandleWriteFunc(handle);
+    IotcAdptSleSsapWriteFunc func = FindAttrHandleWriteFunc(param->handle);
     if (func == NULL) {
         IOTC_LOGE("no find write func");
         return IOTC_ERROR;
     }
-    ret = func(value, valueLen);
+    ret = func(param->value, param->valueLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;

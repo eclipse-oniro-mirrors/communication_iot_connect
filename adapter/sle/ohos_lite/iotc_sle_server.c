@@ -475,9 +475,9 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
     return IOTC_OK;
 }
 
-uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
+int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
 {
-    if ((param == NULL)) {
+    if (param == NULL) {
         IOTC_LOGE("IotcSleSendSsapsResponse invalid param");
         return IOTC_ERROR;
     }
@@ -486,13 +486,14 @@ uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const Iot
     resParam.status  = param->status;
     resParam.valueLen = param->valueLen;
     resParam.value = param->value;
-    int32_t ret = SendResponse(serverId, connectId, param);
+    int32_t ret = SendResponse(serverId, connectId, &resParam);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcSleSendSsapsResponse ret=%d", ret);
         return ret;
     }
     return IOTC_OK;
 }
+
 static void ReadRequestCb(int32_t errCode, uint8_t serverId, uint16_t connectId, const SsapsReqReadCbParam *readCbPara)
 {
     IOTC_LOGD("SLE  ReadRequestCb:errCode:%d,serverId:%d,conn_id=%d", errCode, serverId, connectId);
@@ -650,33 +651,54 @@ uint8_t IotcAddSsapSetServerMtuInfo(uint8_t serverId, const IotcAdptSleMtuInfo *
     return IOTC_OK;
 }
 
-static void connectStateCB(
-    uint16_t connectId,
-    const SleDeviceAddress *addr,
-    SleConnectState connState,
-    SlePairState pairState,
-    SleDisConnectReason discReason)
+static void SleConnectStateChangedCallback(uint16_t connectId, const SleDeviceAddress *addr,
+    SleConnectState connState, SlePairState pairState, SleDisConnectReason discReason)
 {
-    IOTC_LOGD("SLE  connectStateCB:conn_id:%d,connState:%d", connectId, connState);
+    if (addr == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+
+    IOTC_LOGI("SLE ConnectStateChanged cb:conn_id:%d,conn_state:%d,pair_state:%d,disc_reason:%d",
+        connectId, connState, pairState, discReason);
+    IotcAdptSleConnectionEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleConnectionEventParam));
+    param.sleConnectStateChanged.conn_id = connectId;
+    param.sleConnectStateChanged.addr.type = addr->addrType;
+    (void)memcpy_s(param.sleConnectStateChanged.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, sizeof(addr->addr));
+    
+    param.sleConnectStateChanged.conn_state = (IotcAdptSleAcbState)connState;
+    param.sleConnectStateChanged.pair_state = (IotcAdptSlePairState)pairState;
+    param.sleConnectStateChanged.disc_reason = (IotcAdptSleDiscReason)discReason;
+    if (g_sleConnectionEventHandler != NULL) {
+        int32_t ret = g_sleConnectionEventHandler(IOTC_ADPT_SLE_CONNECT_STATE_CHANGED_EVENT, &param);
+        IOTC_LOGD("SLE ConnectStateChanged cb:ret:%d", ret);
+    }
 }
 
-static void connectParamUpdateCB(uint16_t connectId, SleErrorCode errCode, const SleConnectionParamUpdateEvt *connParam)
+static void SleConnectParamUpdateCB(uint16_t connectId, SleErrorCode errCode,
+    const SleConnectionParamUpdateEvt *connParam)
 {
-    IOTC_LOGD("SLE  connectParamUpdateCB:conn_id:%d,code:%d", connectId, errCode);
+    IOTC_LOGI("SLE SleConnectParamUpdateCB cb:errCode: %d", errCode);
 }
 
 static SleConnectCallbacks g_SleConnectionCb = {
-    .OnSleConnStateChangeCb = connectStateCB,
-    .OnSleConnParamUpdatedCb = connectParamUpdateCB
+    .OnSleConnStateChangeCb = SleConnectStateChangedCallback,
+    .OnSleConnParamUpdatedCb = SleConnectParamUpdateCB
 };
 
 int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback callback)
 {
     g_sleConnectionEventHandler = callback;
-    int32_t ret = RegisterConnectCallbacks(&g_SleConnectionCb);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+    int32_t ret = InitSleConnectService();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("init connection  ret=%d", ret);
+        return ret;
+    }
+    ret = RegisterConnectCallbacks(&g_SleConnectionCb);
+    if (ret != IOTC_OK) {
         IOTC_LOGE("register connection callback ret=%d", ret);
-        return IOTC_ERROR;
+        return ret;
     }
     return IOTC_OK;
 }
