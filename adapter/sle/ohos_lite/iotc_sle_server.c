@@ -184,7 +184,6 @@ uint8_t IotcInitSleSsapsService(void)
 
 uint8_t IotcAddSsapServer(const IotcSleUuidAddr *appUuid, uint8_t *serverId)
 {
-
     if (appUuid == NULL || appUuid->len == 0 || appUuid->len > UUID_LEN) {
         IOTC_LOGE("IotcAddSsapServer Invalid input parameters");
         return IOTC_ERROR;
@@ -524,7 +523,7 @@ static void WriteRequestCb(
     eventParam.reqWrite.needAuthorize = writeCbPara ->needAuthorize;
     eventParam.reqWrite.valueLen = writeCbPara ->valueLen;
     eventParam.reqWrite.value  = IotcCalloc(writeCbPara ->valueLen, sizeof(uint8_t));
-    if (eventParam.reqWrite.value == NULL ) {
+    if (eventParam.reqWrite.value == NULL) {
         IOTC_LOGE("SLE  WriteRequestCb memory fail");
         return;
     }
