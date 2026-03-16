@@ -1,17 +1,17 @@
 /*
-* Copyright (c) 2024-2024 Shenzhen Kaihong Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "iotc_sle_server.h"
 #include "sle_ssap_event.h"
@@ -110,14 +110,12 @@ static int32_t SleSsapEventHandler(IotcAdptSleSsapEvent ssapEvent, const IotcAdp
         if (ssapEvent != EVENT_COVERT_MAP[i].ssapEvent) {
             continue;
         }
-
         IotcAdptSleSsapEventParam *eventParam =
             (IotcAdptSleSsapEventParam *)UtilsMallocCopy((const uint8_t *)param, sizeof(IotcAdptSleSsapEventParam));
         if (eventParam == NULL) {
             IOTC_LOGW("malloc error");
             return IOTC_ADAPTER_MEM_ERR_MALLOC;
         }
-
         SleSchedMsg msg;
         msg.event = EVENT_COVERT_MAP[i].scheduleEvent;
         msg.param = eventParam;
@@ -138,7 +136,6 @@ static void connectStateChnage(uint32_t event, void *param, uint32_t len)
 {
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleConnectionEventParam *eventParam = (IotcAdptSleConnectionEventParam *)param;
-
     if (eventParam->sleConnectStateChanged.conn_state == IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED) {
         int32_t ret = SleAdvCtrlResume();
         if (ret != IOTC_OK) {
@@ -156,14 +153,7 @@ int32_t SleSsapServiceEventInit(void)
         IOTC_LOGE("sle conn init err ret=%d", ret);
         return ret;
     }
-
     ret = EventBusSubscribe(connectStateChnage, IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "subscribe sle connect state change err:%d", ret);
     return IotcSleSsapsRegisterServer(SleSsapEventHandler);
 }
-
-
-
-
-
-
