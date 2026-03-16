@@ -476,7 +476,7 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
 }
 
 int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
-{     
+{
     if (param == NULL) {
         IOTC_LOGE("IotcSleSendSsapsResponse invalid param");
         return IOTC_ERROR;
@@ -487,7 +487,7 @@ int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const Iot
     resParam.valueLen = param->valueLen;
     resParam.value = param->value;
     int32_t ret = SendResponse(serverId, connectId, &resParam);
-    if(ret != IOTC_OK) {
+    if (ret != IOTC_OK) {
         IOTC_LOGE("IotcSleSendSsapsResponse ret=%d", ret);
         return ret;
     }
@@ -676,9 +676,10 @@ static void SleConnectStateChangedCallback(uint16_t connectId, const SleDeviceAd
     }
 }
 
-static void SleConnectParamUpdateCB(uint16_t connectId, SleErrorCode errCode, const SleConnectionParamUpdateEvt *connParam)
+static void SleConnectParamUpdateCB(uint16_t connectId, SleErrorCode errCode,
+    const SleConnectionParamUpdateEvt *connParam)
 {
-    IOTC_LOGI("SLE SleConnectParamUpdateCB cb:errCode: %d",errCode);
+    IOTC_LOGI("SLE SleConnectParamUpdateCB cb:errCode: %d", errCode);
 }
 
 static SleConnectCallbacks g_SleConnectionCb = {
