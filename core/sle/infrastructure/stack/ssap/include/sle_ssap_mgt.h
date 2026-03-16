@@ -23,9 +23,10 @@
 extern "C" {
 #endif
 
-#define SLE_DEV_NAME "IotcBT"
-#define SLE_DEFAULT_MAX_CONN_NUM 1
-#define SLE_MTU_SIZE 500
+#define SLE_DEFAULT_MAX_CONN_NUM    10
+#define SLE_CONN_HEAD_NODE          11
+#define SLE_MTU_SIZE                500
+
 
 typedef struct {
     uint32_t connId;
@@ -39,6 +40,8 @@ typedef struct {
     uint8_t svcNum;
     IotcAdptSleSsapService *svc;
     uint8_t startedSvcNum;
+    uint8_t handle;
+    uint8_t serverId;
 } SleSsapMgtApp;
 
 typedef struct {

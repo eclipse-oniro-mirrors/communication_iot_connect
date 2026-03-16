@@ -61,8 +61,45 @@ iotc_core_sle_src = [
   
 ]
 
+
+if (defined(ohos_lite))
+{
+  iotc_core_sle_inc += [
+    "$iotc_core_path/sle/application/ssaps/include",
+    "$iotc_core_path/sle/application/adv/include",
+    "$iotc_core_path/sle/application/ssaps/include",
+  ]
+  iotc_core_sle_src += [
+    "$iotc_core_path/sle/infrastructure/stack/adv/sle_adv_ctrl.c",
+    "$iotc_core_path/sle/application/adv/sle_adv_data.c",
+    "$iotc_core_path/sle/application/adv/sle_adv_param.c",
+    "$iotc_core_path/sle/application/adv/sle_adv.c",
+    "$iotc_core_path/sle/application/ssaps/sle_server_event_service.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssaps/sle_ssaps_event.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssaps/sle_ssaps_mgt.c"
+  ]
+}
+
+
+if (!defined(ohos_lite)) {
+  iotc_core_sle_inc += [
+    "$iotc_core_path/sle/infrastructure/stack/ssapc/include",
+    "$iotc_core_path/sle/application/ssapc/include",
+  ]
+  iotc_core_sle_src += [
+    "$iotc_core_path/sle/application/ssapc/sle_client_event_service.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_ctrl.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_event.c",
+    "$iotc_core_path/sle/application/ssapc/sle_client_stubs.c",
+    "$iotc_core_path/sle/infrastructure/stack/conn_dev_mgt/sle_conn_mgt.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_mgt.c"
+  ]
+}
+
+
+
 if(!iot_connect_feature_ble_support){
-  #  from BLE 
+  #  from BLE
   iotc_core_sle_src += [
     "$iotc_core_path/ble/infrastructure/linklayer/linklayer_encrypt.c",
     "$iotc_core_path/ble/infrastructure/linklayer/linklayer_process.c",

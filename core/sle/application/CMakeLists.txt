@@ -17,7 +17,7 @@ add_subdirectory(base)
 add_subdirectory(ssap)
 add_subdirectory(profile)
 add_subdirectory(report)
-
+add_subdirectory(ssaps)
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc.c

@@ -91,3 +91,9 @@ int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)
     NOT_USED(info);
     return IOTC_OK;
 }
+
+int32_t SleScanServiceStop(void)
+{
+    // 停止扫描
+    return IOTC_OK;
+}
