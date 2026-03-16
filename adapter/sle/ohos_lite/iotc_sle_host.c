@@ -83,11 +83,10 @@ IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
         return NULL;
     }
     IotcAdptSleDeviceAddr* addr = (IotcAdptSleDeviceAddr*)malloc(sizeof(IotcAdptSleDeviceAddr));
-    // 将 sleAddr 的内容赋值给 addr
-    if(memcpy(addr, sleAddr, sizeof(IotcAdptSleDeviceAddr)) != 0){
+    if (memcpy_s(addr, sizeof(IotcAdptSleDeviceAddr), sleAddr, sizeof(IotcAdptSleDeviceAddr)) != EOK) {
         return NULL;
     }
-   return addr;
+    return addr;
 }
 
 

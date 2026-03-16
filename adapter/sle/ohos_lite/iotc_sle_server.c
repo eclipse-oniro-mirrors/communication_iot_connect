@@ -395,7 +395,7 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
     if ((svc == NULL) || (svcNum == 0)) {
         IOTC_LOGE("IotcSleSsapsStartService invalid param");
         return IOTC_ERROR;
-    } 
+    }
 
     IOTC_LOGI("IotcSleSsapsStartService svcNum:%u", svcNum);
     for (uint8_t i = 0; i < svcNum; i++) {
@@ -528,7 +528,7 @@ static void WriteRequestCb(
         IOTC_LOGE("SLE  WriteRequestCb memory fail");
         return;
     }
-    if (memcpy_s(eventParam.reqWrite.value, writeCbPara ->valueLen, writeCbPara->value, writeCbPara ->valueLen) != EOK) {
+    if (memcpy_s(eventParam.reqWrite.value, writeCbPara->valueLen, writeCbPara->value, writeCbPara->valueLen) != EOK) {
         IotcFree(eventParam.reqWrite.value);
         IOTC_LOGE("SLE  WriteRequestCb copy fail");
         return;
@@ -565,11 +565,7 @@ static SleSsapsCallbacks g_sleSsapsCb = {
 
 uint8_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
 {
-    // if ((callback == NULL)) {
-    //    IOTC_LOGE("IotcSleSsapsRegisterServer invalid param");
-    //     return IOTC_ERROR;
-    // }
-    int32_t ret=IotcInitSleSsapsService();
+    int32_t ret = IotcInitSleSsapsService();
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcInitSleSsapsService ret=%d", ret);
         return ret;

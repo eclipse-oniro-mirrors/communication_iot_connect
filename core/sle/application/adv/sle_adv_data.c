@@ -488,7 +488,7 @@ static int32_t GenAdvName(SleAdvNameValue *value)
     if (snLen < ADV_NAME_SN_LEN) {
         IOTC_LOGW("set mac to adv sn");
         IotcAdptSleDeviceAddr* mac = IotcGetHostAddress();
-        if(mac == NULL){
+        if (mac == NULL) {
             IOTC_LOGE("get sle mac");
             return IOTC_ERROR;
         }

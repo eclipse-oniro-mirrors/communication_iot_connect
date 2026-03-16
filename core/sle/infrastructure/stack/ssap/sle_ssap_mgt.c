@@ -690,7 +690,7 @@ int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
     }
     GetSleSsapMgtApp()->handle = handle;
     GetSleSsapMgtApp()->serverId = serverId;
-    IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d,serviceId:%d,handle:%d",requestId,valueLen,serverId,handle);
+    IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d,serviceId:%d,handle:%d", requestId, valueLen, serverId, handle);
     IotcAdptSleResponseParam param;
     int32_t ret = GetAttrHandleServerId(handle, &serverId);
     IOTC_LOGI("SleSsapReqWrite GetAttrHandleServerId:%d", ret);
