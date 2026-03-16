@@ -661,7 +661,6 @@ int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
     }
     IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d", param->requestId, param->valueLen);
     uint8_t ret = IotcSleSendSsapsResponse(param->serverId, param->connectId, &param);
-
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;
