@@ -22,6 +22,14 @@
         <licensefile>LICENSE</licensefile>
         <policylist>
             <policy name="projectPolicy" desc="">
+                <policyitem
+                    desc="Copyright (c) 2024-2024 ShenZhen Kaihong Device Co."
+                    filefilter="copyrightPolicyFilter"
+                    group="defaultGroup"
+                    name="ShenZhen Kaihong Device Co."
+                    path=".*"
+                    rule="may"
+                    type="copyright"/>
             </policy>
         </policylist>
         <filefilterlist>
