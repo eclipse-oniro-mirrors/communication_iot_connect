@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
 #include "sle_server_event_service.h"
 #include "sle_ssap_service.h"
 #include "iotc_errcode.h"
@@ -21,6 +22,22 @@
 #include "sle_common.h"
 #include "utils_common.h"
 #include "iotc_log.h"
+#include "event_bus.h"
+#include "iotc_event.h"
+#include "sle_profile.h"
+#include "sle_linklayer.h"
+
+static uint16_t g_connectId = 0;
+static void SleConnectStateCallback(uint32_t event, void *param, uint32_t len)
+{
+    if (param == NULL) {
+        IOTC_LOGE("SleConnectStateCallback  invalid param");
+        return;
+    }
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    g_connectId = eventParam->sleConnectStateChanged.conn_id;
+    IOTC_LOGE("SleConnectStateCallback con_id:%d", g_connectId);
+}
 
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
 {
@@ -45,6 +62,9 @@ int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
         IOTC_LOGW("start sle adv error %d", ret);
         return ret;
     }
+
+    ret = EventBusSubscribe(SleConnectStateCallback, IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED);
+    IOTC_LOGI("svc subscribe sle connect state change result:%d", ret);
     return IOTC_OK;
 }
 int32_t SleScanServiceStart(void)
@@ -53,11 +73,12 @@ int32_t SleScanServiceStart(void)
 }
 int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
-    NOT_USED(devId);
-    NOT_USED(protType);
-    NOT_USED(data);
-    NOT_USED(len);
-    return IOTC_OK;
+    if (data == NULL) {
+        IOTC_LOGE("SleSendCustomSecDataService Invalid input parameters (data=%p)", devId, data);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    return SleLinkLayerReportSvcDataEnc(g_connectId, SLE_SVC_CUSTOM_SEC_DATA, data, len, SLE_OPTYPE_GET);
 }
 
 int32_t SleAdvServiceStart(uint32_t ms)
