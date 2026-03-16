@@ -35,7 +35,7 @@ static void SleConnectStateCallback(uint32_t event, void *param, uint32_t len)
     }
     IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
     g_connectId = eventParam->sleConnectStateChanged.conn_id;
-    IOTC_LOGE("SleConnectStateCallback  con_id:%d",g_connectId);
+    IOTC_LOGE("SleConnectStateCallback con_id:%d", g_connectId);
 }
 
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)

@@ -127,7 +127,7 @@ static int32_t SleAdapterAdvCtrlStart(const IotcAdptSleAnnounceParam *advPara,
     IOTC_LOGE("SleAdapterAdvCtrlStart");
     StopSleAdvTimer();
 
-   int32_t ret = IotcStartAnnounce(anounceId, advData,NULL);
+    int32_t ret = IotcStartAnnounce(anounceId, advData, NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGE("SleAdapterAdvCtrlStart start sle adv err %d", ret);
         return ret;
