@@ -32,13 +32,13 @@ extern "C" {
 
 #define IOTC_ADPT_SLE_LINK_KEY_LEN    16
 
-/* sle接口执行结果 */
 typedef enum {
     IOTC_ADPT_SLE_STATUS_SUCCESS = 0,
     IOTC_ADPT_SLE_STATUS_FAIL = 1
 } IotcAdptSleStatus;
 
 
+/* sle接口执行结果 */
 typedef enum {
     IOTC_ADPT_SLE_PAIR_NONE    = 0x01,    /*!< @if Eng Pair state of none
                                      @else   未配对状态 @endif */
@@ -654,6 +654,7 @@ uint8_t IotcDeinitSleSsapsService(void);
  */
 uint8_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle);
 
+int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum);
 
 /**
  * @brief 发送SSAP数据

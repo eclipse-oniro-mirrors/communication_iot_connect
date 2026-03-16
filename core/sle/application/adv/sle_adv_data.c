@@ -577,3 +577,16 @@ void SleSetAdvType(SleSvcAdvDataType type)
     g_sleAdvType = type;
     IOTC_LOGN("set adv type to %d", type);
 }
+
+int32_t RegSleCustomAdvDataCb(CustomAdvDataCb cb)
+{
+    CHECK_RETURN_LOGW(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    if (!UtilsGlobalMutexLock()) {
+        IOTC_LOGW("glock error");
+        return IOTC_ERR_TIMEOUT;
+    }
+    g_customAdvDataCb = cb;
+    UtilsGlobalMutexUnlock();
+    return IOTC_OK;
+}

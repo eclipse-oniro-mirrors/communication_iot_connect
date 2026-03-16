@@ -112,7 +112,7 @@ static int32_t SleAdvSvcInit(SleSvcCtx *ctx)
     SleSetAdvType(ctx->initParam.advType);
 
     if (ctx->initParam.onCustomAdv != NULL) {
-        ret = RegCustomAdvDataCb(ctx->initParam.onCustomAdv);
+        ret = RegSleCustomAdvDataCb(ctx->initParam.onCustomAdv);
         if (ret != IOTC_OK) {
             IOTC_LOGW("reg custom adv cb error %d", ret);
             return ret;

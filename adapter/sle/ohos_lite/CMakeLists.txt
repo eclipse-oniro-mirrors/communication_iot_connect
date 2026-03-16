@@ -17,5 +17,6 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_sle_server.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_sle_host.c
     ${CMAKE_CURRENT_SOURCE_DIR}/iotc_sle_announce.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iotc_sle_ext.c
     PARENT_SCOPE
 )

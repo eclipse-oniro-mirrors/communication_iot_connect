@@ -91,9 +91,9 @@ typedef struct {
 /* 广播数据 */
 typedef struct {
     uint16_t announceLength;
-    uint8_t *announceData;
+    uint8_t announceData[IOTC_ADPT_SLE_ADV_VALUE_MAX_LEN];
     uint16_t responceLength;
-    uint8_t *responceData;
+    uint8_t responceData[IOTC_ADPT_SLE_ADV_VALUE_MAX_LEN];
 } IotcAdptSleAnnounceData;
 
 typedef union {

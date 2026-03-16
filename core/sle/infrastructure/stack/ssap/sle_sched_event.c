@@ -143,7 +143,8 @@ static void SleEventStartSvcResultHandler(int32_t event, void *param)
             if (svcList[i].svcHandle != eventParam->startSvc.svcHandle) {
                 continue;
             }
-            if (IotcSleStartSsapsService(&svcList[i], 1) != IOTC_OK) {
+            
+            if (IotcSleSsapsStartService(svcList[i].serverId, svcList[i].svcHandle) != IOTC_OK) {
                 IOTC_LOGE("start svc err");
             }
             return;
@@ -165,9 +166,6 @@ static void SleEventStopSvcResultHandler(int32_t event, void *param)
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
     if (eventParam->stopSvc.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("stop svc fail");
-        if (IotcSleStopSsapsService(eventParam->stopSvc.serverId, eventParam->stopSvc.svcHandle) != IOTC_OK) {
-            IOTC_LOGE("stop svc err");
-        }
         return;
     }
     GetSleSsapMgtApp()->startedSvcNum--;
@@ -195,7 +193,6 @@ static void SleEventStartAdvResultHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-
     IOTC_LOGN("start adv success");
 }
 
@@ -204,6 +201,9 @@ static void SleEventReqReadHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
+    int32_t ret = SleSsapReqRead(eventParam->reqRead.serverId,
+        eventParam->reqRead.connectId, eventParam->reqRead.handle, eventParam->reqRead.requestId);
+    IOTC_LOGN("req read ret=%d", ret);
 }
 
 static void SleEventReqWriteHandler(int32_t event, void *param)
@@ -217,7 +217,8 @@ static void SleEventReqWriteHandler(int32_t event, void *param)
         .requestId = eventParam->reqWrite.requestId,
         .type = eventParam->reqWrite.type,
         .value = eventParam->reqWrite.value,
-        .valueLen = eventParam->reqWrite.valueLen
+        .valueLen = eventParam->reqWrite.valueLen,
+        .handle = eventParam->reqWrite.handle
     };
     int32_t ret = SleSsapReqWrite(&writeParam);
     IOTC_LOGN("req write ret=%d", ret);
@@ -227,9 +228,155 @@ static void SleEventStopAdvResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-
     IOTC_LOGN("stop adv success");
+}
+
+static void SleEventEnableHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    if (eventParam->sleEnable.status == IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        EventBusPublishSync(IOTC_CORE_SLE_EVENT_ENABLED, NULL, 0);
+    } else {
+        IOTC_LOGE("sle enable error!");
+    }
+}
+
+static void SleEventDisableHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    if (eventParam->sleDisable.status == IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        EventBusPublishSync(IOTC_CORE_SLE_EVENT_DISABLED, NULL, 0);
+    } else {
+        IOTC_LOGE("sle disable error!");
+    }
+}
+
+static void SleEventAnnounceEnableHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_ANNOUNCE_ENABLED, param, sizeof(eventParam->announceEnable));
+}
+
+static void SleEventAnnounceDisableHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_ANNOUNCE_DISABLED, param, sizeof(eventParam->announceDisable));
+}
+
+static void SleEventAnnounceTerminalHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_ANNOUNCE_TERMINAL, param, sizeof(eventParam->announceTerminal));
+}
+
+static void SleEventAnnounceRemoveHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_ANNOUNCE_REMOVE, param, sizeof(eventParam->announceRemove));
+}
+
+static void SleEventSeekEnableHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    if (eventParam->startSeek.status == IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        EventBusPublishSync(IOTC_CORE_SLE_EVENT_SEEK_ENABLE, NULL, 0);
+    } else {
+        IOTC_LOGE("sle seek enable error!");
+    }
+}
+
+static void SleEventSeekDisableHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    if (eventParam->seekDisable.status == IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        EventBusPublishSync(IOTC_CORE_SLE_EVENT_SEEK_DISABLE, NULL, 0);
+    } else {
+        IOTC_LOGE("sle seek disable error!");
+    }
+}
+
+static void SleEventSeekResultHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleAnnounceSeekEventParam *eventParam =  (IotcAdptSleAnnounceSeekEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SEEK_RESULT, param, sizeof(eventParam->seekResult));
+}
+
+static void SleEventConnectStateChangeHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED, param, sizeof(eventParam->sleConnectStateChanged));
+}
+
+static void SleEventConnectParamUpdateReqHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(
+        IOTC_CORE_SLE_EVENT_CONNECT_PARAM_UPDATE_REQ,
+        param,
+        sizeof(eventParam->sleConnectParamUpdateReq)
+    );
+}
+
+static void SleEventConnectParamUpdateHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_CONNECT_PARAM_UPDATE, param, sizeof(eventParam->sleConnectParamUpdate));
+}
+
+static void SleEventAuthCompleteHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_AUTH_COMPLETE, param, sizeof(eventParam->sleAuthComplete));
+}
+
+static void SleEventPairCompleteHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_PAIR_COMPLETE, param, sizeof(eventParam->slePairComplete));
+}
+
+static void SleEventReadRssiHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_READ_RSSI, param, sizeof(eventParam->sleReadRssi));
+}
+
+static void SleEventLowLatencyHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_LOW_LATENCY, param, sizeof(eventParam->sleLowLatency));
 }
 
 static SleSchedMsgHandler g_sleSchedEvent[] = {

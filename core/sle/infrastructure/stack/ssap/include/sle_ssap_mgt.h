@@ -55,6 +55,7 @@ typedef struct {
     uint8_t type;
     uint8_t *value;
     int32_t valueLen;
+    uint16_t handle;
 } SleSsapWriteParam;
 
 int32_t SleAddSsapSvc(const IotcSleSsapProfileSvc *svc);
@@ -70,7 +71,7 @@ int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
 int32_t SleScheduleEventInit(void);
 void SleSsapDisconnectAll(void);
 int32_t SetSleConnectParam(void);
-int32_t SleSsapReqRead(int32_t connId, int32_t attrHandle, int32_t transId);
+int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, int16_t requestId);
 int32_t SleSsapReqWrite(const SleSsapWriteParam *param);
 
 #ifdef __cplusplus

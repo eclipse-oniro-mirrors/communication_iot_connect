@@ -134,6 +134,12 @@ typedef struct {
     uint8_t announceChannelMap; // channelMap;
 } IotcSleAdvParam;
 
+/* uuid with len */
+typedef struct {
+    unsigned char uuidLen;
+    char *uuid;
+} IotcSleUuid;
+
 #ifdef __cplusplus
 }
 #endif

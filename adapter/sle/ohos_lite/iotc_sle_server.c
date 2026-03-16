@@ -18,9 +18,12 @@
 #include "iotc_mem.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
+#include "ohos_bt_gatt_server.h"
+#include "iotc_sle_ext.h"
 
 #include "kh_sle_ssap_server.h"
 #include "kh_sle_connect.h"
+
 
 #define SLE_ADV_HANDLE_DEFAULT 1
 enum {
@@ -35,11 +38,79 @@ static IotcAdptSleSsapCallback g_gattEventHandler = NULL;
 static IotcAdptSleAnnounceSeekCallback g_sleAnnounceSeekEventHandler = NULL;
 static IotcAdptSleConnectionCallback g_sleConnectionEventHandler = NULL;
 
-uint8_t IotcSsapsAddProperty(
+
+static IotcAdptSleStatus OhosStatusToAdapterStatus(int32_t status)
+{
+    return (status == IOTC_ADPT_SLE_STATUS_SUCCESS) ? IOTC_ADPT_SLE_STATUS_SUCCESS : IOTC_ADPT_SLE_STATUS_FAIL;
+}
+
+static uint32_t AdapterPemissionToOhosPermission(uint32_t permission)
+{
+    uint32_t toPermission = 0;
+    if (permission & IOTC_SLE_SSAP_PERMISSION_READ) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_READ;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED_MITM) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_READ_ENCRYPTED_MITM;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_WRITE) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_WRITE;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_WRITE_ENCRYPTED) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_WRITE_ENCRYPTED;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_WRITE_ENCRYPTED_MITM) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_WRITE_ENCRYPTED_MITM;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_WRITE_SIGNED) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_WRITE_SIGNED;
+    }
+    if (permission & IOTC_SLE_SSAP_PERMISSION_WRITE_SIGNED_MITM) {
+        toPermission |= IOTC_SLE_SSAP_PERMISSION_WRITE_SIGNED_MITM;
+    }
+    return toPermission;
+}
+
+static uint32_t AdapterPropertyToOhosProperty(uint32_t property)
+{
+    uint32_t toProperty = 0;
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_BROADCAST) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_BROADCAST;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_READ) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_READ;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_WRITE_NO_RSP) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_WRITE_WITHOUT_RESP;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_WRITE) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_WRITE;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_NOTIFY) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_NOTIFY;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_INDICATE) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_INDICATE;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_SIGNED_WRITE) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_SIGNED_WRITE;
+    }
+    if (property & IOTC_SLE_SSAP_CHARACTER_PROPERTY_BIT_EXTENDED_PROPERTY) {
+        toProperty |= IOTC_ADPT_SLE_CHAR_PROP_EXTENDED_PROPERTY;
+    }
+    return toProperty;
+}
+
+
+int32_t IotcSsapsAddProperty(
     uint8_t serviceId,
     uint16_t serviceHandle,
     IotcAdptSleSsapsPropertyInfo *property,
-    uint16_t *handle)
+    uint16_t *handle
+)
 {
     if (property == NULL || handle == NULL) {
         IOTC_LOGE("IotcSsapsAddProperty Invalid input parameters");
@@ -94,7 +165,7 @@ uint8_t IotcSsapsAddDescriptor(
 
     int32_t ret = AddDescriptor(serverId, serviceHandle, propHandle, &param, descHandle);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("IotcAddSsapServer ret=%d", ret);
+        IOTC_LOGE("AddDescriptor ret=%d", ret);
         return ret;
     }
     return IOTC_OK;
@@ -138,7 +209,176 @@ uint8_t IotcAddSsapServer(const IotcSleUuidAddr *appUuid, uint8_t *serverId)
     return IOTC_OK;
 }
 
-uint8_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
+static bool HexChar2Num(char hexChar, uint8_t *num)
+{
+    if (hexChar >= '0' && hexChar <= '9') {
+        *num = hexChar - '0';
+    } else if (hexChar >= 'a' && hexChar <= 'f') {
+        /* 10表示16进制的a的值 */
+        *num = hexChar - 'a' + 10;
+    } else if (hexChar >= 'A' && hexChar <= 'F') {
+        /* 10表示16进制的A的值 */
+        *num = hexChar - 'A' + 10;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+static bool UtilsUnhexifyR(const char *inBuf, uint32_t inBufLen, uint8_t *outBuf, uint32_t outBufLen)
+{
+    if (inBuf == NULL || inBufLen == 0 || outBuf == NULL || outBufLen == 0) {
+        return false;
+    }
+
+    /* 对2取余保证解码长度必须为偶数 */
+    if ((inBufLen % 2) != 0) {
+        return false;
+    }
+
+    /* unhex后长度除以2 */
+    uint32_t outLen = inBufLen / 2;
+    if (outLen > outBufLen) {
+        return false;
+    }
+    char *in = (char *)inBuf + inBufLen - 1;
+    uint32_t outIndex = 0;
+    uint8_t high;
+    uint8_t low;
+    while (outIndex < outLen) {
+        if (!HexChar2Num(*(in--), &low)) {
+            return false;
+        }
+
+        if (!HexChar2Num(*(in--), &high)) {
+            return false;
+        }
+        /* 左移4位将单个16进制字符数的第一位移动到高位 */
+        *outBuf++ = (high << 4) | low;
+        outIndex++;
+    }
+    return true;
+}
+
+static uint32_t GetOhosUuidType(const char *uuid)
+{
+    if (uuid == NULL) {
+        return OHOS_UUID_TYPE_NULL;
+    }
+    uint32_t len = strlen(uuid);
+    if (len == UUID_STR_4_BYTES) {
+        return OHOS_UUID_TYPE_16_BIT;
+    } else if (len == UUID_STR_8_BYTES) {
+        return OHOS_UUID_TYPE_32_BIT;
+    } else if (len == UUID_STR_32_BYTES) {
+        return OHOS_UUID_TYPE_128_BIT;
+    }
+    return OHOS_UUID_TYPE_NULL;
+}
+
+static int32_t AdapterSvcToOhosSvc(IotcAdptSleSsapService *in, SleAttr *to)
+{
+    to->attrType = OHOS_SLE_ATTRIB_TYPE_SERVICE;
+    to->uuidType = GetOhosUuidType(in->uuid);
+    if (!UtilsUnhexifyR(in->uuid, strlen(in->uuid), to->uuid, sizeof(to->uuid))) {
+        IOTC_LOGE("str to hex");
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+static uint8_t GetSvcAttrNum(IotcAdptSleSsapService *svc)
+{
+    uint8_t attrCnt = 1;
+    attrCnt += svc->charNum;
+    for (uint8_t i = 0; i < svc->charNum; i++) {
+        attrCnt += svc->character[i].descNum;
+    }
+    return attrCnt;
+}
+
+static int32_t AdapterCharToOhosChar(IotcAdptSleSsapsChar *in, SleAttr *to)
+{
+    IOTC_LOGI("AdapterCharToOhosChar start");
+    if (in->uuid == NULL) {
+        IOTC_LOGE("uuid is null");
+        return IOTC_ERROR;
+    }
+    to->attrType = OHOS_SLE_ATTRIB_TYPE_CHAR;
+    to->permission = AdapterPemissionToOhosPermission(in->permission);
+    to->uuidType = GetOhosUuidType(in->uuid);
+    if (!UtilsUnhexifyR(in->uuid, strlen(in->uuid), to->uuid, sizeof(to->uuid))) {
+        IOTC_LOGE("str to hex");
+        return IOTC_ERROR;
+    }
+    to->properties = AdapterPropertyToOhosProperty(in->property);
+    to->func.read = in->readFunc;
+    to->func.write = in->writeFunc;
+    to->func.indicate = in->indicateFunc;
+    return IOTC_OK;
+}
+
+static int32_t AdapterDescToOhosDesc(IotcAdptSleSsapCharDesc *in, SleAttr *to)
+{
+    if (in->uuid == NULL) {
+        IOTC_LOGE("uuid is null");
+        return IOTC_ERROR;
+    }
+    to->attrType = OHOS_SLE_ATTRIB_TYPE_CHAR_USER_DESCR;
+    to->permission = AdapterPemissionToOhosPermission(in->permission);
+    if (!UtilsUnhexifyR(in->uuid, strlen(in->uuid),
+        to->uuid, sizeof(to->uuid))) {
+        IOTC_LOGE("str to hex");
+        return IOTC_ERROR;
+    }
+    to->func.read = in->readFunc;
+    to->func.write = in->writeFunc;
+    return IOTC_OK;
+}
+
+static int32_t AdapterServiceCopyToOhosGattAttr(IotcAdptSleSsapService *svc, SleAttr *attrList, uint8_t attrNum)
+{
+    if (svc->uuid == NULL) {
+        IOTC_LOGE("uuid is null");
+        return IOTC_ERROR;
+    }
+    uint8_t attrCnt = 0;
+    if (AdapterSvcToOhosSvc(svc, &attrList[attrCnt]) != IOTC_OK) {
+        IOTC_LOGE("svc copy err");
+        return IOTC_ERROR;
+    }
+    attrCnt++;
+    for (uint8_t i = 0; i < svc->charNum; i++) {
+        if (AdapterCharToOhosChar(&svc->character[i], &attrList[attrCnt]) != IOTC_OK) {
+            IOTC_LOGE("char copy err");
+            return IOTC_ERROR;
+        }
+        svc->character[i].charHandle = attrCnt;
+        attrCnt++;
+        for (uint8_t j = 0; j < svc->character[i].descNum; j++) {
+            if (AdapterDescToOhosDesc(&svc->character[i].desc[j], &attrList[attrCnt])) {
+                IOTC_LOGE("desc copy err");
+                return IOTC_ERROR;
+            }
+            svc->character[i].desc[j].descHandle = attrCnt;
+            attrCnt++;
+        }
+    }
+    return IOTC_OK;
+}
+
+static void RefreshHandle(IotcAdptSleSsapService *svc)
+{
+    for (uint8_t i = 0; i < svc->charNum; i++) {
+        svc->character[i].charHandle += svc->svcHandle;
+        for (uint8_t j = 0; j < svc->character[i].descNum; j++) {
+            svc->character[i].desc[j].descHandle += svc->svcHandle;
+        }
+    }
+}
+
+int32_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
 {
     IOTC_LOGD("SLE  IotcSleStartSsapsService:serverId:%d,handle=%d", serviceId, serviceHandle);
     int32_t ret = StartService(serviceId, serviceHandle);
@@ -149,6 +389,39 @@ uint8_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
     return IOTC_OK;
 }
 
+int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
+{
+    if ((svc == NULL) || (svcNum == 0)) {
+        IOTC_LOGE("IotcSleSsapsStartService invalid param");
+        return IOTC_ERROR;
+    }
+
+    IOTC_LOGI("IotcSleSsapsStartService svcNum:%u", svcNum);
+    for (uint8_t i = 0; i < svcNum; i++) {
+        uint8_t attrNum = GetSvcAttrNum(svc + i);
+        IOTC_LOGI(" attrNum:%u", attrNum);
+        SleAttr attrList[attrNum];
+        (void)memset_s(&attrList, attrNum * sizeof(SleAttr), 0, attrNum * sizeof(SleAttr));
+        if (AdapterServiceCopyToOhosGattAttr(svc + i, attrList, attrNum) != IOTC_OK) {
+            IOTC_LOGE("copy gatt service");
+            return IOTC_ERROR;
+        }
+        SleService srvcInfo = {0};
+        srvcInfo.attrNum = attrNum;
+        srvcInfo.attrList = attrList;
+        //print uuid
+        IOTC_LOGI("IotcBleStartGattsService uuid:%s  svcHandle:%d", svc[i].uuid, &svc[i].svcHandle);
+    
+        int32_t ret = IotcSleStartServiceEx(&svc[i].svcHandle, &srvcInfo);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("sle start service ret=%d", ret);
+            return ret;
+        }
+        RefreshHandle(svc + i);
+    }
+
+    return IOTC_OK;
+}
 
 uint8_t IotcSleSendSsapsIndicate(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateParam *param)
 {
@@ -213,7 +486,7 @@ uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const Iot
     resParam.status  = param->status;
     resParam.valueLen = param->valueLen;
     resParam.value = param->value;
-    uint8_t ret = SendResponse(serverId, connectId, param);
+    int32_t ret = SendResponse(serverId, connectId, param);
     if (ret != IOTC_OK) {
         IOTC_LOGE("IotcSleSendSsapsResponse ret=%d", ret);
         return ret;
