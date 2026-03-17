@@ -78,7 +78,8 @@ int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const u
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    return SleLinkLayerReportSvcDataEnc(g_connectId, SLE_SVC_CUSTOM_SEC_DATA, data, len, SLE_OPTYPE_GET);
+    //HI3863_SDK_CONFIG_PATH
+    return SleLinkLayerReportSvcDataEnc(g_connectId, SLE_SVC_CUSTOM_SEC_DATA, data, len, SLE_OPTYPE_PUT);
 }
 
 int32_t SleAdvServiceStart(uint32_t ms)

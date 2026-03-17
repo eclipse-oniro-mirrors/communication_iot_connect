@@ -235,6 +235,10 @@ static int32_t SleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .data       = data,
         .dataLen    = dataLen,
     };
+    #ifdef HI3863_SDK_CONFIG_PATH
+    param.add = NULL;
+    param.addLen = 0;
+    #endif
     ret = IotcAesGcmEncrypt(&param, outBuff + SESS_IV_LEN + dataLen, SESS_TAG_LEN,
         outBuff + SESS_IV_LEN);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen encData err:%d", ret);
@@ -274,6 +278,10 @@ static int32_t SleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .data       = data + SESS_IV_LEN,
         .dataLen    = outLen,
     };
+    #ifdef HI3863_SDK_CONFIG_PATH
+    param.add = NULL;
+    param.addLen = 0;
+    #endif
     ret = IotcAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen decData err:%d", ret);
     

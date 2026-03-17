@@ -28,8 +28,16 @@ static int32_t SaveAuthSetupInfo(char *in)
     IotcJsonDelete(req);
     if (ret != IOTC_OK) {
         IOTC_LOGW("auth info process error %d", ret);
+        return ret;
     }
-    return ret;
+
+    #ifdef HI3863_SDK_CONFIG_JSON_PATH
+    const char *path = HI3863_SDK_CONFIG_JSON_PATH;
+    IOTC_LOGI("SaveAuthSetupInfo IotcKvSetValue path:%s  strLen:%d", path, strlen(in));
+    IotcKvSetValue(path, (const uint8_t *)in, strlen(in));
+    #endif
+    
+    return IOTC_OK;
 }
 
 int32_t GetBleSvcAuthSetup(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
