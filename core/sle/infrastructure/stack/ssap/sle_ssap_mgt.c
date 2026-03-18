@@ -333,7 +333,7 @@ int32_t SleSsapMgtInit(void)
     PrintSleSsapServiceList(g_SleSsapApp.svc, g_SleSsapApp.svcNum);
     IOTC_LOGI(" ---> uuid:%s", g_SleSsapApp.svc[0].uuid);
     ret = IotcInitSleSsapsService();
-   
+
     IOTC_LOGI(" ---> init service :%d", ret);
     ret = SleSsapEventInit();
     if (ret != IOTC_OK) {
@@ -504,91 +504,6 @@ static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
     return NULL;
 }
 
-static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptSleSsapsChar *character, uint8_t charNum)
-{
-    for (uint8_t i = 0; i < charNum; i++) {
-        if (character[i].charHandle == attrHandle) {
-            return true;
-        }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
-            if (character[i].desc[j].descHandle == attrHandle) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
-{
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (IsAttrHandleInCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum)) {
-            *serverId =  GetSleSsapMgtApp()->svc[i].serverId;
-            return IOTC_OK;
-        }
-    }
-    return IOTC_ERROR;
-}
-
-static IotcAdptSleSsapReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
-    IotcAdptSleSsapsChar *character, uint8_t charNum)
-{
-    for (uint8_t i = 0; i < charNum; i++) {
-        if (character[i].charHandle == attrHandle) {
-            return character[i].readFunc;
-        }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
-            if (character[i].desc[j].descHandle == attrHandle) {
-                return character[i].desc[j].readFunc;
-            }
-        }
-    }
-    return NULL;
-}
-
-static IotcAdptSleSsapReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
-{
-    IotcAdptSleSsapReadFunc res = NULL;
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        res = FindReadFuncFromCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum);
-        if (res != NULL) {
-            return res;
-        }
-    }
-    return NULL;
-}
-
-static IotcAdptSleSsapWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
-    IotcAdptSleSsapsChar *character, uint8_t charNum)
-{
-    for (uint8_t i = 0; i < charNum; i++) {
-        if (character[i].charHandle == attrHandle) {
-            return character[i].writeFunc;
-        }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
-            if (character[i].desc[j].descHandle == attrHandle) {
-                return character[i].desc[j].writeFunc;
-            }
-        }
-    }
-    return NULL;
-}
-
-static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
-{
-    IotcAdptSleSsapWriteFunc res = NULL;
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        res = FindWriteFuncFromCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum);
-        if (res != NULL) {
-            return res;
-        }
-    }
-    return NULL;
-}
-
 int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen)
 {
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
@@ -599,7 +514,8 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
     }
     IotcAdptSleSendIndicateParam param;
     (void)memset_s(&param, sizeof(param), 0, sizeof(param));
-    int32_t ret = GetSeviceHandle(svcUuid, (int32_t*)(&param.handle));
+    int32_t handle = param.handle;
+    int32_t ret = GetSeviceHandle(svcUuid, &handle);
     if (ret != IOTC_OK) {
         IOTC_LOGE("get svc handle err ret=%d", ret);
         return ret;

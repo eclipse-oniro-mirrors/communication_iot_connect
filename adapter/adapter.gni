@@ -45,7 +45,7 @@ iotc_adapter_dep = []
 
 if (iot_connect_feature_ble_support) {
   if (defined(ohos_lite)) {
-    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/iotc_ble.c"]  
+    iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_lite/iotc_ble.c"]
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/ble/ohos_standard/iotc_ble.c"]
   }
@@ -59,7 +59,7 @@ if (iot_connect_feature_ble_support) {
     } else {
       iotc_adapter_inc += ["//third_party/mbedtls/include"]
     }
-    
+
   }
 }
 
@@ -72,12 +72,14 @@ if (iot_connect_feature_sle_support) {
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/sle/ohos_standard/iotc_sle.c"]
   }
-    iotc_adapter_def += ["IOTC_CONF_SLE_SUPPORT=1"]
-    iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
-    iotc_adapter_inc += ["//third_party/mbedtls/include"]
-    iotc_adapter_inc += ["//foundation/communication/nearlink/sle/interface/c_interface"]
-    iotc_adapter_inc += ["//foundation/communication/nearlink/sle/sle_utils/defines"]
-    iotc_adapter_inc += ["//foundation/communication/nearlink/sle/sle_utils/hilog"]
+  iotc_adapter_def += ["IOTC_CONF_SLE_SUPPORT=1"]
+  iotc_adapter_inc += ["//foundation/communication/bluetooth/interfaces/inner_api/include/c_header"]
+  iotc_adapter_inc += ["//third_party/mbedtls/include"]
+  # iotc_adapter_inc += ["//device/soc/hisilicon/hi3863v100/sdk_liteos/include"]
+  #                       device/soc/hisilicon/hi3863v100/sdk_liteos/include/middleware/services/bts/sle
+  if (defined(ohos_lite)) {
+    iotc_adapter_inc +=["//device/soc/hisilicon/hi3863v100/sdk_liteos/include/middleware/services/bts/sle"]
+  }
 }
 
 if (iot_connect_feature_wifi_support) {
@@ -126,8 +128,8 @@ if (defined(ohos_lite)) {
         iotc_adapter_inc += ["//device/soc/hisilicon/hi3863v100/sdk_liteos/open_source/mbedtls/mbedtls_v3.1.0/include"]
       } else {
         iotc_adapter_inc += ["//third_party/mbedtls/include"]
-      }      
-     
+      }
+
     }
 
     if (board_hi3863) {
