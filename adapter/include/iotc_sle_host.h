@@ -59,7 +59,7 @@ typedef struct {
  *  @param  None
  *  @return SleErrorCode - operation result
  */
-uint8_t IotcInitSleHostService(void);
+int32_t IotcInitSleHostService(void);
 
 /**
  *  @brief  deinitialize sle service sync
@@ -67,7 +67,7 @@ uint8_t IotcInitSleHostService(void);
  *  @param  None
  *  @return SleErrorCode - operation result
  */
-uint8_t IotcDeinitSleHostService(void);
+int32_t IotcDeinitSleHostService(void);
 
 /**
  *  @brief  enable sle sync
@@ -77,7 +77,7 @@ uint8_t IotcDeinitSleHostService(void);
  *
  *  @note   result return in SleHostTimeOut = 3s
  */
-uint8_t IotcSleEnable(void);
+int32_t IotcSleEnable(void);
 
 /**
  *  @brief  disable sle sync
@@ -87,7 +87,7 @@ uint8_t IotcSleEnable(void);
  *
  *  @note   result return in SleHostTimeOut = 3s
  */
-uint8_t IotcSleDisable(void);
+int32_t IotcSleDisable(void);
 
 /**
  *  @brief  get host address sync
@@ -103,8 +103,7 @@ IotcAdptSleDeviceAddr* IotcGetHostAddress(void);
  * @param name [IN] 名字
  * @return 0成功，非0失败
  */
-uint8_t IotcSleSetSleName(const char *name);
-
+int32_t IotcSleSetSleName(const char *name, uint8_t len);
 
 /**
  *  @brief  unregister host callbacks sync
@@ -114,9 +113,9 @@ uint8_t IotcSleSetSleName(const char *name);
  *
  *  @note   hostCallback should be delete by user after SleDisable
  */
-uint8_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback);
+int32_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback);
 
-uint8_t IotcSleRegisterHostCallbacks();
+int32_t IotcSleRegisterHostCallbacks();
 
 #ifdef __cplusplus
 }

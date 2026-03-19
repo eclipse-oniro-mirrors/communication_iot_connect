@@ -23,7 +23,7 @@
 
 static IotcAdptSleAnnounceCallback g_announceEventHandler = NULL;
 
-uint8_t IotcInitSleAnnounceService(void)
+int32_t IotcInitSleAnnounceService(void)
 {
     uint8_t ret = InitSleAnnounceService();
     if (ret != IOTC_OK) {
@@ -33,7 +33,7 @@ uint8_t IotcInitSleAnnounceService(void)
     return IOTC_OK;
 }
 
-uint8_t IotcAddAnnounce(uint8_t *announceId)
+int32_t IotcAddAnnounce(uint8_t *announceId)
 {
     if (announceId == NULL) {
         IOTC_LOGE("IotcAddAnnounce invalid param");
@@ -65,7 +65,7 @@ static SleAnnounceCallbacks g_sleAnnounceUtCbs = {
     .OnSleAnnounceStateChangeCb = iotcAnnounceStateChangeCB,
 };
 
-uint8_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
+int32_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
 {
     g_announceEventHandler = callback;
     uint8_t ret = RegisterAnnounceCallbacks(&g_sleAnnounceUtCbs);
@@ -81,7 +81,7 @@ static int32_t HandleAdvParam(const IotcAdptSleAnnounceParam *advParam, SleAnnou
     if (advParam == NULL || iotcAdvParam == NULL) {
         return IOTC_ERROR;
     }
-    
+
     iotcAdvParam->handle = advParam->handle;
     iotcAdvParam->mode = advParam->mode;
     iotcAdvParam->role = advParam->role;
@@ -94,7 +94,7 @@ static int32_t HandleAdvParam(const IotcAdptSleAnnounceParam *advParam, SleAnnou
     iotcAdvParam->connectIntervalMax = advParam->connectIntervalMax;
     iotcAdvParam->connectLatency = advParam->connectLatency;
     iotcAdvParam->connectTimeout = advParam->connectTimeout;
-    
+
     SleDeviceAddress ownAddr = {0};
     ownAddr.addrType = advParam->ownAddr.type;
     if (memcpy_s(
@@ -106,7 +106,7 @@ static int32_t HandleAdvParam(const IotcAdptSleAnnounceParam *advParam, SleAnnou
         IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
     }
     iotcAdvParam->ownAddr = ownAddr;
-    
+
     SleDeviceAddress peerAddr = {0};
     peerAddr.addrType = advParam->peerAddr.type;
     if (memcpy_s(
@@ -118,15 +118,12 @@ static int32_t HandleAdvParam(const IotcAdptSleAnnounceParam *advParam, SleAnnou
         IOTC_LOGE("IotcStartAnnounce memcpy_s failed: UUID data copy error");
     }
     iotcAdvParam->peerAddr = peerAddr;
-    
+
     return IOTC_OK;
 }
 
-uint8_t IotcStartAnnounce(
-    uint8_t announceId,
-    const IotcAdptSleAnnounceData *advData,
-    const IotcAdptSleAnnounceParam *advParam
-)
+int32_t IotcStartAnnounce(uint8_t announceId, const IotcAdptSleAnnounceData *advData,
+    const IotcAdptSleAnnounceParam *advParam)
 {
     if ((advData == NULL)) {
         IOTC_LOGE("invalid param");
@@ -156,7 +153,7 @@ uint8_t IotcStartAnnounce(
     return IOTC_OK;
 }
 
-uint8_t IotcRemoveAnnounce(uint8_t announceId)
+int32_t IotcRemoveAnnounce(uint8_t announceId)
 {
     uint8_t ret = RemoveAnnounce(announceId);
     if (ret != IOTC_OK) {
@@ -167,7 +164,7 @@ uint8_t IotcRemoveAnnounce(uint8_t announceId)
 }
 
 
-uint8_t IotcStopAnnounce(uint8_t announceId)
+int32_t IotcStopAnnounce(uint8_t announceId)
 {
     /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
     uint8_t ret = StopAnnounce(announceId);
@@ -178,7 +175,7 @@ uint8_t IotcStopAnnounce(uint8_t announceId)
     return IOTC_OK;
 }
 
-uint8_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
+int32_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
 {
     g_announceEventHandler = callback;
     uint8_t ret = UnregisterAnnounceCallbacks(&g_sleAnnounceUtCbs);
@@ -189,7 +186,7 @@ uint8_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
     return IOTC_OK;
 }
 
-uint8_t IotcDeinitSleAnnounceService(void)
+int32_t IotcDeinitSleAnnounceService(void)
 {
     uint8_t ret = DeinitSleAnnounceService();
     if (ret != IOTC_OK) {

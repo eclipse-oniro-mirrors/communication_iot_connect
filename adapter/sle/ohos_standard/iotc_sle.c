@@ -20,16 +20,14 @@
 #include "iotc_mem.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "iotc_sle_tem.h"
-#include "iotc_sle_vendor.h"
+
 #include "sle_errcode.h"
 #include "sle_ssap_server.h"
+#include "sle_ssap_server_config.h"
 #include "sle_device_discovery.h"
 #include "sle_connection_manager.h"
 
 static bool g_isBond = false;
-#define SLE_ADV_HANDLE_DEFAULT 1
-static uint8_t g_announceId = SLE_ADV_HANDLE_DEFAULT;
 static IotcAdptSleSsapCallback g_sleSsapEventHandler = NULL;
 static IotcAdptSleAnnounceSeekCallback g_sleAnnounceSeekEventHandler = NULL;
 static IotcAdptSleConnectionCallback g_sleConnectionEventHandler = NULL;
@@ -134,13 +132,13 @@ static int32_t sle_notify_indicate_sync(uint8_t serverId, uint16_t connectId, ss
 }
 
 pthread_mutex_t g_sendMutexServer;
-static int32_t SsapsNotifyIndicate(uint8_t serverId, uint16_t connectId, const SsapsNtfInd *param)
+static int32_t SsapsNotifyIndicate(uint8_t serverId, uint16_t connectId, const SsapsNotifyParam *param)
 {
     pthread_mutex_lock(&g_sendMutexServer);
     ssaps_ntf_ind_t param_sdk = {
         .handle = param->handle,
         .type = (uint8_t)param->type,
-        .value_len = param->value_len,
+        .value_len = param->valueLen,
         .value = param->value,
     };
     int32_t ret = sle_notify_indicate_sync(serverId, connectId, &param_sdk);
@@ -148,7 +146,7 @@ static int32_t SsapsNotifyIndicate(uint8_t serverId, uint16_t connectId, const S
     return ret;
 }
 
-static int32_t SlePairRemoteDevice(const IotcAdptSleAddr *addr)
+static int32_t SlePairRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
     sle_addr_t addr_sdk = {
         .type = (uint8_t)addr->type,
@@ -169,9 +167,9 @@ static int32_t DisableSle(void)
     return disable_sle();
 }
 
-static int32_t SleSetLocalName(const uint8_t *name, uint8_t len)
+static int32_t SleSetLocalName(const char *name, uint8_t len)
 {
-    return sle_set_local_name(name, len);
+    return sle_set_local_name((uint8_t *)name, len);
 }
 
 static void AddServiceCb(uint8_t serverId, sle_uuid_t *uuid, uint16_t handle, uint32_t status)
@@ -602,33 +600,41 @@ static uint32_t SleStopSeek(void)
 {
     uint32_t ret = sle_stop_seek();
     IOTC_LOGI("sle_stop_seek ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 static uint32_t SleConnectRemoteDevice(const sle_addr_t *addr)
 {
     uint32_t ret = sle_connect_remote_device(addr);
     IOTC_LOGI("sle_connect_remote_device ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 static uint32_t SleDisconnectRemoteDevice(const sle_addr_t *addr)
 {
     uint32_t ret = sle_disconnect_remote_device(addr);
     IOTC_LOGI("sle_disconnect_remote_device ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
 static uint32_t SleDefaultConnectionParamSet(sle_default_connect_param_t *set_param)
 {
     uint32_t ret = sle_default_connection_param_set(set_param);
     IOTC_LOGI("sle_default_connection_param_set ret = %{public}d", ret);
-    return ret; 
+    return ret;
 }
 
-/***************************************************************************************************/
+int32_t IotcInitSleHostService(void)
+{
+    return IOTC_OK;
+}
 
-int32_t IotcSleInitStack(void)
+int32_t IotcSleRegisterHostCallbacks()
+{
+    return IOTC_OK;
+}
+
+int32_t IotcSleEnable(void)
 {
     int32_t ret = EnableSle();
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
@@ -653,14 +659,13 @@ int32_t IotcSleSetConnectParam(const IotcAdptSleConnectParam *param)
     return IOTC_OK;
 }
 
-int32_t IotcSleRegisterSsapCb(const IotcAdptSleSsapCallback callback)
+int32_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
 {
     if (callback == NULL) {
         IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleSsapEventHandler = callback;
-    //TODO 注册回调
     int32_t ret =  SsapsRegisterCallbacks(&g_sleSsapsCb);
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("register ssap callback ret=%d", ret);
@@ -699,7 +704,7 @@ int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback c
     return IOTC_OK;
 }
 
-int32_t IotcSleSetSleName(const uint8_t *name, uint8_t len)
+int32_t IotcSleSetSleName(const char *name, uint8_t len)
 {
     if (name == NULL) {
         IOTC_LOGE("invalid param");
@@ -713,26 +718,27 @@ int32_t IotcSleSetSleName(const uint8_t *name, uint8_t len)
     return IOTC_OK;
 }
 
-int32_t IotcSleStartAdv(const IotcAdptSleAdvParam *advParam, const IotcAdptSleAdvData *advData)
+int32_t IotcStartAnnounce(uint8_t announceId, const IotcAdptSleAnnounceData *advData,
+    const IotcAdptSleAnnounceParam *advParam)
 {
     if ((advParam == NULL) || (advData == NULL)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    int32_t ret = SleSetAnnounceData(g_announceId, advData);
-     if (ret != ERRCODE_SLE_SUCCESS) {
+    int32_t ret = SleSetAnnounceData(announceId, advData);
+    if (ret != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("start adv set data=%d", ret);
         return ret;
     }
 
-    int32_t paramRet = SleSetAnnounceParam(g_announceId, advParam);
+    int32_t paramRet = SleSetAnnounceParam(announceId, advParam);
     if (paramRet != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("start adv set param=%d", paramRet);
         return paramRet;
     }
 
-    ret = SleStartAnnounce(g_announceId);
+    ret = SleStartAnnounce(announceId);
     if (ret != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("start adv ret=%d", ret);
         return ret;
@@ -741,10 +747,10 @@ int32_t IotcSleStartAdv(const IotcAdptSleAdvParam *advParam, const IotcAdptSleAd
     return ERRCODE_SLE_SUCCESS;
 }
 
-int32_t IotcSleStopAdv()
+int32_t IotcStopAnnounce(uint8_t announceId)
 {
     /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
-    int32_t ret = SleStopAnnounce(g_announceId);
+    int32_t ret = SleStopAnnounce(announceId);
     if (ret != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("stop adv ret=%d", ret);
         return ret;
@@ -753,48 +759,32 @@ int32_t IotcSleStopAdv()
     return ERRCODE_SLE_SUCCESS;
 }
 
-static void RefreshHandle(IotcAdptSleSsapService *svc)
+int32_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
 {
-    for (uint8_t i = 0; i < svc->charNum; i++) {
-        svc->character[i].charHandle += svc->svcHandle;
-        for (uint8_t j = 0; j < svc->character[i].descNum; j++) {
-            svc->character[i].desc[j].descHandle += svc->svcHandle;
-        }
+    int32_t ret = SsapsStartService(serviceId, serviceHandle);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("IotcSleSsapsStartService ret=%d", ret);
+        return IOTC_ERROR;
     }
-}
-
-int32_t IotcSleStartSsapsService(IotcAdptSleSsapService *svc, uint8_t svcNum)
-{
-    if ((svc == NULL) || (svcNum == 0)) {
-        IOTC_LOGE("invalid param");
-        return IOTC_ERR_PARAM_INVALID;
-    }
-    for (uint8_t i = 0; i < svcNum; i++) {
-        int32_t ret = SsapsStartService(svc[i].serverId, svc[i].svcHandle);
-        if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-            IOTC_LOGE("gatt start service ret=%d", ret);
-            return IOTC_ERROR;
-        }
-        RefreshHandle(svc + i);
     }
     return IOTC_OK;
 }
 
 
-int32_t IotcSleSendSsapsIndicate(const IotcAdptSleSendIndicateParam *param)
+int32_t IotcSleSendSsapsIndicate(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateParam *param)
 {
     if ((param == NULL) || (param->value == NULL) || (param->valueLen == 0)) {
         IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    SsapsNtfInd indParam = {0};
+    SsapsNotifyParam indParam = {0};
     (void)memset_s(&indParam, sizeof(indParam), 0, sizeof(indParam));
     indParam.handle = param->handle;
     indParam.type = param->type;
-    indParam.value_len = param->valueLen;
+    indParam.valueLen = param->valueLen;
     indParam.value = param->value;
-    int32_t ret = SsapsNotifyIndicate(param->serverId, param->connId, &indParam);
+    int32_t ret = SsapsNotifyIndicate(serverId, connectId, &indParam);
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("sle send indicate ret=%d", ret);
         return IOTC_ERROR;
@@ -802,7 +792,7 @@ int32_t IotcSleSendSsapsIndicate(const IotcAdptSleSendIndicateParam *param)
     return IOTC_OK;
 }
 
-int32_t IotcSleSendSsapsResponse(const IotcAdptSleResponseParam *param)
+int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
 {
     (void)param;
 
@@ -815,12 +805,11 @@ int32_t IotcSleDisconnectSsap(const uint8_t *bdAddr, uint32_t addrLen)
         IOTC_LOGE("invalid param");
         return IOTC_ERR_PARAM_INVALID;
     }
-    IotcAdptSleAddr iotcAddr = {0};
+    IotcAdptSleDeviceAddr iotcAddr = {0};
     if (memcpy_s(iotcAddr.addr, SLE_ADDR_LEN, bdAddr, addrLen) != EOK) {
         IOTC_LOGE("memcpy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
-    //TODO  type?
     int32_t ret = SlePairRemoteDevice(&iotcAddr);
     if (ret != ERRCODE_SLE_SUCCESS) {
         IOTC_LOGE("gatt disconnect ret=%d", ret);
@@ -873,7 +862,7 @@ int32_t IotcSleStoptSeek(void)
     return SleStopSeek();
 }
 
-int32_t IotcSleConnectRemoteDevice(const IotcAdptSleAddr *addr)
+int32_t IotcSleConnectRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
     if (addr == NULL) {
         IOTC_LOGE("invalid param");
@@ -891,7 +880,7 @@ int32_t IotcSleConnectRemoteDevice(const IotcAdptSleAddr *addr)
     return SleConnectRemoteDevice(&sleAddr);
 }
 
-int32_t IotcSleDisconnectRemoteDevice(const IotcAdptSleAddr *addr)
+int32_t IotcSleDisconnectRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
     if (addr == NULL) {
         IOTC_LOGE("invalid param");

@@ -136,7 +136,7 @@ static void connectStateChnage(uint32_t event, void *param, uint32_t len)
 {
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleConnectionEventParam *eventParam = (IotcAdptSleConnectionEventParam *)param;
-    if (eventParam->sleConnectStateChanged.conn_state == IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED) {
+    if (eventParam->sleConnectStateChanged.connstate == IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED) {
         int32_t ret = SleAdvCtrlResume();
         if (ret != IOTC_OK) {
             IOTC_LOGE("start adv err %d", ret);

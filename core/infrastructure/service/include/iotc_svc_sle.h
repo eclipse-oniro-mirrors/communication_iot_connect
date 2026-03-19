@@ -44,13 +44,14 @@ typedef void (*SleSetAdvDataType)(SleSvcAdvDataType type);
 typedef int32_t (*SleScanStart)(void);
 typedef int32_t (*SleScanStop)(void);
 typedef int32_t (*SleScanParamSet)(const IotcAdptSleSeekParam *param);
-typedef int32_t (*SleConnectDevice)(const IotcAdptSleAddr *addr);
-typedef int32_t (*SleDisconnectDevice)(const IotcAdptSleAddr *addr);
+typedef int32_t (*SleConnectDevice)(const IotcAdptSleDeviceAddr *addr);
+typedef int32_t (*SleDisconnectDevice)(const IotcAdptSleDeviceAddr *addr);
 typedef int32_t (*SleDefConnectionParamSet)(const IotcAdptSleDefaultConnectParam *param);
 typedef int32_t (*SleRecvNetCfgInfo)(const char *netInfo, uint32_t len);
 typedef int32_t (*SleRecvCustomSecData)(const uint8_t *data, uint32_t len);
 typedef int32_t (*SleSendCustomSecData)(const uint8_t *data, uint32_t len);
-typedef int32_t (*SleSendIndicateData)(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
+typedef int32_t (*SleSendIndicateData)(const char *svcUuid, const char *charUuid,
+    const uint8_t *value, uint32_t valueLen);
 
 typedef struct {
     SleStartAdv onStartAdv;

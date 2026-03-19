@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 #include "sle_conn_ctrl.h"
-#include "iotc_sle_server.h"
+#include "iotc_sle_client.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 #include "iotc_os.h"
 #include "utils_common.h"
 
-int32_t SleCtrlConnectRemoteDevice(const IotcAdptSleAddr *addr)
+int32_t SleCtrlConnectRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
     return IotcSleConnectRemoteDevice(addr);
 }
 
-int32_t SleCtrlDisconnectRemoteDevice(const IotcAdptSleAddr *addr)
+int32_t SleCtrlDisconnectRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
     return IotcSleDisconnectRemoteDevice(addr);
 }

@@ -487,16 +487,6 @@ static int32_t GenAdvName(SleAdvNameValue *value)
     int32_t snLen = strlen(devInfo->sn);
     if (snLen < ADV_NAME_SN_LEN) {
         IOTC_LOGW("set mac to adv sn");
-        IotcAdptSleDeviceAddr* mac = IotcGetHostAddress();
-        if (mac == NULL) {
-            IOTC_LOGE("get sle mac");
-            return IOTC_ERROR;
-        }
-        if (sprintf_s(advSn, sizeof(advSn), "%02X%02X",
-            mac->addr[IOTC_ADPT_SLE_ADDR_LEN - ONE_BYTE], mac->addr[IOTC_ADPT_SLE_ADDR_LEN - TWO_BYTE]) <= 0) {
-            IOTC_LOGE("sprintf_s");
-            return IOTC_ERROR;
-        }
     } else {
         if (sprintf_s(advSn, sizeof(advSn), "%s", GET_STR_TAIL(devInfo->sn, ADV_NAME_SN_LEN)) <= 0) {
             IOTC_LOGE("sprintf_s");

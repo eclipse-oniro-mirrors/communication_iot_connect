@@ -136,10 +136,6 @@ typedef struct {
                                      @else 后发链路反馈类型指示，取值范围0-7。 @endif */
 } IotcAdptSleSetPhy;
 
-typedef struct {
-    uint8_t type;
-    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];
-} IotcAdptSleAddr;
 /**
  * @if Eng
  * @brief Enum of sle ACB connection state.
@@ -335,8 +331,8 @@ typedef union {
 
     struct  {
         uint8_t eventType;
-        IotcAdptSleAddr addr;
-        IotcAdptSleAddr directAddr;
+        IotcAdptSleDeviceAddr addr;
+        IotcAdptSleDeviceAddr directAddr;
         uint8_t rssi;
         uint8_t dataStatus;
         uint8_t dataLength;
@@ -354,11 +350,11 @@ typedef union {
 
 typedef union {
     struct {
-        uint16_t connId;
-        IotcAdptSleAddr addr;
-        IotcAdptSleAcbState connState;
-        IotcAdptSlePairState pairState;
-        IotcAdptSleDiscReason discReason;
+        uint16_t connid;
+        IotcAdptSleDeviceAddr addr;
+        IotcAdptSleAcbState connstate;
+        IotcAdptSlePairState pairstate;
+        IotcAdptSleDiscReason discreason;
     } sleConnectStateChanged;
     struct {
         uint16_t connId;
@@ -371,19 +367,14 @@ typedef union {
         IotcAdptSleConnectionParamUpdateReq param;
     } sleConnectParamUpdateReq;
     struct  {
-        uint16_t connId;
-        IotcAdptSleAddr addr;
+        uint16_t connid;
+        IotcAdptSleDeviceAddr addr;
         IotcAdptSleStatus status;
         IotcAdptSleAuthInfoEvt evt;
     } sleAuthComplete;
     struct  {
-        uint16_t connId;
-        IotcAdptSleAddr addr;
-        IotcAdptSleStatus status;
-    } sleConnect;
-    struct  {
-        uint16_t connId;
-        IotcAdptSleAddr addr;
+        uint16_t connid;
+        IotcAdptSleDeviceAddr addr;
         IotcAdptSleStatus status;
     } slePairComplete;
     struct  {
@@ -398,7 +389,7 @@ typedef union {
     } sleReadRssi;
     struct  {
         uint8_t status;
-        IotcAdptSleAddr addr;
+        IotcAdptSleDeviceAddr addr;
         uint8_t rate;
     } sleLowLatency;
     struct  {
@@ -633,7 +624,7 @@ typedef struct {
  * @param None
  * @return SleErrorCode
  */
-uint8_t IotcInitSleSsapsService(void);
+int32_t IotcInitSleSsapsService(void);
 
 
 /**
@@ -642,7 +633,7 @@ uint8_t IotcInitSleSsapsService(void);
  * @param None
  * @return SleErrorCode
  */
-uint8_t IotcDeinitSleSsapsService(void);
+int32_t IotcDeinitSleSsapsService(void);
 
 
 /**
@@ -652,7 +643,7 @@ uint8_t IotcDeinitSleSsapsService(void);
  * @param svcNum [IN] 服务数量
  * @return 0成功，非0失败
  */
-uint8_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle);
+int32_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle);
 
 int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum);
 
@@ -662,10 +653,7 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
  * @param param [IN] 参数
  * @return 0成功，非0失败
  */
-uint8_t IotcSleSendSsapsIndicate(
-    uint8_t serverId,
-    uint16_t connectId,
-    const IotcAdptSleSendIndicateParam *param);
+int32_t IotcSleSendSsapsIndicate(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateParam *param);
 
 /**
  * @brief 发送SSAP数据
@@ -673,11 +661,8 @@ uint8_t IotcSleSendSsapsIndicate(
  * @param param [IN] 参数
  * @return 0成功，非0失败
  */
-uint8_t IotcSleSendSsapsIndicateByUuid(
-    uint8_t serverId,
-    uint16_t connectId,
-    const IotcAdptSleSendIndicateByUuidParam *param
-);
+int32_t IotcSleSendSsapsIndicateByUuid(uint8_t serverId, uint16_t connectId,
+    const IotcAdptSleSendIndicateByUuidParam *param);
 
 /**
  * @brief 发送SSAP数据
@@ -685,31 +670,22 @@ uint8_t IotcSleSendSsapsIndicateByUuid(
  * @param param [IN] 参数
  * @return 0成功，非0失败  (uint8_t serverId, uint16_t connectId, const SsapsSendRspParam *rspParam
  */
-uint8_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param);
+int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param);
 
 
-uint8_t IotcSsapsAddProperty(
-    uint8_t serviceId,
-    uint16_t serviceHandle,
-    IotcAdptSleSsapsPropertyInfo *property,
-    uint16_t *handle
-);
+int32_t IotcSsapsAddProperty(uint8_t serviceId, uint16_t serviceHandle,
+    IotcAdptSleSsapsPropertyInfo *property, uint16_t *handle);
 
-uint8_t IotcSsapsAddDescriptor(
-    uint8_t serverId,
-    uint16_t serviceHandle,
-    uint16_t propHandle,
-    const IotcAdptSleSsapsDescInfo *descParam,
-    uint16_t *descHandle
-);
+int32_t IotcSsapsAddDescriptor(uint8_t serverId, uint16_t serviceHandle, uint16_t propHandle,
+    const IotcAdptSleSsapsDescInfo *descParam, uint16_t *descHandle);
 
-uint8_t IotcSsapsAddService(uint8_t serviceId, IotcSleUuidAddr *serviceUuid, bool isPrimary, uint16_t *handle);
+int32_t IotcSsapsAddService(uint8_t serviceId, IotcSleUuidAddr *serviceUuid, bool isPrimary, uint16_t *handle);
 
-uint8_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback);
+int32_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback);
 
-uint8_t IotcSleSsapsUnregisterServer(const IotcAdptSleSsapCallback callback);
+int32_t IotcSleSsapsUnregisterServer(const IotcAdptSleSsapCallback callback);
 
-uint8_t IotcSsapsDeleteAllServices(uint8_t serviceId);
+int32_t IotcSsapsDeleteAllServices(uint8_t serviceId);
 
 /**
  * @brief Remove a Ssap server
@@ -717,7 +693,7 @@ uint8_t IotcSsapsDeleteAllServices(uint8_t serviceId);
  * @param [in] serverId The ID of the server
  * @return SleErrorCode
  */
-uint8_t IotcSsapsRemoveSsapServer(uint8_t serverId);
+int32_t IotcSsapsRemoveSsapServer(uint8_t serverId);
 
 /**
  * @brief Add a Ssap server
@@ -726,7 +702,7 @@ uint8_t IotcSsapsRemoveSsapServer(uint8_t serverId);
  * @param [out] serverId The ID of the server
  * @return SleErrorCode
  */
-uint8_t IotcAddSsapServer(const IotcSleUuidAddr *appUuid, uint8_t *serverId);
+int32_t IotcAddSsapServer(const IotcSleUuidAddr *appUuid, uint8_t *serverId);
 
 /**
  * @brief Set the MTU of the connection
@@ -736,7 +712,7 @@ uint8_t IotcAddSsapServer(const IotcSleUuidAddr *appUuid, uint8_t *serverId);
  * @param   [in] mtuInfo The MTU info of the connection
  * @return  SleErrorCode
  */
-uint8_t IotcAddSsapSetServerMtuInfo(uint8_t serverId, const IotcAdptSleMtuInfo *mtuInfo);
+int32_t IotcAddSsapSetServerMtuInfo(uint8_t serverId, const IotcAdptSleMtuInfo *mtuInfo);
 
 int32_t IotcSleRegisterAnnounceSeekCallbacks(const IotcAdptSleAnnounceSeekCallback callback);
 
