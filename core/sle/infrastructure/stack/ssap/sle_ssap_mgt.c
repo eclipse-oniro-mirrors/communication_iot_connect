@@ -25,6 +25,7 @@
 #include "sle_ssap_event.h"
 #include "sle_disc_event.h"
 #include "sle_conn_event.h"
+#include "sle_ssapc_event.h"
 #include "iotc_sle_client.h"
 
 static SleSsapMgtApp g_SleSsapApp = {
@@ -347,6 +348,11 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("sle conn init err ret=%d", ret);
         return ret;
     }
+    ret = SleSsapClinetEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle ssap client init err ret=%d", ret);
+        return ret;
+    }
     ret = SleSsapPeerDevInfoInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("ssap peer dev info init err ret=%d", ret);
@@ -390,32 +396,62 @@ static int32_t GetSeviceHandle(const char *svcUuid, int32_t *handle)
     return IOTC_CORE_SLE_INVALID_SVC_UUID;
 }
 
-static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptSleSsapsChar *character, uint8_t charNum)
+static IotcAdptSleSsapReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
+    IotcAdptSleSsapsChar *character, uint8_t charNum)
 {
     for (uint8_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
-            return true;
+            return character[i].readFunc;
         }
         for (uint8_t j = 0; j < character[i].descNum; j++) {
             if (character[i].desc[j].descHandle == attrHandle) {
-                return true;
+                return character[i].desc[j].readFunc;
             }
         }
     }
-    return false;
+    return NULL;
 }
 
-static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
+static IotcAdptSleSsapReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
 {
+    IotcAdptSleSsapReadFunc res = NULL;
     for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (IsAttrHandleInCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum)) {
-            *serverId =  GetSleSsapMgtApp()->svc[i].serverId;
-            return IOTC_OK;
+        res = FindReadFuncFromCharacterTbl(attrHandle,
+            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum);
+        if (res != NULL) {
+            return res;
         }
     }
-    IOTC_LOGE("no find char");
-    return IOTC_CORE_SLE_INVALID_CHAR_UUID;
+    return NULL;
+}
+
+static IotcAdptSleSsapWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
+    IotcAdptSleSsapsChar *character, uint8_t charNum)
+{
+    for (uint8_t i = 0; i < charNum; i++) {
+        if (character[i].charHandle == attrHandle) {
+            return character[i].writeFunc;
+        }
+        for (uint8_t j = 0; j < character[i].descNum; j++) {
+            if (character[i].desc[j].descHandle == attrHandle) {
+                return character[i].desc[j].writeFunc;
+            }
+        }
+    }
+    return NULL;
+}
+
+static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
+{
+    IotcAdptSleSsapWriteFunc res = NULL;
+    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
+        res = FindWriteFuncFromCharacterTbl(attrHandle,
+            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum);
+        if (res != NULL) {
+            return res;
+        }
+    }
+    return NULL;
 }
 
 int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen)
@@ -442,8 +478,7 @@ void SleSsapDisconnectAll(void)
 {
     SlePeerDevInfo *peerDevInfoList = GetSleSsapMgtApp()->peerDevInfo;
     for (uint8_t i = 0; i < GetSleSsapMgtApp()->connNum; i++) {
-        int32_t ret = IotcSleDisconnectSsap(peerDevInfoList[i].peerAddr,
-            IOTC_ADPT_SLE_ADDR_LEN);
+        int32_t ret = IotcSleDisconnectSsap(peerDevInfoList[i].peerAddr, IOTC_ADPT_SLE_ADDR_LEN);
         if (ret != IOTC_OK) {
             IOTC_LOGW("disconn with peer[%u] err", i);
         }
@@ -476,8 +511,8 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
     }
     param.value = IotcCalloc(1, IOTC_ADPT_SLE_SSAP_READ_BUF_SIZE);
     if (param.value == NULL) {
-        (void)IotcSleSendSsapsResponse(serverId, connId, &param);
-        IOTC_LOGI("IotcSleSendSsapsResponse ret=%d", ret);
+        int32_t sendRet = IotcSleSendSsapsResponse(serverId, connId, &param);
+        IOTC_LOGI("IotcSleSendSsapsResponse ret=%d", sendRet);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
     IotcAdptSleSsapReadFunc func = FindAttrHandleReadFunc(attrHandle);
@@ -485,7 +520,7 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
         IOTC_LOGE("no find read func");
         IotcFree(param.value);
         param.value = NULL;
-        (void)IotcSleSendSsapsResponse(serverId, connId, &param);
+        ret = IotcSleSendSsapsResponse(serverId, connId, &param);
         IOTC_LOGI("IotcSleSendSsapsResponse ret=%d", ret);
         return IOTC_ERROR;
     }

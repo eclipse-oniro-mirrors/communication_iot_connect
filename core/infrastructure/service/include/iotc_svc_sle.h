@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include "iotc_sle_announce.h"
 #include "iotc_sle_server.h"
+#include "iotc_sle_client.h"
 
 #ifdef __cplusplus
 extern "C" {

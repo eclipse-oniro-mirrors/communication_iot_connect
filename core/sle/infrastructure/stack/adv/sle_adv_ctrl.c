@@ -59,7 +59,7 @@ static int32_t CopyAdvInfo2Adapter(const IotcAdptSleAnnounceParam *advPara, cons
     IotcAdptSleAnnounceParam *adapterAdvParam, IotcAdptSleAnnounceData *adapterAdvData)
 {
     CHECK_RETURN_LOGW(advData->announceData != NULL && advData->announceLength != 0 &&
-        advData->responceData && advData->responceLength != 0,
+        advData->responceData != NULL && advData->responceLength != 0,
         IOTC_ERR_PARAM_INVALID, "param invalid");
     adapterAdvParam->mode = advPara->mode;
     adapterAdvParam->annonceIntervalMin = advPara->annonceIntervalMin;

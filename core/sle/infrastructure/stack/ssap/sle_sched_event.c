@@ -25,6 +25,7 @@
 #include "utils_common.h"
 #include "iotc_event.h"
 #include "iotc_errcode.h"
+#include "iotc_sle_client.h"
 
 typedef struct {
     int32_t event;
@@ -195,11 +196,6 @@ static void SleEventStartAdvResultHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    if (eventParam->startSvc.status != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("start adv fail");
-        return;
-    }
     IOTC_LOGN("start adv success");
 }
 
@@ -395,6 +391,88 @@ static void SleEventLowLatencyHandler(int32_t event, void *param)
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_LOW_LATENCY, param, sizeof(eventParam->sleLowLatency));
 }
 
+static void SleEventSetPhyEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SET_PHY_EVENT, param, sizeof(eventParam->sleSetPhy));
+}
+
+static void SleSsapcFindStructureEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE, param, sizeof(eventParam->ssapcFindServiceResult));
+}
+
+static void SleSsapcFindPropertyEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_FIND_PROPERTY, param, sizeof(eventParam->ssapcFindPropertyResult));
+}
+
+static void SleSsapcFindStructureCompleteEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE_COMPLETE, param,
+        sizeof(eventParam->ssapcFindStructureResult));
+}
+
+static void SleSsapcReadCfmEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_READ_CFM, param, sizeof(eventParam->ssapcHandleValue));
+}
+
+static void SleSsapcReadByUuidCompleteEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_READ_BY_UUID_COMPLETE, param,
+        sizeof(eventParam->ssapcReadByUuidCmpResult));
+}
+
+static void SleSsapcWriteCfmEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_WRITE_CFM, param, sizeof(eventParam->ssapcWriteResult));
+}
+
+static void SleSsapcExchangeInfoEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_EXCHANGE_INFO, param, sizeof(eventParam->ssapExchangeInfo));
+}
+
+static void SleSsapcNotificationEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_NOTIFICATION, param, sizeof(eventParam->ssapcNotification));
+}
+
+static void SleSsapcIndicationEventHandler(int32_t event, void *param)
+{
+    (void)event;
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_INDICATION, param, sizeof(eventParam->ssapcIndication));
+}
+
 static SleSchedMsgHandler g_sleSchedEvent[] = {
     {.event = SLE_EVENT_START, .eventHandler = SleEventStartHandler},
     {.event = SLE_EVENT_CONNECT, .eventHandler = SleEventConnectHandler},
@@ -425,6 +503,15 @@ static SleSchedMsgHandler g_sleSchedEvent[] = {
     {.event = SLE_EVENT_READ_RSSI, .eventHandler = SleEventReadRssiHandler},
     {.event = SLE_EVENT_LOW_LATENCY, .eventHandler = SleEventLowLatencyHandler},
     {.event = SLE_EVENT_SET_PHY_EVENT, .eventHandler = SleEventSetPhyEventHandler},
+    {.event = SLE_EVENT_SSAPC_FIND_STRUCTURE, .eventHandler = SleSsapcFindStructureEventHandler},
+    {.event = SLE_EVENT_SSAPC_FIND_PROPERTY, .eventHandler = SleSsapcFindPropertyEventHandler},
+    {.event = SLE_EVENT_SSAPC_FIND_STRUCTURE_COMPLETE, .eventHandler = SleSsapcFindStructureCompleteEventHandler},
+    {.event = SLE_EVENT_SSAPC_READ_CFM, .eventHandler = SleSsapcReadCfmEventHandler},
+    {.event = SLE_EVENT_SSAPC_READ_BY_UUID_COMPLETE, .eventHandler = SleSsapcReadByUuidCompleteEventHandler},
+    {.event = SLE_EVENT_SSAPC_WRITE_CFM, .eventHandler = SleSsapcWriteCfmEventHandler},
+    {.event = SLE_EVENT_SSAPC_EXCHANGE_INFO, .eventHandler = SleSsapcExchangeInfoEventHandler},
+    {.event = SLE_EVENT_SSAPC_NOTIFICATION, .eventHandler = SleSsapcNotificationEventHandler},
+    {.event = SLE_EVENT_SSAPC_INDICATION, .eventHandler = SleSsapcIndicationEventHandler},
 };
 
 int32_t SleScheduleEventInit(void)
