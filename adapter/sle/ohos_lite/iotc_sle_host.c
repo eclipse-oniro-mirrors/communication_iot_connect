@@ -18,7 +18,7 @@
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 
-uint8_t IotcInitSleHostService(void)
+int32_t IotcInitSleHostService(void)
 {
     uint8_t ret = InitSleHostService();
     if (ret != IOTC_OK) {
@@ -28,8 +28,7 @@ uint8_t IotcInitSleHostService(void)
     return IOTC_OK;
 }
 
-
-uint8_t IotcDeinitSleHostService(void)
+int32_t IotcDeinitSleHostService(void)
 {
     uint8_t ret = DeinitSleHostService();
     if (ret != IOTC_OK) {
@@ -39,7 +38,7 @@ uint8_t IotcDeinitSleHostService(void)
     return IOTC_OK;
 }
 
-uint8_t IotcSleEnable(void)
+int32_t IotcSleEnable(void)
 {
     uint8_t ret = SleEnable();
     if (ret != IOTC_OK) {
@@ -49,7 +48,7 @@ uint8_t IotcSleEnable(void)
     return IOTC_OK;
 }
 
-uint8_t IotcSleDisable(void)
+int32_t IotcSleDisable(void)
 {
     uint8_t ret = SleDisable();
     if (ret != IOTC_OK) {
@@ -59,13 +58,13 @@ uint8_t IotcSleDisable(void)
     return IOTC_OK;
 }
 
-uint8_t IotcSleSetSleName(const char *name)
+int32_t IotcSleSetSleName(const char *name, uint8_t len)
 {
     if (name == NULL) {
         IOTC_LOGE("IotcSleSetSleName invalid param");
         return IOTC_ERROR;
     }
-    uint8_t ret = SetHostName(&name, sizeof(*name));
+    uint8_t ret = SetHostName(&name, len);
     if (ret != IOTC_OK) {
         IOTC_LOGE("set name ret=%d", ret);
         return ret;
@@ -89,7 +88,6 @@ IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
     return addr;
 }
 
-
 static void SleFlowMonitorEventCb(float flow)
 {
 }
@@ -104,8 +102,7 @@ static SleHostCallbacks  g_host_cb = {
     .OnSleFlowMonitorEventCb = sleFlowMonitorEventCb,
 };
 
-
-uint8_t IotcSleRegisterHostCallbacks()
+int32_t IotcSleRegisterHostCallbacks()
 {
     int32_t ret = RegisterHostCallbacks(&g_host_cb);
     if (!ret) {
@@ -115,7 +112,7 @@ uint8_t IotcSleRegisterHostCallbacks()
     return IOTC_OK;
 }
 
-uint8_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback)
+int32_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback)
 {
     if (hostCallback == NULL) {
         IOTC_LOGE("UnregisterHostCallbacks invalid param");

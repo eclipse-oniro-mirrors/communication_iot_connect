@@ -117,7 +117,7 @@ typedef int32_t (*IotcAdptSleAnnounceCallback)(
  *   @param   None
  *   @return  SleErrorCode - operation result
  */
-uint8_t IotcInitSleAnnounceService(void);
+int32_t IotcInitSleAnnounceService(void);
 
 /**
  *   @brief   Deinit SleAnnounceService sync
@@ -125,7 +125,7 @@ uint8_t IotcInitSleAnnounceService(void);
  *   @param   None
  *   @return  SleErrorCode - operation result
  */
-uint8_t IotcDeinitSleAnnounceService(void);
+int32_t IotcDeinitSleAnnounceService(void);
 
 /**
  *  @brief  add announce service sync
@@ -134,7 +134,7 @@ uint8_t IotcDeinitSleAnnounceService(void);
  *
  *  @return SleErrorCode - operation result
  */
-uint8_t IotcAddAnnounce(uint8_t *announceId);
+int32_t IotcAddAnnounce(uint8_t *announceId);
 
 /**
  *  @brief  remove announce service sync
@@ -142,7 +142,7 @@ uint8_t IotcAddAnnounce(uint8_t *announceId);
  *  @param  [in] announceId
  *  @return SleErrorCode - operation result
  */
-uint8_t IotcRemoveAnnounce(uint8_t announceId);
+int32_t IotcRemoveAnnounce(uint8_t announceId);
 
 /**
  *   @brief   Start announce
@@ -155,11 +155,8 @@ uint8_t IotcRemoveAnnounce(uint8_t announceId);
  *   @note    dataLen mast less then SLE_ANNOUNCE_DATA_ANN_MAX_LENGTH or SLE_ANNOUNCE_DATA_MAX_RSP_LENGTH
  *   @attention if announceParam is not NULL, all params of announceParam should be set by user
  */
-uint8_t IotcStartAnnounce(
-    uint8_t announceId,
-    const IotcAdptSleAnnounceData *data,
-    const IotcAdptSleAnnounceParam *announceParam
-);
+int32_t IotcStartAnnounce(uint8_t announceId, const IotcAdptSleAnnounceData *data,
+    const IotcAdptSleAnnounceParam *announceParam);
 
 /**
  *   @brief   Stop announce
@@ -169,7 +166,7 @@ uint8_t IotcStartAnnounce(
  *
  *   @note    this func will try to Unregister callback
  */
-uint8_t IotcStopAnnounce(uint8_t announceId);
+int32_t IotcStopAnnounce(uint8_t announceId);
 
 /**
  *   @brief   Register announce callback sync
@@ -179,7 +176,7 @@ uint8_t IotcStopAnnounce(uint8_t announceId);
  *
  *   @attention   announceCallback must be registered before StartAnnounce to get announceId
  */
-uint8_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback);
+int32_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback);
 
 /**
  *   @brief   Register announce callback sync
@@ -189,7 +186,7 @@ uint8_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback);
  *
  *   @note    announceCallback should be delete by user when not needed
  */
-uint8_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback);
+int32_t IotcUnregisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback);
 
 #ifdef __cplusplus
 }

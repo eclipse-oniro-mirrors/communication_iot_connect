@@ -25,10 +25,7 @@
 #include "sle_ssap_event.h"
 #include "sle_disc_event.h"
 #include "sle_conn_event.h"
-#include "sle_ssapc_event.h"
 #include "iotc_sle_client.h"
-#include "iotc_sle_ext.h"
-#include "sle_conn_event.h"
 
 static SleSsapMgtApp g_SleSsapApp = {
     .peerDevInfo = NULL,
@@ -340,6 +337,11 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("ssap event init err ret=%d", ret);
         return ret;
     }
+    ret = SleDiscEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle disc init err ret=%d", ret);
+        return ret;
+    }
     ret = SleConnectionEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("sle conn init err ret=%d", ret);
@@ -414,94 +416,6 @@ static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
     }
     IOTC_LOGE("no find char");
     return IOTC_CORE_SLE_INVALID_CHAR_UUID;
-}
-*/
-static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptSleSsapsChar *character, uint8_t charNum)
-{
-    IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl attrHandle:%d", attrHandle);
-    for (uint8_t i = 0; i < charNum; i++) {
-        if (character[i].charHandle == attrHandle) {
-            IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl charHandle:%d", character[i].charHandle);
-            return true;
-        }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
-            IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl descHandle:%d", character[i].desc[j].descHandle);
-            if (character[i].desc[j].descHandle == attrHandle) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-static int32_t GetAttrHandleServerId(int32_t attrHandle, int32_t *serverId)
-{
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (IsAttrHandleInCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum)) {
-            *serverId =  GetSleSsapMgtApp()->svc[i].serverId;
-            return IOTC_OK;
-        }
-    }
-    return IOTC_ERROR;
-}
-
-static IotcAdptSleSsapReadFunc FindReadFuncFromCharacterTbl(int32_t attrHandle,
-    IotcAdptSleSsapsChar *character, uint8_t charNum)
-{
-    for (uint8_t i = 0; i < charNum; i++) {
-        if (character[i].charHandle == attrHandle) {
-            return character[i].readFunc;
-        }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
-            if (character[i].desc[j].descHandle == attrHandle) {
-                return character[i].desc[j].readFunc;
-            }
-        }
-    }
-    return NULL;
-}
-
-static IotcAdptSleSsapReadFunc FindAttrHandleReadFunc(int32_t attrHandle)
-{
-    IotcAdptSleSsapReadFunc res = NULL;
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        res = FindReadFuncFromCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum);
-        if (res != NULL) {
-            return res;
-        }
-    }
-    return NULL;
-}
-
-static IotcAdptSleSsapWriteFunc FindWriteFuncFromCharacterTbl(int32_t attrHandle,
-    IotcAdptSleSsapsChar *character, uint8_t charNum)
-{
-    for (uint8_t i = 0; i < charNum; i++) {
-        if (character[i].charHandle == attrHandle) {
-            return character[i].writeFunc;
-        }
-        for (uint8_t j = 0; j < character[i].descNum; j++) {
-            if (character[i].desc[j].descHandle == attrHandle) {
-                return character[i].desc[j].writeFunc;
-            }
-        }
-    }
-    return NULL;
-}
-
-static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
-{
-    IotcAdptSleSsapWriteFunc res = NULL;
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        res = FindWriteFuncFromCharacterTbl(attrHandle,
-            GetSleSsapMgtApp()->svc[i].character, GetSleSsapMgtApp()->svc[i].charNum);
-        if (res != NULL) {
-            return res;
-        }
-    }
-    return NULL;
 }
 
 int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen)

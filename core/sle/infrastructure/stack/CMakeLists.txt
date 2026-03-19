@@ -13,6 +13,8 @@
 # limitations under the License.
 
 add_subdirectory(adv)
+add_subdirectory(disc)
+add_subdirectory(conn)
 add_subdirectory(ssap)
 add_subdirectory(ssapc)
 add_subdirectory(ssaps)

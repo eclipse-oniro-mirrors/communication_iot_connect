@@ -21,7 +21,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 typedef enum {
     SLE_SERVICE_MSG_ID_DEVICE_CONTROL = 0,
     SLE_SERVICE_MSG_ID_CLOUD_SETUP,
@@ -42,6 +41,12 @@ typedef int32_t (*SleSvcCustomAdvDataCallback)(IotcAdptSleAnnounceData *advData)
 typedef int32_t (*SleStartAdv)(uint32_t ms);
 typedef int32_t (*SleStopAdv)(void);
 typedef void (*SleSetAdvDataType)(SleSvcAdvDataType type);
+typedef int32_t (*SleScanStart)(void);
+typedef int32_t (*SleScanStop)(void);
+typedef int32_t (*SleScanParamSet)(const IotcAdptSleSeekParam *param);
+typedef int32_t (*SleConnectDevice)(const IotcAdptSleDeviceAddr *addr);
+typedef int32_t (*SleDisconnectDevice)(const IotcAdptSleDeviceAddr *addr);
+typedef int32_t (*SleDefConnectionParamSet)(const IotcAdptSleDefaultConnectParam *param);
 typedef int32_t (*SleRecvNetCfgInfo)(const char *netInfo, uint32_t len);
 typedef int32_t (*SleRecvCustomSecData)(const uint8_t *data, uint32_t len);
 typedef int32_t (*SleSendCustomSecData)(const uint8_t *data, uint32_t len);
@@ -52,6 +57,12 @@ typedef struct {
     SleStartAdv onStartAdv;
     SleStopAdv onStopAdv;
     SleSetAdvDataType onSetAdvType;
+    SleScanStart onStartScan;
+    SleScanStop onStopScan;
+    SleScanParamSet onScanParamSet;
+    SleConnectDevice onConnectDeviec;
+    SleDisconnectDevice onDisconnectDevice;
+    SleDefConnectionParamSet onConnectionParamSet;
     SleSendCustomSecData onSendCustomSecData;
     SleSendIndicateData onSendIndicateData;
 } SleSvcApi;
@@ -64,8 +75,7 @@ typedef struct {
 int32_t SleSvcProxyStartAdv(uint32_t ms);
 int32_t SleSvcProxyStopAdv(void);
 int32_t SleSvcProxySendCustomSecData(const uint8_t *data, uint32_t len);
-int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,
-    const uint8_t *value, uint32_t valueLen);
+int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
 
 #ifdef __cplusplus
 }

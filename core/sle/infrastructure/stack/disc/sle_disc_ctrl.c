@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "sle_disc_ctrl.h"
-#include "iotc_sle_server.h"
+#include "iotc_sle_client.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
