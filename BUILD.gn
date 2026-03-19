@@ -77,6 +77,12 @@ if (defined(ohos_lite)) {
       "$iotc_interface_path/kits/common",
       "$iotc_interface_path/kits/oh_connect",
     ]
+    if (iot_connect_feature_sle_support) {
+      include_dirs += [
+        "//drivers/peripheral/nearlink/sle/hi3873e/modules/sle/include/bsle/common",
+        "//drivers/peripheral/nearlink/sle/hi3873e/modules/sle/include/bsle/sle",
+      ]
+    }
     cflags = [
       "-Wall",
       "-Werror",
@@ -94,7 +100,17 @@ if (defined(ohos_lite)) {
     sources = iotc_src
     public_configs = [":iotc_config"]
     deps = iotc_dep
-    deps += []
+    if (iot_connect_feature_sle_support) {
+      if (target_cpu == "arm") {
+        libs = [
+          "//drivers/peripheral/nearlink/sle/hi3873e/modules/sle/application/lib/35xx/libsle_host_arm32.a",
+        ]
+      } else if (target_cpu == "arm64") {
+        libs = [
+          "//drivers/peripheral/nearlink/sle/hi3873e/modules/sle/application/lib/35xx/libsle_host_aarch64.a",
+        ]
+      }
+    }
     external_deps = [
       "bounds_checking_function:libsec_shared",
       "mbedtls:mbedtls_shared",

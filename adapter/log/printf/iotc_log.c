@@ -18,6 +18,11 @@
 #include "iotc_log.h"
 #include "iotc_errcode.h"
 
+/* Undef the convenience macro so we can define the real function below.
+ * The macro (which auto-appends \n) remains available to other TUs via the
+ * header; here we need the bare vprintf variant for IotcLogOutputImpl. */
+#undef IotcPrintf
+
 static void IotcPrintf(const char *fmt, ...)
 {
     if (fmt == NULL) {
