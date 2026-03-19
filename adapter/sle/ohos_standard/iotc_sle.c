@@ -371,11 +371,6 @@ static void SleDisableCallback(errcode_t status)
     }
 }
 
-static void SleDfrCallback(void)
-{
-
-}
-
 static sle_announce_seek_callbacks_t g_SleAnnounceSeek = {
     .sle_enable_cb = SleEnableCallback,
     .sle_disable_cb = SleDisableCallback,
@@ -386,7 +381,6 @@ static sle_announce_seek_callbacks_t g_SleAnnounceSeek = {
     .seek_enable_cb = SleStartSeekCallback,
     .seek_disable_cb = SleSeekDisableCallback,
     .seek_result_cb = SleSeekResultCallback,
-    .sle_dfr_cb = SleDfrCallback,         
 };
 
 static void SleConnectStateChangedCallback(uint16_t conn_id, const sle_addr_t *addr,

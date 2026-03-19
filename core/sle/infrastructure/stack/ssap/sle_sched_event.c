@@ -403,6 +403,23 @@ static SleSchedMsgHandler g_sleSchedEvent[] = {
     {.event = SLE_EVENT_STOP_ADV_RESULT, .eventHandler = SleEventStopAdvResultHandler},
     {.event = SLE_EVENT_REQ_READ, .eventHandler = SleEventReqReadHandler},
     {.event = SLE_EVENT_REQ_WRITE, .eventHandler = SleEventReqWriteHandler},
+    {.event = SLE_EVENT_ENABLE, .eventHandler = SleEventEnableHandler},
+    {.event = SLE_EVENT_DISABLE, .eventHandler = SleEventDisableHandler},
+    {.event = SLE_EVENT_ANNOUNCE_ENABLE, .eventHandler = SleEventAnnounceEnableHandler},
+    {.event = SLE_EVENT_ANNOUNCE_DISABLE, .eventHandler = SleEventAnnounceDisableHandler},
+    {.event = SLE_EVENT_ANNOUNCE_TERMINAL, .eventHandler = SleEventAnnounceTerminalHandler},
+    {.event = SLE_EVENT_ANNOUNCE_REMOVE, .eventHandler = SleEventAnnounceRemoveHandler},
+    {.event = SLE_EVENT_SEEK_ENABLE, .eventHandler = SleEventSeekEnableHandler},
+    {.event = SLE_EVENT_SEEK_DISABLE, .eventHandler = SleEventSeekDisableHandler},
+    {.event = SLE_EVENT_SEEK_RESULT, .eventHandler = SleEventSeekResultHandler},
+    {.event = SLE_EVENT_CONNECT_STATE_CHANGED, .eventHandler = SleEventConnectStateChangeHandler},
+    {.event = SLE_EVENT_CONNECT_PARAM_UPDATE_REQ, .eventHandler = SleEventConnectParamUpdateReqHandler},
+    {.event = SLE_EVENT_CONNECT_PARAM_UPDATE, .eventHandler = SleEventConnectParamUpdateHandler},
+    {.event = SLE_EVENT_AUTH_COMPLETE, .eventHandler = SleEventAuthCompleteHandler},
+    {.event = SLE_EVENT_PAIR_COMPLETE, .eventHandler = SleEventPairCompleteHandler},
+    {.event = SLE_EVENT_READ_RSSI, .eventHandler = SleEventReadRssiHandler},
+    {.event = SLE_EVENT_LOW_LATENCY, .eventHandler = SleEventLowLatencyHandler},
+    {.event = SLE_EVENT_SET_PHY_EVENT, .eventHandler = SleEventSetPhyEventHandler},
 };
 
 int32_t SleScheduleEventInit(void)

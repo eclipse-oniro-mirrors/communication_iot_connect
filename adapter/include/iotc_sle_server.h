@@ -291,7 +291,6 @@ typedef enum {
     IOTC_ADPT_SLE_SEEK_ENABLE_EVENT,
     IOTC_ADPT_SLE_SEEK_DISABLE_EVENT,
     IOTC_ADPT_SLE_SEEK_RESULT_EVENT,
-    IOTC_ADPT_SLE_SLE_DFR_EVENT
 } IotcAdptSleAnnounceSeekEvent;
 
 typedef enum {
