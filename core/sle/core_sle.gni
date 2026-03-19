@@ -18,7 +18,10 @@ import("../../iotc.gni")
 iotc_core_sle_inc = [
   "$iotc_core_path/sle/interfaces/include",
   "$iotc_core_path/sle/infrastructure/stack/adv/include",
+  "$iotc_core_path/sle/infrastructure/stack/disc/include",
+  "$iotc_core_path/sle/infrastructure/stack/conn/include",
   "$iotc_core_path/sle/infrastructure/stack/ssap/include",
+  "$iotc_core_path/sle/infrastructure/stack/ssap",
   "$iotc_core_path/sle/infrastructure/utils/include",
   "$iotc_core_path/sle/application/adv/include",
   "$iotc_core_path/sle/application/base/include",
@@ -26,7 +29,6 @@ iotc_core_sle_inc = [
   "$iotc_core_path/sle/application/profile/include",
   "$iotc_core_path/sle/application/report/include",
   "$iotc_core_path/sle/application/include",
-
   "$iotc_core_path/ble/application/adv/include",
   "$iotc_core_path/ble/infrastructure/utils/include",
   "$iotc_core_path/ble/infrastructure/linklayer/include",
@@ -34,7 +36,11 @@ iotc_core_sle_inc = [
 
 iotc_core_sle_src = [
   "$iotc_core_path/sle/interfaces/core_sle_init.c",
-    "$iotc_core_path/sle/infrastructure/stack/adv/sle_adv_ctrl.c",
+  "$iotc_core_path/sle/infrastructure/stack/adv/sle_adv_ctrl.c",
+  "$iotc_core_path/sle/infrastructure/stack/disc/sle_disc_ctrl.c",
+  "$iotc_core_path/sle/infrastructure/stack/disc/sle_disc_event.c",
+  "$iotc_core_path/sle/infrastructure/stack/conn/sle_conn_ctrl.c",
+  "$iotc_core_path/sle/infrastructure/stack/conn/sle_conn_event.c",
   "$iotc_core_path/sle/infrastructure/stack/ssap/sle_ssap_event.c",
   "$iotc_core_path/sle/infrastructure/stack/ssap/sle_ssap_mgt.c",
   "$iotc_core_path/sle/infrastructure/stack/ssap/sle_sched_event.c",

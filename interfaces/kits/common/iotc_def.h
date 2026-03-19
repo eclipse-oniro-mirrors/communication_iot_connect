@@ -105,6 +105,7 @@ typedef enum {
 #define IOTC_AC_KEY_LEN 48
 
 #define IOTC_BLE_UUID_MAX_LEN 16
+#define IOTC_SLE_SEEK_PHY_NUM_MAX 3
 
 #define IOTC_API_PUBLIC __attribute__ ((visibility ("default")))
 

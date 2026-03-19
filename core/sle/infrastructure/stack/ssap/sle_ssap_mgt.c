@@ -340,6 +340,11 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("ssap event init err ret=%d", ret);
         return ret;
     }
+    ret = SleDiscEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle disc init err ret=%d", ret);
+        return ret;
+    }
     ret = SleConnectionEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("sle conn init err ret=%d", ret);

@@ -291,6 +291,7 @@ typedef enum {
     IOTC_ADPT_SLE_SEEK_ENABLE_EVENT,
     IOTC_ADPT_SLE_SEEK_DISABLE_EVENT,
     IOTC_ADPT_SLE_SEEK_RESULT_EVENT,
+    IOTC_ADPT_SLE_SLE_DFR_EVENT
 } IotcAdptSleAnnounceSeekEvent;
 
 typedef enum {
@@ -741,6 +742,18 @@ uint8_t IotcAddSsapSetServerMtuInfo(uint8_t serverId, const IotcAdptSleMtuInfo *
 int32_t IotcSleRegisterAnnounceSeekCallbacks(const IotcAdptSleAnnounceSeekCallback callback);
 
 int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback callback);
+
+int32_t IotcSleSetSeekParam(const IotcAdptSleSeekParam *param);
+
+int32_t IotcSleStartSeek(void);
+
+int32_t IotcSleStoptSeek(void);
+
+int32_t IotcSleConnectRemoteDevice(const IotcAdptSleAddr *addr);
+
+int32_t IotcSleDisconnectRemoteDevice(const IotcAdptSleAddr *addr);
+
+int32_t IotcSleDefaultConnectionParamSet(const IotcAdptSleDefaultConnectParam *param);
 
 #ifdef __cplusplus
 }
