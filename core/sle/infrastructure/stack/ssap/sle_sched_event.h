@@ -50,7 +50,7 @@ typedef enum {
     SLE_EVENT_PAIR_COMPLETE,
     SLE_EVENT_READ_RSSI,
     SLE_EVENT_LOW_LATENCY,
-    SLE_EVENT_SET_PHY_EVENT
+    SLE_EVENT_SET_PHY_EVENT,
 } SleScheduleEvent;
 
 typedef struct {

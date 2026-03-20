@@ -12,23 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_CONN_CTRL_H
-#define SLE_CONN_CTRL_H
+#ifndef IOT_CONNECT_CORE_SLE_INFRASTRUCTURE_STACK_SSAPC_INCLUDE_SLE_SSAPC_EVENT_H_
+#define IOT_CONNECT_CORE_SLE_INFRASTRUCTURE_STACK_SSAPC_INCLUDE_SLE_SSAPC_EVENT_H_
 
 #include <stdint.h>
-#include "iotc_sle_client.h"
-#include "iotc_sle_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t SleCtrlConnectRemoteDevice(const IotcAdptSleDeviceAddr *addr);
-int32_t SleCtrlDisconnectRemoteDevice(const IotcAdptSleDeviceAddr *addr);
-int32_t SleCtrlDefaultConnectionParamSet(const IotcAdptSleDefaultConnectParam *param);
+int32_t SleSsapClinetEventInit(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_ADV_CTRL_H */
+#endif

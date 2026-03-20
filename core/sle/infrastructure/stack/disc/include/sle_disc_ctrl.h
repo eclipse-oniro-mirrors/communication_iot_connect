@@ -16,7 +16,7 @@
 #define SLE_DISC_CTRL_H
 
 #include <stdint.h>
-#include "iotc_sle_server.h"
+#include "iotc_sle_client.h"
 #include "iotc_sle_def.h"
 
 #ifdef __cplusplus

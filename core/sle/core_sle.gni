@@ -64,7 +64,6 @@ iotc_core_sle_src = [
   "$iotc_core_path/sle/application/report/sle_svc_netcfg_status.c",
   "$iotc_core_path/sle/application/report/sle_svc_report.c",
   "$iotc_core_path/sle/application/sle_svc.c",
-  
 ]
 
 

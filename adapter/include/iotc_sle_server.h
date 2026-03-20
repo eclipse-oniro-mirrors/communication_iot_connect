@@ -33,13 +33,6 @@ extern "C" {
 #define IOTC_ADPT_SLE_LINK_KEY_LEN    16
 
 typedef enum {
-    IOTC_ADPT_SLE_STATUS_SUCCESS = 0,
-    IOTC_ADPT_SLE_STATUS_FAIL = 1
-} IotcAdptSleStatus;
-
-
-/* sle接口执行结果 */
-typedef enum {
     IOTC_ADPT_SLE_PAIR_NONE    = 0x01,    /*!< @if Eng Pair state of none
                                      @else   未配对状态 @endif */
     IOTC_ADPT_SLE_PAIR_PAIRING = 0x02,    /*!< @if Eng Pair state of pairing
@@ -495,13 +488,6 @@ typedef struct {
     uint8_t *value;
 } IotcAdptSleSendIndicateByUuidParam;
 
-/* 设置发现链接参数 */
-typedef struct {
-    bool isDiscover;
-    bool isConnect;
-    bool isBond;
-} IotcAdptSleConnectParam;
-
 typedef struct {
     uint16_t requestId;
     uint32_t status;
@@ -572,51 +558,6 @@ typedef struct {
     uint8_t *value;              /*!< @if Eng data.
                                       @else   数据。 @endif */
 } IotcAdptSleSsapsDescInfo;
-
-#define OH_SLE_SEEK_PHY_NUM_MAX 3
-typedef struct {
-    uint8_t ownaddrtype;                        /*!< @if Eng own address type
-                                                       @else   本端地址类型 @endif */
-    uint8_t filterduplicates;                    /*!< @if Eng duplicates filter
-                                                       @else   重复过滤开关，0：关闭，1：开启 @endif */
-    uint8_t seekfilterpolicy;                   /*!< @if Eng scan filter policy { @ref SleSeekFilterType }
-                                                       @else   扫描设备使用的过滤类型，
-                                                               { @ref SleSeekFilterType } @endif */
-    uint8_t seekphys;                            /*!< @if Eng scan PHY type { @ref SleSeekPhyType }
-                                                       @else   扫描设备所使用的PHY，{ @ref SleSeekPhyType }
-                                                       @endif */
-    uint8_t seekType[OH_SLE_SEEK_PHY_NUM_MAX];      /*!< @if Eng scan type { @ref sle_seek_scan_t }
-                                                       @else   扫描类型，{ @ref SleSeekType }
-                                                       @endif */
-    uint16_t seekInterval[OH_SLE_SEEK_PHY_NUM_MAX]; /*!< @if Eng scan interval
-                                                       @else   扫描间隔，取值范围[0x0004, 0xFFFF]，time = N * 0.125ms
-                                                       @endif */
-    uint16_t seekWindow[OH_SLE_SEEK_PHY_NUM_MAX];   /*!< @if Eng scan window
-                                                       @else   扫描窗口，取值范围[0x0004, 0xFFFF]，time = N * 0.125ms
-                                                       @endif */
-} IotcAdptSleSeekParam;
-
-
-typedef struct {
-    uint8_t  enableFilterPolicy;      /*!< @if Eng Whether the filtering function is enabled on the link
-                                             @else 链路是否打开过滤功能 @endif */
-    uint8_t  initiatePhys;             /*!< @if Eng Link scanning communication bandwidth: 1:1M, 2:2M
-                                             @else 链路扫描通信带宽： 1:1M, 2:2M @endif */
-    uint8_t  gtNegotiate;              /*!< @if Eng Whether G-T interaction is performed during link establishment
-                                             @else 链路建立时是否进行G和T交互 @endif */
-    uint16_t scanInterval;             /*!< @if Eng Interval for scanning the peer
-                                                     device during link establishment
-                                             @else 链路建立时扫描对端设备的interval @endif */
-    uint16_t scanWindow;               /*!< @if Eng Scans the Windows operating system of the
-                                                     peer device during link establishment.
-                                             @else 链路建立时扫描对端设备的windows @endif */
-    uint16_t minInterval;              /*!< @if Eng Minimum link scheduling interval
-                                             @else 链路调度最小interval @endif */
-    uint16_t maxInterval;              /*!< @if Eng Maximum link scheduling interval
-                                             @else 链路调度最大interval @endif */
-    uint16_t timeout;                   /*!< @if Eng Link Timeout Interval
-                                             @else 链路超时时间 @endif */
-} IotcAdptSleDefaultConnectParam;
 
 /**
  * @brief Initialize the Ssap server

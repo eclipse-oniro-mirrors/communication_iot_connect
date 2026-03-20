@@ -32,6 +32,12 @@ typedef struct {
     unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];
 } IotcAdptSleDeviceAddr;
 
+/* sle接口执行结果 */
+typedef enum {
+    IOTC_ADPT_SLE_STATUS_SUCCESS = 0,
+    IOTC_ADPT_SLE_STATUS_FAIL = 1
+} IotcAdptSleStatus;
+
 /**
  *  @brief  sle host state change callback
  *

@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "iotc_sle.h"
+#include "iotc_sle_server.h"
+#include "iotc_sle_announce.h"
+#include "iotc_sle_client.h"
 #include <time.h>
 #include <sched.h>
 #include <pthread.h>
@@ -26,19 +28,21 @@
 #include "sle_ssap_server_config.h"
 #include "sle_device_discovery.h"
 #include "sle_connection_manager.h"
+#include "sle_ssap_client.h"
 
 static bool g_isBond = false;
 static IotcAdptSleSsapCallback g_sleSsapEventHandler = NULL;
 static IotcAdptSleAnnounceSeekCallback g_sleAnnounceSeekEventHandler = NULL;
 static IotcAdptSleConnectionCallback g_sleConnectionEventHandler = NULL;
+static IotcAdptSleSsapClientCallback g_sleSsapClientEventHandler = NULL;
 
 static int32_t SleSetAnnounceData(uint8_t announceId, const IotcAdptSleAdvData *advData)
 {
     sle_announce_data_t data_sdk = {
         .announce_data_len = advData->announceDataLen,
         .seek_rsp_data_len = advData->seekRspDataLen,
-        .announce_data = advData->announceData,
-        .seek_rsp_data = advData->seekRspData,
+        .announce_data = (uint8_t *)advData->announceData,
+        .seek_rsp_data = (uint8_t *)advData->seekRspData,
     };
     return sle_set_announce_data(announceId, &data_sdk);
 }
@@ -85,6 +89,35 @@ static int32_t SleStopAnnounce(uint8_t announceId)
 static int32_t SsapsStartService(uint8_t serverId, uint16_t serviceHandle)
 {
     return ssaps_start_service(serverId, serviceHandle);
+}
+
+int32_t IotcInitSleAnnounceService(void)
+{
+    return IOTC_OK;
+}
+
+int32_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
+{
+    (void)callback;
+    return IOTC_OK;
+}
+
+int32_t IotcAddAnnounce(uint8_t *announceId)
+{
+    (void)announceId;
+    return IOTC_OK;
+}
+
+int32_t IotcInitSleSsapsService(void)
+{
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
+{
+    (void)svc;
+    (void)svcNum;
+    return IOTC_OK;
 }
 
 #define SLE_CONNECT_UPDATE_INTERVAL_HDI 20
@@ -624,6 +657,270 @@ static uint32_t SleDefaultConnectionParamSet(sle_default_connect_param_t *set_pa
     return ret;
 }
 
+
+void SsapcFindStructureCallback(uint8_t client_id, uint16_t conn_id,
+    ssapc_find_service_result_t *service, errcode_t status)
+{
+    if (service == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Find Structure cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcFindServiceResult.clientId = client_id;
+    param.ssapcFindServiceResult.connId = conn_id;
+    param.ssapcFindServiceResult.service.startHdl = service->starthdl;
+    param.ssapcFindServiceResult.service.endHdl = service->endhdl;
+    param.ssapcFindServiceResult.service.uuid.len = service->uuid.len;
+    (void)memcpy_s(param.ssapcFindServiceResult.service.uuid.id, SLE_UUID_LEN, service->uuid.uuid, SLE_ADDR_LEN);
+    param.ssapcFindServiceResult.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SLE_SSAPC_FIND_STRUCTURE_EVENT, &param);
+        IOTC_LOGD("Ssapc Find Structure cb:ret:%d", ret);
+    }
+}
+
+void SsapcFindPropertyCallback(uint8_t client_id, uint16_t conn_id,
+    ssapc_find_property_result_t *property, errcode_t status)
+{
+    if (property == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+
+    IOTC_LOGD("Ssapc Find Property cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcFindPropertyResult.clientId = client_id;
+    param.ssapcFindPropertyResult.connId = conn_id;
+    param.ssapcFindPropertyResult.property.handle = property->handle;
+    param.ssapcFindPropertyResult.property.operateIndication = property->operate_indication;
+    param.ssapcFindPropertyResult.property.uuid.len = property->uuid.len;
+    (void)memcpy_s(param.ssapcFindPropertyResult.property.uuid.id, SLE_UUID_LEN, property->uuid.uuid, SLE_ADDR_LEN);
+    if (property->descriptors_count > 0) {
+        param.ssapcFindPropertyResult.property.descriptorsCount = property->descriptors_count;
+        param.ssapcFindPropertyResult.property.descriptorsType = IotcMalloc(property->descriptors_count);
+        (void)memcpy_s(param.ssapcFindPropertyResult.property.descriptorsType, property->descriptors_count,
+            property->descriptors_type, property->descriptors_count);
+    }
+    param.ssapcFindPropertyResult.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SLE_SSAPC_FIND_PROPERTY_EVENT, &param);
+        IOTC_LOGD("Ssapc Find Property cb:ret:%d", ret);
+    }
+}
+
+void SsapcFindStructureCompleteCallback(uint8_t client_id, uint16_t conn_id,
+    ssapc_find_structure_result_t *structure_result, errcode_t status)
+{
+    if (structure_result == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Find Structure Complete cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcFindStructureResult.clientId = client_id;
+    param.ssapcFindStructureResult.connId = conn_id;
+    param.ssapcFindStructureResult.structureResult.type = structure_result->type;
+    param.ssapcFindStructureResult.structureResult.uuid.len = structure_result->uuid.len;
+    (void)memcpy_s(param.ssapcFindStructureResult.structureResult.uuid.id, SLE_UUID_LEN, structure_result->uuid.uuid,
+        SLE_ADDR_LEN);
+    param.ssapcFindStructureResult.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SLE_SSAPC_FIND_STRUCTURE_COMPLETE_EVENT, &param);
+        IOTC_LOGD("Ssapc Find Structure Complete cb:ret:%d", ret);
+    }
+}
+
+void SsapcReadCfmCallback(uint8_t client_id, uint16_t conn_id, ssapc_handle_value_t *read_data,
+    errcode_t status)
+{
+    if (read_data == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Read Cfm cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcHandleValue.clientId = client_id;
+    param.ssapcHandleValue.connId = conn_id;
+    param.ssapcHandleValue.readData.handle = read_data->handle;
+    param.ssapcHandleValue.readData.type = read_data->type;
+    if (read_data->data_len > 0) {
+        param.ssapcHandleValue.readData.dataLen = read_data->data_len;
+        param.ssapcHandleValue.readData.data = IotcMalloc(read_data->data_len);
+        (void)memcpy_s(param.ssapcHandleValue.readData.data, read_data->data_len, read_data->data, read_data->data_len);
+    }
+    param.ssapcHandleValue.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SLE_SSAPC_READ_CFM_EVENT, &param);
+        IOTC_LOGD("Ssapc Read Cfm Complete cb:ret:%d", ret);
+    }
+}
+
+void SsapcReadByUuidCompleteCallback(uint8_t client_id, uint16_t conn_id,
+    ssapc_read_by_uuid_cmp_result_t *cmp_result, errcode_t status)
+{
+    if (cmp_result == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Read By Uuid Complete cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcReadByUuidCmpResult.clientId = client_id;
+    param.ssapcReadByUuidCmpResult.connId = conn_id;
+    param.ssapcReadByUuidCmpResult.cmpResult.type = cmp_result->type;
+    param.ssapcReadByUuidCmpResult.cmpResult.uuid.len = cmp_result->uuid.len;
+    (void)memcpy_s(param.ssapcReadByUuidCmpResult.cmpResult.uuid.id, SLE_UUID_LEN, cmp_result->uuid.uuid, SLE_ADDR_LEN);
+    param.ssapcReadByUuidCmpResult.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SSAPC_READ_BY_UUID_COMPLETE_EVENT, &param);
+        IOTC_LOGD("Ssapc Read By Uuid Complete cb:ret:%d", ret);
+    }
+}
+
+void SsapcWriteCfmCallback(uint8_t client_id, uint16_t conn_id, ssapc_write_result_t *write_result,
+    errcode_t status)
+{
+    if (write_result == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Write Cfm cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcWriteResult.clientId = client_id;
+    param.ssapcWriteResult.connId = conn_id;
+    param.ssapcWriteResult.writeResult.type = write_result->type;
+    param.ssapcWriteResult.writeResult.handle = write_result->handle;
+    param.ssapcWriteResult.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SSAPC_WRITE_CFM_EVENT, &param);
+        IOTC_LOGD("Ssapc Write Cfm  cb:ret:%d", ret);
+    }
+}
+void SsapcExchangeInfoCallback(uint8_t client_id, uint16_t conn_id, ssap_exchange_info_t *exchange_info,
+    errcode_t status)
+{
+    if (exchange_info == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Exchange Info cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapExchangeInfo.clientId = client_id;
+    param.ssapExchangeInfo.connId = conn_id;
+    param.ssapExchangeInfo.exInfo.mtuSize = exchange_info->mtu_size;
+    param.ssapExchangeInfo.exInfo.version = exchange_info->version;
+    param.ssapExchangeInfo.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SSAPC_EXCHANGE_INFO_EVENT, &param);
+        IOTC_LOGD("Ssapc Exchange Info  cb:ret:%d", ret);
+    }
+}
+
+void SsapcNotificationCallback(uint8_t client_id, uint16_t conn_id, ssapc_handle_value_t *data,
+    errcode_t status)
+{
+    if (data == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Notification cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcNotification.clientId = client_id;
+    param.ssapcNotification.connId = conn_id;
+    param.ssapcNotification.data.handle = data->handle;
+    param.ssapcNotification.data.type = data->type;
+    if (data->data_len > 0) {
+        param.ssapcNotification.data.dataLen = data->data_len;
+        param.ssapcNotification.data.data = IotcMalloc(data->data_len);
+        (void)memcpy_s(param.ssapcNotification.data.data, data->data_len, data->data, data->data_len);
+    }
+    param.ssapcNotification.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SSAPC_NOTIFICATION_EVENT, &param);
+        IOTC_LOGD("Ssapc Notification Complete cb:ret:%d", ret);
+    }
+}
+void SsapcIndicationCallback(uint8_t client_id, uint16_t conn_id, ssapc_handle_value_t *data,
+    errcode_t status)
+{
+    if (data == NULL) {
+        IOTC_LOGE("invalid param");
+        return;
+    }
+    IOTC_LOGD("Ssapc Indication cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IotcAdptSleSsapClientEventParam param = {0};
+    (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
+    param.ssapcIndication.clientId = client_id;
+    param.ssapcIndication.connId = conn_id;
+    param.ssapcIndication.data.handle = data->handle;
+    param.ssapcIndication.data.type = data->type;
+    if (data->data_len > 0) {
+        param.ssapcIndication.data.dataLen = data->data_len;
+        param.ssapcIndication.data.data = IotcMalloc(data->data_len);
+        (void)memcpy_s(param.ssapcIndication.data.data, data->data_len, data->data, data->data_len);
+    }
+    param.ssapcIndication.status = OhosStatusToAdapterStatus(status);
+    if (g_sleSsapClientEventHandler != NULL) {
+        int32_t ret = g_sleSsapClientEventHandler(IOTC_ADPT_SSAPC_INDICATION_EVENT, &param);
+        IOTC_LOGD("Ssapc Indication Complete cb:ret:%d", ret);
+    }
+}
+
+static ssapc_callbacks_t g_SsapcCallbacks = {
+    .find_structure_cb = SsapcFindStructureCallback,
+    .ssapc_find_property_cbk = SsapcFindPropertyCallback,
+    .find_structure_cmp_cb = SsapcFindStructureCompleteCallback,
+    .read_cfm_cb = SsapcReadCfmCallback,
+    .read_by_uuid_cmp_cb = SsapcReadByUuidCompleteCallback,
+    .write_cfm_cb = SsapcWriteCfmCallback,
+    .exchange_info_cb = SsapcExchangeInfoCallback,
+    .notification_cb = SsapcNotificationCallback,
+    .indication_cb = SsapcIndicationCallback,
+};
+
+static int32_t SsapClientRegisterCallbacks(ssapc_callbacks_t *cb)
+{
+    return ssapc_register_callbacks(cb);
+}
+
+static int32_t SsapcRegister(sle_uuid_t *app_uuid, uint8_t *client_id)
+{
+    return ssapc_register_client(app_uuid, client_id);
+}
+
+static int32_t SsapcRegisterUnregister(uint8_t client_id)
+{
+    return ssapc_unregister_client(client_id);
+}
+
+static int32_t SsapcFindStructure(uint8_t client_id, uint16_t conn_id, ssapc_find_structure_param_t *param)
+{
+    return ssapc_find_structure(client_id, conn_id, param);
+}
+
+static int32_t SsapcReadReq(uint8_t client_id, uint16_t conn_id, uint16_t handle, uint8_t type)
+{
+    return ssapc_read_req(client_id, conn_id, handle, type);
+}
+
+static int32_t SsapcWriteReq(uint8_t client_id, uint16_t conn_id, ssapc_write_param_t *param)
+{
+    return ssapc_write_req(client_id, conn_id, param);
+}
+
+static int32_t SsapcExchangeInfoReq(uint8_t client_id, uint16_t conn_id, ssap_exchange_info_t* param)
+{
+    return ssapc_exchange_info_req(client_id, conn_id, param);
+}
+
 int32_t IotcInitSleHostService(void)
 {
     return IOTC_OK;
@@ -699,6 +996,124 @@ int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback c
     int32_t ret = ConnectionRegisterCallbacks(&g_SleConnectionCb);
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("register connection callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t IotcSleRegisterSsapClientCallbacks(const IotcAdptSleSsapClientCallback callback)
+{
+    if (callback == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    g_sleSsapClientEventHandler = callback;
+    int32_t ret = SsapClientRegisterCallbacks(&g_SsapcCallbacks);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register ssap client callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapcRegister(SleUuid *appUuid, uint8_t *clientId)
+{
+    if (appUuid == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    sle_uuid_t app_uuid = {0};
+    uint8_t client_id = 0;
+    (void)memset_s(&app_uuid, sizeof(app_uuid), 0, sizeof(sle_uuid_t));
+    app_uuid.len = appUuid->len;
+    (void)memcpy_s(app_uuid.uuid, SLE_UUID_LEN, appUuid->id, appUuid->len);
+    int32_t ret = SsapcRegister(&app_uuid, &client_id);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("Iotc Sle Ssapc Register ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    *clientId = client_id;
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapcRegisterUnregister(uint8_t clientId)
+{
+    int32_t ret = SsapcRegisterUnregister(clientId);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("Iotc Sle Ssapc Register Unregister ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapcFindStructure(uint8_t clientId, uint16_t connId, IotcAdptSsapcFindStructureParam *param)
+{
+    if (param == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    ssapc_find_structure_param_t ssapcFindParam = {0};
+    (void)memset_s(&ssapcFindParam, sizeof(ssapcFindParam), 0, sizeof(ssapc_find_structure_param_t));
+    ssapcFindParam.type = param->type;
+    ssapcFindParam.start_hdl = param->type;
+    ssapcFindParam.end_hdl = param->endHdl;
+    ssapcFindParam.uuid.len = param->uuid.len;
+    (void)memcpy_s(ssapcFindParam.uuid.uuid, SLE_UUID_LEN, param->uuid.id, param->uuid.len);
+    ssapcFindParam.reserve = param->reserve;
+    int32_t ret = SsapcFindStructure(clientId, connId, &ssapcFindParam);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("Iotc Sle Ssapc Find Structure ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapcReadReq(uint8_t clientId, uint16_t connId, uint16_t handle, uint8_t type)
+{
+    int32_t ret = SsapcReadReq(clientId, connId, handle, type);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("Iotc Sle Ssapc Read Req ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapcWriteReq(uint8_t clientId, uint16_t connId, IotcAdptSsapcWriteParam *param)
+{
+    if (param == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    ssapc_write_param_t writeParam = {0};
+    (void)memset_s(&writeParam, sizeof(writeParam), 0, sizeof(ssapc_write_param_t));
+    writeParam.handle = param->handle;
+    writeParam.type = param->type;
+    writeParam.data_len = param->dataLen;
+    writeParam.data = param->data;
+    int32_t ret = SsapcWriteReq(clientId, connId, &writeParam);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("Iotc Sle Ssapc Write Req ret=%d", ret);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t IotcSleSsapcExchangeInfoReq(uint8_t clientId, uint16_t connId, IotcAdptSsapExchangeInfo* param)
+{
+    if (param == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    ssap_exchange_info_t excInfo = {0};
+    (void)memset_s(&excInfo, sizeof(excInfo), 0, sizeof(ssap_exchange_info_t));
+    excInfo.mtu_size = param->mtuSize;
+    excInfo.version = param->version;
+    int32_t ret = SsapcExchangeInfoReq(clientId, connId, &excInfo);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("Iotc Sle Ssapc Exchange Info Req ret=%d", ret);
         return IOTC_ERROR;
     }
     return IOTC_OK;
