@@ -18,7 +18,6 @@
 #include "iotc_log.h"
 #include "iotc_mem.h"
 #include "utils_assert.h"
-#include "utils_list.h"
 #include "utils_mutex_global.h"
 #include "sle_sched_event.h"
 #include "utils_common.h"
@@ -27,6 +26,28 @@
 #include "sle_conn_event.h"
 #include "sle_ssapc_event.h"
 #include "iotc_sle_client.h"
+
+#define SLE_ADDR_STR_LEN    18
+#define SLE_ADDR_FORMAT_STR "%02x:%02x:%02x:%02x:%02x:%02x"
+
+typedef enum {
+    SLE_ADDR_BYTE_IDX_0 = 0,
+    SLE_ADDR_BYTE_IDX_1,
+    SLE_ADDR_BYTE_IDX_2,
+    SLE_ADDR_BYTE_IDX_3,
+    SLE_ADDR_BYTE_IDX_4,
+    SLE_ADDR_BYTE_IDX_5
+} SleAddrByteIdx;
+
+static inline void SleAddrToStr(const uint8_t *addr, char *buf, uint32_t bufLen)
+{
+    if (addr == NULL || buf == NULL || bufLen < SLE_ADDR_STR_LEN) {
+        return;
+    }
+    (void)snprintf_s(buf, bufLen, bufLen - 1, SLE_ADDR_FORMAT_STR,
+        addr[SLE_ADDR_BYTE_IDX_0], addr[SLE_ADDR_BYTE_IDX_1], addr[SLE_ADDR_BYTE_IDX_2],
+        addr[SLE_ADDR_BYTE_IDX_3], addr[SLE_ADDR_BYTE_IDX_4], addr[SLE_ADDR_BYTE_IDX_5]);
+}
 
 static SleSsapMgtApp g_SleSsapApp = {
     .peerDevInfo = NULL,
@@ -84,6 +105,17 @@ static void PrintSleSsapsCharList(IotcAdptSleSsapsChar *character, uint8_t num)
             num, i, character[i].charHandle, character[i].uuid,
             character[i].permission, character[i].property, character[i].descNum);
         PrintSleSsapCharDescList(character[i].desc, character[i].descNum);
+    }
+}
+
+void PrintSleSsapConnidAndAddr(void)
+{
+    ListEntry *item = NULL;
+    LIST_FOR_EACH_ITEM(item, &(g_SleSsapApp.peerDevInfo->node)) {
+        SlePeerDevInfo *node = CONTAINER_OF(item, SlePeerDevInfo, node);
+        char addrStr[SLE_ADDR_STR_LEN];
+        SleAddrToStr(node->devAddr.addr, addrStr, sizeof(addrStr));
+        IOTC_LOGI("[sle_ssap_mgt] connId:%u,addr: %s\r\n", node->connId, addrStr);
     }
 }
 
@@ -308,18 +340,55 @@ static int32_t SleSsapProfileSvcInit(void)
     return IOTC_OK;
 }
 
+
 static int32_t SleSsapPeerDevInfoInit(void)
 {
-    uint32_t mallocSize = SLE_DEFAULT_MAX_CONN_NUM * sizeof(SlePeerDevInfo);
-    SlePeerDevInfo *peerDevInfo = (SlePeerDevInfo *)IotcMalloc(mallocSize);
+    if (g_SleSsapApp.peerDevInfo == NULL) {
+        g_SleSsapApp.peerDevInfo = (SlePeerDevInfo *)IotcMalloc(sizeof(SlePeerDevInfo));
+        (void)memset_s(g_SleSsapApp.peerDevInfo, sizeof(SlePeerDevInfo), 0, sizeof(SlePeerDevInfo));
+        g_SleSsapApp.peerDevInfo->connId = SLE_CONN_HEAD_NODE; //头节点不存储任何信息
+        LIST_INIT(&(g_SleSsapApp.peerDevInfo->node));
+        return IOTC_OK;
+    }
+    return IOTC_ERR_ALREADY_INIT;
+}
+
+static SlePeerDevInfo *SleSsapPeerDevInfoCreateNode(uint32_t connId)
+{
+    SlePeerDevInfo *peerDevInfo = (SlePeerDevInfo *)IotcMalloc(sizeof(SlePeerDevInfo));
     if (peerDevInfo == NULL) {
         IOTC_LOGE("malloc");
-        return IOTC_ADAPTER_MEM_ERR_MALLOC;
+        return NULL;
     }
-    (void)memset_s(peerDevInfo, mallocSize, 0, mallocSize);
-    GetSleSsapMgtApp()->peerDevInfo = peerDevInfo;
+    (void)memset_s(peerDevInfo, sizeof(SlePeerDevInfo), 0, sizeof(SlePeerDevInfo));
+
+    peerDevInfo->connId = connId;
+    LIST_INSERT(&peerDevInfo->node, &g_SleSsapApp.peerDevInfo->node);
+    return peerDevInfo;
+}
+
+static SlePeerDevInfo *SleSsapPeerDevInfoFind(uint32_t connId)
+{
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, &g_SleSsapApp.peerDevInfo->node) {
+        SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
+        if (peerDevInfo->connId == connId) {
+            return peerDevInfo;
+        }
+    }
+    //如果没查找到对应的连接信息就创建一个节点存储， 如果有，就直接返回
+    return SleSsapPeerDevInfoCreateNode(connId);
+}
+
+
+int32_t SleSetServiceAtt(const uint32_t connId, const uint32_t startHdl, const uint32_t endHdl)
+{
+    SlePeerDevInfo *peerDevInfo = SleSsapPeerDevInfoFind(connId);
+    peerDevInfo->handler.startHdl = startHdl;
+    peerDevInfo->handler.endHdl = endHdl;
     return IOTC_OK;
 }
+
 
 int32_t SleSsapMgtInit(void)
 {
@@ -376,6 +445,30 @@ void SleSsapMgtDestroy(void)
         GetSleSsapMgtApp()->peerDevInfo = NULL;
     }
     DestroySleSsapSvcList();
+}
+
+int32_t DelSleSsapMgtPeerDevInfo(uint32_t connId)
+{
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, &g_SleSsapApp.peerDevInfo->node) {
+        SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
+        if (peerDevInfo->connId == connId) {
+            LIST_REMOVE(item);
+            IotcFree(peerDevInfo);
+            return IOTC_OK;
+        }
+    }
+    IOTC_LOGE("no find connId");
+    return IOTC_ERROR;
+}
+
+SlePeerDevInfo *GetSleSsapMgtPeerDevInfo(uint32_t connId)
+{
+    if (connId >= SLE_DEFAULT_MAX_CONN_NUM) {
+        IOTC_LOGE("invalid connId");
+        return NULL;
+    }
+    return SleSsapPeerDevInfoFind(connId);
 }
 
 SleSsapMgtApp *GetSleSsapMgtApp(void)
@@ -454,7 +547,8 @@ static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
     return NULL;
 }
 
-int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen)
+int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
+    uint32_t connId, const uint8_t *value, uint32_t valueLen)
 {
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
         IOTC_ERR_PARAM_INVALID, "invalid param");
@@ -476,12 +570,15 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
 
 void SleSsapDisconnectAll(void)
 {
-    SlePeerDevInfo *peerDevInfoList = GetSleSsapMgtApp()->peerDevInfo;
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->connNum; i++) {
-        int32_t ret = IotcSleDisconnectSsap(peerDevInfoList[i].peerAddr, IOTC_ADPT_SLE_ADDR_LEN);
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, &g_SleSsapApp.peerDevInfo->node) {
+        SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
+        int32_t ret = IotcSleDisconnectSsap(peerDevInfo->devAddr.addr, IOTC_ADPT_SLE_ADDR_LEN);
         if (ret != IOTC_OK) {
-            IOTC_LOGW("disconn with peer[%u] err", i);
+            continue;
         }
+        LIST_REMOVE(item);
+        IotcFree(peerDevInfo);
     }
 }
 
@@ -525,7 +622,7 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
         return IOTC_ERROR;
     }
     param.valueLen = IOTC_ADPT_SLE_SSAP_READ_BUF_SIZE;
-    ret = func(param.value, (uint32_t *)&param.valueLen);
+    ret = func(connId, param.value, (uint32_t *)&param.valueLen);
     if ((ret != IOTC_OK) || (param.valueLen == 0)) {
         IOTC_LOGE("read err ret=%d, len=%d", ret, param.valueLen);
         IotcFree(param.value);
@@ -553,23 +650,25 @@ int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
         IOTC_LOGE("no connect");
         return IOTC_CORE_SLE_NO_CONNECT;
     }
-    GetSleSsapMgtApp()->handle = handle;
-    GetSleSsapMgtApp()->serverId = serverId;
-    IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d,serviceId:%d,handle:%d", requestId, valueLen, serverId, handle);
-    IotcAdptSleResponseParam param;
-    int32_t ret = GetAttrHandleServerId(handle, &serverId);
+    GetSleSsapMgtApp()->handle = param->handle;
+    GetSleSsapMgtApp()->serverId = param->serverId;
+    IOTC_LOGI("SleSsapReqWrite requestId:%d,valuelen:%d,serviceId:%d,handle:%d",
+        param->requestId, param->valueLen, param->serverId, param->handle);
+    uint8_t serverId = param->serverId;
+    IotcAdptSleResponseParam rspParam;
+    int32_t ret = GetAttrHandleServerId(param->handle, &serverId);
     IOTC_LOGI("SleSsapReqWrite GetAttrHandleServerId:%d", ret);
-    param.requestId = requestId;
-    param.value = NULL;
-    param.valueLen = valueLen;
-    (void)IotcSleSendSsapsResponse(serverId, connectId, &param);
+    rspParam.requestId = param->requestId;
+    rspParam.value = NULL;
+    rspParam.valueLen = param->valueLen;
+    (void)IotcSleSendSsapsResponse(serverId, param->connectId, &rspParam);
 
-    IotcAdptSleSsapWriteFunc func = FindAttrHandleWriteFunc(handle);
+    IotcAdptSleSsapWriteFunc func = FindAttrHandleWriteFunc(param->handle);
     if (func == NULL) {
         IOTC_LOGE("no find write func");
         return IOTC_ERROR;
     }
-    ret = func(connectId, value, valueLen);
+    ret = func(param->connectId, param->value, param->valueLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;

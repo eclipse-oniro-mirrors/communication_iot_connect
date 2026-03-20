@@ -16,13 +16,13 @@
 #define SLE_SVC_CLEAR_DEV_REG_INFO_H
 
 #include <stdint.h>
-#include "ble_linklayer.h"
+#include "sle_linklayer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t PutSleSvcClearDevRegInfo(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
+int32_t PutSleSvcClearDevRegInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
 
 #ifdef __cplusplus
 }

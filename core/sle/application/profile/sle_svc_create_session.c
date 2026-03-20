@@ -177,7 +177,7 @@ static int32_t SleCreateSession(const uint8_t *in, uint8_t **out, uint32_t *outL
     return IOTC_OK;
 }
 
-int32_t GetSleSvcCreateSession(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t GetSleSvcCreateSession(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((param != NULL) && (param->request != NULL) && (param->requestLen != 0) &&
         (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");

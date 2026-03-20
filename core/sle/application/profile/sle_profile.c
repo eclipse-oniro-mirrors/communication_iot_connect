@@ -25,7 +25,7 @@
 #include "utils_assert.h"
 #include "iotc_json.h"
 #include "utils_common.h"
-#include "ble_linklayer.h"
+#include "sle_linklayer.h"
 #include "iotc_errcode.h"
 
 #define SLE_SVC_NET_CFG_VER_IDX 80
@@ -37,28 +37,29 @@
 #define SLE_SVC_CREATE_SESSION_IDX 84
 #define SLE_SVC_CUSTOM_SEC_DATA_IDX 79
 
-static const BtSvcInfo g_svcInfoTab[] = {
-    {.svcIdx = SLE_SVC_NET_CFG_VER_IDX, .service = SLE_SVC_NET_CFG_VER, .suppEncType = ENC_SUPP_PLAIN,
-        .getFunc = GetSleSvcNetCfgVer, .putFunc = NULL},
-    {.svcIdx = SLE_SVC_DEVICE_INFO_IDX, .service = SLE_SVC_DEVICE_INFO, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,
-        .getFunc = GetSleSvcDeviceInfo, .putFunc = NULL},
-    {.svcIdx = SLE_SVC_AUTH_SETUP_IDX, .service = SLE_SVC_AUTH_SETUP, .suppEncType = ENC_SUPP_SPEKE,
-        .getFunc = GetSleSvcAuthSetup, .putFunc = NULL},
-    {.svcIdx = SLE_SVC_CLEAR_REGINFO_IDX, .service = SLE_SVC_CLEAR_REGINFO, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,
-        .getFunc = NULL, .putFunc = PutSleSvcClearDevRegInfo},
-    {.svcIdx = SLE_SVC_SPEKE_IDX, .service = SLE_SVC_SPEKE, .suppEncType = ENC_SUPP_PLAIN,
-        .getFunc = NULL, .putFunc = PutSleSvcSpeke},
-    {.svcIdx = SLE_SVC_NETCFG_IDX, .service = SLE_SVC_NETCFG, .suppEncType = ENC_SUPP_SPEKE,
-        .getFunc = NULL, .putFunc = PutSleSvcNetCfg},
-    {.svcIdx = SLE_SVC_CREATE_SESSION_IDX, .service = SLE_SVC_CREATE_SESSION, .suppEncType = ENC_SUPP_PLAIN,
-        .getFunc = GetSleSvcCreateSession, .putFunc = NULL},
-    {.svcIdx = SLE_SVC_CUSTOM_SEC_DATA_IDX, .service = SLE_SVC_CUSTOM_SEC_DATA, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,
-        .getFunc = NULL, .putFunc = PutSleSvcCustomSecData},
+static const SleSvcInfo g_svcInfoTab[] = {
+    {.svcIdx = SLE_SVC_NET_CFG_VER_IDX, .service = SLE_SVC_NET_CFG_VER, .suppEncType = SLE_ENC_SUPP_PLAIN,
+        .getSleFunc = GetSleSvcNetCfgVer, .putSleFunc = NULL},
+    {.svcIdx = SLE_SVC_DEVICE_INFO_IDX, .service = SLE_SVC_DEVICE_INFO, .suppEncType = SLE_ENC_SUPP_SPEKE_SESSKEY,
+        .getSleFunc = GetSleSvcDeviceInfo, .putSleFunc = NULL},
+    {.svcIdx = SLE_SVC_AUTH_SETUP_IDX, .service = SLE_SVC_AUTH_SETUP, .suppEncType = SLE_ENC_SUPP_SPEKE,
+        .getSleFunc = GetSleSvcAuthSetup, .putSleFunc = NULL},
+    {.svcIdx = SLE_SVC_CLEAR_REGINFO_IDX, .service = SLE_SVC_CLEAR_REGINFO, .suppEncType = SLE_ENC_SUPP_SPEKE_SESSKEY,
+        .getSleFunc = NULL, .putSleFunc = PutSleSvcClearDevRegInfo},
+    {.svcIdx = SLE_SVC_SPEKE_IDX, .service = SLE_SVC_SPEKE, .suppEncType = SLE_ENC_SUPP_PLAIN,
+        .getSleFunc = NULL, .putSleFunc = PutSleSvcSpeke},
+    {.svcIdx = SLE_SVC_NETCFG_IDX, .service = SLE_SVC_NETCFG, .suppEncType = SLE_ENC_SUPP_SPEKE,
+        .getSleFunc = NULL, .putSleFunc = PutSleSvcNetCfg},
+    {.svcIdx = SLE_SVC_CREATE_SESSION_IDX, .service = SLE_SVC_CREATE_SESSION, .suppEncType = SLE_ENC_SUPP_PLAIN,
+        .getSleFunc = GetSleSvcCreateSession, .putSleFunc = NULL},
+    {.svcIdx = SLE_SVC_CUSTOM_SEC_DATA_IDX, .service = SLE_SVC_CUSTOM_SEC_DATA,
+        .suppEncType = SLE_ENC_SUPP_SPEKE_SESSKEY,
+        .getSleFunc = NULL, .putSleFunc = PutSleSvcCustomSecData},
 };
 
 int32_t SleProfileInit(void)
 {
-    int32_t ret = LinkLayerServiceRegister(g_svcInfoTab, ARRAY_SIZE(g_svcInfoTab));
+    int32_t ret = SleLinkLayerServiceRegister(g_svcInfoTab, ARRAY_SIZE(g_svcInfoTab));
     if (ret != IOTC_OK) {
         IOTC_LOGW("reg linklayer svc error %d", ret);
     }
@@ -67,5 +68,5 @@ int32_t SleProfileInit(void)
 
 void SleProfileDeinit(void)
 {
-    LinkLayerServiceRelease();
+    SleLinkLayerServiceRelease();
 }

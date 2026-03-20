@@ -12,21 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_DEVICE_INFO_H
-#define SLE_SVC_DEVICE_INFO_H
 
+#ifndef CLIENT_SLE_SPEKE_H
+#define CLIENT_SLE_SPEKE_H
 #include <stdint.h>
-#include "sle_linklayer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef enum {
+    IOTC_SLE_ADDRESS_TYPE_PUBLIC = 0,   /*!< @if Eng public address
+                                                @else   公有地址 @endif */
+    IOTC_SLE_ADDRESS_TYPE_RANDOM = 6,   /*!< @if Eng random address
+                                                @else   随机地址 @endif */
+} IotcSleAddrType;
 
-int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
+int32_t ClientSleSpekeStartSession(uint32_t connId);
+int32_t ClientSleSpekeProcessMsg(uint32_t connId);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_SVC_DEVICE_INFO_H */
+#endif

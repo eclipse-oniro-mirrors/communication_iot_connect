@@ -12,21 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_DEVICE_INFO_H
-#define SLE_SVC_DEVICE_INFO_H
+#ifndef SLE_LINKLAYER_ENCRYPT_SESSKEY_H
+#define SLE_LINKLAYER_ENCRYPT_SESSKEY_H
 
+#include <stdbool.h>
 #include <stdint.h>
-#include "sle_linklayer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
+int32_t SleLinkLayerSleSessKeyEncrypt(const uint8_t *data, uint32_t dataLen, uint8_t **outData, uint32_t *outDataLen);
+
+int32_t SleLinkLayerSleSessKeyDecrypt(uint8_t *data, uint32_t *dataLen);
+
+bool SleLinkLayerSessKeyExist(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_SVC_DEVICE_INFO_H */
+#endif /* SLE_LINKLAYER_ENCRYPT_SESSKEY_H */

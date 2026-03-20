@@ -17,6 +17,7 @@
 #include "iotc_sle_host.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
+#include "securec.h"
 
 int32_t IotcInitSleHostService(void)
 {
@@ -72,19 +73,22 @@ int32_t IotcSleSetSleName(const char *name, uint8_t len)
     return IOTC_OK;
 }
 
-IotcAdptSleDeviceAddr* IotcGetHostAddress(void)
+IotcAdptSleDeviceAddr *IotcGetHostAddress(void)
 {
-    SleDeviceAddress* sleAddr = (SleDeviceAddress*)malloc(sizeof(SleDeviceAddress));
+    SleDeviceAddress *sleAddr = (SleDeviceAddress *)malloc(sizeof(SleDeviceAddress));
     uint8_t ret = GetHostAddress(sleAddr);
     if (ret != IOTC_OK) {
         IOTC_LOGE("set name ret=%d", ret);
         free(sleAddr);
         return NULL;
     }
-    IotcAdptSleDeviceAddr* addr = (IotcAdptSleDeviceAddr*)malloc(sizeof(IotcAdptSleDeviceAddr));
+    IotcAdptSleDeviceAddr *addr = (IotcAdptSleDeviceAddr *)malloc(sizeof(IotcAdptSleDeviceAddr));
     if (memcpy_s(addr, sizeof(IotcAdptSleDeviceAddr), sleAddr, sizeof(IotcAdptSleDeviceAddr)) != EOK) {
+        free(addr);
+        free(sleAddr);
         return NULL;
     }
+    free(sleAddr);
     return addr;
 }
 
@@ -102,7 +106,7 @@ static SleHostCallbacks  g_host_cb = {
     .OnSleFlowMonitorEventCb = sleFlowMonitorEventCb,
 };
 
-int32_t IotcSleRegisterHostCallbacks()
+int32_t IotcSleRegisterHostCallbacks(void)
 {
     int32_t ret = RegisterHostCallbacks(&g_host_cb);
     if (!ret) {

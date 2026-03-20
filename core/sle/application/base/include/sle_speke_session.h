@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-int32_t CreateSleSpekeSess(void);
-SpekeSession *GetSleSpekeSess(void);
+int32_t CreateSleSpekeSess(SpekeType type, uint32_t connSessionId);
+SpekeSession *GetSleSpekeSess(uint32_t connSessionId);
 void DestroySleSpekeSess(void);
 int32_t GetSleSpekeErrCode(void);
 

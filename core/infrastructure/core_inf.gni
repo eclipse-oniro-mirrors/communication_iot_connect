@@ -39,6 +39,7 @@ iotc_core_infrastructure_src = [
   "$iotc_core_path/infrastructure/service/iotc_svc_dev.c",
   "$iotc_core_path/infrastructure/service/iotc_svc_conn.c",
   "$iotc_core_path/infrastructure/service/iotc_svc_ble.c",
+  "$iotc_core_path/infrastructure/service/iotc_svc_sle.c",
   "$iotc_core_path/infrastructure/frameworks/event_bus/event_bus.c",
   "$iotc_core_path/infrastructure/frameworks/event_bus/event_bus_public.c",
   "$iotc_core_path/infrastructure/frameworks/event_loop/event_loop.c",

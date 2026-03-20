@@ -12,21 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_DEVICE_INFO_H
-#define SLE_SVC_DEVICE_INFO_H
+#ifndef SLE_LINKLAYER_PROCESS_H
+#define SLE_LINKLAYER_PROCESS_H
 
 #include <stdint.h>
-#include "sle_linklayer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
+#define SLE_PKG_HEAD_LEN    7
+
+enum {
+    SLE_PKG_HEAD_TYPE_IDX = 0,
+    SLE_PKG_HEAD_TOKEN_IDX,
+    SLE_PKG_HEAD_PKGNUM_IDX,
+    SLE_PKG_HEAD_INDEX_IDX,
+    SLE_PKG_HEAD_RESERVED_IDX,
+    SLE_PKG_HEAD_ENCRYPT_TYPE_IDX,
+    SLE_PKG_HEAD_RET_IDX,
+};
+
+int32_t SleLinkLayerReportEncryptCmdData(uint32_t connId, const uint8_t *buff, uint32_t len);
+
+int32_t SleLinkLayerReportCmdData(uint32_t connId, const uint8_t *buff, uint32_t len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_SVC_DEVICE_INFO_H */
+#endif /* SLE_LINKLAYER_PROCESS_H */

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_DEVICE_INFO_H
-#define SLE_SVC_DEVICE_INFO_H
+#ifndef SLE_LINKLAYER_SERVICE_H
+#define SLE_LINKLAYER_SERVICE_H
 
 #include <stdint.h>
 #include "sle_linklayer.h"
@@ -22,11 +22,25 @@
 extern "C" {
 #endif
 
-int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
+#define SVC_TYPE_LEN    1
+#define SVC_LEN_LEN     1
+#define SVC_PAYLOAD_LEN_LEN     2
+
+
+typedef struct {
+    const uint8_t *buff;
+    uint32_t len;
+    SleLinkLayerEncryptType encryptType;
+    uint8_t **outBuff;
+    uint32_t *outLen;
+} SleLinkLayerProcessRspParam;
+
+int32_t SleLinkLayerProcessRspData(uint32_t connId, const SleLinkLayerProcessRspParam *param);
+
+int32_t DecodeCmdSleData(const uint8_t *buff, uint32_t len, SleCmdParam *cmdParam);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_SVC_DEVICE_INFO_H */
+#endif /* SLE_LINKLAYER_SERVICE_H */

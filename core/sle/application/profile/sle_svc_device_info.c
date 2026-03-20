@@ -73,6 +73,12 @@ static int32_t BuildVendor(IotcJson *root)
         IotcJsonDelete(devInfo);
         return ret;
     }
+    ret = IotcJsonAddStr2Obj(devInfo, STR_JSON_DEVID, "devId1234567890" /* h获取设备id */);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("add device id err ret=%d", ret);
+        IotcJsonDelete(devInfo);
+        return ret;
+    }
     ret = IotcJsonAddItem2Obj(root, STR_JSON_DEVICE_INFO, devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add device info err ret=%d", ret);
@@ -112,7 +118,39 @@ static int32_t BuildAll(IotcJson *root)
     return IOTC_OK;
 }
 
-int32_t GetSleSvcDeviceInfo(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen)
+{
+    CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
+    *out = NULL;
+    *outLen = 0;
+    IotcJson *root = IotcJsonCreate();
+    if (root == NULL) {
+        IOTC_LOGE("create err");
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+
+    int32_t ret;
+    do {
+        if (IotcJsonAddStr2Obj(root, STR_JSON_PRODUCT_ID, ModelGetDevProId()) != IOTC_OK) {
+            IOTC_LOGE("add prod id err");
+            return IOTC_ADAPTER_JSON_ERR_ADD;
+        }
+
+        char *outStr = UtilsJsonPrintByMalloc(root);
+        if (outStr == NULL) {
+            IOTC_LOGE("json print err");
+            ret = IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
+            break;
+        }
+        *out = (uint8_t *)outStr;
+        *outLen = strlen(outStr);
+        ret = IOTC_OK;
+    } while (false);
+    IotcJsonDelete(root);
+    return ret;
+}
+
+int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
     NOT_USED(param);
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");

@@ -49,7 +49,7 @@ static int32_t ClearRegInfo(char *in)
     return EventBusPublishAsync(IOTC_CORE_COMM_EVENT_MAIN_RESTORE, NULL, 0, NULL);
 }
 
-int32_t PutSleSvcClearDevRegInfo(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t PutSleSvcClearDevRegInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((param != NULL) && (param->request != NULL) && (param->requestLen != 0) &&
         (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");

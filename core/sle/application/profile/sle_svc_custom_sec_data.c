@@ -310,7 +310,7 @@ static int32_t PutCustomSecData(const char *jsonStr, uint8_t **out, uint32_t *ou
     return ret;
 }
 
-int32_t PutSleSvcCustomSecData(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t PutSleSvcCustomSecData(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((param != NULL) && (param->request != NULL) && (param->requestLen != 0) &&
         (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");

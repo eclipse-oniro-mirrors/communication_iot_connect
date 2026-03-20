@@ -25,8 +25,7 @@
 extern "C" {
 #endif
 
-/* 设备地址长度 */
-#define IOTC_ADPT_SLE_ADDR_LEN 6
+
 /* UUID最大长度 */
 #define IOTC_ADPT_SLE_UUID_MAX_LEN 16
 
@@ -129,6 +128,10 @@ typedef struct {
                                      @else 后发链路反馈类型指示，取值范围0-7。 @endif */
 } IotcAdptSleSetPhy;
 
+typedef struct {
+    uint8_t type;
+    unsigned char addr[IOTC_ADPT_SLE_ADDR_LEN];
+} IotcAdptSleAddr;
 /**
  * @if Eng
  * @brief Enum of sle ACB connection state.
@@ -296,7 +299,7 @@ typedef enum {
 typedef struct {
     uint8_t len;
     uint8_t uuid[16];
-} IotcSleUuidAddr;
+}IotcSleUuidAddr;
 
 typedef union {
     struct {
@@ -432,34 +435,35 @@ typedef union {
         uint32_t mtuSize;
         uint16_t version;
     } setMtu;
+
     /* 请求读 */
     struct  {
-    uint8_t serverId;
-    uint16_t connectId;
-    int16_t requestId;
-    uint16_t handle;
-    uint8_t type;
-    bool needRsp;
-    bool needAuthorize;
+        uint8_t serverId;
+        uint16_t connectId;
+        int16_t requestId;
+        uint16_t handle;
+        uint8_t type;
+        bool needRsp;
+        bool needAuthorize;
     } reqRead;
 
     /* 请求写 */
     struct  {
-    uint8_t serverId;
-    uint16_t connectId;
-    uint16_t requestId;
-    uint16_t handle;
-    uint8_t type;
-    bool needRsp;
-    bool needAuthorize;
-    uint16_t valueLen;
-    uint8_t *value;
+        uint8_t serverId;
+        uint16_t connectId;
+        uint16_t requestId;
+        uint16_t handle;
+        uint8_t type;
+        bool needRsp;
+        bool needAuthorize;
+        uint16_t valueLen;
+        uint8_t *value;
     } reqWrite;
 } IotcAdptSleSsapEventParam;
 
 #define IOTC_ADPT_SLE_SSAP_READ_BUF_SIZE 520
-typedef int32_t(*IotcAdptSleSsapReadFunc)(uint8_t *buff, uint32_t *len);
-typedef int32_t(*IotcAdptSleSsapWriteFunc)(uint8_t *buff, uint32_t len);
+typedef int32_t(*IotcAdptSleSsapReadFunc)(uint32_t connId, uint8_t *buff, uint32_t *len);
+typedef int32_t(*IotcAdptSleSsapWriteFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
 typedef int32_t(*IotcAdptSleSsapCallback)(IotcAdptSleSsapEvent event, const IotcAdptSleSsapEventParam *param);
 typedef int32_t(*IotcAdptSleAnnounceSeekCallback)(
     IotcAdptSleAnnounceSeekEvent event,
@@ -498,8 +502,8 @@ typedef struct {
 typedef struct {
     const char *uuid;
     uint32_t permission;
-    int32_t(*readFunc)(uint8_t *buff, uint32_t *len);
-    int32_t(*writeFunc)(uint8_t *buff, uint32_t len);
+    int32_t(*readFunc)(uint32_t connId, uint8_t *buff, uint32_t *len);
+    int32_t(*writeFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
     int32_t descHandle;
 } IotcAdptSleSsapCharDesc;
 
@@ -507,9 +511,9 @@ typedef struct {
     const char *uuid;
     uint32_t permission;
     uint32_t property;
-    int32_t(*readFunc)(uint8_t *buff, uint32_t *len);
-    int32_t(*writeFunc)(uint8_t *buff, uint32_t len);
-    int32_t(*indicateFunc)(uint8_t *buff, uint32_t len);
+    int32_t(*readFunc)(uint32_t connId, uint8_t *buff, uint32_t *len);
+    int32_t(*writeFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
+    int32_t(*indicateFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
     IotcAdptSleSsapCharDesc *desc;
     uint32_t descNum;
     int32_t charHandle;
@@ -659,17 +663,9 @@ int32_t IotcSleRegisterAnnounceSeekCallbacks(const IotcAdptSleAnnounceSeekCallba
 
 int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback callback);
 
-int32_t IotcSleSetSeekParam(const IotcAdptSleSeekParam *param);
-
 int32_t IotcSleStartSeek(void);
 
 int32_t IotcSleStoptSeek(void);
-
-int32_t IotcSleConnectRemoteDevice(const IotcAdptSleAddr *addr);
-
-int32_t IotcSleDisconnectRemoteDevice(const IotcAdptSleAddr *addr);
-
-int32_t IotcSleDefaultConnectionParamSet(const IotcAdptSleDefaultConnectParam *param);
 
 #ifdef __cplusplus
 }

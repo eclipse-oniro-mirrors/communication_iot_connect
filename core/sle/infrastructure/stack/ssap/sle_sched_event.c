@@ -51,12 +51,12 @@ static void SleEventConnectHandler(int32_t event, void *param)
         IOTC_LOGE("no init peer dev info");
         return;
     }
-    SlePeerDevInfo *peerDevInfoList = GetSleSsapMgtApp()->peerDevInfo;
+
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    peerDevInfoList[GetSleSsapMgtApp()->connNum].connId = eventParam->connSvc.connId;
-    peerDevInfoList[GetSleSsapMgtApp()->connNum].serverId = eventParam->connSvc.serverId;
-    if (memcpy_s(peerDevInfoList[GetSleSsapMgtApp()->connNum].peerAddr,
-        sizeof(peerDevInfoList[GetSleSsapMgtApp()->connNum].peerAddr),
+    SlePeerDevInfo *peerDevInfoList = GetSleSsapMgtPeerDevInfo(eventParam->connSvc.connId);
+    peerDevInfoList->connId = eventParam->connSvc.connId;
+    peerDevInfoList->serverId = eventParam->connSvc.serverId;
+    if (memcpy_s(peerDevInfoList->devAddr.addr, sizeof(peerDevInfoList->devAddr.addr),
         eventParam->connSvc.devAddr, sizeof(eventParam->connSvc.devAddr)) != EOK) {
         IOTC_LOGE("memepy");
         return;
@@ -72,7 +72,8 @@ static void SleEventSendIndicatetHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN(param != NULL);
     SleIndicateParam *indParam = (SleIndicateParam *)param;
-    int32_t ret = SleSendIndicateDataInner(indParam->svcUuid, indParam->charUuid, indParam->value, indParam->valueLen);
+    int32_t ret = SleSendIndicateDataInner(indParam->svcUuid, indParam->charUuid,
+        indParam->connId, indParam->value, indParam->valueLen);
     IOTC_LOGN("send indicate msg ret=%d, valueLen=%u", ret, indParam->valueLen);
 }
 
@@ -98,26 +99,18 @@ static void SleEventDisconnectHandler(int32_t event, void *param)
         IOTC_LOGE("connect num=%u", GetSleSsapMgtApp()->connNum);
         return;
     }
-    SlePeerDevInfo *peerDevInfoList = GetSleSsapMgtApp()->peerDevInfo;
+
     IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)param;
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->connNum; i++) {
-        if (peerDevInfoList[i].connId != eventParam->disconnSvc.connId) {
-            continue;
-        }
-        uint8_t maxIndex = GetSleSsapMgtApp()->connNum - 1;
-        for (uint8_t j = i; j < maxIndex; j++) {
-            if (memcpy_s(&peerDevInfoList[j], sizeof(SlePeerDevInfo),
-                &peerDevInfoList[j + 1], sizeof(SlePeerDevInfo)) != EOK) {
-                IOTC_LOGE("memcpy_s");
-                return;
-            }
-        }
-        (void)memset_s(&peerDevInfoList[maxIndex], sizeof(SlePeerDevInfo), 0, sizeof(SlePeerDevInfo));
-        GetSleSsapMgtApp()->connNum--;
-        break;
+
+    int32_t ret = DelSleSsapMgtPeerDevInfo(eventParam->disconnSvc.connId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("del peer dev info err %d", ret);
+        return;
     }
 
-    int32_t ret = SleAdvCtrlResume();
+    GetSleSsapMgtApp()->connNum--;
+
+    ret = SleAdvCtrlResume();
     if (ret != IOTC_OK) {
         IOTC_LOGE("start adv err %d", ret);
         return;
