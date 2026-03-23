@@ -24,7 +24,6 @@
 #include "sle_ssap_event.h"
 #include "sle_disc_event.h"
 #include "sle_conn_event.h"
-#include "sle_ssapc_event.h"
 #include "iotc_sle_client.h"
 
 #define SLE_ADDR_STR_LEN    18
@@ -407,21 +406,7 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("ssap event init err ret=%d", ret);
         return ret;
     }
-    ret = SleDiscEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle disc init err ret=%d", ret);
-        return ret;
-    }
-    ret = SleConnectionEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle conn init err ret=%d", ret);
-        return ret;
-    }
-    ret = SleSsapClinetEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle ssap client init err ret=%d", ret);
-        return ret;
-    }
+
     ret = SleSsapPeerDevInfoInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("ssap peer dev info init err ret=%d", ret);
@@ -565,6 +550,25 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
         return ret;
     }
 
+
+    SlePeerDevInfo * devInfo = GetSleSsapMgtPeerDevInfo(connId);
+    if (devInfo == NULL) {
+        IOTC_LOGE("no find peer dev info");
+        return IOTC_CORE_SLE_INVALID_CONNID;
+    }
+    if(devInfo->connState != IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED)
+    {
+        return IOTC_CORE_SLE_CONNECT_STATE_ERROR;
+    }
+    param.handle = (devInfo->handler.startHdl);
+    param.type   = devInfo->type;
+    param.value  = (uint8_t *)value;
+    param.valueLen = valueLen;
+    ret = IotcSleSendSsapsIndicate(devInfo->serverId, connId, &param);
+    if(ret != IOTC_OK)
+    {
+        IOTC_LOGE("send indicate msg err ret=%d", ret);
+    }
     return ret;
 }
 

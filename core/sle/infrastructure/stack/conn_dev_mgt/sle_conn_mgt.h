@@ -39,12 +39,13 @@ typedef struct { // 一个端侧生态设备 和云端进行控制交互，屏�
     char devId[DEVICE_ID_MAX_STR_LEN + 1];
     char secret[CLOUD_SECRET_MAX_STR_LEN + 1];
     UtilsFsm *fsmCtx; // 云端交互状态机
-    
+
     // 下面可以扩展具体SLE或BLE设备，以及设置一系列回调处理函数
     uint8_t type; // 端侧设备类型是SLE或BLE，后面根据类型做消息发布（发送）
 }M2mEndDeviceInfo;
 
 typedef struct {
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
     char sn[SLE_CONN_DEV_INFO_SN];
     char model[SLE_CONN_DEV_INFO_MODEL];
     char devType[SLE_CONN_DEV_INFO_DEV_TYPE];
@@ -61,6 +62,8 @@ void PrintSleConnDevList();
 bool IsExitSleConnDev(const uint16_t connID);
 
 void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo);
+SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId);
+int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info);
 
 #ifdef __cplusplus
 }

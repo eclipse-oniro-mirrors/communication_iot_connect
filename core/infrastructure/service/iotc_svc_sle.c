@@ -23,10 +23,20 @@ static const SleSvcApi *GetSleSvcApi(void)
     const SleSvcApi *sleApi = NULL;
     int32_t ret = ServiceProxyGetApiHandler(IOTC_SERVICE_ID_SLE, (const void **)&sleApi);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("get ble api error %d", ret);
+        IOTC_LOGW("get sle api error %d", ret);
         return NULL;
     }
     return sleApi;
+}
+
+int32_t SleSvcProxyStartSeek(void)
+{
+    const SleSvcApi *sleApi = GetSleSvcApi();
+    if (sleApi == NULL || sleApi->onStartScan == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return sleApi->onStartScan();
 }
 
 int32_t SleSvcProxyStartAdv(uint32_t ms)

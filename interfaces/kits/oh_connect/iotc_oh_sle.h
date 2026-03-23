@@ -24,11 +24,13 @@
 extern "C" {
 #endif
 
-typedef int32_t (*IotcRecvNetCfgInfoCallback)(const char *netInfo, uint32_t len);
+typedef int32_t (*IotcSleRecvNetCfgInfoCallback)(const char *netInfo, uint32_t len);
 
-typedef int32_t (*IotcRecvCustomSecDataCallback)(const uint8_t *data, uint32_t len);
+typedef int32_t (*IotcSleRecvCustomSecDataCallback)(const uint8_t *data, uint32_t len);
 
-IOTC_API_PUBLIC int32_t IotcOhSleEnable(uint8_t mode);
+IOTC_API_PUBLIC int32_t IotcOhSleEnable(void);
+
+IOTC_API_PUBLIC int32_t IotcOhSleStartSeek(void);
 
 IOTC_API_PUBLIC int32_t IotcOhSleDisable(void);
 

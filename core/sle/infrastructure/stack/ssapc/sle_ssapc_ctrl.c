@@ -42,7 +42,8 @@ int32_t SleCtrlSsapcReadReq(uint8_t clientId, uint16_t connId, uint16_t handle, 
 
 int32_t SleCtrlSsapcWriteReq(uint8_t clientId, uint16_t connId, IotcAdptSsapcWriteParam *param)
 {
-    return IotcSleSsapcWriteReq(clientId, connId, param);
+    // return IotcSleSsapcWriteReq(clientId, connId, param);
+    return 0;
 }
 
 int32_t SleCtrlSsapcExchangeInfoReq(uint8_t clientId, uint16_t connId, IotcAdptSsapExchangeInfo* param)

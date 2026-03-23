@@ -27,6 +27,13 @@
 
 static uint32_t g_sleConnDevListNum = 0;
 static ListEntry g_sleConnDevList = LIST_DECLARE_INIT(&g_sleConnDevList);
+static uint32_t g_sleDeviceInfoNum = 0;
+static ListEntry g_sleDeviceInfoList = LIST_DECLARE_INIT(&g_sleDeviceInfoList);
+typedef struct {
+    SleConnDeviceInfo info;
+    ListEntry node;
+} SlDeviceInfoNode;
+
 
 static void ReleaseStrings(uint8_t **strs)
 {
@@ -56,7 +63,7 @@ int32_t SleConnDevMgt(const SleConnRetDeviceInfo *retDev)
         IOTC_LOGE("conn status:[%u]", retDev->status);
         return IOTC_ERR_PARAM_INVALID;
     }
-    
+
     if(retDev->status == IOTC_CONN_SLE_STATE_DISCONNECTED) {
         SleDeleteConnDev(retDev->connID);
         IOTC_LOGI("delete connID:[%u]", retDev->connID);
@@ -67,7 +74,7 @@ int32_t SleConnDevMgt(const SleConnRetDeviceInfo *retDev)
     if(ret != IOTC_OK) {
         return ret;
     }
-    
+
     return IOTC_OK;
 }
 
@@ -108,6 +115,47 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
     UtilsGlobalMutexUnlock();
     return IOTC_OK;
 }
+
+SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId)
+{
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, &g_sleDeviceInfoList) {
+        SlDeviceInfoNode *node = CONTAINER_OF(item, SlDeviceInfoNode, node);
+        if(memcmp(node->info.devId, devId, strlen(devId)) == 0) {
+            return &node->info;
+        }
+    }
+    return NULL;
+}
+
+int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info)
+{
+    CHECK_RETURN_LOGW(info != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
+
+    ListEntry *item = NULL;
+    LIST_FOR_EACH_ITEM(item, &g_sleDeviceInfoList) {
+        SlDeviceInfoNode *node = CONTAINER_OF(item, SlDeviceInfoNode, node);
+        if(memcmp(node->info.devId, info->devId, DEVICE_ID_MAX_STR_LEN + 1) == 0) {
+            return true;
+        }
+    }
+
+    SlDeviceInfoNode *newNode = (SlDeviceInfoNode *)IotcMalloc(sizeof(SlDeviceInfoNode));
+    if (newNode == NULL) {
+        IOTC_LOGW("malloc error");
+        return IOTC_ADAPTER_MEM_ERR_MALLOC;
+    }
+    (void)memset_s(newNode, sizeof(SlDeviceInfoNode), 0, sizeof(SlDeviceInfoNode));
+    memcpy_s(&(newNode->info), sizeof(SleConnDeviceInfo), info, sizeof(SleConnDeviceInfo));
+
+    (void)UtilsGlobalMutexLock();
+    LIST_INSERT(&newNode->node, &g_sleDeviceInfoList);
+    g_sleDeviceInfoNum ++;
+    UtilsGlobalMutexUnlock();
+    return IOTC_OK;
+}
+
+
 
 void SleDeleteConnDev(uint16_t connID)
 {

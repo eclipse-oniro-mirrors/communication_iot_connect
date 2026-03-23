@@ -110,11 +110,12 @@ static void SleEventDisconnectHandler(int32_t event, void *param)
 
     GetSleSsapMgtApp()->connNum--;
 
-    ret = SleAdvCtrlResume();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("start adv err %d", ret);
-        return;
-    }
+    //开广播可以订阅IOTC_CORE_SLE_EVENT_SSAP_DISCONNECT 回调的时候在业务上调用，client不需要广播，这里有冲突
+    // ret = SleAdvCtrlResume();
+    // if (ret != IOTC_OK) {
+    //     IOTC_LOGE("start adv err %d", ret);
+    //     return;
+    // }
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAP_DISCONNECT, NULL, 0);
     IOTC_LOGN("disconnect success connNum=%u, connId=%u, reason=%d",
         GetSleSsapMgtApp()->connNum, eventParam->disconnSvc.connId, eventParam->disconnSvc.reason);
@@ -319,15 +320,25 @@ static void SleEventConnectStateChangeHandler(int32_t event, void *param)
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
 
-    if (GetSleSsapMgtApp()->connNum >= SLE_DEFAULT_MAX_CONN_NUM) {
-        IOTC_LOGE("connect num overflow=%u", GetSleSsapMgtApp()->connNum);
-        return;
-    }
-    if (eventParam->sleConnectStateChanged.connstate == IOTC_ADPT_SLE_ACB_STATE_CONNECTED) {
-        GetSleSsapMgtApp()->connNum++;
-    }
-    if (eventParam->sleConnectStateChanged.connstate == IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED) {
-        GetSleSsapMgtApp()->connNum--;
+     // 根据连接状态更新连接数
+     switch (eventParam->sleConnectStateChanged.conn_state) {
+        case IOTC_ADPT_SLE_ACB_STATE_CONNECTED:
+            if (GetSleSsapMgtApp()->connNum >= SLE_DEFAULT_MAX_CONN_NUM) {
+                IOTC_LOGE("Connection limit reached, cannot increment connNum");
+            } else {
+                GetSleSsapMgtApp()->connNum++;
+            }
+            break;
+        case IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED:
+            if (GetSleSsapMgtApp()->connNum > 0) {
+                GetSleSsapMgtApp()->connNum--;
+            } else {
+                IOTC_LOGE("Connection count already zero, cannot decrement connNum");
+            }
+            break;
+        default:
+            IOTC_LOGW("Unknown connection state: %d", eventParam->sleConnectStateChanged.conn_state);
+            break;
     }
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED, param, sizeof(eventParam->sleConnectStateChanged));
 }
@@ -455,6 +466,8 @@ static void SleSsapcNotificationEventHandler(int32_t event, void *param)
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+    IOTC_LOGI("SleSsapcNotificationEventHandler connid = %d\n", eventParam->ssapcNotification.connId);
+
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_NOTIFICATION, param, sizeof(eventParam->ssapcNotification));
 }
 

@@ -33,6 +33,7 @@ extern "C" {
 typedef struct {
     uint32_t    connId;
     uint32_t    serverId;
+    SleStateType    type;
     IotcAdptSleAcbState   connState;
     IotcAdptSleDeviceAddr devAddr;
     IotcAdptSsapcFindServiceResult handler;

@@ -174,6 +174,13 @@ typedef enum {
     IOTC_ADPT_SSAPC_NOTIFICATION_EVENT,
     IOTC_ADPT_SSAPC_INDICATION_EVENT
 } IotcAdptSleSsapClientEvent;
+
+typedef enum {
+    IOTC_SLE_SSAP_CONNECT_STATE_NONE          = 0x00,
+    IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED     = 0x01,
+    IOTC_SLE_SSAP_CONNECT_STATE_DISCONNECTED  = 0x02,
+} SleStateType;
+
 typedef int32_t(*IotcAdptSleSsapClientCallback)(IotcAdptSleSsapClientEvent event,
     const IotcAdptSleSsapClientEventParam *param);
 int32_t IotcSleConnectRemoteDevice(const IotcAdptSleDeviceAddr *addr);
@@ -188,9 +195,11 @@ int32_t IotcSleSsapcRegister(SleUuid *appUuid, uint8_t *clientId);
 int32_t IotcSleSsapcRegisterUnregister(uint8_t clientId);
 int32_t IotcSleSsapcFindStructure(uint8_t clientId, uint16_t connId, IotcAdptSsapcFindStructureParam *param);
 int32_t IotcSleSsapcReadReq(uint8_t clientId, uint16_t connId, uint16_t handle, uint8_t type);
-int32_t IotcSleSsapcWriteReq(uint8_t clientId, uint16_t connId, IotcAdptSsapcWriteParam *param);
+// int32_t IotcSleSsapcWriteReq(uint8_t clientId, uint16_t connId, IotcAdptSsapcWriteParam *param);
 int32_t IotcSleSsapcExchangeInfoReq(uint8_t clientId, uint16_t connId, IotcAdptSsapExchangeInfo* param);
 int32_t IotcSleRegisterSsapClientCallbacks(const IotcAdptSleSsapClientCallback callback);
+int32_t SlePairRemoteDevice(const IotcAdptSleDeviceAddr *addr);
+
 
 #ifdef __cplusplus
 }

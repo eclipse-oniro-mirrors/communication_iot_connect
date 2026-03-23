@@ -19,7 +19,7 @@
 #include "service_proxy.h"
 #include "iotc_errcode.h"
 #include "sle_svc_ctx.h"
-#include "sle_adv.h"
+// #include "sle_adv.h"
 #include "securec.h"
 #include "sle_ssap_data_svc.h"
 #include "sle_profile.h"
@@ -30,11 +30,12 @@
 #include "sle_ssap_mgt.h"
 #include "iotc_sle_host.h"
 #include "iotc_sle_server.h"
-#include "sle_adv_ctrl.h"
-#include "ble_linklayer.h"
+// #include "sle_adv_ctrl.h"
+#include "sle_linklayer.h"
 #include "sle_common.h"
 #include "sle_svc_netcfg_status.h"
 #include "iotc_mem.h"
+#include "sle_ssap_service.h"
 
 static const char *SLE_SERVICE_NAME = "SLE";
 
@@ -95,38 +96,13 @@ static void SleServiceStopInner(void)
     SleSessReset();
     SleProfileDeinit();
     SleStackDeinit();
-    LinkLayerClearAllCachePkg();
+    SleLinkLayerClearAllCachePkg();
     SleSvcCtx *ctx = GetSleSvcCtx();
     if (ctx->onFinish != NULL) {
         ctx->onFinish(ctx->instanceId);
     }
 }
 
-static int32_t SleAdvSvcInit(SleSvcCtx *ctx)
-{
-    int32_t ret = SleAdvInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("adv init error %d", ret);
-        return ret;
-    }
-
-    SleSetAdvType(ctx->initParam.advType);
-
-    if (ctx->initParam.onCustomAdv != NULL) {
-        ret = RegSleCustomAdvDataCb(ctx->initParam.onCustomAdv);
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("reg custom adv cb error %d", ret);
-            return ret;
-        }
-    }
-
-    ret = SleAdvCtrlStart(GetSleStartUpAdvTimeout());
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("start sle adv error %d", ret);
-        return ret;
-    }
-    return IOTC_OK;
-}
 
 static int32_t SleServiceInit(SleSvcCtx *ctx)
 {
@@ -149,9 +125,9 @@ static int32_t SleServiceInit(SleSvcCtx *ctx)
         return ret;
     }
 
-    ret = SleAdvSvcInit(ctx);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("adv init error %d", ret);
+    ret = SleSsapServiceSvcInit(ctx);
+    if(ret != IOTC_OK){
+        IOTC_LOGE("SleSsapServiceSvcInit err %d", ret);
         return ret;
     }
 
@@ -222,18 +198,6 @@ static int32_t SleServiceStop(int32_t instanceId, void *param)
     return IOTC_OK;
 }
 
-static int32_t SendCustomSecData(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
-{
-    CHECK_RETURN_LOGW(data != NULL || len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
-    return 0;
-}
-
-static int32_t IotcSleFindDeviceInfo(const char *devId, void **info)
-{
-    CHECK_RETURN_LOGW(devId == NULL || info != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    return IOTC_OK;
-}
-
 int32_t SleConnectServiceInit(void)
 {
     static const ServiceHandler SLE_SERVICE_HANDLER = {
@@ -248,12 +212,13 @@ int32_t SleConnectServiceInit(void)
     }
 
     static const SleSvcApi SLE_SERVICE_API = {
-        .onStartAdv = SleAdvCtrlStart,
-        .onStopAdv = SleAdvCtrlStop,
-        .onSetAdvType = SleSetAdvType,
-        .onSendCustomSecData = SendCustomSecData,
+        .onStartAdv = SleAdvServiceStart,
+        .onStopAdv = SleAdvServiceStop,
+        .onStartScan = SleScanServiceStart,
+        .onSetAdvType = SleAdvSetType,
+        .onSendCustomSecData = SleSendCustomSecDataService,
         .onSendIndicateData = IotcSleSendIndicateData,
-        .onFindDeviceInfo = IotcSleFindDeviceInfo,
+        .onFindDeviceInfo = IotcOhSleFindDeviceInfoService,
     };
 
     ServiceInstance instance = {
