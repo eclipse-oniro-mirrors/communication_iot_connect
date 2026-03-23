@@ -29,6 +29,7 @@
 #include "iotc_log.h"
 #include "securec.h"
 #include <stddef.h>
+#include "sle_conn_mgt.h"
 
 /* 部分星闪扫描参数 */
 #define IOTC_SLE_CLOSE_FILTER           0
@@ -187,6 +188,17 @@ static void SleClientConnectStateCallback(uint32_t event, void *param, uint32_t 
     info.version = SLE_DEFAULT_MTU_VERSION;
     if (IotcSleSsapcExchangeInfoReq(g_client_id, devInfo->connId, &info) != IOTC_OK) {
         IOTC_LOGE("[uuid client] %s: exchange info failed.", __func__);
+    }
+
+    SleConnRetDeviceInfo retDevInfo;
+    retDevInfo.connID = eventParam->sleConnectStateChanged.conn_id;
+    memset_s(retDevInfo.devAddr, IOTC_ADPT_SLE_ADDR_LEN, 0, IOTC_ADPT_SLE_ADDR_LEN);
+    memcpy_s(retDevInfo.devAddr, IOTC_ADPT_SLE_ADDR_LEN, eventParam->sleConnectStateChanged.addr.addr, sizeof(eventParam->sleConnectStateChanged.addr.addr));
+    retDevInfo.status = (uint16_t)eventParam->sleConnectStateChanged.conn_state;
+    
+    int32_t ret = SleConnDevMgt(&retDevInfo);
+    if(ret != IOTC_OK) {
+        IOTC_LOGE("sle conn dev mgt fail, %u", ret);
     }
 }
 

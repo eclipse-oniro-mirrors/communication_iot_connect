@@ -29,13 +29,15 @@ iotc_core_sle_inc = [
   "$iotc_core_path/sle/application/ssapc/include",
   "$iotc_core_path/sle/application/profile",
   "$iotc_core_path/sle/application/profile/include",
+  "$iotc_core_path/sle/application/profile",
   "$iotc_core_path/sle/application/report/include",
   "$iotc_core_path/sle/application/include",
   "$iotc_core_path/ble/application/adv/include",
   "$iotc_core_path/ble/infrastructure/utils/include",
   "$iotc_core_path/ble/infrastructure/linklayer/include",
   "$iotc_core_path/sle/infrastructure/linklayer",
-  "$iotc_core_path/sle/infrastructure/linklayer/include"
+  "$iotc_core_path/sle/infrastructure/linklayer/include",
+  "$iotc_core_path/sle/infrastructure/stack/conn_dev_mgt",
 ]
 
 iotc_core_sle_src = [
@@ -75,6 +77,7 @@ iotc_core_sle_src = [
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_recv.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_send.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_service.c",
+  "$iotc_core_path/sle/infrastructure/stack/conn_dev_mgt/sle_conn_mgt.c",
 
 ]
 
