@@ -29,9 +29,14 @@
 #include "m2m_cloud_dev_del.h"
 #include "m2m_cloud_revoke.h"
 #include "m2m_cloud_heartbeat.h"
+#include "m2m_cloud_psk.h"
+#include "m2m_cloud_authcode.h"
 #include "event_bus.h"
 #include "m2m_cloud_link.h"
 #include "securec.h"
+#include "service_proxy.h"
+#include "iotc_svc.h"
+#include "iotc_svc_ble.h"
 
 #define M2M_CLOUD_REGISTER_TIMEOUT_MS UTILS_MIN_TO_MS(1)
 
@@ -162,8 +167,63 @@ static int32_t CloudFsmConnectHandler(void *param, int32_t cur)
         return cur;
     }
 
-    return UTILS_IS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER) ?
-        M2M_CLOUD_FSM_STATE_REGISTER : M2M_CLOUD_FSM_STATE_LOGIN;
+    /* 此处发送CSM */
+    M2mCloudSendCSM(ctx);
+    return M2M_CLOUD_FSM_STATE_PSK;
+}
+
+static void M2mCloudPskRegRespHandler(const CoapPacket *resp,
+    const SocketAddr *addr, void *userData, bool timeout)
+{
+    NOT_USED(addr);
+    CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
+    M2mCloudContext *ctx = (M2mCloudContext *)userData;
+
+    if (ctx->stateManager.fsmCtx == NULL ||
+        ctx->stateManager.fsmCtx->cur != M2M_CLOUD_FSM_STATE_PSK_WAIT_RESP) {
+        IOTC_LOGW("recv psk resp invalid state %d", ctx->stateManager.fsmCtx->cur);
+        return;
+    }
+
+    if (timeout) {
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        IOTC_LOGW("psk wait resp timeout %d", timeout);
+        return;
+    }
+    CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
+
+    int32_t errcode;
+    int32_t ret = M2mCloudParsePskResponse(ctx, resp, &errcode);
+    if (ret != IOTC_OK) {
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        IOTC_LOGW("psk resp parse error %d", ret);
+        return;
+    }
+    /* 注册返回成功以后删除定时器 */
+    if (ctx->stateManager.regTimer >= 0) {
+        SchedTimerRemove(ctx->stateManager.regTimer);
+        ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+    ctx->pskInfo.pskFinish = 1;
+
+    CHANGE_FSM_TO(ctx, UTILS_IS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER) ?
+        M2M_CLOUD_FSM_STATE_REGISTER : M2M_CLOUD_FSM_STATE_LOGIN);
+}
+
+static int32_t CloudFsmPskHandler(void *param, int32_t cur)
+{
+    CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    M2mCloudContext *ctx = (M2mCloudContext *)param;
+
+    ctx->pskInfo.pskFinish = 0;
+    int32_t ret = M2mCloudSendRequest(ctx, M2mCloudPskRegRespHandler,
+        M2mCloudBuildPskRequest, M2mCloudGetPskOption());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("%s psk error %d", __func__, ret);
+        return M2M_CLOUD_FSM_STATE_CONNECT;
+    }
+
+    return M2M_CLOUD_FSM_STATE_PSK_WAIT_RESP;
 }
 
 static void M2mCloudRegisterRegRespHandler(const CoapPacket *resp,
@@ -205,6 +265,7 @@ static void M2mCloudRegisterRegRespHandler(const CoapPacket *resp,
             IOTC_LOGW("get login info error after reg");
             CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_EXIT);
         } else {
+            BleSvcProxyStopAdv();
             CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_LOGIN);
         }
     }
@@ -316,6 +377,64 @@ static int32_t CloudFsmRevokeHandler(void *param, int32_t cur)
     return M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP;
 }
 
+static void M2mCloudAuthCodeRegRespHandler(const CoapPacket *resp,
+    const SocketAddr *addr, void *userData, bool timeout)
+{
+    NOT_USED(addr);
+    CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
+    M2mCloudContext *ctx = (M2mCloudContext *)userData;
+
+    if (ctx->stateManager.fsmCtx == NULL ||
+        ctx->stateManager.fsmCtx->cur != M2M_CLOUD_FSM_STATE_AUTHCODE_WAIT_RESP) {
+        IOTC_LOGW("recv psk resp invalid state %d", ctx->stateManager.fsmCtx->cur);
+        return;
+    }
+
+    if (timeout) {
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        IOTC_LOGW("authcode wait resp timeout");
+        return;
+    }
+    CHECK_V_RETURN_LOGW(resp != NULL, "param invalid");
+
+    int32_t errcode;
+
+    int32_t ret = M2mCloudParseAuthCodeResponse(ctx, resp, &errcode);
+    if (ret != IOTC_OK) {
+        CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        IOTC_LOGW("authcode resp parse error %d", ret);
+        return;
+    }
+
+    CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ONLINE);
+    EventBusPublishSync(IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_REGISTERED, NULL, 0);
+
+    /* 获取AUTHCODE后开启本地控 */
+    ret = ServiceProxyStartService(IOTC_SERVICE_ID_LOCAL_CONTROL, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("start local control service error %d", ret);
+    }
+    ret = ServiceProxyStartService(IOTC_SERVICE_ID_LAN_SEARCH, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("start lan search error %d", ret);
+    }
+}
+
+static int32_t CloudFsmAuthCodeHandler(void *param, int32_t cur)
+{
+    CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    M2mCloudContext *ctx = (M2mCloudContext *)param;
+
+    int32_t ret = M2mCloudSendRequest(ctx, M2mCloudAuthCodeRegRespHandler,
+        M2mCloudBuildAuthCodeRequest, M2mCloudGetAuthCodeOption());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("%s authcode error %d", __func__, ret);
+        return M2M_CLOUD_FSM_STATE_CONNECT;
+    }
+
+    return M2M_CLOUD_FSM_STATE_AUTHCODE_WAIT_RESP;
+}
+
 static void CloudDevInfoSyncRespHandler(const CoapPacket *resp, const SocketAddr *addr, void *userData, bool timeout)
 {
     NOT_USED(addr);
@@ -344,7 +463,7 @@ static void CloudDevInfoSyncRespHandler(const CoapPacket *resp, const SocketAddr
         return;
     }
     DevSvcProxySetOnlineStatus(true);
-    CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ONLINE);
+    CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_AUTHCODE);
     EventBusPublishSync(IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE, NULL, 0);
 }
 
@@ -369,10 +488,14 @@ static UtilsFsm *GetM2mCloudFsm(void)
         { M2M_CLOUD_FSM_STATE_INIT, CloudFsmInitHandler },
         { M2M_CLOUD_FSM_STATE_CREATE_LINK, CloudFsmCreateLinkHandler },
         { M2M_CLOUD_FSM_STATE_CONNECT, CloudFsmConnectHandler },
+        { M2M_CLOUD_FSM_STATE_PSK, CloudFsmPskHandler },
+        { M2M_CLOUD_FSM_STATE_PSK_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_REGISTER, CloudFsmRegisterHandler },
         { M2M_CLOUD_FSM_STATE_REGISTER_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_LOGIN, CloudFsmLoginHandler },
         { M2M_CLOUD_FSM_STATE_LOGIN_WAIT_RESP, UtilsFsmStateSelfCirculation },
+        { M2M_CLOUD_FSM_STATE_AUTHCODE, CloudFsmAuthCodeHandler },
+        { M2M_CLOUD_FSM_STATE_AUTHCODE_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_REVOKE, CloudFsmRevokeHandler },
         { M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC, CloudFsmDevInfoSyncHandler },
@@ -429,9 +552,5 @@ void M2mCloudFsmDeinit(M2mCloudContext *ctx)
     if (ctx->stateManager.hbTimer >= 0) {
         SchedTimerRemove(ctx->stateManager.hbTimer);
         ctx->stateManager.hbTimer = EVENT_SOURCE_INVALID_TIMER_FD;
-    }
-    if (ctx->stateManager.regTimer >= 0) {
-        SchedTimerRemove(ctx->stateManager.regTimer);
-        ctx->stateManager.regTimer = EVENT_SOURCE_INVALID_TIMER_FD;
     }
 }

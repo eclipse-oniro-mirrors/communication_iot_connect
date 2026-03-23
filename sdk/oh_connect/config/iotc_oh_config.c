@@ -47,6 +47,9 @@ int32_t IotcOhStoreDataInit(void)
         .onGetValueLen = IotcKvGetLen,
         .onDelValue = IotcKvDelValue,
     };
+    if (storePath[0] == '\0') {
+        strcpy_s(storePath, sizeof(storePath), SDK_CONFIG_PATH);
+    }
     ret = SecurityStoreInit(storePath, &callbacks);
     if (ret != IOTC_OK) {
         IOTC_LOGW("utils store init error %d", ret);

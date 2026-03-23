@@ -646,7 +646,7 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
 
 int32_t SleSsapReqWrite(const SleSsapWriteParam *param)
 {
-    if ((GetSleSsapMgtApp()->connNum == 0)) {
+    if (GetSleSsapMgtApp()->connNum == 0) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_SLE_NO_CONNECT;
     }

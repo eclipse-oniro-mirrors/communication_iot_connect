@@ -547,6 +547,9 @@ int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
 
 void BleGattDisconnectAll(void)
 {
+    if (GetBleGattMgtApp()->peerDevInfo == NULL) {
+        return ;
+    }
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
     for (uint32_t i = 0; i < GetBleGattMgtApp()->connNum; i++) {
         int32_t ret = IotcBleDisconnectGatt(peerDevInfoList[i].peerAddr,

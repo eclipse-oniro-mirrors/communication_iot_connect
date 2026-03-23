@@ -36,6 +36,7 @@
 #include "iotc_event_inner.h"
 #include "iotc_svc_conn.h"
 #include "service_proxy.h"
+#include "wifi_device.h"
 
 static int32_t StartWifiSoftapSvc(void)
 {
@@ -85,26 +86,12 @@ static void EventBusStartWifiSvcCallback(uint32_t event, void *param, uint32_t l
         return;
     }
 
-#if IOTC_CONF_AILIFE_SUPPORT
     ret = ServiceProxyStartService(IOTC_SERVICE_ID_M2M_CLOUD, NULL);
+    IOTC_LOGI("start cloud error %d", ret);
     if (ret != IOTC_OK) {
         IOTC_LOGE("start cloud error %d", ret);
         return;
     }
-#else
-    ret = ServiceProxyStartService(IOTC_SERVICE_ID_LOCAL_CONTROL, NULL);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("start local control service error %d", ret);
-        return;
-    }
-
-    ret = ServiceProxyStartService(IOTC_SERVICE_ID_LAN_SEARCH, NULL);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("start lan search error %d", ret);
-        return;
-    }
-#endif
-
     return;
 }
 
@@ -207,6 +194,13 @@ int32_t IotcOhWifiEnable(void)
 {
     IOTC_LOGN("iotc oh wifi enable");
     CHECK_MAIN_RUNNING_RETURN();
+
+    if (IsWifiActive() != WIFI_STA_ACTIVE) {
+        if (EnableWifi() != WIFI_SUCCESS) {
+            IOTC_LOGE("enable wifi fail");
+            return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
+        }
+    }
 
     int32_t ret = IotcOhOptionRegister(WIFI_OPTION_TABLE, ARRAY_SIZE(WIFI_OPTION_TABLE));
     if (ret != IOTC_OK) {

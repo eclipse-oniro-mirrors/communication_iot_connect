@@ -83,6 +83,7 @@ struct CoapEndpoint {
 
 int32_t CoapEndpointSendPacket(CoapEndpoint *endpoint, const CoapBuildPacket *buildPkt,
     CoapPacket *pkt, uint32_t preSize, const SocketAddr *addr);
+int32_t CoapEndpointSendCSM(CoapEndpoint *endpoint, CoapPacket *pkt, const SocketAddr *addr);
 
 int32_t CoapEndpointClientInit(CoapEndpointClient *cli);
 

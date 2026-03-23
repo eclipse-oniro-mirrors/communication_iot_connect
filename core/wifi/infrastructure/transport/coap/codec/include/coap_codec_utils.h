@@ -35,6 +35,7 @@ void CoapUtilsDumpPacket(const CoapPacket *pkt);
 #endif
 
 int32_t CoapUtilsReplacePayload(CoapPacket *pkt, CoapBuffer *buf, const CoapData *payload);
+int32_t CoapUtilsAddPayload(CoapPacket *pkt, CoapBuffer *buf, const CoapData *payload);
 
 const CoapOption *CoapUtilsFindOption(const CoapPacket *pkt, CoapOptionType option, uint32_t *seg);
 

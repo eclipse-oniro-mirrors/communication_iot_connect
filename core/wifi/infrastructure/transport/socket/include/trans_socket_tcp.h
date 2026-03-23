@@ -12,38 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef M2M_CLOUD_SEND_H
-#define M2M_CLOUD_SEND_H
-#include <stdint.h>
-#include "coap_endpoint_client.h"
-#include "utils_json.h"
-#include "m2m_cloud_ctx.h"
+#ifndef TRANS_SOCKET_TCP_H
+#define TRANS_SOCKET_TCP_H
+
+#include "trans_socket.h"
+#include "iotc_tcp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef enum {
-    CLOUD_OPTION_BIT_ACCESS_TOKEN_ID = 0,
-    CLOUD_OPTION_BIT_REQ_ID,
-    CLOUD_OPTION_BIT_DEV_ID,
-    CLOUD_OPTION_BIT_SEQ_NUM_ID,
-} CloudOptionBitMap;
-
 typedef struct {
-    const char **uri;
-    uint32_t num;
-    uint8_t opBitMap;
-} CloudOption;
+    /* name应为常量字符 */
+    const char *name;
+    int32_t (*onUpdateRemainLen)(const uint8_t *packet, uint32_t curLen, uint32_t *remain);
+    IotcTcpHost host;
+} SocketTcpInitParam;
 
-typedef IotcJson *(*M2mBuildRequest)(M2mCloudContext *ctx);
-
-int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
-    M2mBuildRequest build, const CloudOption *option);
-int32_t M2mCloudSendCSM(M2mCloudContext *ctx);
+TransSocket *TransSocketTcpNew(const SocketTcpInitParam *init);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* M2M_CLOUD_SEND_H */
+#endif

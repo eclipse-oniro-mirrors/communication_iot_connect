@@ -26,6 +26,8 @@ void LocalCtlCoapSearchHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
 void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData);
 
 void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData);
+void LocalCtlSvcCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData);
+void LocalCtlSvcGetCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData);
 
 #ifdef __cplusplus
 }

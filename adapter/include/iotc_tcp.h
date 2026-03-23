@@ -12,38 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef M2M_CLOUD_SEND_H
-#define M2M_CLOUD_SEND_H
+#ifndef IOTC_TCP_H
+#define IOTC_TCP_H
+
 #include <stdint.h>
-#include "coap_endpoint_client.h"
-#include "utils_json.h"
-#include "m2m_cloud_ctx.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef enum {
-    CLOUD_OPTION_BIT_ACCESS_TOKEN_ID = 0,
-    CLOUD_OPTION_BIT_REQ_ID,
-    CLOUD_OPTION_BIT_DEV_ID,
-    CLOUD_OPTION_BIT_SEQ_NUM_ID,
-} CloudOptionBitMap;
-
+/** tcp host配置参数 */
 typedef struct {
-    const char **uri;
-    uint32_t num;
-    uint8_t opBitMap;
-} CloudOption;
+    const char *hostname; /**< 对端域名 */
+    uint16_t port;        /**< 对端端口 */
+} IotcTcpHost;
 
-typedef IotcJson *(*M2mBuildRequest)(M2mCloudContext *ctx);
-
-int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
-    M2mBuildRequest build, const CloudOption *option);
-int32_t M2mCloudSendCSM(M2mCloudContext *ctx);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* M2M_CLOUD_SEND_H */
+#endif /* IOTC_TCP_H */

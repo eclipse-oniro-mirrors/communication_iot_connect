@@ -68,7 +68,6 @@ iotc_core_sle_src = [
   "$iotc_core_path/sle/application/report/sle_svc_netcfg_status.c",
   "$iotc_core_path/sle/application/report/sle_svc_report.c",
   "$iotc_core_path/sle/application/sle_svc.c",
-  "$iotc_core_path/sle/application/ssapc/sle_client_event_service.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_encrypt_speke.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_encrypt_sesskey.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_encrypt.c",
@@ -114,7 +113,7 @@ if (!defined(ohos_lite)) {
   ]
 }
 
-if (!iot_connect_feature_ble_support) {
+if(!iot_connect_ble_support){
   #  from BLE
   iotc_core_sle_src += [
     "$iotc_core_path/ble/infrastructure/linklayer/linklayer_encrypt.c",

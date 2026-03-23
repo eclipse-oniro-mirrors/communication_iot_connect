@@ -248,6 +248,25 @@ int32_t CoapUtilsReplacePayload(CoapPacket *pkt, CoapBuffer *buf, const CoapData
     return IOTC_OK;
 }
 
+int32_t CoapUtilsAddPayload(CoapPacket *pkt, CoapBuffer *buf, const CoapData *payload)
+{
+    CHECK_RETURN_LOGW(pkt != NULL && buf != NULL && buf->size != 0 && payload != NULL && payload->data != NULL &&
+        payload->len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    const uint8_t *payloadPoint = pkt->payload.data;
+    /* payload指针应该指向buffer内 */
+    if (payloadPoint < buf->buffer || payloadPoint > buf->buffer + buf->size) {
+        IOTC_LOGW("payload not in buffer");
+        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_PAYLOAD_INVALID;
+    }
+    memcpy_s((void *)&payloadPoint[pkt->payload.len], payload->len, payload->data, payload->len);
+    buf->len += payload->len;
+    buf->buffer[buf->len] = '\0';
+    pkt->payload.len = buf->len;
+
+    return IOTC_OK;
+}
+
 const CoapOption *CoapUtilsFindOption(const CoapPacket *pkt, CoapOptionType option, uint32_t *seg)
 {
     CHECK_RETURN_LOGW(pkt != NULL && seg != NULL, NULL, "param invalid");

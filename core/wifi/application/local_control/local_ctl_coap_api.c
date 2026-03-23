@@ -28,6 +28,11 @@
 #include "securec.h"
 #include "seq_num_utils.h"
 #include "local_ctl_report.h"
+#include "m2m_cloud_ctx.h"
+#include "iotc_kdf.h"
+#include "security_random.h"
+#include "iotc_aes.h"
+#include "m2m_cloud_ctx.h"
 
 #define LOCAL_CONTROL_SEQ_WINDOW 30
 
@@ -37,6 +42,11 @@ typedef enum {
     LOCAL_MODE_AES_GCM,
 } LocalMode;
 
+uint8_t localCtlSn1[SESS_SN_LEN] = {0};
+uint8_t localCtlKey[HEXIFY_LEN(SESS_SN_LEN)];
+int32_t localCtlSessKeyGen(M2mCloudContext *ctx, const uint8_t *sn1, uint32_t sn1Len,
+    const uint8_t *sn2, uint32_t sn2Len);
+
 static IotcJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const LocalControlClient *client)
 {
     IotcJson *jsonObj = UtilsJsonCreateErrcode(0);
@@ -45,9 +55,17 @@ static IotcJson *CreateLocalSearchRespJson(const DevAuthInfo *authInfo, const Lo
         return NULL;
     }
 
+    M2mCloudContext *ctx = GetM2mCloudCtx();
+    char authcodeIdStr[HEXIFY_LEN(SESSION_AUTHCODE_LEN + 1) + 1] = {0};
+
+    if (ctx != NULL) {
+        UtilsHexify(ctx->authCodeInfo.authCodeId, sizeof(ctx->authCodeInfo.authCodeId),
+            authcodeIdStr, sizeof(authcodeIdStr));
+    }
+    
     UtilsJsonStrItem strTable[] = {
         { STR_JSON_DEVID, authInfo->devId },
-        { STR_JSON_AUTHCODE_ID, authInfo->authCodeId },
+        { STR_JSON_AUTHCODE_ID, authcodeIdStr },
         { STR_JSON_SESS_ID, client == NULL ? "" : client->sessInfo.sessId },
     };
 
@@ -235,6 +253,7 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
 
     uint32_t seg = 0;
+    M2mCloudContext *ctx = GetM2mCloudCtx();
     const CoapOption *puuidOption = CoapUtilsFindOption(req, COAP_OPTION_TYPE_PUUID, &seg);
     if (!LocalCtlPuuidOptionCheck(puuidOption, seg)) {
         IOTC_LOGW("invalid mngr packet");
@@ -252,6 +271,14 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
         return;
     }
 
+    // sn1
+    const char *sn1Hex = IotcJsonGetStr(IotcJsonGetObj(reqJson, STR_JSON_SN1));
+    if (sn1Hex == NULL) {
+        IOTC_LOGW("json sn1 invalid");
+    }
+
+    UtilsUnhexify(sn1Hex, strlen(sn1Hex), localCtlSn1, sizeof(localCtlSn1));
+
     uint8_t sn2[SESS_SN_LEN] = {0};
     (void)SecurityRandom(sn2, SESS_SN_LEN);
     LocalControlClient *client = CreateLocalCtlClient(userData, puuidOption, addr->addr, reqJson, sn2);
@@ -261,6 +288,8 @@ void LocalCtlCoapSessMngrHandler(CoapEndpoint *endpoint, const CoapPacket *req, 
         IOTC_LOGW("create client error");
         return;
     }
+
+    localCtlSessKeyGen(ctx, localCtlSn1, sizeof(localCtlSn1), sn2, sizeof(sn2));
 
     IotcJson *respJson = CreateSessMngrRespJson(client, sn2);
     if (respJson == NULL) {
@@ -334,6 +363,70 @@ static void LocalCtrlMsgReportAfterGetCmd(const IotcJson *dataArray,
     return;
 }
 
+static int32_t GetStrFromOption(const CoapPacket *req, char *data, uint32_t dataLen, CoapOptionType type)
+{
+    uint32_t seg = 0;
+    const CoapOption *uriOption = CoapUtilsFindOption(req, type, &seg);
+    if (uriOption == NULL || seg != 1 || uriOption->value.data == NULL || uriOption->value.len == 0) {
+        IOTC_LOGW("invalid e2e packet");
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPTION;
+    }
+
+    if (strncpy_s(data, dataLen, (const char *)uriOption->value.data, uriOption->value.len) != EOK) {
+        IOTC_LOGW("strcpy error %u", uriOption->value.len);
+        return IOTC_ERR_SECUREC_STRCPY;
+    }
+
+    return IOTC_OK;
+}
+
+static IotcJson *ParseE2eCtlMsg(const CoapPacket *req)
+{
+    char svcId[IOTC_SVC_ID_STR_MAX_LEN] = {0};
+    int32_t ret = GetStrFromOption(req, svcId, sizeof(svcId), COAP_OPTION_TYPE_URI_PATH);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("Get svcId error %d", ret);
+        return NULL;
+    }
+    IotcJson *array = IotcJsonCreateArray();
+    if (array == NULL) {
+        IOTC_LOGW("create array error %d", ret);
+        return NULL;
+    }
+    do {
+        IotcJson *payloadObj = IotcJsonCreate();
+        if (payloadObj == NULL) {
+            IOTC_LOGW("add data error");
+            break;
+        }
+        if (req->header.code != COAP_METHOD_TYPE_GET) {
+            IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+            if (dataObj == NULL) {
+                IOTC_LOGW("invalid ctl json");
+            }
+            ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
+            if (ret != IOTC_OK) {
+                IOTC_LOGW("add data error %d", ret);
+            }
+        }
+        ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("add sid error %d", ret);
+            IotcJsonDelete(payloadObj);
+            break;
+        }
+        ret = IotcJsonAddItem2Array(array, payloadObj);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("add payload error %d", ret);
+            IotcJsonDelete(payloadObj);
+            break;
+        }
+        return array;
+    } while (false);
+    IotcJsonDelete(array);
+    return NULL;
+}
+
 void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
 {
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
@@ -380,4 +473,127 @@ void LocalCtlCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket *req, c
     if (ret != IOTC_OK) {
         IOTC_LOGE("send local ctl resp error %d", ret);
     }
+}
+
+void LocalCtlSvcCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
+{
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
+    LocalCoapSessMsg *sessMsg = (LocalCoapSessMsg *)req;
+    CHECK_V_RETURN_LOGW(sessMsg->client != NULL, "invalid client");
+    int32_t ret = IOTC_OK;
+    IotcJson *payloadJsonObj = ParseE2eCtlMsg(req);
+    if (payloadJsonObj == NULL) {
+        IOTC_LOGW("Parse E2eCtl Msg error");
+        return;
+    }
+    /* 创建JSON指针 */
+    IotcJson *respJson = IotcJsonCreate();
+    if (respJson == NULL) {
+        IOTC_LOGW("create resp json error ");
+        return;
+    }
+    if (req->header.code == COAP_METHOD_TYPE_GET) {
+        ret = DevSvcProxyCtlGetCharStates(payloadJsonObj, &respJson);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("cloud get char error %d", ret);
+        }
+    } else if (req->header.code == COAP_METHOD_TYPE_POST) {
+        int32_t errcode;
+        errcode = DevSvcProxyCtlPutCharStates(payloadJsonObj, NULL);
+        if (errcode != IOTC_OK) {
+            IOTC_LOGE("ctrl error %d", errcode);
+        }
+        ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, errcode);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("add num to obj err %d", ret);
+            IotcJsonDelete(respJson);
+        }
+    }
+    IotcJsonDelete(payloadJsonObj);
+    payloadJsonObj = NULL;
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("e2e ctl error %d", ret);
+    }
+    LocalCoapSessMsg respSessMsg;
+    BuildLocalCoapSessMsg(&respSessMsg, 0, sessMsg->client);
+    ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
+    IotcJsonDelete(respJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("send local ctl resp error %d", ret);
+    }
+}
+
+void LocalCtlSvcGetCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, void *userData)
+{
+    CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "param invalid");
+
+    LocalCoapSessMsg *sessMsg = (LocalCoapSessMsg *)req;
+    CHECK_V_RETURN_LOGW(sessMsg->client != NULL, "invalid client");
+
+    int32_t ret = IOTC_OK;
+
+    IotcJson *payloadJsonObj = ParseE2eCtlMsg(req);
+    if (payloadJsonObj == NULL) {
+        IOTC_LOGW("Parse E2eCtl Msg error");
+        return;
+    }
+    
+    ret = DevSvcProxyCtlPutCharStates(payloadJsonObj, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("ctrl error %d", ret);
+    }
+
+    IotcJson *respJson = IotcJsonCreate();
+    if (respJson == NULL) {
+        IOTC_LOGW("create resp json error ");
+        return;
+    }
+
+    ret = DevSvcProxyCtlGetCharStates(payloadJsonObj, &respJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("cloud get char error %d", ret);
+    }
+
+    IotcJsonDelete(payloadJsonObj);
+    payloadJsonObj = NULL;
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("e2e ctl error %d", ret);
+    }
+
+    LocalCoapSessMsg respSessMsg;
+    BuildLocalCoapSessMsg(&respSessMsg, 0, sessMsg->client);
+
+    ret = SendLocalCtlResp(endpoint, req, addr, &respSessMsg, respJson);
+    IotcJsonDelete(respJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("send local ctl resp error %d", ret);
+    }
+}
+
+int32_t localCtlSessKeyGen(M2mCloudContext *ctx, const uint8_t *sn1, uint32_t sn1Len,
+    const uint8_t *sn2, uint32_t sn2Len)
+{
+    CHECK_RETURN_LOGE((sn1 != NULL) && (sn1Len > 0) && (sn2 != NULL) && (sn2Len > 0),
+        IOTC_ERR_PARAM_INVALID, "param invalid, sn1Len:%u, sn2Len:%u", sn1Len, sn2Len);
+    int32_t ret = memcpy_s(ctx->pskInfo.salt, RAND_SN_LEN, sn1, sn1Len);
+    CHECK_RETURN_LOGE(ret == EOK, IOTC_ERR_SECUREC_MEMCPY, "cpy sn1 err:%d", ret);
+    ret = memcpy_s(ctx->pskInfo.salt + RAND_SN_LEN, RAND_SN_LEN, sn2, sn2Len);
+    CHECK_RETURN_LOGE(ret == EOK, IOTC_ERR_SECUREC_MEMCPY, "cpy sn2 err:%d", ret);
+
+    IotcPbkdf2HmacParam param = {
+        .md = IOTC_MD_SHA256,
+        .password = ctx->authCodeInfo.authCode,
+        .passwordLen = sizeof(ctx->authCodeInfo.authCode),
+        .salt = ctx->pskInfo.salt,
+        .saltLen = SALT_LEN,
+        .iterCount = ITER_TIMES
+    };
+    
+    ret = IotcPkcs5Pbkdf2Hmac(&param, localCtlKey, HEXIFY_LEN(SESS_SN_LEN));
+    char localCtlKeyStr[HEXIFY_LEN(SESSION_AUTHCODE_LEN) + 1] = { 0 };
+    UtilsHexify(localCtlKey, sizeof(localCtlKey), localCtlKeyStr, sizeof(localCtlKeyStr));
+    IOTC_LOGI("%s localCtlKey:[%s]", __func__, localCtlKeyStr);
+
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "ble sess key gen err:%d", ret);
+    return IOTC_OK;
 }

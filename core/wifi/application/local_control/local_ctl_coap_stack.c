@@ -32,6 +32,9 @@
 #include "local_ctl_coap_api.h"
 
 #define LOCAL_CTL_SESS_NAME "LOCAL_CTL"
+#define LOCAL_CTL_COAP_RETRANS_CNT 5
+#define LOCAL_CTL_COAP_RETRANS_INTERVAL UTILS_SEC_TO_MS(1)
+#define LOCAL_CTL__COAP_UDP_MULTI_ADDR "238.101.0.0"
 
 static int32_t LocalCtlCoapStackCreate(LocalControlContext *ctx)
 {
@@ -42,11 +45,12 @@ static int32_t LocalCtlCoapStackCreate(LocalControlContext *ctx)
         return ret;
     }
 
+    IOTC_LOGI("get local ip  %s", local);
     SocketUdpInitParam udp = {
         .port = LOCAL_CONTROL_PORT,
         .localAddr = local,
-        .multicastAddr = NULL,
-        .broadcastAddr = NULL,
+        .multiAddr = LOCAL_CTL__COAP_UDP_MULTI_ADDR,
+        .broadAddr = NULL,
     };
 
     TransSocket *socket = TransSocketUdpNew(&udp);
@@ -98,16 +102,20 @@ static int32_t LocalCtlSessionSetup(LocalControlContext *ctx)
 
 static int32_t LocalCtlCoapEndpointSetup(LocalControlContext *ctx)
 {
-    static const CoapResource localCtlCoapRes[] = {
-        { UTILS_BIT(COAP_METHOD_TYPE_GET), STR_URI_LOCAL_CONTROL_SEARCH, NULL,
-            LocalCtlCoapSearchHandler },
-        { UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_LOCAL_CONTROL_SESS_MNGR, NULL,
-            LocalCtlCoapSessMngrHandler },
-        { UTILS_BIT(COAP_METHOD_TYPE_POST), STR_E2E_CONTROL, NULL,
-            LocalCtlCoapControlHandler },
+    static const CoapResource LOCAL_CTL_COAP_RES[] = {
+        {UTILS_BIT(COAP_METHOD_TYPE_GET), STR_URI_LOCAL_CONTROL_SEARCH, NULL,
+            LocalCtlCoapSearchHandler},
+        { UTILS_BIT(COAP_METHOD_TYPE_GET), "switch", NULL,
+            LocalCtlSvcGetCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), "switch", NULL,
+            LocalCtlSvcCoapHandler },
+        {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_LOCAL_CONTROL_SESS_MNGR, NULL,
+            LocalCtlCoapSessMngrHandler},
+        {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_E2E_CONTROL, NULL,
+            LocalCtlCoapControlHandler},
     };
 
-    int32_t ret = CoapServerAddResource(ctx->coapStack.endpoint, localCtlCoapRes, ARRAY_SIZE(localCtlCoapRes));
+    int32_t ret = CoapServerAddResource(ctx->coapStack.endpoint, LOCAL_CTL_COAP_RES, ARRAY_SIZE(LOCAL_CTL_COAP_RES));
     if (ret != IOTC_OK) {
         IOTC_LOGW("add coap res error %d", ret);
         return ret;

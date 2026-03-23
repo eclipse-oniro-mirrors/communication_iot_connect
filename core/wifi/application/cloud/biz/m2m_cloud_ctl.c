@@ -47,31 +47,31 @@ static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
         IOTC_LOGW("Get svcId error %d", ret);
         return NULL;
     }
-
     IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
         IOTC_LOGW("create array error %d", ret);
         return NULL;
     }
-
     do {
         IotcJson *payloadObj = IotcJsonCreate();
         if (payloadObj == NULL) {
             IOTC_LOGW("add data error");
             break;
         }
-        IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
-        if (dataObj == NULL) {
-            IOTC_LOGW("invalid ctl json");
-            IotcJsonDelete(payloadObj);
-            break;
-        }
-        ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("add data error %d", ret);
-            IotcJsonDelete(payloadObj);
-            IotcJsonDelete(dataObj);
-            break;
+        if (req->header.code != COAP_METHOD_TYPE_GET) {
+            IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+            if (dataObj == NULL) {
+                IOTC_LOGW("invalid ctl json");
+                IotcJsonDelete(payloadObj);
+                break;
+            }
+            ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
+            if (ret != IOTC_OK) {
+                IOTC_LOGW("add data error %d", ret);
+                IotcJsonDelete(payloadObj);
+                IotcJsonDelete(dataObj);
+                break;
+            }
         }
         ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
         if (ret != IOTC_OK) {
@@ -87,21 +87,14 @@ static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
         }
         return array;
     } while (false);
-
     IotcJsonDelete(array);
     return NULL;
 }
 
-static int32_t SendCloudCtlMsgResp(int32_t errcode, CoapEndpoint *endpoint, const CoapPacket *req,
-    const SocketAddr *addr, const M2mCloudContext *ctx)
+static int32_t SendCloudCtlMsg(CoapEndpoint *endpoint, const CoapPacket *req,
+    const SocketAddr *addr, const M2mCloudContext *ctx, IotcJson *respJson)
 {
-    IotcJson *respJson = UtilsJsonCreateErrcode(errcode);
-    if (respJson == NULL) {
-        IOTC_LOGW("create resp json error %d", errcode);
-        return IOTC_ADAPTER_JSON_ERR_CREATE;
-    }
-
-    int32_t ret;
+    int32_t ret = IOTC_OK;
     do {
         uint32_t seg = 0;
         const CoapOption *reqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_REQ_ID, &seg);
@@ -119,12 +112,17 @@ static int32_t SendCloudCtlMsgResp(int32_t errcode, CoapEndpoint *endpoint, cons
             ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_USER_ID;
             break;
         }
+        const CoapOption *seqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_SEQ_NUM_ID, &seg);
+        if (uerIdOpt == NULL || seg != 1 || seqIdOpt->value.data == NULL || seqIdOpt->value.len == 0) {
+            ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_SEQ_NUM_ID;
+            break;
+        }
         const CoapOption options[] = {
             {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->tokenInfo.access, strlen(ctx->tokenInfo.access)}},
             {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)reqIdOpt->value.data, reqIdOpt->value.len}},
             {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)devIdOpt->value.data, devIdOpt->value.len}},
             {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)uerIdOpt->value.data, uerIdOpt->value.len}},
-            {COAP_OPTION_TYPE_SEQ_NUM_ID, {NULL, sizeof(uint32_t)}},
+            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seqIdOpt->value.data, seqIdOpt->value.len}},
         };
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
             options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
@@ -134,7 +132,44 @@ static int32_t SendCloudCtlMsgResp(int32_t errcode, CoapEndpoint *endpoint, cons
             IOTC_LOGW("send e2e ctrl resp msg error %d", ret);
         }
     } while (false);
+    IotcJsonDelete(respJson);
+    return ret;
+}
 
+static int32_t SendCloudCtlMsgResp(CoapEndpoint *endpoint, const CoapPacket *req,
+    const SocketAddr *addr, const M2mCloudContext *ctx)
+{
+    IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
+    if (dataJsonArray == NULL) {
+        IOTC_LOGW("Parse Cloud Ctl Msg error");
+        return IOTC_ERROR;
+    }
+    /* 创建JSON指针 */
+    IotcJson *respJson = IotcJsonCreate();
+    if (respJson == NULL) {
+        IOTC_LOGW("create resp json error ");
+        return IOTC_ERROR;
+    }
+    int32_t ret = IOTC_OK;
+    if (req->header.code == COAP_METHOD_TYPE_GET) {
+        ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &respJson);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("cloud get char error %d", ret);
+        }
+    } else if (req->header.code == COAP_METHOD_TYPE_POST) {
+        ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("ctrl error %d", ret);
+        }
+        ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, ret);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("add num to obj err %d", ret);
+            IotcJsonDelete(respJson);
+        }
+    }
+    SendCloudCtlMsg(endpoint, req, addr, ctx, respJson);
+    IotcJsonDelete(dataJsonArray);
+    dataJsonArray = NULL;
     IotcJsonDelete(respJson);
     return ret;
 }
@@ -144,21 +179,8 @@ static void M2mCloudCoapControlHandler(CoapEndpoint *endpoint, const CoapPacket 
 {
     CHECK_V_RETURN_LOGW(endpoint != NULL && req != NULL && addr != NULL && userData != NULL, "invalid param");
 
-    IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
-    if (dataJsonArray == NULL) {
-        IOTC_LOGW("Parse Cloud Ctl Msg error");
-        return;
-    }
-
-    int32_t ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
-    IotcJsonDelete(dataJsonArray);
-    dataJsonArray = NULL;
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("ctrl error %d", ret);
-    }
-
     M2mCloudContext *ctx = GetM2mCloudCtx();
-    ret = SendCloudCtlMsgResp(ret, endpoint, req, addr, ctx);
+    int32_t ret = SendCloudCtlMsgResp(endpoint, req, addr, ctx);
     if (ret != IOTC_OK) {
         IOTC_LOGE("send resp error %d", ret);
     }
