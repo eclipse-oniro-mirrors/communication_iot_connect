@@ -59,7 +59,13 @@ bool IsWifiNetInfoExist(void)
         return false;
     }
 
-    bool valid = UtilsIsEmptyStr((const char *)ssid);
+    bool valid = false;
+    if (ssid[0] == '\0') {
+        valid = false;
+    } else {
+        valid = true;
+    }
+    
     (void)memset_s(ssid, sizeof(ssid), 0, sizeof(ssid));
     (void)memset_s(pwd, sizeof(pwd), 0, sizeof(pwd));
     return valid;

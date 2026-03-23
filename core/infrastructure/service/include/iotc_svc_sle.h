@@ -50,10 +50,11 @@ typedef int32_t (*SleDisconnectDevice)(const IotcAdptSleDeviceAddr *addr);
 typedef int32_t (*SleDefConnectionParamSet)(const IotcAdptSleDefaultConnectParam *param);
 typedef int32_t (*SleRecvNetCfgInfo)(const char *netInfo, uint32_t len);
 typedef int32_t (*SleRecvCustomSecData)(const uint8_t *data, uint32_t len);
-typedef int32_t (*SleSendCustomSecData)(const uint8_t *data, uint32_t len);
+typedef int32_t (*SleSendCustomSecData)(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len);
 typedef int32_t (*SleSendIndicateData)(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 
+typedef int32_t (*SleFindDeviceInfo)(const char *devId, void **info);
 typedef struct {
     SleStartAdv onStartAdv;
     SleStopAdv onStopAdv;
@@ -66,6 +67,7 @@ typedef struct {
     SleDefConnectionParamSet onConnectionParamSet;
     SleSendCustomSecData onSendCustomSecData;
     SleSendIndicateData onSendIndicateData;
+    SleFindDeviceInfo onFindDeviceInfo;
 } SleSvcApi;
 
 typedef struct {
@@ -75,8 +77,11 @@ typedef struct {
 
 int32_t SleSvcProxyStartAdv(uint32_t ms);
 int32_t SleSvcProxyStopAdv(void);
-int32_t SleSvcProxySendCustomSecData(const uint8_t *data, uint32_t len);
-int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
+int32_t SleSvcProxySendCustomSecData(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len);
+int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,
+    const uint8_t *value, uint32_t valueLen);
+
+int32_t SleSvcProxyFindDeviceInfo(const char *devId, void **info);
 
 #ifdef __cplusplus
 }

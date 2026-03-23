@@ -16,7 +16,7 @@
 #include "sle_ssap_mgt.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
-#include "ble_linklayer.h"
+#include "sle_linklayer.h"
 #include "utils_assert.h"
 #include "utils_common.h"
 #include "sched_executor.h"
@@ -25,8 +25,8 @@
 #define DATA_SVC_READ_UUID "15F1E601A27743FCA484DD39EF8A9100"
 #define DATA_SVC_WRITE_UUID "15F1E602A27743FCA484DD39EF8A9100"
 
-static int32_t SleDataCharWrite(uint8_t *buff, uint32_t len);
-static int32_t SleDataCharRead(uint8_t *buff, uint32_t *len);
+static int32_t SleDataCharWrite(uint32_t connId, uint8_t *buff, uint32_t len);
+static int32_t SleDataCharRead(uint32_t connId, uint8_t *buff, uint32_t *len);
 
 static IotcSleSsapProfileChar g_dataChar[] = {
     {
@@ -62,9 +62,9 @@ typedef struct {
     uint32_t valueLen;
 } LinkLayerExecutorParam;
 
-static int32_t SleSendIndicate(const uint8_t *buff, uint32_t len)
+static int32_t SleSendIndicate(uint32_t connId, const uint8_t *buff, uint32_t len)
 {
-    return SleSendIndicateDataInner(DATA_SVC_UUID, DATA_SVC_READ_UUID, buff, len);
+    return SleSendIndicateDataInner(DATA_SVC_UUID, DATA_SVC_READ_UUID, connId, buff, len);
 }
 
 static int32_t LinkLayerExecutorWaitCallback(void *inData, void **outData)
@@ -73,12 +73,12 @@ static int32_t LinkLayerExecutorWaitCallback(void *inData, void **outData)
     CHECK_RETURN_LOGE(inData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     const LinkLayerExecutorParam *param = (const LinkLayerExecutorParam *)inData;
 
-    int32_t ret = LinkLayerProcessBtData(param->value, param->valueLen);
+    int32_t ret = SleLinkLayerProcessData(0, param->value, param->valueLen);
     IOTC_LOGI("process bt data, len=%u,ret=%d", param->valueLen, ret);
     return ret;
 }
 
-static int32_t SleDataCharWrite(uint8_t *buff, uint32_t len)
+static int32_t SleDataCharWrite(uint32_t connId, uint8_t *buff, uint32_t len)
 {
     CHECK_RETURN_LOGE((buff != NULL) && (len > 0), IOTC_ERR_PARAM_INVALID, "invalid param");
 
@@ -93,7 +93,7 @@ static int32_t SleDataCharWrite(uint8_t *buff, uint32_t len)
     return errcode;
 }
 
-static int32_t SleDataCharRead(uint8_t *buff, uint32_t *len)
+static int32_t SleDataCharRead(uint32_t connId, uint8_t *buff, uint32_t *len)
 {
     CHECK_RETURN_LOGE((buff != NULL) && (len != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
 
@@ -109,7 +109,7 @@ int32_t SleSsapDataSvcInit(void)
         IOTC_LOGE("add sle ssap svc err");
         return ret;
     }
-    ret = LinkLayerRegisterBtDataSendCb(SleSendIndicate);
+    ret = SleLinkLayerRegisterDataSendCb(SleSendIndicate);
     if (ret != IOTC_OK) {
         IOTC_LOGE("reg bt data send cb err");
         return ret;

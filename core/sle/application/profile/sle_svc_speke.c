@@ -20,20 +20,20 @@
 #include "utils_json.h"
 #include "iotc_errcode.h"
 
-int32_t PutSleSvcSpeke(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t PutSleSvcSpeke(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((param != NULL) && (param->request != NULL) && (param->requestLen != 0) &&
         (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
 
     *out = NULL;
     *outLen = 0;
-    int32_t ret = CreateSleSpekeSess();
+    int32_t ret = CreateSleSpekeSess(SPEKE_TYPE_SERVER, param->connId);
     if (ret != IOTC_OK) {
         IOTC_LOGE("create sle speke session err ret=%d", ret);
         return ret;
     }
 
-    ret = SpekeProcessPacket(GetSleSpekeSess(), (const char *)param->request, out, outLen);
+    ret = SpekeProcessPacket(GetSleSpekeSess(param->connId), (const char *)param->request, out, outLen);
     if (ret != IOTC_OK) {
         IOTC_LOGW("process speke packet %d", ret);
         if (*out != NULL) {

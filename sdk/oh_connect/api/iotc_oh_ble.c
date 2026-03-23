@@ -39,6 +39,10 @@
 #include "ble_common.h"
 #include "iotc_event_inner.h"
 #include "iotc_svc_dev.h"
+#include "ohos_bt_gap.h"
+#include <unistd.h>
+
+#define BLE_START_WAIT_SLEEP_S 2
 
 static void EventBusStartBleSvcCallback(uint32_t event, void *param, uint32_t len)
 {
@@ -177,6 +181,16 @@ int32_t IotcOhBleEnable(void)
     IOTC_LOGN("iotc oh ble enable");
     CHECK_MAIN_RUNNING_RETURN();
 
+    if (IsBleEnabled() == false) {
+        if (EnableBle() == false) {
+            IOTC_LOGE("enable ble fail");
+        } else {
+            IOTC_LOGI("enable ble ok");
+        }
+    }
+    /* 此处加延时为了使后面SetLocalName可以成功执行 */
+    sleep(BLE_START_WAIT_SLEEP_S);
+    
     int32_t ret = IotcOhOptionRegister(BLE_OPTION_TABLE, ARRAY_SIZE(BLE_OPTION_TABLE));
     if (ret != IOTC_OK) {
         IOTC_LOGE("reg ble option error %d", ret);

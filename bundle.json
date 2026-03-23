@@ -22,12 +22,15 @@
       "standard"
     ],
     "hisysevent_config": [],
-    "syscap": [],
+    "syscap":[],
     "features": [
-      "iot_connect_feature_ble_support",
-      "iot_connect_feature_sle_support",
-      "iot_connect_feature_wifi_support",
-      "iot_connect_feature_ailife_support"
+      "iot_connect_ble_support",
+      "iot_connect_sle_support",
+      "iot_connect_wifi_support",
+      "iot_connect_ailife_support",
+      "iot_connect_mbedtls_v2_support",
+      "iot_connect_mbedtls_psk_support",
+      "iot_connect_mbedtls_ccm_support"
     ],
     "rom": "",
     "ram": "",

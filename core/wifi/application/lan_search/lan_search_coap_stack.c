@@ -35,6 +35,8 @@
 #define LAN_SEARCH_SESS_NAME "LAN_SEARCH"
 #define LAN_SEARCH_COAP_RETRANS_CNT 5
 #define LAN_SEARCH_COAP_RETRANS_INTERVAL UTILS_SEC_TO_MS(1)
+#define LAN_SEARCH_COAP_UDP_MULTI_ADDR "238.100.0.0"
+#define LAN_SEARCH_COAP_UDP_BROAD_ADDR "0.0.0.0"
 
 static int32_t LanSearchSessionSetup(LanSearchContext *ctx)
 {
@@ -90,9 +92,9 @@ static int32_t LanSearchCoapStackCreate(LanSearchContext *ctx)
 
     SocketUdpInitParam udp = {
         .port = LAN_SEARCH_PORT,
-        .localAddr = localIp,
-        .multicastAddr = NULL,
-        .broadcastAddr = NULL,
+        .localAddr = local,
+        .multiAddr = LAN_SEARCH_COAP_UDP_MULTI_ADDR,
+        .broadAddr = LAN_SEARCH_COAP_UDP_BROAD_ADDR,
     };
     TransSocket *socket = TransSocketUdpNew(&udp);
     if (socket == NULL) {

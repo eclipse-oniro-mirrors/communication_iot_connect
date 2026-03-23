@@ -220,7 +220,7 @@ int32_t IotcAesCbcEncrypt(const IotcAesCbcParam *param, uint8_t *buf,  uint32_t 
     if (!IsAesCbcParamValid(param) || buf == NULL || bufLen == NULL || *bufLen == 0) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    return AesCbcCrypt(param, MBEDTLS_DECRYPT, buf, bufLen);
+    return AesCbcCrypt(param, MBEDTLS_ENCRYPT, buf, bufLen);
 }
 
 int32_t IotcAesCbcDecrypt(const IotcAesCbcParam *param, uint8_t *buf, uint32_t *bufLen)
@@ -228,7 +228,7 @@ int32_t IotcAesCbcDecrypt(const IotcAesCbcParam *param, uint8_t *buf, uint32_t *
     if (!IsAesCbcParamValid(param) || buf == NULL || bufLen == NULL || *bufLen == 0) {
         return IOTC_ERR_PARAM_INVALID;
     }
-    return AesCbcCrypt(param, MBEDTLS_ENCRYPT, buf, bufLen);
+    return AesCbcCrypt(param, MBEDTLS_DECRYPT, buf, bufLen);
 }
 
 static bool IsAesCcmParamValid(const IotcAesCcmParam *param)

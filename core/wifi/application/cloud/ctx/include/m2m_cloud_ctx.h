@@ -27,16 +27,27 @@
 extern "C" {
 #endif
 
+#define SESS_HMAC_LEN   32
 #define M2M_CLOUD_URL_NUM 3
+#define RAND_SN_LEN     8
+#define SALT_LEN        (RAND_SN_LEN * 2)
+#define SESSION_KEY_LEN 32
+#define ITER_TIMES          1 /* 基于authcode派生，迭代一次表示依赖authcode安全强度 */
+#define REQ_ID_LEN          20
+#define SESSION_AUTHCODE_LEN 16
 
 typedef enum {
     M2M_CLOUD_FSM_STATE_INIT = 0,
     M2M_CLOUD_FSM_STATE_CREATE_LINK,
     M2M_CLOUD_FSM_STATE_CONNECT,
+    M2M_CLOUD_FSM_STATE_PSK,
+    M2M_CLOUD_FSM_STATE_PSK_WAIT_RESP,
     M2M_CLOUD_FSM_STATE_REGISTER,
     M2M_CLOUD_FSM_STATE_REGISTER_WAIT_RESP,
     M2M_CLOUD_FSM_STATE_LOGIN,
     M2M_CLOUD_FSM_STATE_LOGIN_WAIT_RESP,
+    M2M_CLOUD_FSM_STATE_AUTHCODE,
+    M2M_CLOUD_FSM_STATE_AUTHCODE_WAIT_RESP,
     M2M_CLOUD_FSM_STATE_REVOKE,
     M2M_CLOUD_FSM_STATE_REVOKE_WAIT_RESP,
     M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC,
@@ -99,9 +110,22 @@ struct M2mCloudContext {
         uint32_t interval;
     } backoffInfo;
     struct {
+        bool pskFinish;
+        bool encrypt;
+        uint8_t salt[SALT_LEN];
+        uint8_t key[SESSION_KEY_LEN];
+    }pskInfo;
+    struct {
+        bool acFinish;
+        int32_t timeout;
+        uint8_t authCode[SESSION_AUTHCODE_LEN];
+        uint8_t authCodeId[SESSION_AUTHCODE_LEN];
+    }authCodeInfo;
+    struct {
         uint16_t sentCnt;
         uint32_t interval;
     } heartbeatInfo;
+    char reqId[HEXIFY_LEN(REQ_ID_LEN) + 1];
 };
 
 M2mCloudContext *GetM2mCloudCtx(void);

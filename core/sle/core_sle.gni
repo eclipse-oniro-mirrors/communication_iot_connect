@@ -26,12 +26,16 @@ iotc_core_sle_inc = [
   "$iotc_core_path/sle/application/adv/include",
   "$iotc_core_path/sle/application/base/include",
   "$iotc_core_path/sle/application/ssap/include",
+  "$iotc_core_path/sle/application/ssapc/include",
+  "$iotc_core_path/sle/application/profile",
   "$iotc_core_path/sle/application/profile/include",
   "$iotc_core_path/sle/application/report/include",
   "$iotc_core_path/sle/application/include",
   "$iotc_core_path/ble/application/adv/include",
   "$iotc_core_path/ble/infrastructure/utils/include",
   "$iotc_core_path/ble/infrastructure/linklayer/include",
+  "$iotc_core_path/sle/infrastructure/linklayer",
+  "$iotc_core_path/sle/infrastructure/linklayer/include"
 ]
 
 iotc_core_sle_src = [
@@ -64,6 +68,14 @@ iotc_core_sle_src = [
   "$iotc_core_path/sle/application/report/sle_svc_netcfg_status.c",
   "$iotc_core_path/sle/application/report/sle_svc_report.c",
   "$iotc_core_path/sle/application/sle_svc.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_encrypt_speke.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_encrypt_sesskey.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_encrypt.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_process.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_recv.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_send.c",
+  "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_service.c",
+
 ]
 
 
@@ -101,9 +113,7 @@ if (!defined(ohos_lite)) {
   ]
 }
 
-
-
-if(!iot_connect_feature_ble_support){
+if(!iot_connect_ble_support){
   #  from BLE
   iotc_core_sle_src += [
     "$iotc_core_path/ble/infrastructure/linklayer/linklayer_encrypt.c",

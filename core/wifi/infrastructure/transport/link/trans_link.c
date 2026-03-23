@@ -63,8 +63,6 @@ void TransLinkFree(TransLink *link)
 {
     CHECK_V_RETURN_LOGW(link != NULL, "param invalid");
     TransLinkClose(link);
-    TransSocketFree(link->socket);
-    link->socket = NULL;
     IOTC_LOGD("link[%s] destroy", NON_NULL_STR(link->name));
     IotcFree(link);
 }

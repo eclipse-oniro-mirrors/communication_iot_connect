@@ -18,6 +18,7 @@
 #include "utils_assert.h"
 #include "trans_buffer_inner.h"
 #include "m2m_cloud_sess.h"
+#include "m2m_cloud_tcp_sess.h"
 #include "coap_codec_tcp_v1.h"
 #include "utils_common.h"
 #include "coap_endpoint_client.h"
@@ -28,6 +29,24 @@
 #include "wifi_sched_fd_watch.h"
 
 #define CLOUD_RESP_TIMEOUT_MS UTILS_SEC_TO_MS(30)
+
+void GetDomainFromUrl(const char *url, char **domain, uint16_t *port)
+{
+    char *dup = strdup(url);
+    *domain = strtok(dup, ":");
+    dup = strdup(url);
+    char *last = strchr(dup, ':');
+
+    if (last) {
+        *last = '\0';
+        last++;
+        *port = atoi(last);
+    }
+
+    if (dup) {
+        free(dup);
+    }
+}
 
 static int32_t CloudLinkBufferInit(M2mCloudContext *ctx)
 {
@@ -58,7 +77,7 @@ static int32_t CloudLinkUrlInit(M2mCloudContext *ctx)
         backup = ctx->authInfo.loginInfo.backupUrl;
     }
 
-    ctx->linkInfo.url[0] = UtilsStrDup(url);
+    GetDomainFromUrl(url, (char **)&ctx->linkInfo.url[0], &ctx->linkInfo.port);
     ctx->linkInfo.url[1] = UtilsStrDup(backup);
 
     if (ctx->linkInfo.url[0] == NULL || ctx->linkInfo.url[1] == NULL) {
@@ -113,7 +132,11 @@ int32_t M2mCloudLinkCreate(M2mCloudContext *ctx)
             IOTC_LOGW("url init error %d", ret);
             break;
         }
-        ret = CloudLinkSessInit(ctx, CoapTcpV1GetRemainSize);
+        #if IOTC_CONF_TCP_SUPPORT
+            ret = CloudLinkTcpSessInit(ctx, CoapTcpV1GetRemainSize);
+        #else
+            ret = CloudLinkSessInit(ctx, CoapTcpV1GetRemainSize);
+        #endif
         if (ret != IOTC_OK) {
             IOTC_LOGW("sess init error %d", ret);
             break;
@@ -134,7 +157,11 @@ void M2mCloudLinkDeinit(M2mCloudContext *ctx)
 {
     CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
     M2mCloudLinkClose(ctx);
-    CloudLinkSessDeinit(ctx);
+    #if IOTC_CONF_TCP_SUPPORT
+        CloudLinkTcpSessDeinit(ctx);
+    #else
+        CloudLinkSessDeinit(ctx);
+    #endif
     if (ctx->linkInfo.recvBuf != NULL) {
         TransReleaseBuffer(ctx->linkInfo.recvBuf);
         ctx->linkInfo.recvBuf = NULL;

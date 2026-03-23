@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "m2m_cloud_sess.h"
+#include "trans_socket_tcp.h"
 #include "trans_socket_tls.h"
 #include "securec.h"
 #include "utils_common.h"
@@ -26,12 +27,16 @@
 #include "product_adapter.h"
 
 static const char *TLS_SESS_NAME = "CLOUD_TLS";
+#if IOTC_CONF_TCP_SUPPORT   //TLS
+static const char *TCP_SESS_NAME = "CLOUD_TCP";
+#endif
 
 static int32_t CloudTlsTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemainLen remainUpdate)
 {
     CHECK_RETURN_LOGW(ctx->linkInfo.urlIndex < M2M_CLOUD_URL_NUM && ctx->linkInfo.url[ctx->linkInfo.urlIndex] != NULL
         && remainUpdate != NULL, IOTC_CORE_WIFI_M2M_ERR_CLOUD_INVALID_CTX, "param invalid");
 
+    #if !IOTC_CONF_TCP_SUPPORT   //TLS
     SocketTlsInitParam tlsParam;
     (void)memset_s(&tlsParam, sizeof(tlsParam), 0, sizeof(tlsParam));
     tlsParam.name = TLS_SESS_NAME;
@@ -58,6 +63,18 @@ static int32_t CloudTlsTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemai
     tlsParam.cert.hostVerify = true;
 
     ctx->linkInfo.socket = TransSocketTlsNew(&tlsParam);
+    #else
+    //TCP
+    SocketTcpInitParam tcpParam;
+    (void)memset_s(&tcpParam, sizeof(tcpParam), 0, sizeof(tcpParam));
+    tcpParam.name = TCP_SESS_NAME;
+    tcpParam.onUpdateRemainLen = remainUpdate;
+    tcpParam.host.port = ctx->linkInfo.port == 0 ? STA_CLOUD_TCP_PORT : ctx->linkInfo.port;
+    tcpParam.host.hostname = ctx->linkInfo.url[ctx->linkInfo.urlIndex];
+
+    ctx->linkInfo.socket = TransSocketTcpNew(&tcpParam);
+    #endif
+    
     if (ctx->linkInfo.socket == NULL) {
         IOTC_LOGW("create tls socket error");
         return IOTC_CORE_WIFI_TRANS_ERR_SOCKET_TLS_CREATE;

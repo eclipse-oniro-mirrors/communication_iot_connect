@@ -33,7 +33,6 @@ IotcJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
         {STR_JSON_HWV, devInfo->hwv},
         {STR_JSON_SWV, devInfo->swv},
         {STR_JSON_SUB_PROD_ID, devInfo->subProdId},
-        {STR_JSON_HIV, HILINK_VERSION},
     };
 
     int32_t ret = UtilsJsonAddStrTable(devInfoObj, strItem, ARRAY_SIZE(strItem));

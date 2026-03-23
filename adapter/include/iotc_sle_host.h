@@ -121,7 +121,7 @@ int32_t IotcSleSetSleName(const char *name, uint8_t len);
  */
 int32_t IotcUnregisterHostCallbacks(IotcSleHostCallbacks *hostCallback);
 
-int32_t IotcSleRegisterHostCallbacks();
+int32_t IotcSleRegisterHostCallbacks(void);
 
 #ifdef __cplusplus
 }

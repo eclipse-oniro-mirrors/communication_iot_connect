@@ -25,6 +25,8 @@ extern "C" {
 
 typedef enum {
     CLOUD_OPTION_BIT_ACCESS_TOKEN_ID = 0,
+    CLOUD_OPTION_BIT_REQ_ID,
+    CLOUD_OPTION_BIT_DEV_ID,
     CLOUD_OPTION_BIT_SEQ_NUM_ID,
 } CloudOptionBitMap;
 
@@ -38,6 +40,7 @@ typedef IotcJson *(*M2mBuildRequest)(M2mCloudContext *ctx);
 
 int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
     M2mBuildRequest build, const CloudOption *option);
+int32_t M2mCloudSendCSM(M2mCloudContext *ctx);
 
 #ifdef __cplusplus
 }

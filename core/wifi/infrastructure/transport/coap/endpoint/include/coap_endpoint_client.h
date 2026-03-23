@@ -43,6 +43,9 @@ int32_t CoapClientSetTokenLen(CoapEndpoint *endpoint, uint8_t tkl);
 int32_t CoapClientSendReq(CoapEndpoint *endpoint, const CoapClientReqParam *param,
     const SocketAddr *addr, CoapPacket *packetBuf);
 
+int32_t CoapClientSendCSM(CoapEndpoint *endpoint, const SocketAddr *addr,
+    CoapPacket *packetBuf);
+
 int32_t CoapClientAddDefaultRespHandler(CoapEndpoint *endpoint, CoapClientRespHandler handler);
 
 int32_t CoapClientSetRespTimeout(CoapEndpoint *endpoint, uint32_t ms);

@@ -68,8 +68,8 @@ enum IotcSleSsapProperties {
 typedef struct {
     const char *uuid;
     uint32_t permission;
-    int32_t (*readFunc)(uint8_t *buff, uint32_t *len);
-    int32_t (*writeFunc)(uint8_t *buff, uint32_t len);
+    int32_t (*readFunc)(uint32_t connId, uint8_t *buff, uint32_t *len);
+    int32_t (*writeFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
 } IotcSleSsapProfileDesc;
 
 typedef struct {
@@ -77,11 +77,11 @@ typedef struct {
     uint32_t permission;
     uint32_t property;
     /** SLE SSAP服务读函数类型 */
-    int32_t (*readFunc)(uint8_t *buff, uint32_t *len);
+    int32_t (*readFunc)(uint32_t connId, uint8_t *buff, uint32_t *len);
     /** SLE SSAP服务写函数类型 */
-    int32_t (*writeFunc)(uint8_t *buff, uint32_t len);
+    int32_t (*writeFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
     /** SLE SSAP服务指示函数类型 */
-    int32_t (*indicateFunc)(uint8_t *buff, uint32_t len);
+    int32_t (*indicateFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
     const IotcSleSsapProfileDesc *desc;
     uint8_t descNum;
 } IotcSleSsapProfileChar;

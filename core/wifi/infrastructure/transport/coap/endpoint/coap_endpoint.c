@@ -20,6 +20,8 @@
 #include "coap_codec_udp.h"
 #include "iotc_errcode.h"
 
+#define CSM_MSG_MAX_LEN 7
+
 static int32_t CoapEndpointRecvPacket(CoapEndpoint *endpoint, const CoapPacket *pkt, const SocketAddr *addr);
 
 static SessCode SessMsgProcessCoapDecode(SessMsg *msg, UtilsBuffer *buf, SessAddtlInfo *info)
@@ -178,6 +180,35 @@ int32_t CoapEndpointSendPacket(CoapEndpoint *endpoint, const CoapBuildPacket *bu
             break;
         }
 
+        (void)CoapRetransAddPacket(endpoint, pkt, buf, addr);
+    } while (0);
+
+    UtilsReleaseBuffer(endpoint->sendBuf, &buf);
+    return ret;
+}
+
+int32_t CoapEndpointSendCSM(CoapEndpoint *endpoint,
+    CoapPacket *pkt, const SocketAddr *addr)
+{
+    CHECK_RETURN(endpoint != NULL && pkt != NULL, IOTC_ERR_PARAM_INVALID);
+    UtilsBuffer *buf = UtilsGetBuffer(endpoint->sendBuf);
+    if (buf == NULL) {
+        return IOTC_CORE_COMM_UTILS_ERR_BUFFER_GET;
+    }
+    int32_t ret = IOTC_OK;
+    uint8_t csmMsg[CSM_MSG_MAX_LEN] = {0x50, 0xe1, 0x23, 0x80, 0x01, 0x00, 0x20};
+
+    do {
+        buf->len = CSM_MSG_MAX_LEN;
+        memcpy_s((void *)buf->buffer, buf->len, csmMsg, buf->len);
+        buf->buffer[buf->len] = '\0';
+        CoapUtilsDumpPacket(pkt);
+        /* 报文发送 */
+        ret = TransSessMsgSend(endpoint->sess, pkt, buf, addr);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("coap send error %d", ret);
+            break;
+        }
         (void)CoapRetransAddPacket(endpoint, pkt, buf, addr);
     } while (0);
 

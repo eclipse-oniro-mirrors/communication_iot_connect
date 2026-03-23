@@ -20,6 +20,7 @@
 #include "utils_assert.h"
 #include "utils_bit_map.h"
 #include "iotc_json.h"
+#include "security_random.h"
 
 static IotcJson *GenReportJson(const IotcJson *dataArray, const M2mCloudContext *ctx)
 {
@@ -74,10 +75,21 @@ int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
     IotcJson *reportJson = GenReportJson(dataArray, (const M2mCloudContext *)ctx);
     CHECK_RETURN_LOGW(reportJson != NULL, IOTC_ERR_PARAM_INVALID, "gen report error");
     
+    {
+        uint8_t Reqid[REQ_ID_LEN] = {0};
+        //生成随机数
+        SecurityRandom((uint8_t *)Reqid, REQ_ID_LEN);
+        UtilsHexify(Reqid, sizeof(Reqid), ctx->reqId, sizeof(ctx->reqId));
+        ctx->reqId[HEXIFY_LEN(REQ_ID_LEN)] = '\0';
+    }
+
     const CoapOption options[] = {
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_URI_PATH_SYS, strlen(STR_URI_PATH_SYS)}},
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_JSON_DATA, strlen(STR_JSON_DATA)}},
         {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->tokenInfo.access, strlen(ctx->tokenInfo.access)}},
+        {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)ctx->reqId, strlen(ctx->reqId)}},
+        {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)ctx->authInfo.loginInfo.devId,
+            strlen(ctx->authInfo.loginInfo.devId)}},
         {COAP_OPTION_TYPE_SEQ_NUM_ID, {NULL, sizeof(uint32_t)}},
     };
     CoapClientReqParam param = {

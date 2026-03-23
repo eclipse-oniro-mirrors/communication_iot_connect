@@ -34,6 +34,7 @@
 #include "ble_linklayer.h"
 #include "sle_common.h"
 #include "sle_svc_netcfg_status.h"
+#include "iotc_mem.h"
 
 static const char *SLE_SERVICE_NAME = "SLE";
 
@@ -55,7 +56,7 @@ static int32_t SleStackInit(void)
 
     ret = IotcSleEnable();
     IOTC_LOGI("IotcSleEnable %d", ret);
-     
+
     ret = IotcSleRegisterHostCallbacks();
 
     IOTC_LOGI("IotcSleRegisterHostCallbacks %d", ret);
@@ -141,7 +142,7 @@ static int32_t SleServiceInit(SleSvcCtx *ctx)
         IOTC_LOGW("sle event init error %d", ret);
         return ret;
     }
- 
+
     ret = SleSsapInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("ssap init error %d", ret);
@@ -221,10 +222,16 @@ static int32_t SleServiceStop(int32_t instanceId, void *param)
     return IOTC_OK;
 }
 
-static int32_t SendCustomSecData(const uint8_t *data, uint32_t len)
+static int32_t SendCustomSecData(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
     CHECK_RETURN_LOGW(data != NULL || len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
-    return LinkLayerReportSvcDataEnc(SLE_SVC_CUSTOM_SEC_DATA, data, len);
+    return 0;
+}
+
+static int32_t IotcSleFindDeviceInfo(const char *devId, void **info)
+{
+    CHECK_RETURN_LOGW(devId == NULL || info != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    return IOTC_OK;
 }
 
 int32_t SleConnectServiceInit(void)
@@ -246,6 +253,7 @@ int32_t SleConnectServiceInit(void)
         .onSetAdvType = SleSetAdvType,
         .onSendCustomSecData = SendCustomSecData,
         .onSendIndicateData = IotcSleSendIndicateData,
+        .onFindDeviceInfo = IotcSleFindDeviceInfo,
     };
 
     ServiceInstance instance = {

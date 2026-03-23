@@ -17,21 +17,26 @@
 
 #include <stdint.h>
 #include "iotc_sle_server.h"
+#include "iotc_sle_client.h"
 #include "iotc_sle_def.h"
+#include "utils_list.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define SLE_DEV_NAME                "IotcBT"
 #define SLE_DEFAULT_MAX_CONN_NUM    10
 #define SLE_CONN_HEAD_NODE          11
 #define SLE_MTU_SIZE                500
 
-
 typedef struct {
-    uint32_t connId;
-    uint32_t serverId;
-    uint8_t peerAddr[IOTC_ADPT_SLE_ADDR_LEN];
+    uint32_t    connId;
+    uint32_t    serverId;
+    IotcAdptSleAcbState   connState;
+    IotcAdptSleDeviceAddr devAddr;
+    IotcAdptSsapcFindServiceResult handler;
+    ListEntry   node;
 } SlePeerDevInfo;
 
 typedef struct {
@@ -47,6 +52,7 @@ typedef struct {
 typedef struct {
     const char *svcUuid;
     const char *charUuid;
+    uint32_t connId;
     uint32_t valueLen;
     uint8_t *value;
 } SleIndicateParam;
@@ -74,9 +80,12 @@ int32_t SleAddSsapSvc(const IotcSleSsapProfileSvc *svc);
 int32_t SleSsapMgtInit(void);
 void SleSsapMgtDestroy(void);
 SleSsapMgtApp *GetSleSsapMgtApp(void);
+int32_t DelSleSsapMgtPeerDevInfo(uint32_t connId);
+SlePeerDevInfo *GetSleSsapMgtPeerDevInfo(uint32_t connId);
 bool SleIsPair(void);
 void SleSetPair(bool isSlePair);
-int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, const uint8_t *value, uint32_t valueLen);
+int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
+    uint32_t connId, const uint8_t *value, uint32_t valueLen);
 void PrintSleSsapServiceList(IotcAdptSleSsapService *svc, uint8_t num);
 int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
@@ -85,8 +94,8 @@ void SleSsapDisconnectAll(void);
 int32_t SetSleConnectParam(void);
 int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, int16_t requestId);
 int32_t SleSsapReqWrite(const SleSsapWriteParam *param);
-int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *param);
-
+int32_t SleSetServiceAtt(const uint32_t connId, const uint32_t startHdl, const uint32_t endHdl);
+void PrintSleSsapConnidAndAddr(void);
 #ifdef __cplusplus
 }
 #endif

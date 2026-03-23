@@ -23,7 +23,7 @@
 
 #define SLE_CFG_NET_VER 2
 
-int32_t GetSleSvcNetCfgVer(const BtCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t GetSleSvcNetCfgVer(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
     NOT_USED(param);
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");

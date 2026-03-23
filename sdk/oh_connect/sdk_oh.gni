@@ -32,23 +32,21 @@ iotc_sdk_oh_src = [
 
 iotc_sdk_oh_def = []
 
-if (iot_connect_feature_ailife_support) {
+if (iot_connect_ailife_support) {
   iotc_sdk_oh_def += ["IOTC_CONF_AILIFE_SUPPORT=1"]
 }
 
-if (iot_connect_feature_ble_support) {
+if (iot_connect_ble_support) {
   iotc_sdk_oh_src += ["$iotc_sdk_path/oh_connect/api/iotc_oh_ble.c"]
 }
 
-if (iot_connect_feature_sle_support) {
-  if (defined(ohos_lite)) {
-    iotc_sdk_oh_src += ["$iotc_sdk_path/oh_connect/api/iotc_oh_sle.c",]
-  }
+if (iot_connect_sle_support) {
   iotc_sdk_oh_src += [
+    "$iotc_sdk_path/oh_connect/api/iotc_oh_sle.c",
     "$iotc_sdk_path/oh_connect/biz/iotc_oh_sle_adv_data.c",
   ]
 }
 
-if (iot_connect_feature_wifi_support) {
+if (iot_connect_wifi_support) {
   iotc_sdk_oh_src += ["$iotc_sdk_path/oh_connect/api/iotc_oh_wifi.c"]
 }

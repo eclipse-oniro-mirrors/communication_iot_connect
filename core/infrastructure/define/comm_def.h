@@ -69,16 +69,13 @@ typedef struct {
 #define STR_URI_PATH_HB "heartbeat"
 #define STR_URI_PATH_DEV_DEL ".sys/delDevice"
 #define STR_URI_PATH_REVOKE "revoke"
+#define STR_URI_PATH_PSK "psk"
+#define STR_URI_PATH_AUTHCODE "authCode"
 
 #define WIFI_CLOUD_TLS_PORT 5683
 #define WIFI_CLOUD_TCP_PORT 5685
 #define STA_CLOUD_TCP_PORT 5893
-#ifdef HI3863_SDK_CONFIG_PATH
-#define SDK_CONFIG_PATH "iotc"
-#define HI3863_SDK_CONFIG_JSON_PATH "authInfo"
-#else
 #define SDK_CONFIG_PATH "/data/app/iotc"
-#endif
 
 #define STR_NETINFO_SSID "ssid"
 #define STR_NETINFO_PASSWORD "password"
@@ -88,6 +85,8 @@ typedef struct {
 #define STR_NETINFO_URL "cloudPrimaryUrl"
 #define STR_NETINFO_BACKUP_URL "cloudStandbyUrl"
 
+#define STR_JSON_ENCRYPT "encryptMode"
+#define STR_JSON_PLAINTEXT "plaintext"
 #define STR_JSON_DEVID          "devId"
 #define STR_JSON_AUTHCODE       "authCode"
 #define STR_JSON_UIDHASH        "uidHash"

@@ -926,7 +926,7 @@ int32_t IotcInitSleHostService(void)
     return IOTC_OK;
 }
 
-int32_t IotcSleRegisterHostCallbacks()
+int32_t IotcSleRegisterHostCallbacks(void)
 {
     return IOTC_OK;
 }

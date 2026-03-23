@@ -97,8 +97,10 @@ SessCode LocalCtlSessCoapRecvPreProcess(SessMsg *msg, UtilsBuffer *buf, SessAddt
         return SESS_CODE_ERR;
     }
 
-    int32_t ret = GetLocalControlClient(info->userData, CLIENT_SESS_ID, (const char *)sessOption->value.data,
-        sessOption->value.len, &sessMsg->client);
+    char sessIdStr[HEXIFY_LEN(LOCAL_CONTROL_SESS_ID_LEN) + 1] = { 0 };
+    UtilsHexify(sessOption->value.data, sessOption->value.len, sessIdStr, sizeof(sessIdStr));
+    int32_t ret = GetLocalControlClient(info->userData, CLIENT_SESS_ID, (const char *)sessIdStr,
+        sessOption->value.len * 2, &sessMsg->client);
     if (ret != IOTC_OK || sessMsg->client == NULL) {
         IOTC_LOGW("sess client not exist");
         return SESS_CODE_ERR;

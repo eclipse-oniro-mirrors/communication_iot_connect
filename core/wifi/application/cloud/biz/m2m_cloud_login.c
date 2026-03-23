@@ -67,7 +67,7 @@ int32_t M2mCloudLoginResponseParse(M2mCloudContext *ctx, const CoapPacket *resp,
         return ret;
     }
     ret = DealErrCodeRsp(*errcode);
-    if (ret == IOTC_OK) {
+    if (ret != IOTC_OK) {
         IotcJsonDelete(respJson);
         return ret;
     }
@@ -84,9 +84,11 @@ const CloudOption *M2mCloudGetLoginOption(void)
 {
     static const char *sysLogin[] = {STR_URI_PATH_SYS, STR_URI_PATH_LOGIN};
     static const CloudOption REG_OPTION = {
-        .uri = sysLogin,
-        .num = ARRAY_SIZE(sysLogin),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID),
+        .uri = SYS_LOGIN,
+        .num = ARRAY_SIZE(SYS_LOGIN),
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID),
     };
     return &REG_OPTION;
 }

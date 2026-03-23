@@ -32,6 +32,7 @@ extern "C" {
 #define COAP_CODE_DETAIL(code) ((code) & COAP_CODE_DETAIL_MASK)
 #define COAP_URI_MAX_LEN 128
 #define COAP_OPTION_MIN_LEN 1
+#define COAP_EXTEND_DELTA_VALUE_UINT   12
 #define COAP_EXTEND_DELTA_VALUE_UINT8   13
 #define COAP_EXTEND_DELTA_VALUE_UINT16  14
 #define COAP_EXTEND_DELTA_VALUE_UINT32  15
@@ -63,8 +64,8 @@ typedef enum {
 /* 消息方法类型 */
 typedef enum {
     COAP_METHOD_TYPE_GET    = 1,
-    COAP_METHOD_TYPE_POST   = 2,
-    COAP_METHOD_TYPE_PUT    = 3,
+    COAP_METHOD_TYPE_PUT    = 2,
+    COAP_METHOD_TYPE_POST   = 3,
     COAP_METHOD_TYPE_DELETE = 4,
 } CoapMethodType;
 
@@ -116,6 +117,14 @@ typedef struct {
     uint16_t msgId;
 } CoapHeader;
 
+/* CoAP over TCP消息头 */
+typedef struct {
+    uint8_t len : 4;
+    uint8_t tkl : 4;
+    uint8_t code;
+    uint32_t exlen;
+} CoapTcpHeader;
+
 typedef struct {
     uint16_t option;
     CoapData value;
@@ -124,6 +133,7 @@ typedef struct {
 /* CoAP报文结构 */
 typedef struct {
     CoapHeader header;
+    CoapTcpHeader tcpheader;
     uint8_t token[COAP_TOKEN_MAX_LEN];
     uint8_t opNum;
     CoapOption options[COAP_OPTION_MAX_NUM];
@@ -136,6 +146,7 @@ typedef int32_t (*CoapPacketBuildPayloadFunc)(const CoapBuildPacket *build, Coap
 
 struct CoapBuildPacket {
     CoapHeader header;
+    CoapTcpHeader tcpheader;
     uint8_t token[COAP_TOKEN_MAX_LEN];
     uint8_t opNum;
     const CoapOption *options;

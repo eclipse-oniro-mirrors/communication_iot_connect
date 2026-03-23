@@ -17,10 +17,45 @@
 #include "coap_codec_comm.h"
 #include "iotc_socket.h"
 #include "iotc_errcode.h"
+#include "m2m_cloud_svc.h"
+#include "m2m_cloud_psk.h"
+#include "coap_codec_utils.h"
+#include "iotc_kdf.h"
+#include "securec.h"
+#include "iotc_mem.h"
+#include <stdlib.h>
 
 #define COAP_TCP_V1_GET_REMAIN_SIZE_FINISH 1
 #define COAP_TCP_V1_COAP_HEADER_LEN 2
 #define COAP_TCP_V1_VER 1
+
+#define COAP_TCP_DATA_ENCRYPT_PADDING 16
+#define COAP_TCP_DATA_POS_EXTEND_DELTA_UINT16 2
+#define COAP_TCP_DATA_POS_EXTEND_DELTA_UINT32 4
+#define COAP_TCP_DATA_HEADER_1 1
+#define COAP_TCP_DATA_HEADER_2 2
+#define COAP_TCP_DATA_HEADER_3 3
+#define COAP_TCP_DATA_HEADER_4 4
+#define COAP_TCP_HEADER_DELTA_UINT8 1
+#define COAP_TCP_HEADER_DELTA_UINT16 2
+#define COAP_TCP_HEADER_DELTA_UINT32 3
+#define COAP_TCP_HEADER_DELTA 5
+#define COAP_TCP_HEADER_OFFSET 4
+
+
+static int32_t CoapTcpDecrypt(CoapPacket *pkt, const CoapData *raw);
+static int32_t CoapTcpEncrypt(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf, uint32_t len);
+
+static int32_t CoapTcpV1HmacCompare(uint8_t *src, uint8_t *dest, uint32_t len)
+{
+    for (uint32_t i = 0; i < len; i++) {
+        if (src[i] != dest[i]) {
+            IOTC_LOGW("%s compare err %02x/%02x", __func__, src[i], dest[i]);
+            return IOTC_ERROR;
+        }
+    }
+    return IOTC_OK;
+}
 
 static int32_t CoapTcpV1ParseHeader(CoapPacket *pkt, const CoapData *raw, uint32_t *pos)
 {
@@ -28,24 +63,93 @@ static int32_t CoapTcpV1ParseHeader(CoapPacket *pkt, const CoapData *raw, uint32
         IOTC_LOGW("pkt header short %u", raw->len);
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_TCP_V1_HEADER_SHORT;
     }
-    /* 2字节标识报文长度 */
-    *pos += COAP_TCP_V1_RAW_HEADER_LEN;
 
-    /* right shift 6 for high two bit version */
-    pkt->header.ver = (raw->data[*pos] >> 6) & 0x03;
-    if (pkt->header.ver != COAP_TCP_V1_VER) {
-        IOTC_LOGW("invalid ver %u", pkt->header.ver);
-        return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_TCP_V1_INVALID_VER;
-    }
-
-    /* 0字节的第4/5位为类型 */
-    pkt->header.type = ((raw->data[*pos] & 0x30) >> 4) & 0x03;
+    /* 0字节的高4位为len */
+    pkt->tcpheader.len = (raw->data[*pos] >> 4) & 0x0f;
     /* 0字节的低4位为token长度 */
     pkt->header.tkl = raw->data[*pos] & 0x0F;
     (*pos)++;
+
+    /* 计算需要偏移长度 */
+    if (pkt->tcpheader.len >= 0 && pkt->tcpheader.len <= COAP_EXTEND_DELTA_VALUE_UINT) {
+    } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT8) {
+        (*pos)++;
+    } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT16) {
+        (*pos) += COAP_TCP_DATA_POS_EXTEND_DELTA_UINT16;
+    } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT32) {
+        (*pos) += COAP_TCP_DATA_POS_EXTEND_DELTA_UINT32;
+    }
+
     /* 1字节为操作码 */
     pkt->header.code = raw->data[*pos];
+    IOTC_LOGD("%s pkt header len %u", __func__, pkt->tcpheader.len);
     (*pos)++;
+    return IOTC_OK;
+}
+
+static int32_t CoapTcpV1GetHeader(CoapPacket *pkt)
+{
+    int32_t buflen = 0;
+
+    if (pkt->tcpheader.exlen < COAP_DELTA_UINT8_ADD_NUM) {
+        buflen = COAP_TCP_HEADER_DELTA_UINT8;
+    } else if (pkt->tcpheader.exlen <= COAP_DELTA_UINT16_ADD_NUM) {
+        buflen = COAP_TCP_HEADER_DELTA_UINT16;
+    } else if (pkt->tcpheader.exlen <= COAP_DELTA_UINT32_ADD_NUM) {
+        buflen = COAP_TCP_HEADER_DELTA_UINT32;
+    } else {
+        buflen = COAP_TCP_HEADER_DELTA;
+    }
+    buflen++;
+
+    return buflen;
+}
+
+static int32_t CoapTcpDecrypt(CoapPacket *pkt, const CoapData *raw)
+{
+    M2mCloudContext *ctx = GetM2mCloudCtx();
+    /* payload加解密操作 */
+    if (ctx->pskInfo.pskFinish == true && ctx->pskInfo.encrypt == false) {
+        uint8_t *decData = NULL;
+        int32_t ret;
+        uint32_t decLen = 0;
+        uint8_t hmacRecv[SESS_HMAC_LEN] = { 0 };
+        uint32_t headerLen = CoapTcpV1GetHeader(pkt);
+        memcpy_s(hmacRecv, SESS_HMAC_LEN, &pkt->payload.data[pkt->payload.len - SESS_HMAC_LEN], SESS_HMAC_LEN);
+        /* 报文完整性保护 */
+        uint8_t *hmacData = NULL;
+        uint32_t hmacLen = 0;
+        uint8_t hmacKey[SESS_HMAC_LEN] = { 0 };
+        hmacLen = (pkt->payload.len - SESS_HMAC_LEN);
+        hmacLen += headerLen;
+        hmacData = (uint8_t *)IotcMalloc(hmacLen + 1);
+        if (hmacData == NULL) {
+            IOTC_LOGE("hmacData malloc(%u) err", hmacLen);
+            return IOTC_ADAPTER_MEM_ERR_MALLOC;
+        }
+        (void)memset_s(hmacData, hmacLen, 0, hmacLen);
+        ret = memcpy_s(hmacData, headerLen, raw->data, headerLen);
+        memcpy_s(&hmacData[headerLen], pkt->payload.len - SESS_HMAC_LEN, pkt->payload.data,
+            pkt->payload.len - SESS_HMAC_LEN);
+        /* 计算HMAC */
+        ret = StationSessCalHmac(ctx, hmacData, hmacLen, hmacKey, SESS_HMAC_LEN);
+        /* 对比两个HMAC */
+        ret = CoapTcpV1HmacCompare(hmacKey, hmacRecv, SESS_HMAC_LEN);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("%s sess hmac compare err %d", __func__, ret);
+            return IOTC_ERROR;
+        }
+        /* 解密payload */
+        ret = PskDecryptData(ctx, pkt->payload.data, pkt->payload.len - SESS_HMAC_LEN, &decData, &decLen);
+        if (ret != IOTC_OK || decData == NULL || decLen == 0) {
+            IOTC_LOGW("speke sess dec err %d/%u", ret, decLen);
+            return SESS_CODE_ERR;
+        }
+        if (ret == IOTC_OK) {
+            memcpy_s((void *)pkt->payload.data, decLen, (void *)decData, (size_t)decLen);
+            pkt->payload.len = decLen;
+        }
+    }
     return IOTC_OK;
 }
 
@@ -77,6 +181,7 @@ int32_t CoapTcpV1Decode(CoapPacket *pkt, const CoapData *raw)
         IOTC_LOGW("parse coap tcp v1 payload error %d", ret);
         return ret;
     }
+    CoapTcpDecrypt(pkt, raw);
     return IOTC_OK;
 }
 
@@ -86,6 +191,8 @@ static int32_t CoapTcpV1BuildHeader(const CoapBuildPacket *build, CoapPacket *pk
         IOTC_LOGW("buf short for header %u/%u", buf->len, buf->size);
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
     }
+    uint32_t ext;
+    uint8_t len = 0;
     /* code为0只能为空消息 */
     if (build->header.code == 0 &&
         (build->header.tkl != 0 || build->payload != NULL || build->buildFunc != NULL)) {
@@ -98,10 +205,35 @@ static int32_t CoapTcpV1BuildHeader(const CoapBuildPacket *build, CoapPacket *pk
 
     pkt->header = build->header;
     pkt->header.msgId = 0;
-    pkt->header.ver = COAP_TCP_V1_VER;
+    pkt->header.ver = 0;
 
-    /* 第3个字节的高2位为版本号左移6位, 第4、5位为消息类型, 低4位为token长度 */
-    buf->buffer[buf->len++] = ((pkt->header.ver << 6) | (pkt->header.type << 4) | pkt->header.tkl);
+    if (pkt->tcpheader.exlen < COAP_DELTA_UINT8_ADD_NUM) {
+        len = pkt->tcpheader.exlen;
+        buf->len = COAP_TCP_HEADER_DELTA_UINT8;
+    } else if (pkt->tcpheader.exlen <= COAP_DELTA_UINT16_ADD_NUM) {
+        len = COAP_EXTEND_DELTA_VALUE_UINT8;
+        buf->buffer[COAP_TCP_DATA_HEADER_1] = (uint8_t)(pkt->tcpheader.exlen - COAP_DELTA_UINT8_ADD_NUM);
+        buf->len = COAP_TCP_HEADER_DELTA_UINT16;
+    } else if (pkt->tcpheader.exlen <= COAP_DELTA_UINT32_ADD_NUM) {
+        len = COAP_EXTEND_DELTA_VALUE_UINT16;
+        ext = pkt->tcpheader.exlen - COAP_DELTA_UINT16_ADD_NUM;
+        buf->buffer[COAP_TCP_DATA_HEADER_1] = (uint8_t)((ext >> BIT_PER_BYTE) & 0xFF);
+        buf->buffer[COAP_TCP_DATA_HEADER_2] = (uint8_t)(ext & 0xFF);
+        buf->len = COAP_TCP_HEADER_DELTA_UINT32;
+    } else {
+        len = COAP_EXTEND_DELTA_VALUE_UINT32;
+        ext = pkt->tcpheader.exlen - COAP_DELTA_UINT32_ADD_NUM;
+        /* 右移24bit获得高位 */
+        buf->buffer[COAP_TCP_DATA_HEADER_1] = (uint8_t)((ext >> 24) & 0xFF);
+        /* 右移16bit获得次高位 */
+        buf->buffer[COAP_TCP_DATA_HEADER_2] = (uint8_t)((ext >> 16) & 0xFF);
+        /* 右移8bit获得次低位 */
+        buf->buffer[COAP_TCP_DATA_HEADER_3] = (uint8_t)((ext >> 8) & 0xFF);
+        buf->buffer[COAP_TCP_DATA_HEADER_4] = (uint8_t)(ext & 0xFF);
+        buf->len = COAP_TCP_HEADER_DELTA;
+    }
+
+    buf->buffer[0] = (((len) << COAP_TCP_HEADER_OFFSET) | pkt->header.tkl);
     /* 第4个字节为操作码 */
     buf->buffer[buf->len++] = pkt->header.code;
 
@@ -119,16 +251,67 @@ int32_t CoapTcpV1UpdateRawHeaderLen(uint8_t *start, uint32_t len)
     return IOTC_OK;
 }
 
+static int32_t CoapTcpEncrypt(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf, uint32_t len)
+{
+    M2mCloudContext *ctx = GetM2mCloudCtx();
+    if (ctx->pskInfo.pskFinish == true && ctx->pskInfo.encrypt == false) {
+        int32_t ret = IOTC_OK;
+        uint8_t *encData = NULL;
+        uint32_t encLen = 0;
+        ret = PskEncryptData(ctx, pkt->payload.data, pkt->payload.len, &encData, &encLen);
+        if (ret != IOTC_OK || encData == NULL) {
+            return SESS_CODE_ERR;
+        }
+        pkt->tcpheader.exlen = pkt->tcpheader.exlen + (COAP_TCP_DATA_ENCRYPT_PADDING -
+            (pkt->payload.len % COAP_TCP_DATA_ENCRYPT_PADDING)) + SESS_HMAC_LEN;
+        ret = CoapTcpV1BuildHeader(build, pkt, buf);
+        if (ret != IOTC_OK) {
+            return ret;
+        }
+        ret = CoapCommBuildToken(build, pkt, buf);
+        if (ret != IOTC_OK) {
+            return ret;
+        }
+        ret = CoapCommBuildOption(build, pkt, buf);
+        if (ret != IOTC_OK) {
+            return ret;
+        }
+        uint8_t *hmacData = NULL;
+        uint32_t hmacLen = encLen + len;
+        uint8_t hmacKey[SESS_HMAC_LEN] = { 0 };
+        hmacData = (uint8_t *)IotcMalloc(hmacLen + 1);
+        if (hmacData == NULL) {
+            return IOTC_ADAPTER_MEM_ERR_MALLOC;
+        }
+        ret = memcpy_s(hmacData, len, buf->buffer, len);
+        memcpy_s(&hmacData[len], encLen, encData, encLen);
+        ret = StationSessCalHmac(ctx, hmacData, hmacLen, hmacKey, SESS_HMAC_LEN);
+        CoapData payloadEnc = {encData, encLen};
+        ret = CoapUtilsReplacePayload(pkt, buf, &payloadEnc);
+        memcpy_s(&buf->buffer[buf->len], SESS_HMAC_LEN, hmacKey, SESS_HMAC_LEN);
+        buf->len += SESS_HMAC_LEN;
+        IotcFree(encData);
+        IotcFree(hmacData);
+    }
+    return IOTC_OK;
+}
+
 int32_t CoapTcpV1Encode(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffer *buf)
 {
     CHECK_RETURN(build != NULL && pkt != NULL && buf != NULL && buf->size != 0, IOTC_ERR_PARAM_INVALID);
-
+    uint32_t tempLen = 0;
+    uint8_t headerLen = 0;
+    tempLen = buf->len;
+    CoapCommBuildOption(build, pkt, buf);
+    CoapCommBuildPayload(build, pkt, buf);
+    pkt->tcpheader.exlen = buf->len;
+    buf->len = tempLen;
     int32_t ret = CoapTcpV1BuildHeader(build, pkt, buf);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build coap tcp v1 header error %d", ret);
         return ret;
     }
-
+    headerLen = buf->len;
     ret = CoapCommBuildToken(build, pkt, buf);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build coap tcp v1 token error %d", ret);
@@ -146,12 +329,7 @@ int32_t CoapTcpV1Encode(const CoapBuildPacket *build, CoapPacket *pkt, CoapBuffe
         IOTC_LOGW("build coap tcp v1 payload error %d", ret);
         return ret;
     }
-
-    ret = CoapTcpV1UpdateRawHeaderLen(buf->buffer, buf->len);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("build coap tcp v1 header error %d", ret);
-        return ret;
-    }
+    CoapTcpEncrypt(build, pkt, buf, headerLen);
     return IOTC_OK;
 }
 

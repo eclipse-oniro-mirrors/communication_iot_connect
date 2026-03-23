@@ -25,12 +25,11 @@
 #include "iotc_mem.h"
 #include "iotc_log.h"
 
-#if IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
 #include <sys/time.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
-#endif
+
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -680,10 +679,10 @@ uint32_t IotcInetAddr(const char *ip)
 const char *IotcInetNtoa(uint32_t addr, char *buf, uint32_t buflen)
 {
     struct in_addr tempAddr;
-    tempAddr.s_addr = addr;
+    tempAddr.s_addr = IotcHtonl(addr);
 #if IOTC_CONF_ADAPTER_SOCKET_LWIP_SUPPORT
     return inet_ntoa_r(tempAddr, buf, buflen);
 #else
-    return inet_ntop(AF_INET, &tempAddr, buf, sizeof(tempAddr));
+    return inet_ntop(AF_INET, &tempAddr, buf, buflen);
 #endif
 }

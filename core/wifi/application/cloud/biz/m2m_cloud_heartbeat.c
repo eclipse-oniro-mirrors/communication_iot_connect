@@ -28,9 +28,12 @@ static const CloudOption *M2mCloudGetHeartbeatOption(void)
 {
     static const char *sysHb[] = {STR_URI_PATH_SYS, STR_URI_PATH_HB};
     static const CloudOption HB_OPTION = {
-        .uri = sysHb,
-        .num = ARRAY_SIZE(sysHb),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
+        .uri = SYS_HB,
+        .num = ARRAY_SIZE(SYS_HB),
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
+                    UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &HB_OPTION;
 }
@@ -48,6 +51,13 @@ static IotcJson *M2mCloudBuildHeartbeatRequest(M2mCloudContext *ctx)
         IotcJsonDelete(rootObj);
         return NULL;
     }
+
+    // 添加devid
+    ret = IotcJsonAddStr2Obj(rootObj, STR_NETINFO_DEVICE_ID, ctx->authInfo.loginInfo.devId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add devid error %d", ret);
+    }
+    
     ctx->heartbeatInfo.sentCnt++;
     IOTC_LOGN("send heartbeat sentCnt:%u", ctx->heartbeatInfo.sentCnt);
 

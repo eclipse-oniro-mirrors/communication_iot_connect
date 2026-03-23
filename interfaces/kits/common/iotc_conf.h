@@ -121,6 +121,18 @@
     #define IOTC_CONF_AILIFE_SUPPORT 0
 #endif
 
+#ifndef IOTC_CONF_TCP_SUPPORT
+    #define IOTC_CONF_TCP_SUPPORT 1
+#endif
+
+#ifndef IOTC_CONF_AES_SUPPORT
+    #define IOTC_CONF_AES_SUPPORT 1
+#endif
+
+#ifndef IOTC_CONF_DEBUG_SUPPORT
+    #define IOTC_CONF_DEBUG_SUPPORT 0
+#endif
+
 #ifndef IOTC_CONF_BROAD_CAST_SUPPORT
     #define IOTC_CONF_BROAD_CAST_SUPPORT 0
 #endif

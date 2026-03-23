@@ -242,6 +242,25 @@ int32_t CoapClientSendReq(CoapEndpoint *endpoint, const CoapClientReqParam *para
     return IOTC_OK;
 }
 
+int32_t CoapClientSendCSM(CoapEndpoint *endpoint, const SocketAddr *addr,
+    CoapPacket *packetBuf)
+{
+    CHECK_RETURN_LOGW(endpoint != NULL && packetBuf != NULL,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    IOTC_LOGD("endpoint client send CSM packet");
+    int32_t ret = CoapEndpointSendCSM(endpoint, packetBuf, addr);
+    if (ret != IOTC_OK) {
+        (void)memset_s(packetBuf, sizeof(CoapPacket), 0, sizeof(CoapPacket));
+        IOTC_LOGW("send req error %d", ret);
+        return ret;
+    }
+
+    /* CoapPacket结构体存在二级指针，退出需清理 */
+    (void)memset_s(packetBuf, sizeof(CoapPacket), 0, sizeof(CoapPacket));
+    return IOTC_OK;
+}
+
 int32_t CoapClientAddDefaultRespHandler(CoapEndpoint *endpoint, CoapClientRespHandler handler)
 {
     CHECK_RETURN_LOGW(endpoint != NULL && handler != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
