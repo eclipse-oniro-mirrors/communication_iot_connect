@@ -64,6 +64,7 @@ bool IsExitSleConnDev(const uint16_t connID);
 void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo);
 SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId);
 int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info);
+SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint32_t connId);
 
 #ifdef __cplusplus
 }

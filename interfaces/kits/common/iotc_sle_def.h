@@ -88,6 +88,7 @@ typedef struct {
     int32_t (*indicateFunc)(uint32_t connId, uint8_t *buff, uint32_t len);
     const IotcSleSsapProfileDesc *desc;
     uint8_t descNum;
+    uint8_t serviceId;
 } IotcSleSsapProfileChar;
 
 typedef struct {
@@ -143,6 +144,12 @@ typedef struct {
     unsigned char uuidLen;
     char *uuid;
 } IotcSleUuid;
+
+typedef enum {
+    IOTC_SPEKE_SLE_STATE_NONE         = 0x00,
+    IOTC_SPEKE_SLE_STATE_INIT         = 0x01,
+} SpekeState;
+
 typedef struct {
     IotcDeviceInfo devInfo; // 下挂的生态设备信息（SLE连接后,从生态设备处获取）
     uint8_t linkType; // 链路类型
@@ -155,6 +162,7 @@ typedef struct {
     uint8_t authCode[BLE_AUTHCODE_LEN];
     uint16_t connID;
     uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
+    SpekeState isSecure;
 } SleDeviceInfo;
 
 typedef enum {
@@ -165,6 +173,7 @@ typedef enum {
     IOTC_CONN_SLE_STATE_DISCONNECTED  = 0x02,   /*!< @if Eng SLE ACB connect state of disconnected
                                                @else   SLE ACB 已断接 @endif */
 } IotcConnSleState;
+
 typedef struct {
     uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
     uint16_t connID;

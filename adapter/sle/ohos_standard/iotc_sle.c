@@ -16,6 +16,8 @@
 #include "iotc_sle_announce.h"
 #include "iotc_sle_client.h"
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sched.h>
 #include <pthread.h>
 #include "securec.h"
@@ -113,10 +115,42 @@ int32_t IotcInitSleSsapsService(void)
     return IOTC_OK;
 }
 
+static int32_t IotcSleStartServiceEx(uint8_t *serverId)
+{
+    int32_t ret;
+    sleUUID appUuid = {0};
+    appUuid.len = SLE_UUID_LEN;
+
+    const uint8_t fixedUuid[SLE_UUID_LEN] = {
+        0x39, 0xBE, 0xA8, 0x80, 0xFC, 0x70, 0x11, 0xEA,
+        0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    if(memcpy_s(appUuid.id, SLE_UUID_LEN, fixedUuid, SLE_UUID_LEN) != EOK)
+    {
+        return IOTC_ERROR;
+    }
+
+    ret = IotcSleSsapcRegister(&appUuid, serverId);
+    IOTC_LOGI("[FIXED UUID] ssapc_register ret:0x%08X", ret);
+    return ret;
+}
+
 int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
 {
-    (void)svc;
-    (void)svcNum;
+    if ((svc == NULL) || (svcNum == 0)) {
+        IOTC_LOGE("IotcSleSsapsStartService invalid param");
+        return IOTC_ERROR;
+    }
+
+    for (uint8_t i = 0; i < svcNum; i++) {
+        int32_t ret = IotcSleStartServiceEx(&svc[i].serverId);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("sle start service ret=%d, serverId = %d", ret, svc[i].serverId);
+            return ret;
+        }
+    }
+
     return IOTC_OK;
 }
 

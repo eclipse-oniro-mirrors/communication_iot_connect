@@ -116,6 +116,18 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
     return IOTC_OK;
 }
 
+SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint32_t connId)
+{
+    ListEntry *item = NULL;
+    LIST_FOR_EACH_ITEM(item, &g_sleConnDevList) {
+        SleConnDevList *list = CONTAINER_OF(item, SleConnDevList, list);
+        if(list->info.connID == connId) {
+            return &list->info;
+        }
+    }
+    return NULL;
+}
+
 SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId)
 {
     ListEntry *item;

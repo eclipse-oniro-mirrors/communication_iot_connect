@@ -82,8 +82,7 @@ typedef enum {
     IOTC_SLE_SEEK_ACTIVE  = 0x01,
 } SoftbusSleSeekType;
 
-static char g_sleUuidAppUuid[] = {0x39, 0xBE, 0xA8, 0x80, 0xFC, 0x70, 0x11, 0xEA,
-    0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 
 static uint8_t g_clientId = 1;
 
@@ -269,8 +268,8 @@ static void SleClientFindStructureCallBack(uint32_t event, void *param, uint32_t
         return;
     }
     IOTC_LOGI("[uuid client] %s: event = %d, param = %p, len = %d", __func__, event, param, len);
-
     IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
+
     int32_t ret = SleSetServiceAtt(eventParam->ssapcFindServiceResult.clientId,
         eventParam->ssapcFindServiceResult.service.startHdl,
         eventParam->ssapcFindServiceResult.service.endHdl);
@@ -280,6 +279,7 @@ static void SleClientFindStructureCallBack(uint32_t event, void *param, uint32_t
         IOTC_LOGE("[uuid client] %s: set service att failed.", __func__);
         return;
     }
+
 }
 
 static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, uint32_t len)
@@ -290,9 +290,28 @@ static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, 
         return ;
     }
     IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
-    IOTC_LOGI("[uuid client] %s: conn_id:%d client id:%d status:%d type:%02x\r\n",__func__,
-        eventParam->ssapcFindStructureResult.connId, eventParam->ssapcFindStructureResult.clientId,
-        eventParam->ssapcFindStructureResult.status, eventParam->ssapcFindStructureResult.structureResult.type);
+    IOTC_LOGI("[uuid client] %s: status = %d", __func__, eventParam->ssapcFindStructureResult.status);
+
+    if(eventParam->ssapcFindStructureResult.status == IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED)
+    {
+        SleDeviceInfo* info = SleGetSleConnRetDeviceInfo(eventParam->ssapcFindStructureResult.connId);
+        if(info == NULL)
+        {
+            IOTC_LOGE("[uuid client] %s: info is NULL.", __func__);
+            return ;
+        }
+        if(info->isSecure == IOTC_SPEKE_SLE_STATE_INIT)
+        {
+            IOTC_LOGE("[uuid client] %s: isSecure is IOTC_SPEKE_SLE_STATE_INIT.", __func__);
+            return;
+        }
+        int32_t ret = ClientSleSpekeStartSession(eventParam->ssapcFindStructureResult.connId);
+        if(ret != IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] %s: ClientSleSpekeStartSession failed, ret:%d\r\n", __func__, ret);
+        }
+        info->isSecure = IOTC_SPEKE_SLE_STATE_INIT;
+    }
 
 }
 
@@ -309,17 +328,9 @@ static void SleClientConnectParamUpdateCallback(uint32_t event, void *param, uin
 }
 
 
-static int32_t SleUuidClientRegister(void)
+static int32_t SleClientBusinessCallbackInit(void)
 {
     int32_t ret;
-
-    sleUUID appUuid = {0};
-    IOTC_LOGI("[uuid client] ssapc_register_client \r\n");
-    appUuid.len = sizeof(g_sleUuidAppUuid);
-    if (memcpy_s(appUuid.id, appUuid.len, g_sleUuidAppUuid, sizeof(g_sleUuidAppUuid)) != EOK)
-    {
-        return IOTC_ERROR;
-    }
 
     ret = EventBusSubscribe(SleClientSeekResultCallBack, IOTC_CORE_SLE_EVENT_SEEK_RESULT);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleSeek err:%d", ret);
@@ -339,8 +350,6 @@ static int32_t SleUuidClientRegister(void)
     ret = EventBusSubscribe(SleClientConnectParamUpdateCallback, IOTC_CORE_SLE_EVENT_CONNECT_PARAM_UPDATE_REQ);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientConnectParamUpdateCallback err:%d", ret);
 
-    ret = IotcSleSsapcRegister(&appUuid, &g_clientId);
-    IOTC_LOGI("[uuid client] ssapc_register_client ret:%x", ret);
     return ret;
 }
 
@@ -364,6 +373,8 @@ int32_t SleScanServiceStart(void)
 
 int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType,const uint8_t *data, uint32_t len)
 {
+    //判断是否已经协商speke
+
     // IotcOhSendCustomSecData(devId, protType, data, len);
     IOTC_LOGI("%s: devId=%s, protType=%d, len=%d", __func__, devId, protType, len);
     int32_t connId = 0;
@@ -403,7 +414,7 @@ int32_t IotcClientFindConnIdAndAddrList(void)
 
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
 {
-    int32_t ret = SleUuidClientRegister();
+    int32_t ret = SleClientBusinessCallbackInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("sle ssap client register err ret=%d", ret);
         return ret;

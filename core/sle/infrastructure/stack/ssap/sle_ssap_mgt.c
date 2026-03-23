@@ -274,6 +274,7 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcSleSsapProfileSvc *in, IotcA
     to->uuid = in->uuid;
     to->character = character;
     to->charNum = in->charNum;
+    to->serverId = in->character->serviceId;
     return IOTC_OK;
 }
 
@@ -532,8 +533,23 @@ static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
     return NULL;
 }
 
-int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
-    uint32_t connId, const uint8_t *value, uint32_t valueLen)
+static IotcAdptSleSsapWriteFunc ServiceIdFindAttrHandleNotifyFunc(int8_t serviceId)
+{
+    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
+        if (GetSleSsapMgtApp()->svc[i].serverId == serviceId) {
+            for(uint8_t j = 0; j < GetSleSsapMgtApp()->svc[i].charNum; j++)
+            {
+                if(GetSleSsapMgtApp()->svc[i].character[j].writeFunc != NULL)
+                {
+                    return GetSleSsapMgtApp()->svc[i].character[j].writeFunc;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint32_t connId, const uint8_t *value, uint32_t valueLen)
 {
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
         IOTC_ERR_PARAM_INVALID, "invalid param");
@@ -693,6 +709,26 @@ int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *para
         return IOTC_ERROR;
     }
     int32_t ret = func(param->value, param->valueLen);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("write err ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    return IOTC_OK;
+}
+
+int32_t SleSsapReqWriteNotification(uint8_t serverId, uint16_t connectId, uint8_t type,uint8_t *value, int32_t valueLen, uint16_t handle)
+{
+    if (GetSleSsapMgtApp()->connNum == 0) {
+        IOTC_LOGE("no connect");
+        return IOTC_CORE_SLE_NO_CONNECT;
+    }
+    IotcAdptSleSsapWriteFunc func = ServiceIdFindAttrHandleNotifyFunc(serverId);
+    if (func == NULL) {
+        IOTC_LOGE("no find write func");
+        return IOTC_ERROR;
+    }
+    int32_t ret = func(connectId, value, valueLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;

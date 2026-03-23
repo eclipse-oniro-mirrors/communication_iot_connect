@@ -468,7 +468,18 @@ static void SleSsapcNotificationEventHandler(int32_t event, void *param)
     IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
     IOTC_LOGI("SleSsapcNotificationEventHandler connid = %d\n", eventParam->ssapcNotification.connId);
 
-    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_NOTIFICATION, param, sizeof(eventParam->ssapcNotification));
+    int32_t ret = SleSsapReqWriteNotification(
+        eventParam->ssapcNotification.clientId + 1,
+        eventParam->ssapcNotification.connId,
+        eventParam->ssapcNotification.data.type,
+        eventParam->ssapcNotification.data.data,
+        eventParam->ssapcNotification.data.dataLen,
+        eventParam->ssapcNotification.data.handle);
+    if(ret != IOTC_OK)
+    {
+        IOTC_LOGE("SleSsapcNotificationEventHandler SleSsapReqWriteNotification failed, ret = %d\n", ret);
+    }
+    // EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_NOTIFICATION, param, sizeof(eventParam->ssapcNotification));
 }
 
 static void SleSsapcIndicationEventHandler(int32_t event, void *param)
