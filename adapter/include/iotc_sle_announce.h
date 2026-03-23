@@ -25,16 +25,6 @@
 extern "C" {
 #endif
 
-/**
-//  *   @brief   Announce state change Callbacks
-//  *
-//  *   @param   [in] announceId
-//  *   @param   [in] announceState
-//  *   @param   [in] isTerminaled - whether the host is connected while announcing
-//  *   @return  None
-//  */
-// typedef void (*IotcAdpSleAnnounceStateChangeCallback)(uint8_t announceId, uint8_t announceState, bool isTerminaled);
-
 typedef enum {
     IOTC_ADPT_SLE_ANNOUNCE_NONCONN_NONSCAN_MODE      = 0x00,
     IOTC_ADPT_SLE_ANNOUNCE_CONNECTABLE_NONSCAN_MODE  = 0x01,

@@ -376,7 +376,6 @@ static SlePeerDevInfo *SleSsapPeerDevInfoFind(uint32_t connId)
             return peerDevInfo;
         }
     }
-    //如果没查找到对应的连接信息就创建一个节点存储， 如果有，就直接返回
     return SleSsapPeerDevInfoCreateNode(connId);
 }
 
@@ -533,23 +532,31 @@ static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
     return NULL;
 }
 
+static IotcAdptSleSsapWriteFunc FindNotifyFuncInService(const IotcAdptSleSsapService *svc)
+{
+    for (uint8_t j = 0; j < svc->charNum; j++) {
+        if (svc->character[j].writeFunc != NULL) {
+            return svc->character[j].writeFunc;
+        }
+    }
+    return NULL;
+}
+
 static IotcAdptSleSsapWriteFunc ServiceIdFindAttrHandleNotifyFunc(int8_t serviceId)
 {
     for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
         if (GetSleSsapMgtApp()->svc[i].serverId == serviceId) {
-            for(uint8_t j = 0; j < GetSleSsapMgtApp()->svc[i].charNum; j++)
-            {
-                if(GetSleSsapMgtApp()->svc[i].character[j].writeFunc != NULL)
-                {
-                    return GetSleSsapMgtApp()->svc[i].character[j].writeFunc;
-                }
+            IotcAdptSleSsapWriteFunc func = FindNotifyFuncInService(&GetSleSsapMgtApp()->svc[i]);
+            if (func != NULL) {
+                return func;
             }
         }
     }
     return NULL;
 }
 
-int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint32_t connId, const uint8_t *value, uint32_t valueLen)
+int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
+    uint32_t connId, const uint8_t *value, uint32_t valueLen)
 {
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
         IOTC_ERR_PARAM_INVALID, "invalid param");
@@ -566,14 +573,12 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint
         return ret;
     }
 
-
-    SlePeerDevInfo * devInfo = GetSleSsapMgtPeerDevInfo(connId);
+    SlePeerDevInfo *devInfo = GetSleSsapMgtPeerDevInfo(connId);
     if (devInfo == NULL) {
         IOTC_LOGE("no find peer dev info");
         return IOTC_CORE_SLE_INVALID_CONNID;
     }
-    if(devInfo->connState != IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED)
-    {
+    if (devInfo->connState != IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED) {
         return IOTC_CORE_SLE_CONNECT_STATE_ERROR;
     }
     param.handle = (devInfo->handler.startHdl);
@@ -581,8 +586,7 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint
     param.value  = (uint8_t *)value;
     param.valueLen = valueLen;
     ret = IotcSleSendSsapsIndicate(devInfo->serverId, connId, &param);
-    if(ret != IOTC_OK)
-    {
+    if (ret != IOTC_OK) {
         IOTC_LOGE("send indicate msg err ret=%d", ret);
     }
     return ret;
@@ -708,27 +712,7 @@ int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *para
         IOTC_LOGE("no find write func");
         return IOTC_ERROR;
     }
-    int32_t ret = func(param->value, param->valueLen);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("write err ret=%d", ret);
-        return IOTC_ERROR;
-    }
-
-    return IOTC_OK;
-}
-
-int32_t SleSsapReqWriteNotification(uint8_t serverId, uint16_t connectId, uint8_t type,uint8_t *value, int32_t valueLen, uint16_t handle)
-{
-    if (GetSleSsapMgtApp()->connNum == 0) {
-        IOTC_LOGE("no connect");
-        return IOTC_CORE_SLE_NO_CONNECT;
-    }
-    IotcAdptSleSsapWriteFunc func = ServiceIdFindAttrHandleNotifyFunc(serverId);
-    if (func == NULL) {
-        IOTC_LOGE("no find write func");
-        return IOTC_ERROR;
-    }
-    int32_t ret = func(connectId, value, valueLen);
+    int32_t ret = func(param->connectId, param->value, param->valueLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;

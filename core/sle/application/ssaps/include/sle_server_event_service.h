@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,16 @@
  * limitations under the License.
  */
 
- #ifndef SLE_SERVER_EVENT_SERVICE_H
- #define SLE_SERVER_EVENT_SERVICE_H
- #include <stdint.h>
+#ifndef SLE_SERVER_EVENT_SERVICE_H
+#define SLE_SERVER_EVENT_SERVICE_H
+#include <stdint.h>
 
- #ifdef __cplusplus
- extern "C" {
- #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#ifdef __cplusplus
+}
+#endif
 
-
- #ifdef __cplusplus
- }
- #endif
-
- #endif
+#endif

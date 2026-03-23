@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "sle_adv_ctrl.h"
 #include "sle_common.h"
 #include "utils_common.h"
+
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
 {
     int32_t ret = SleAdvInit();
@@ -44,11 +45,13 @@ int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
     }
     return IOTC_OK;
 }
+
 int32_t SleScanServiceStart(void)
 {
     return IOTC_OK;
 }
-int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType,const uint8_t *data, uint32_t len)
+
+int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
     NOT_USED(devId);
     NOT_USED(protType);
@@ -57,13 +60,10 @@ int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType,const ui
     return IOTC_OK;
 }
 
-
-
 int32_t SleAdvServiceStart(uint32_t ms)
 {
     int32_t ret = SleAdvCtrlStart(ms);
-    if(ret != IOTC_OK)
-    {
+    if (ret != IOTC_OK) {
         IOTC_LOGW("start sle adv error %d", ret);
         return ret;
     }
@@ -73,18 +73,17 @@ int32_t SleAdvServiceStart(uint32_t ms)
 int32_t SleAdvServiceStop(void)
 {
     int32_t ret = SleAdvCtrlStop();
-    if(ret != IOTC_OK)
-    {
+    if (ret != IOTC_OK) {
         IOTC_LOGW("stop sle adv error %d", ret);
         return ret;
     }
     return IOTC_OK;
 }
+
 void SleAdvSetType(SleSvcAdvDataType type)
 {
-    SleSetAdvType( type);
+    SleSetAdvType(type);
 }
-
 
 int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)
 {

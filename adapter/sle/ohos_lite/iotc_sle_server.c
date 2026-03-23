@@ -404,7 +404,6 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
         SleService srvcInfo = {0};
         srvcInfo.attrNum = attrNum;
         srvcInfo.attrList = attrList;
-        //print uuid
         IOTC_LOGI("IotcBleStartGattsService uuid:%s  svcHandle:%d", svc[i].uuid, &svc[i].svcHandle);
 
         int32_t ret = IotcSleStartServiceEx(&svc[i].svcHandle, &srvcInfo);
@@ -594,7 +593,6 @@ int32_t IotcSsapsAddService(uint8_t serviceId, IotcSleUuidAddr *serviceUuid, boo
         return IOTC_ERROR;
     }
     uuid->len = serviceUuid->len;
-    // 复制 addr 字段
     if (memcpy_s(uuid->uuid, uuid->len, serviceUuid->uuid, serviceUuid->len) != EOK) {
         IOTC_LOGE(" IotcSsapsAddService memcpy_s  uuid fail");
         free(uuid);

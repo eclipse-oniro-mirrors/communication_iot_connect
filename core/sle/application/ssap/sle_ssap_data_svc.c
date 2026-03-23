@@ -76,7 +76,7 @@ static int32_t LinkLayerExecutorWaitCallback(void *inData, void **outData)
     CHECK_RETURN_LOGE(inData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     const LinkLayerExecutorParam *param = (const LinkLayerExecutorParam *)inData;
 
-    int32_t ret = SleLinkLayerProcessData(param->connId,param->value, param->valueLen);
+    int32_t ret = SleLinkLayerProcessData(param->connId, param->value, param->valueLen);
     IOTC_LOGI("process bt data, len=%u,ret=%d", param->valueLen, ret);
     return ret;
 }
@@ -85,7 +85,7 @@ static int32_t SleDataCharWrite(uint32_t connId, uint8_t *buff, uint32_t len)
 {
     CHECK_RETURN_LOGE((buff != NULL) && (len > 0), IOTC_ERR_PARAM_INVALID, "invalid param");
     int32_t errcode;
-    LinkLayerExecutorParam param = {.connId = connId ,.value = buff, .valueLen = len};
+    LinkLayerExecutorParam param = {.connId = connId, .value = buff, .valueLen = len};
     int32_t ret = SchedAsyncExecutorWait(LinkLayerExecutorWaitCallback, &param, NULL, &errcode, UTILS_SEC_TO_MS(1));
     if (ret != IOTC_OK) {
         IOTC_LOGE("async executor error %d", ret);

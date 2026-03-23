@@ -126,8 +126,7 @@ static int32_t IotcSleStartServiceEx(uint8_t *serverId)
         0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
-    if(memcpy_s(appUuid.id, SLE_UUID_LEN, fixedUuid, SLE_UUID_LEN) != EOK)
-    {
+    if (memcpy_s(appUuid.id, SLE_UUID_LEN, fixedUuid, SLE_UUID_LEN) != EOK) {
         return IOTC_ERROR;
     }
 
@@ -163,55 +162,9 @@ uint64_t SleClockGettimeUsKhLite(void)
     return ((uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL);
 }
 
-extern uint8_t gle_tx_acb_data_num_get(void);
-// static int32_t sle_notify_indicate_sync(uint8_t serverId, uint16_t connectId, ssaps_ntf_ind_t *param)
-// {
-//     int32_t ret = -1;
-//     int sflag = 0;
-//     uint64_t kht_before_get_jiffies = 0, kht_after_get_jiffies = 0;
-//     uint64_t after_us = 0;
-//     uint32_t wait_min_time_us = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125);  // 最少等待1个发送间隔(可以是连接间隔)
-//     int retry = 2000; // 最多等待2000个连接间隔时间
-//     kht_before_get_jiffies = sle_clock_gettime_us_kh_lite();
-//     after_us = kht_before_get_jiffies + wait_min_time_us; // 防止溢出回卷, 等待超时时间
+uint8_t gle_tx_acb_data_num_get(void);
 
-//     while (1) {
-//         if (sflag == 0 && gle_tx_acb_data_num_get() > 0) {
-//             ret = ssaps_notify_indicate(serverId, connectId, param);
-//             sflag = 1;
-//         }
-
-//         kht_after_get_jiffies = sle_clock_gettime_us_kh_lite();
-//         if ((int)(kht_after_get_jiffies - after_us) < 0) { // 这里至少等待1个连接间隔(或发送间隔)
-//             sched_yield();
-//         } else {
-//             if (sflag == 0 && (--retry) > 0) {
-//                 after_us += wait_min_time_us; // 没有发出去包的话 这里要继续等待下一个连接间隔(或发送间隔)
-//                 sched_yield();
-//                 continue;
-//             }
-//             // 超过最大等待时间,没有发送出去, 失败退出
-//             // 或者发送出去了, 成功返回
-//             break;
-//         }
-//     }
-//     return ret;
-// }
-
-pthread_mutex_t send_mutex_server;
-// static int32_t SsapsNotifyIndicate(uint8_t serverId, uint16_t connectId, const SsapsNotifyParam *param)
-// {
-//     pthread_mutex_lock(&send_mutex_server);
-//     ssaps_ntf_ind_t param_sdk = {
-//         .handle = param->handle,
-//         .type = (uint8_t)param->type,
-//         .value_len = param->valueLen,
-//         .value = param->value,
-//     };
-//     int32_t ret = sle_notify_indicate_sync(serverId, connectId, &param_sdk);
-//     pthread_mutex_unlock(&send_mutex_server);
-//     return ret;
-// }
+pthread_mutex_t g_sendMutexServer;
 
 int32_t SlePairRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
@@ -1216,31 +1169,8 @@ int32_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
         IOTC_LOGE("IotcSleSsapsStartService ret=%d", ret);
         return IOTC_ERROR;
     }
-    }
     return IOTC_OK;
 }
-
-
-// int32_t IotcSleSendSsapsIndicate(uint8_t serverId, uint16_t connectId, const IotcAdptSleSendIndicateParam *param)
-// {
-//     if ((param == NULL) || (param->value == NULL) || (param->valueLen == 0)) {
-//         IOTC_LOGE("invalid param");
-//         return IOTC_ERR_PARAM_INVALID;
-//     }
-
-//     SsapsNotifyParam indParam = {0};
-//     (void)memset_s(&indParam, sizeof(indParam), 0, sizeof(indParam));
-//     indParam.handle = param->handle;
-//     indParam.type = param->type;
-//     indParam.valueLen = param->valueLen;
-//     indParam.value = param->value;
-//     int32_t ret = SsapsNotifyIndicate(serverId, connectId, &indParam);
-//     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-//         IOTC_LOGE("sle send indicate ret=%d", ret);
-//         return IOTC_ERROR;
-//     }
-//     return IOTC_OK;
-// }
 
 int32_t IotcSleSendSsapsResponse(uint8_t serverId, uint16_t connectId, const IotcAdptSleResponseParam *param)
 {

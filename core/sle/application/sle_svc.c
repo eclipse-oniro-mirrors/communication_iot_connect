@@ -19,7 +19,6 @@
 #include "service_proxy.h"
 #include "iotc_errcode.h"
 #include "sle_svc_ctx.h"
-// #include "sle_adv.h"
 #include "securec.h"
 #include "sle_ssap_data_svc.h"
 #include "sle_profile.h"
@@ -30,7 +29,6 @@
 #include "sle_ssap_mgt.h"
 #include "iotc_sle_host.h"
 #include "iotc_sle_server.h"
-// #include "sle_adv_ctrl.h"
 #include "sle_linklayer.h"
 #include "sle_common.h"
 #include "sle_svc_netcfg_status.h"
@@ -126,7 +124,7 @@ static int32_t SleServiceInit(SleSvcCtx *ctx)
     }
 
     ret = SleSsapServiceSvcInit(ctx);
-    if(ret != IOTC_OK){
+    if (ret != IOTC_OK) {
         IOTC_LOGE("SleSsapServiceSvcInit err %d", ret);
         return ret;
     }

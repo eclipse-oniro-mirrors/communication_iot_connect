@@ -20,8 +20,6 @@
 #include "sle_linklayer.h"
 #include "utils_assert.h"
 #include "iotc_conf.h"
-// #include "sle_adv.h"
-// #include "sle_adv_ctrl.h"
 #include "sle_ssap_mgt.h"
 #include "iotc_oh_sle_adv_data.h"
 #include "sched_executor.h"

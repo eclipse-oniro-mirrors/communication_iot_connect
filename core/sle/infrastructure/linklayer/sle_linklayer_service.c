@@ -178,9 +178,6 @@ static int32_t SvcCheckEncType(const SleSvcInfo *svcInfo, SleLinkLayerEncryptTyp
 {
     CHECK_RETURN_LOGE(encryptType < sizeof(svcInfo->suppEncType) * BITS_PER_BYTE,
         IOTC_CORE_SLE_LL_ERR_ENCRYPT_TYPE, "enc type too large:%d", encryptType);
-    //TODO： 暂时不检查服务加密类型
-    // CHECK_RETURN_LOGE((svcInfo->suppEncType & (1 << encryptType)) > 0,
-    //     IOTC_CORE_SLE_LL_ERR_SVC_NOT_SUPP_ENCTYPE, "svc:%s not supp enc type:%d", svcInfo->service, encryptType);
     return IOTC_OK;
 }
 

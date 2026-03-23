@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+/* SLE connected device management */
+
 #include "sle_conn_mgt.h"
 #include "securec.h"
 #include "iotc_errcode.h"
@@ -33,7 +35,6 @@ typedef struct {
     SleConnDeviceInfo info;
     ListEntry node;
 } SlDeviceInfoNode;
-
 
 static void ReleaseStrings(uint8_t **strs)
 {
@@ -59,19 +60,19 @@ static ListEntry *GetSleConnDevListHead(void)
 int32_t SleConnDevMgt(const SleConnRetDeviceInfo *retDev)
 {
     int32_t ret = IOTC_ERROR;
-    if(retDev->status != IOTC_CONN_SLE_STATE_CONNECTED && retDev->status != IOTC_CONN_SLE_STATE_DISCONNECTED) {
+    if (retDev->status != IOTC_CONN_SLE_STATE_CONNECTED && retDev->status != IOTC_CONN_SLE_STATE_DISCONNECTED) {
         IOTC_LOGE("conn status:[%u]", retDev->status);
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    if(retDev->status == IOTC_CONN_SLE_STATE_DISCONNECTED) {
+    if (retDev->status == IOTC_CONN_SLE_STATE_DISCONNECTED) {
         SleDeleteConnDev(retDev->connID);
         IOTC_LOGI("delete connID:[%u]", retDev->connID);
         return IOTC_OK;
     }
 
     ret = SleAddConnDev(retDev);
-    if(ret != IOTC_OK) {
+    if (ret != IOTC_OK) {
         return ret;
     }
 
@@ -83,7 +84,7 @@ bool IsExitSleConnDev(const uint16_t connID)
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_sleConnDevList) {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
-        if(node->info.connID == connID) {
+        if (node->info.connID == connID) {
             return true;
         }
     }
@@ -94,7 +95,7 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
 {
     CHECK_RETURN_LOGW(retDev != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    if(true == IsExitSleConnDev(retDev->connID)) {
+    if (IsExitSleConnDev(retDev->connID)) {
         IOTC_LOGI("connID is exited:%u", retDev->connID);
         return IOTC_OK;
     }
@@ -116,24 +117,24 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
     return IOTC_OK;
 }
 
-SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint32_t connId)
+SleDeviceInfo *SleGetSleConnRetDeviceInfo(uint32_t connId)
 {
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_sleConnDevList) {
         SleConnDevList *list = CONTAINER_OF(item, SleConnDevList, list);
-        if(list->info.connID == connId) {
+        if (list->info.connID == connId) {
             return &list->info;
         }
     }
     return NULL;
 }
 
-SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId)
+SleConnDeviceInfo *SleFindRetDeviceInfoNode(const char *devId)
 {
     ListEntry *item;
     LIST_FOR_EACH_ITEM(item, &g_sleDeviceInfoList) {
         SlDeviceInfoNode *node = CONTAINER_OF(item, SlDeviceInfoNode, node);
-        if(memcmp(node->info.devId, devId, strlen(devId)) == 0) {
+        if (memcmp(node->info.devId, devId, strlen(devId)) == 0) {
             return &node->info;
         }
     }
@@ -147,7 +148,7 @@ int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info)
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_sleDeviceInfoList) {
         SlDeviceInfoNode *node = CONTAINER_OF(item, SlDeviceInfoNode, node);
-        if(memcmp(node->info.devId, info->devId, DEVICE_ID_MAX_STR_LEN + 1) == 0) {
+        if (memcmp(node->info.devId, info->devId, DEVICE_ID_MAX_STR_LEN + 1) == 0) {
             return true;
         }
     }
@@ -162,21 +163,19 @@ int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info)
 
     (void)UtilsGlobalMutexLock();
     LIST_INSERT(&newNode->node, &g_sleDeviceInfoList);
-    g_sleDeviceInfoNum ++;
+    g_sleDeviceInfoNum++;
     UtilsGlobalMutexUnlock();
     return IOTC_OK;
 }
-
-
 
 void SleDeleteConnDev(uint16_t connID)
 {
     (void)UtilsGlobalMutexLock();
     ListEntry *item;
-    ListEntry*next;
+    ListEntry *next;
     LIST_FOR_EACH_ITEM_SAFE(item, next, GetSleConnDevListHead()) {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
-        if(node->info.connID == connID) {
+        if (node->info.connID == connID) {
             LIST_REMOVE(&node->list);
             IotcFree(node);
             g_sleConnDevListNum--;
@@ -190,10 +189,10 @@ void SleDeleteConnDev(uint16_t connID)
 bool SleFindConnDevByDevId(const char *devID, uint16_t *connID)
 {
     ListEntry *item;
-    ListEntry*next;
+    ListEntry *next;
     LIST_FOR_EACH_ITEM_SAFE(item, next, GetSleConnDevListHead()) {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
-        if(memcmp(node->info.devId, devID, strlen(devID)) == 0) {
+        if (memcmp(node->info.devId, devID, strlen(devID)) == 0) {
             IOTC_LOGI("find connID:[%u], devID[%s]", node->info.connID, node->info.devId);
             *connID = node->info.connID;
             return true;
@@ -216,9 +215,9 @@ void DestroySleConnDevList(void)
     UtilsGlobalMutexUnlock();
 }
 
-void PrintSleConnDevList()
+void PrintSleConnDevList(void)
 {
-    (void) UtilsGlobalMutexLock();
+    (void)UtilsGlobalMutexLock();
     ListEntry *item;
     LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead()) {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
@@ -228,13 +227,13 @@ void PrintSleConnDevList()
 
 void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo)
 {
-    if(deviceInfo == NULL) {
+    if (deviceInfo == NULL) {
         return;
     }
 
     uint32_t len = 0;
     uint8_t **msg = (uint8_t **)IotcCalloc(1, sizeof(uint8_t *));
-    if(msg == NULL) {
+    if (msg == NULL) {
         return;
     }
 
@@ -242,42 +241,42 @@ void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo)
     IotcJson *root = IotcJsonParse((char *)*msg);
 
     IotcJson *vendorJson = IotcJsonGetObj(root, STR_JSON_VENDOR);
-    if(vendorJson == NULL) {
+    if (vendorJson == NULL) {
         return;
     }
 
     IotcJson *devInfoJson = IotcJsonGetObj(vendorJson, STR_JSON_DEV_INFO);
-    if(devInfoJson == NULL) {
+    if (devInfoJson == NULL) {
         return;
     }
 
     IotcJson *snJson = IotcJsonGetObj(devInfoJson, STR_JSON_SN);
     const char *sn = IotcJsonGetStr(snJson);
-    if(sn != NULL) {
+    if (sn != NULL) {
         memcpy_s(deviceInfo->sn, sizeof(deviceInfo->sn), sn, strlen(sn) + 1);
     }
 
     IotcJson *modelJson = IotcJsonGetObj(root, STR_JSON_MODEL);
     const char *model = IotcJsonGetStr(modelJson);
-    if(model != NULL) {
+    if (model != NULL) {
         memcpy_s(deviceInfo->model, sizeof(deviceInfo->model), model, strlen(model) + 1);
     }
 
     IotcJson *devTypeJson = IotcJsonGetObj(root, STR_JSON_DEV_TYPE);
     const char *devType = IotcJsonGetStr(devTypeJson);
-    if(devType != NULL) {
+    if (devType != NULL) {
         memcpy_s(deviceInfo->devType, sizeof(deviceInfo->devType), devType, strlen(devType) + 1);
     }
 
     IotcJson *manuNameJson = IotcJsonGetObj(root, STR_JSON_MANU);
     const char *manuName = IotcJsonGetStr(manuNameJson);
-    if(manuName != NULL) {
+    if (manuName != NULL) {
         memcpy_s(deviceInfo->manu, sizeof(deviceInfo->manu), manuName, strlen(manuName) + 1);
     }
 
     IotcJson *prodIdJson = IotcJsonGetObj(root, STR_JSON_PROD_ID);
     const char *prodId = IotcJsonGetStr(prodIdJson);
-    if(prodId != NULL) {
+    if (prodId != NULL) {
         memcpy_s(deviceInfo->prodId, sizeof(deviceInfo->prodId), prodId, strlen(prodId) + 1);
     }
 
@@ -288,11 +287,11 @@ void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo)
 void IotcOhSendCustomSecData(const char *devId, const char *service, const uint8_t *data, uint32_t len)
 {
     uint16_t *connId = (uint16_t *)malloc(sizeof(uint16_t));
-    if(connId == NULL) {
+    if (connId == NULL) {
         return;
     }
 
-    if(!SleFindConnDevByDevId(devId, connId)) {
+    if (!SleFindConnDevByDevId(devId, connId)) {
         IOTC_LOGI("not find connID, devID[%s]", devId);
         free(connId);
         return;

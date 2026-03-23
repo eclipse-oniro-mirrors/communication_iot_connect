@@ -110,12 +110,6 @@ static void SleEventDisconnectHandler(int32_t event, void *param)
 
     GetSleSsapMgtApp()->connNum--;
 
-    //开广播可以订阅IOTC_CORE_SLE_EVENT_SSAP_DISCONNECT 回调的时候在业务上调用，client不需要广播，这里有冲突
-    // ret = SleAdvCtrlResume();
-    // if (ret != IOTC_OK) {
-    //     IOTC_LOGE("start adv err %d", ret);
-    //     return;
-    // }
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAP_DISCONNECT, NULL, 0);
     IOTC_LOGN("disconnect success connNum=%u, connId=%u, reason=%d",
         GetSleSsapMgtApp()->connNum, eventParam->disconnSvc.connId, eventParam->disconnSvc.reason);
@@ -320,8 +314,7 @@ static void SleEventConnectStateChangeHandler(int32_t event, void *param)
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
 
-     // 根据连接状态更新连接数
-     switch (eventParam->sleConnectStateChanged.conn_state) {
+    switch (eventParam->sleConnectStateChanged.conn_state) {
         case IOTC_ADPT_SLE_ACB_STATE_CONNECTED:
             if (GetSleSsapMgtApp()->connNum >= SLE_DEFAULT_MAX_CONN_NUM) {
                 IOTC_LOGE("Connection limit reached, cannot increment connNum");
@@ -468,18 +461,18 @@ static void SleSsapcNotificationEventHandler(int32_t event, void *param)
     IotcAdptSleSsapClientEventParam *eventParam =  (IotcAdptSleSsapClientEventParam *)param;
     IOTC_LOGI("SleSsapcNotificationEventHandler connid = %d\n", eventParam->ssapcNotification.connId);
 
-    int32_t ret = SleSsapReqWriteNotification(
-        eventParam->ssapcNotification.clientId + 1,
-        eventParam->ssapcNotification.connId,
-        eventParam->ssapcNotification.data.type,
-        eventParam->ssapcNotification.data.data,
-        eventParam->ssapcNotification.data.dataLen,
-        eventParam->ssapcNotification.data.handle);
-    if(ret != IOTC_OK)
-    {
+    SleSsapReqWriteNotificationParam notifyParam = {
+        .serverId  = eventParam->ssapcNotification.clientId + 1,
+        .connectId = eventParam->ssapcNotification.connId,
+        .type      = eventParam->ssapcNotification.data.type,
+        .value     = eventParam->ssapcNotification.data.data,
+        .valueLen  = eventParam->ssapcNotification.data.dataLen,
+        .handle    = eventParam->ssapcNotification.data.handle,
+    };
+    int32_t ret = SleSsapReqWriteNotification(&notifyParam);
+    if (ret != IOTC_OK) {
         IOTC_LOGE("SleSsapcNotificationEventHandler SleSsapReqWriteNotification failed, ret = %d\n", ret);
     }
-    // EventBusPublishSync(IOTC_CORE_SLE_EVENT_SSAPC_NOTIFICATION, param, sizeof(eventParam->ssapcNotification));
 }
 
 static void SleSsapcIndicationEventHandler(int32_t event, void *param)
