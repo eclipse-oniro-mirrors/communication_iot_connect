@@ -22,12 +22,9 @@
 #include "utils_assert.h"
 #include "iotc_event.h"
 #include "sle_disc_ctrl.h"
-#include "sle_disc_event.h"
 #include "iotc_sle_client.h"
-#include "sle_ssapc_event.h"
 #include "sle_conn_event.h"
 #include "sle_profile.h"
-#include "iotc_sle_server.h"
 #include "sle_ssap_mgt.h"
 #include "event_bus.h"
 #include "iotc_log.h"
@@ -84,7 +81,6 @@ typedef enum {
 
 static uint8_t g_clientId = 1;
 
-static bool g_SleSsapClinetEventInit = false;
 
 
 int32_t ClientSleSpekeStartSession(uint32_t connId){
@@ -432,25 +428,6 @@ int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
         IOTC_LOGE("sle ssap client register err ret=%d", ret);
         return ret;
     }
-
-    ret = SleDiscEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle disc init err ret=%d", ret);
-        return ret;
-    }
-    ret = SleConnectionEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle conn init err ret=%d", ret);
-        return ret;
-    }
-
-    if (!g_SleSsapClinetEventInit) {
-        ret = SleSsapClinetEventInit();
-        if (ret != IOTC_OK) {
-            IOTC_LOGE("sle ssap client init err ret=%d", ret);
-            return ret;
-        }
-        g_SleSsapClinetEventInit = true;
-    }
+    
     return IOTC_OK;
 }

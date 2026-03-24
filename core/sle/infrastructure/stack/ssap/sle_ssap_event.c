@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 #include "sle_ssap_event.h"
+#include "sle_conn_event.h"
 #include "sle_ssap_mgt.h"
-#include "iotc_sle_server.h"
 #include "sle_sched_event.h"
 #include "sched_msg_queue.h"
 #include "securec.h"
@@ -23,113 +23,6 @@
 #include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_common.h"
-
-typedef struct {
-    IotcAdptSleSsapEvent ssapEvent;
-    SleScheduleEvent scheduleEvent;
-    void (*msgFree)(void *msg);
-} SsapEventToScheduleEvent;
-
-static void MsgFree(void *msg);
-static void ReqWriteMsgFree(void *msg);
-
-static const SsapEventToScheduleEvent EVENT_COVERT_MAP[] = {
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_CONNECT,
-        .scheduleEvent = SLE_EVENT_CONNECT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_DISCONNECT,
-        .scheduleEvent = SLE_EVENT_DISCONNECT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_START_SVC_RESULT,
-        .scheduleEvent = SLE_EVENT_START_SVC_RESULT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_STOP_SVC_RESULT,
-        .scheduleEvent = SLE_EVENT_STOP_SVC_RESULT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_INDICATE_CONF,
-        .scheduleEvent = SLE_EVENT_INDICATE_CONF,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_SET_MTU_RESULT,
-        .scheduleEvent = SLE_EVENT_SET_MTU_RESULT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_START_ADV_RESULT,
-        .scheduleEvent = SLE_EVENT_START_ADV_RESULT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_STOP_ADV_RESULT,
-        .scheduleEvent = SLE_EVENT_STOP_ADV_RESULT,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_REQ_READ,
-        .scheduleEvent = SLE_EVENT_REQ_READ,
-        .msgFree = MsgFree
-    },
-    {
-        .ssapEvent = IOTC_ADPT_SLE_SSAP_EVENT_REQ_WRITE,
-        .scheduleEvent = SLE_EVENT_REQ_WRITE,
-        .msgFree = ReqWriteMsgFree
-    },
-};
-
-static void MsgFree(void *msg)
-{
-    /* IotcFree may be macro when debug */
-    IotcFree(msg);
-}
-
-static void ReqWriteMsgFree(void *msg)
-{
-    IotcAdptSleSsapEventParam *eventParam = (IotcAdptSleSsapEventParam *)msg;
-    IotcFree(eventParam->reqWrite.value);
-    eventParam->reqWrite.value = NULL;
-    IotcFree(msg);
-}
-
-static int32_t SleSsapEventHandler(IotcAdptSleSsapEvent ssapEvent, const IotcAdptSleSsapEventParam *param)
-{
-    CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
-    for (uint32_t i = 0; i < ARRAY_SIZE(EVENT_COVERT_MAP); i++) {
-        if (ssapEvent != EVENT_COVERT_MAP[i].ssapEvent) {
-            continue;
-        }
-
-        IotcAdptSleSsapEventParam *eventParam =
-            (IotcAdptSleSsapEventParam *)UtilsMallocCopy((const uint8_t *)param, sizeof(IotcAdptSleSsapEventParam));
-        if (eventParam == NULL) {
-            IOTC_LOGW("malloc error");
-            return IOTC_ADAPTER_MEM_ERR_MALLOC;
-        }
-
-        SleSchedMsg msg;
-        msg.event = EVENT_COVERT_MAP[i].scheduleEvent;
-        msg.param = eventParam;
-        msg.freeFunc = EVENT_COVERT_MAP[i].msgFree;
-        int32_t ret = SleSchedMsgQueueSend(&msg, 0);
-        if (ret != IOTC_OK) {
-            IotcFree(eventParam);
-            IOTC_LOGW("send msg error %d", ret);
-            return ret;
-        }
-        return IOTC_OK;
-    }
-    IOTC_LOGW("invalid event %d", ssapEvent);
-    return IOTC_CORE_SLE_INVALID_SSAP_EVENT;
-}
 
 static void SleSendIndicateDataFree(void *param)
 {
@@ -180,5 +73,16 @@ int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
 
 int32_t SleSsapEventInit(void)
 {
-    return IotcSleSsapsRegisterServer(SleSsapEventHandler);
+    int32_t ret = SleSsapServiceEventInit(); //init server or client event
+    if (ret != IOTC_OK) { 
+        IOTC_LOGE("sle ssap init err ret=%d", ret);
+        return ret;
+    }
+
+    ret = SleConnectionEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle conn init err ret=%d", ret);
+        return ret;
+    }
+    return IOTC_OK;
 }

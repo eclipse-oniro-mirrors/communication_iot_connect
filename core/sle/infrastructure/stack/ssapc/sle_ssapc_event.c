@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sle_ssapc_event.h"
+#include "sle_disc_event.h"
 #include "iotc_sle_client.h"
 #include "sle_sched_event.h"
 #include "sched_msg_queue.h"
@@ -171,7 +171,12 @@ static int32_t SleSsapClientEventHandler(IotcAdptSleSsapClientEvent discEvent,
     return IOTC_CORE_BLE_INVALID_GATT_EVENT;
 }
 
-int32_t SleSsapClinetEventInit(void)
-{
+int32_t SleSsapServiceEventInit(void)
+{   
+    int32_t ret = SleDiscEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle disc init err ret=%d", ret);
+        return ret;
+    }
     return IotcSleRegisterSsapClientCallbacks(SleSsapClientEventHandler);
 }

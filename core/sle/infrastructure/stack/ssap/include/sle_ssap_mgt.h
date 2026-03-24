@@ -25,7 +25,6 @@
 extern "C" {
 #endif
 
-#define SLE_DEV_NAME                "IotcBT"
 #define SLE_DEFAULT_MAX_CONN_NUM    10
 #define SLE_CONN_HEAD_NODE          11
 #define SLE_MTU_SIZE                500

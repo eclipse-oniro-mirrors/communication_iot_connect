@@ -22,31 +22,6 @@
 #include "sle_sched_event.h"
 #include "utils_common.h"
 #include "sle_ssap_event.h"
-#include "sle_disc_event.h"
-#include "sle_conn_event.h"
-#include "iotc_sle_client.h"
-
-#define SLE_ADDR_STR_LEN    18
-#define SLE_ADDR_FORMAT_STR "%02x:%02x:%02x:%02x:%02x:%02x"
-
-typedef enum {
-    SLE_ADDR_BYTE_IDX_0 = 0,
-    SLE_ADDR_BYTE_IDX_1,
-    SLE_ADDR_BYTE_IDX_2,
-    SLE_ADDR_BYTE_IDX_3,
-    SLE_ADDR_BYTE_IDX_4,
-    SLE_ADDR_BYTE_IDX_5
-} SleAddrByteIdx;
-
-static inline void SleAddrToStr(const uint8_t *addr, char *buf, uint32_t bufLen)
-{
-    if (addr == NULL || buf == NULL || bufLen < SLE_ADDR_STR_LEN) {
-        return;
-    }
-    (void)snprintf_s(buf, bufLen, bufLen - 1, SLE_ADDR_FORMAT_STR,
-        addr[SLE_ADDR_BYTE_IDX_0], addr[SLE_ADDR_BYTE_IDX_1], addr[SLE_ADDR_BYTE_IDX_2],
-        addr[SLE_ADDR_BYTE_IDX_3], addr[SLE_ADDR_BYTE_IDX_4], addr[SLE_ADDR_BYTE_IDX_5]);
-}
 
 static SleSsapMgtApp g_SleSsapApp = {
     .peerDevInfo = NULL,
@@ -398,9 +373,7 @@ int32_t SleSsapMgtInit(void)
     }
     PrintSleSsapServiceList(g_SleSsapApp.svc, g_SleSsapApp.svcNum);
     IOTC_LOGI(" ---> uuid:%s", g_SleSsapApp.svc[0].uuid);
-    ret = IotcInitSleSsapsService();
-
-    IOTC_LOGI(" ---> init service :%d", ret);
+    
     ret = SleSsapEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("ssap event init err ret=%d", ret);
