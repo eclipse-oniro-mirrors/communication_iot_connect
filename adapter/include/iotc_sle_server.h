@@ -524,7 +524,7 @@ typedef struct {
     IotcAdptSleSsapsChar *character;
     uint8_t charNum;
     int32_t svcHandle;
-    int32_t serverId;
+    uint8_t serverId;
 } IotcAdptSleSsapService;
 
 

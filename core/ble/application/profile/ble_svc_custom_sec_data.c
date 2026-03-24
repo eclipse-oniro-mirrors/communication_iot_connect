@@ -128,6 +128,7 @@ static int32_t BleCustomSecDataGetChar(IotcJson *vendorItem, uint8_t **out, uint
     ret = BuildBleCustomSecDataSingleService(arrayObj, out, outLen);
 #else
     ret = BuildBleCustomSecDataService(arrayObj, out, outLen);
+    ret = LinkLayerReportSvcDataEnc(BLE_SVC_CUSTOM_SEC_DATA, (const uint8_t *)*out, *outLen);
 #endif
     IotcJsonDelete(arrayObj);
     if (ret != IOTC_OK) {

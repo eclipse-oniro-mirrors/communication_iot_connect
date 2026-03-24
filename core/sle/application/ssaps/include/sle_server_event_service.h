@@ -13,29 +13,16 @@
  * limitations under the License.
  */
 
-/* SLE SSAPC application-layer client stubs */
+#ifndef SLE_SERVER_EVENT_SERVICE_H
+#define SLE_SERVER_EVENT_SERVICE_H
+#include <stdint.h>
 
-#include "sle_ssap_service.h"
-#include "iotc_errcode.h"
-#include "iotc_log.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int32_t SleScanServiceStop(void)
-{
-    return IOTC_OK;
+#ifdef __cplusplus
 }
+#endif
 
-int32_t SleAdvServiceStart(uint32_t ms)
-{
-    IOTC_LOGD("SleAdvServiceStart %d", ms);
-    return IOTC_OK;
-}
-
-int32_t SleAdvServiceStop(void)
-{
-    return IOTC_OK;
-}
-
-void SleAdvSetType(SleSvcAdvDataType type)
-{
-    IOTC_LOGD("SleAdvSetType %d", type);
-}
+#endif

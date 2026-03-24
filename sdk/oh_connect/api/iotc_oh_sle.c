@@ -20,8 +20,6 @@
 #include "sle_linklayer.h"
 #include "utils_assert.h"
 #include "iotc_conf.h"
-#include "sle_adv.h"
-#include "sle_adv_ctrl.h"
 #include "sle_ssap_mgt.h"
 #include "iotc_oh_sle_adv_data.h"
 #include "sched_executor.h"
@@ -108,7 +106,7 @@ static const FwkInitUnit OH_SLE[] = {
 
 static int32_t OptionSetSleRecvNetcfgCallback(va_list args)
 {
-    IotcRecvNetCfgInfoCallback cb = va_arg(args, IotcRecvNetCfgInfoCallback);
+    IotcSleRecvNetCfgInfoCallback cb = va_arg(args, IotcSleRecvNetCfgInfoCallback);
     CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     ProductHooks hooks = {0};
     hooks.onRecvNetCfgInfo = cb;
@@ -124,7 +122,7 @@ static int32_t OptionSetSleRecvNetcfgCallback(va_list args)
 
 static int32_t OptionSetSleRecvCustomSecDataCallback(va_list args)
 {
-    IotcRecvCustomSecDataCallback cb = va_arg(args, IotcRecvCustomSecDataCallback);
+    IotcSleRecvCustomSecDataCallback cb = va_arg(args, IotcSleRecvCustomSecDataCallback);
     CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     ProductHooks hooks = {0};
     hooks.onRecvCustomSecData = cb;
@@ -173,7 +171,7 @@ static const OptionItem SLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_SLE_GATT_PROFILE_SVC_LIST, OptionSetSleSsapProfileSvcList },
 };
 
-int32_t IotcOhSleEnable(uint8_t mode)
+int32_t IotcOhSleEnable(void)
 {
     IOTC_LOGN("iotc oh sle enable");
     CHECK_MAIN_RUNNING_RETURN();
@@ -199,6 +197,31 @@ int32_t IotcOhSleEnable(uint8_t mode)
     UtilsComboSetSleFlag(true);
     return IOTC_OK;
 }
+
+
+static int32_t SleStartSeekCallback(void *inData, void **outData)
+{
+    NOT_USED(outData);
+    NOT_USED(inData);
+    return SleSvcProxyStartSeek();
+}
+
+int32_t IotcOhSleStartSeek(void)
+{
+    int32_t errcode = IOTC_OK;
+    uint32_t time = 1000;
+    int32_t ret = SchedAsyncExecutorWait(SleStartSeekCallback, &time, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
+    if (ret != IOTC_OK) {
+        IOTC_LOGF("executor start adv error %d", ret);
+        return ret;
+    }
+    if (errcode != IOTC_OK) {
+        IOTC_LOGF("start adv error %d", errcode);
+        return errcode;
+    }
+    return IOTC_OK;
+}
+
 
 int32_t IotcOhSleDisable(void)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,26 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef SLE_CLIENT_EVENT_SERVICE_H
-#define SLE_CLIENT_EVENT_SERVICE_H
+#ifndef SLE_SSAP_SERVICE_H
+#define SLE_SSAP_SERVICE_H
 #include <stdint.h>
+#include "sle_svc_ctx.h"
+#include "iotc_svc_sle.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef enum {
-    IOTC_SLE_ADDRESS_TYPE_PUBLIC = 0,   /*!< @if Eng public address
-                                                @else   公有地址 @endif */
-    IOTC_SLE_ADDRESS_TYPE_RANDOM = 6,   /*!< @if Eng random address
-                                                @else   随机地址 @endif */
-} IotcSleAddrType;
 
-int32_t ClientSleSpekeStartSession(uint32_t connId);
-int32_t ClientSleSpekeProcessMsg(uint32_t connId);
+int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx);
+int32_t SleScanServiceStart(void);
+int32_t SleScanServiceStop(void);
+int32_t SleAdvServiceStart(uint32_t ms);
+int32_t SleAdvServiceStop(void);
+void SleAdvSetType(SleSvcAdvDataType type);
+
+int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len);
+
+int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif
+#endif /* SLE_CONNECT_SERVICE_H */

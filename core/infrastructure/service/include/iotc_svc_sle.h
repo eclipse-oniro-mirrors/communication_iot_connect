@@ -82,6 +82,7 @@ int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 
 int32_t SleSvcProxyFindDeviceInfo(const char *devId, void **info);
+int32_t SleSvcProxyStartSeek(void);
 
 #ifdef __cplusplus
 }

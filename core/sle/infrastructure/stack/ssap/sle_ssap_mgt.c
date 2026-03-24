@@ -24,7 +24,6 @@
 #include "sle_ssap_event.h"
 #include "sle_disc_event.h"
 #include "sle_conn_event.h"
-#include "sle_ssapc_event.h"
 #include "iotc_sle_client.h"
 
 #define SLE_ADDR_STR_LEN    18
@@ -275,6 +274,7 @@ static int32_t ProfileSvcCopyToAdapterSvc(const IotcSleSsapProfileSvc *in, IotcA
     to->uuid = in->uuid;
     to->character = character;
     to->charNum = in->charNum;
+    to->serverId = in->character->serviceId;
     return IOTC_OK;
 }
 
@@ -376,7 +376,6 @@ static SlePeerDevInfo *SleSsapPeerDevInfoFind(uint32_t connId)
             return peerDevInfo;
         }
     }
-    //如果没查找到对应的连接信息就创建一个节点存储， 如果有，就直接返回
     return SleSsapPeerDevInfoCreateNode(connId);
 }
 
@@ -407,21 +406,7 @@ int32_t SleSsapMgtInit(void)
         IOTC_LOGE("ssap event init err ret=%d", ret);
         return ret;
     }
-    ret = SleDiscEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle disc init err ret=%d", ret);
-        return ret;
-    }
-    ret = SleConnectionEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle conn init err ret=%d", ret);
-        return ret;
-    }
-    ret = SleSsapClinetEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle ssap client init err ret=%d", ret);
-        return ret;
-    }
+
     ret = SleSsapPeerDevInfoInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("ssap peer dev info init err ret=%d", ret);
@@ -547,6 +532,29 @@ static IotcAdptSleSsapWriteFunc FindAttrHandleWriteFunc(int32_t attrHandle)
     return NULL;
 }
 
+static IotcAdptSleSsapWriteFunc FindNotifyFuncInService(const IotcAdptSleSsapService *svc)
+{
+    for (uint8_t j = 0; j < svc->charNum; j++) {
+        if (svc->character[j].writeFunc != NULL) {
+            return svc->character[j].writeFunc;
+        }
+    }
+    return NULL;
+}
+
+static IotcAdptSleSsapWriteFunc ServiceIdFindAttrHandleNotifyFunc(int8_t serviceId)
+{
+    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
+        if (GetSleSsapMgtApp()->svc[i].serverId == serviceId) {
+            IotcAdptSleSsapWriteFunc func = FindNotifyFuncInService(&GetSleSsapMgtApp()->svc[i]);
+            if (func != NULL) {
+                return func;
+            }
+        }
+    }
+    return NULL;
+}
+
 int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
     uint32_t connId, const uint8_t *value, uint32_t valueLen)
 {
@@ -565,6 +573,22 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
         return ret;
     }
 
+    SlePeerDevInfo *devInfo = GetSleSsapMgtPeerDevInfo(connId);
+    if (devInfo == NULL) {
+        IOTC_LOGE("no find peer dev info");
+        return IOTC_CORE_SLE_INVALID_CONNID;
+    }
+    if (devInfo->connState != IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED) {
+        return IOTC_CORE_SLE_CONNECT_STATE_ERROR;
+    }
+    param.handle = (devInfo->handler.startHdl);
+    param.type   = devInfo->type;
+    param.value  = (uint8_t *)value;
+    param.valueLen = valueLen;
+    ret = IotcSleSendSsapsIndicate(devInfo->serverId, connId, &param);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("send indicate msg err ret=%d", ret);
+    }
     return ret;
 }
 
@@ -688,7 +712,7 @@ int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *para
         IOTC_LOGE("no find write func");
         return IOTC_ERROR;
     }
-    int32_t ret = func(param->value, param->valueLen);
+    int32_t ret = func(param->connectId, param->value, param->valueLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("write err ret=%d", ret);
         return IOTC_ERROR;

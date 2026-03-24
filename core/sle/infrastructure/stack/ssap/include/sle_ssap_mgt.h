@@ -33,6 +33,7 @@ extern "C" {
 typedef struct {
     uint32_t    connId;
     uint32_t    serverId;
+    SleStateType    type;
     IotcAdptSleAcbState   connState;
     IotcAdptSleDeviceAddr devAddr;
     IotcAdptSsapcFindServiceResult handler;
@@ -96,6 +97,7 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
 int32_t SleSsapReqWrite(const SleSsapWriteParam *param);
 int32_t SleSetServiceAtt(const uint32_t connId, const uint32_t startHdl, const uint32_t endHdl);
 void PrintSleSsapConnidAndAddr(void);
+int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *param);
 #ifdef __cplusplus
 }
 #endif
