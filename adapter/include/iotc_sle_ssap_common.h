@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef IOTC_SLE_SSAP_COMMON_H
+#define IOTC_SLE_SSAP_COMMON_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -24,7 +41,6 @@ typedef enum {
     IOTC_ADPT_SLE_SSAP_EVENT_REQ_READ,
     IOTC_ADPT_SLE_SSAP_EVENT_REQ_WRITE
 } IotcAdptSleSsapEvent;
-
 
 typedef enum {
     IOTC_ADPT_SLE_ENABLE_EVENT,
@@ -280,35 +296,35 @@ typedef struct {
 
 typedef union {
     struct {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleDeviceAddr addr;
-        IotcAdptSleAcbState conn_state;
-        IotcAdptSlePairState pair_state;
-        IotcAdptSleDiscReason disc_reason;
+        IotcAdptSleAcbState connState;
+        IotcAdptSlePairState pairState;
+        IotcAdptSleDiscReason discReason;
     } sleConnectStateChanged;
     struct {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleStatus status;
         IotcAdptSleConnectionParamUpdateEvt param;
     } sleConnectParamUpdate;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleStatus status;
         IotcAdptSleConnectionParamUpdateReq param;
     } sleConnectParamUpdateReq;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleDeviceAddr addr;
         IotcAdptSleStatus status;
         IotcAdptSleAuthInfoEvt evt;
     } sleAuthComplete;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleDeviceAddr addr;
         IotcAdptSleStatus status;
     } slePairComplete;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         int8_t rssi;
         IotcAdptSleStatus status;
     } sleReadRssi;
@@ -318,7 +334,7 @@ typedef union {
         uint8_t rate;
     } sleLowLatency;
     struct  {
-        uint16_t conn_id;
+        uint16_t connId;
         IotcAdptSleStatus status;
         IotcAdptSleSetPhy param;
     } sleSetPhy;
@@ -340,5 +356,9 @@ typedef struct {
 } IotcAdptSleSendIndicateParam;
 
 typedef int32_t(*IotcAdptSleSsapCallback)(IotcAdptSleSsapEvent event, const IotcAdptSleSsapEventParam *param);
-typedef int32_t(*IotcAdptSleAnnounceSeekCallback)(IotcAdptSleAnnounceSeekEvent event, const IotcAdptSleAnnounceSeekEventParam *param);
-typedef int32_t(*IotcAdptSleConnectionCallback)(IotcAdptSleConnectionEvent event, const IotcAdptSleConnectionEventParam *param);
+typedef int32_t(*IotcAdptSleAnnounceSeekCallback)(IotcAdptSleAnnounceSeekEvent event,
+    const IotcAdptSleAnnounceSeekEventParam *param);
+typedef int32_t(*IotcAdptSleConnectionCallback)(IotcAdptSleConnectionEvent event,
+    const IotcAdptSleConnectionEventParam *param);
+
+#endif /* IOTC_SLE_SSAP_COMMON_H */

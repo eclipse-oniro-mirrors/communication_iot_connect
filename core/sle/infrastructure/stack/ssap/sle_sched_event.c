@@ -314,7 +314,7 @@ static void SleEventConnectStateChangeHandler(int32_t event, void *param)
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
     IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
 
-    switch (eventParam->sleConnectStateChanged.conn_state) {
+    switch (eventParam->sleConnectStateChanged.connState) {
         case IOTC_ADPT_SLE_ACB_STATE_CONNECTED:
             if (GetSleSsapMgtApp()->connNum >= SLE_DEFAULT_MAX_CONN_NUM) {
                 IOTC_LOGE("Connection limit reached, cannot increment connNum");
@@ -330,7 +330,7 @@ static void SleEventConnectStateChangeHandler(int32_t event, void *param)
             }
             break;
         default:
-            IOTC_LOGW("Unknown connection state: %d", eventParam->sleConnectStateChanged.conn_state);
+            IOTC_LOGW("Unknown connection state: %d", eventParam->sleConnectStateChanged.connState);
             break;
     }
     EventBusPublishSync(IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED, param, sizeof(eventParam->sleConnectStateChanged));

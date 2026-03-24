@@ -180,8 +180,6 @@ typedef struct {
     uint8_t *value;
 } IotcAdptSleSendIndicateByUuidParam;
 
-
-
 /**
  * @if Eng
  * @brief Struct of add property information.

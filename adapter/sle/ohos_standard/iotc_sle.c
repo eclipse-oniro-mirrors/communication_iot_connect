@@ -37,6 +37,10 @@ static IotcAdptSleSsapClientCallback g_sleSsapClientEventHandler = NULL;
 
 #define SLE_ADDR_LEN 6
 
+#define SPEED_DEFAULT_CONN_INTERVAL 0x09
+#define SPEED_DEFAULT_TIMEOUT_MULTIPLIER 0x1f4
+#define SPEED_DEFAULT_SCAN_INTERVAL 400
+#define SPEED_DEFAULT_SCAN_WINDOW 20
 
 static int32_t IotcSleStartServiceEx(uint8_t *serverId)
 {
@@ -85,9 +89,9 @@ static uint64_t IotcSleClockGettimeUsLite(void)
     return ((uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL);
 }
 
-extern uint8_t gle_tx_acb_data_num_get(void);
+uint8_t gle_tx_acb_data_num_get(void);
 
-pthread_mutex_t send_mutex_client;
+pthread_mutex_t g_sendMutexClient;
 
 
 int32_t SlePairRemoteDevice(const IotcAdptSleDeviceAddr *addr)
@@ -275,12 +279,12 @@ static void SleConnectStateChangedCallback(uint16_t conn_id, const sle_addr_t *a
         conn_id, conn_state, pair_state, disc_reason);
     IotcAdptSleConnectionEventParam param = {0};
     (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleConnectionEventParam));
-    param.sleConnectStateChanged.conn_id = conn_id;
+    param.sleConnectStateChanged.connId = conn_id;
     param.sleConnectStateChanged.addr.type = addr->type;
     (void)memcpy_s(param.sleConnectStateChanged.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, SLE_ADDR_LEN);
-    param.sleConnectStateChanged.conn_state = (IotcAdptSleAcbState)conn_state;
-    param.sleConnectStateChanged.pair_state = (IotcAdptSlePairState)pair_state;
-    param.sleConnectStateChanged.disc_reason = (IotcAdptSleDiscReason)disc_reason;
+    param.sleConnectStateChanged.connState = (IotcAdptSleAcbState)conn_state;
+    param.sleConnectStateChanged.pairState = (IotcAdptSlePairState)pair_state;
+    param.sleConnectStateChanged.discReason = (IotcAdptSleDiscReason)disc_reason;
     if (g_sleConnectionEventHandler != NULL) {
         int32_t ret = g_sleConnectionEventHandler(IOTC_ADPT_SLE_CONNECT_STATE_CHANGED_EVENT, &param);
         IOTC_LOGD("SLE ConnectStateChanged cb:ret:%d", ret);
@@ -298,7 +302,7 @@ static void SleConnectParamUpdateCallback(uint16_t conn_id, errcode_t status,
         conn_id, status, param->interval, param->latency);
     IotcAdptSleConnectionEventParam updateParam = {0};
     (void)memset_s(&updateParam, sizeof(updateParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    updateParam.sleConnectParamUpdate.conn_id = conn_id;
+    updateParam.sleConnectParamUpdate.connId = conn_id;
     updateParam.sleConnectParamUpdate.status = OhosStatusToAdapterStatus(status);
     updateParam.sleConnectParamUpdate.param.interval = param->interval;
     updateParam.sleConnectParamUpdate.param.latency = param->latency;
@@ -319,7 +323,7 @@ static void SleConnectParamUpdateReqCallback(uint16_t conn_id, errcode_t status,
     IOTC_LOGD("SLE ConnectParamUpdateReq cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam updateReqParam = {0};
     (void)memset_s(&updateReqParam, sizeof(updateReqParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    updateReqParam.sleConnectParamUpdateReq.conn_id = conn_id;
+    updateReqParam.sleConnectParamUpdateReq.connId = conn_id;
     updateReqParam.sleConnectParamUpdateReq.status = OhosStatusToAdapterStatus(status);
     updateReqParam.sleConnectParamUpdateReq.param.intervalMin = param->interval_min;
     updateReqParam.sleConnectParamUpdateReq.param.intervalMax = param->interval_max;
@@ -341,7 +345,7 @@ static void SleAuthCompleteCallback(uint16_t conn_id, const sle_addr_t *addr, er
     IOTC_LOGD("SLE AuthComplete cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam authParam = {0};
     (void)memset_s(&authParam, sizeof(authParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    authParam.sleAuthComplete.conn_id = conn_id;
+    authParam.sleAuthComplete.connId = conn_id;
     authParam.sleAuthComplete.status = OhosStatusToAdapterStatus(status);
     authParam.sleAuthComplete.addr.type = addr->type;
     (void)memcpy_s(authParam.sleAuthComplete.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, SLE_ADDR_LEN);
@@ -364,7 +368,7 @@ static void SlePairCompleteCallback(uint16_t conn_id, const sle_addr_t *addr, er
     IOTC_LOGD("SLE PairComplete cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam pairParam = {0};
     (void)memset_s(&pairParam, sizeof(pairParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    pairParam.slePairComplete.conn_id = conn_id;
+    pairParam.slePairComplete.connId = conn_id;
     pairParam.slePairComplete.status = OhosStatusToAdapterStatus(status);
     pairParam.slePairComplete.addr.type = addr->type;
     (void)memcpy_s(pairParam.slePairComplete.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, SLE_ADDR_LEN);
@@ -379,7 +383,7 @@ static void SleReadRssiCallback(uint16_t conn_id, int8_t rssi, errcode_t status)
     IOTC_LOGD("SLE PairComplete cb:conn_id:%d,status:%d, rssi:%d", conn_id, status, rssi);
     IotcAdptSleConnectionEventParam rssiParam = {0};
     (void)memset_s(&rssiParam, sizeof(rssiParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    rssiParam.sleReadRssi.conn_id = conn_id;
+    rssiParam.sleReadRssi.connId = conn_id;
     rssiParam.sleReadRssi.rssi = rssi;
     rssiParam.sleReadRssi.status = OhosStatusToAdapterStatus(status);
     if (g_sleConnectionEventHandler != NULL) {
@@ -416,7 +420,7 @@ static void SleSetPhyCallback(uint16_t conn_id, errcode_t status, const sle_set_
     IOTC_LOGD("SLE SetPhy cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam phyParam = {0};
     (void)memset_s(&phyParam, sizeof(phyParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    phyParam.sleSetPhy.conn_id = conn_id;
+    phyParam.sleSetPhy.connId = conn_id;
     phyParam.sleSetPhy.status = status;
     phyParam.sleSetPhy.param.gFeedback = param->g_feedback;
     phyParam.sleSetPhy.param.rxFormat = param->rx_format;
@@ -633,7 +637,7 @@ void SsapcWriteCfmCallback(uint8_t client_id, uint16_t conn_id, ssapc_write_resu
         IOTC_LOGE("invalid param");
         return;
     }
-    IOTC_LOGD("Ssapc Write Cfm cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IOTC_LOGI("Ssapc Write Cfm cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
     IotcAdptSleSsapClientEventParam param = {0};
     (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
     param.ssapcWriteResult.clientId = client_id;
@@ -759,14 +763,16 @@ static int32_t IotcSleWriteSync(uint8_t client_id, uint16_t conn_id, ssapc_write
 {
     int32_t ret = -1;
     int sflag = 0;
-    uint64_t kht_before_get_jiffies = 0, kht_after_get_jiffies = 0;
-    uint64_t after_us = 0;
-    uint32_t wait_min_time_us = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125);  // 最少等待1个发送间隔(可以是连接间隔)
-    int retry = 2000; // 最多等待2000个连接间隔时间
-    kht_before_get_jiffies = IotcSleClockGettimeUsLite();
-    after_us = kht_before_get_jiffies + wait_min_time_us; // 防止溢出回卷, 等待超时时间
+    uint64_t khtBeforeGetJiffies = 0;
+    uint64_t khtAfterGetJiffies = 0;
+    uint64_t afterUs = 0;
+    uint32_t waitMinTimeUs = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125);
+    int retry = 2000;
+    khtBeforeGetJiffies = IotcSleClockGettimeUsLite();
+    afterUs = khtBeforeGetJiffies + waitMinTimeUs;
 
-    while (1) {
+    bool keepLooping = true;
+    while (keepLooping) {
         if (sflag == 0 && gle_tx_acb_data_num_get() > 0) {
             if (isReq) {
                 ret = ssapc_write_req(client_id, conn_id, param);
@@ -776,18 +782,16 @@ static int32_t IotcSleWriteSync(uint8_t client_id, uint16_t conn_id, ssapc_write
             sflag = 1;
         }
 
-        kht_after_get_jiffies = IotcSleClockGettimeUsLite();
-        if ((int)(kht_after_get_jiffies - after_us) < 0) { // 这里至少等待1个连接间隔(或发送间隔)
+        khtAfterGetJiffies = IotcSleClockGettimeUsLite();
+        if ((int)(khtAfterGetJiffies - afterUs) < 0) {
             sched_yield();
         } else {
             if (sflag == 0 && (--retry) > 0) {
-                after_us += wait_min_time_us; // 没有发出去包的话 这里要继续等待下一个连接间隔(或发送间隔)
+                afterUs += waitMinTimeUs;
                 sched_yield();
-                continue;
+            } else {
+                keepLooping = false;
             }
-            // 超过最大等待时间,没有发送出去, 失败退出
-            // 或者发送出去了, 成功返回
-            break;
         }
     }
     return ret;
@@ -795,10 +799,7 @@ static int32_t IotcSleWriteSync(uint8_t client_id, uint16_t conn_id, ssapc_write
 
 static int32_t SsapcWriteReq(uint8_t client_id, uint16_t conn_id, ssapc_write_param_t *param)
 {
-    pthread_mutex_lock(&send_mutex_client);
     int32_t ret = IotcSleWriteSync(client_id, conn_id, param, true);
-    pthread_mutex_unlock(&send_mutex_client);
-
     return ret;
 }
 
@@ -819,7 +820,31 @@ int32_t IotcSleRegisterHostCallbacks(void)
 
 int32_t IotcSleEnable(void)
 {
-    int32_t ret = EnableSle();
+    if (g_clientState != IOTC_SLE_STOP) {
+        IOTC_LOGE("sle enable state=%d", g_clientState);
+        return IOTC_OK;
+    }
+    int32_t ret = 0;
+
+    ret = AnnounceSeekRegisterCallbacks(&g_SleAnnounceSeek);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register announce seek callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    ret = ConnectionRegisterCallbacks(&g_SleConnectionCb);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register connection callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    ret = SsapClientRegisterCallbacks(&g_SsapcCallbacks);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register ssap client callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    ret = EnableSle();
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("init stack ret=%d", ret);
         return IOTC_ERROR;
@@ -861,11 +886,6 @@ int32_t IotcSleRegisterAnnounceSeekCallbacks(const IotcAdptSleAnnounceSeekCallba
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleAnnounceSeekEventHandler = callback;
-    int32_t ret = AnnounceSeekRegisterCallbacks(&g_SleAnnounceSeek);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register announce seek callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
     return IOTC_OK;
 }
 
@@ -876,11 +896,7 @@ int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback c
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleConnectionEventHandler = callback;
-    int32_t ret = ConnectionRegisterCallbacks(&g_SleConnectionCb);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register connection callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
+
     return IOTC_OK;
 }
 
@@ -891,11 +907,7 @@ int32_t IotcSleRegisterSsapClientCallbacks(const IotcAdptSleSsapClientCallback c
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleSsapClientEventHandler = callback;
-    int32_t ret = SsapClientRegisterCallbacks(&g_SsapcCallbacks);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register ssap client callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
+
     return IOTC_OK;
 }
 
@@ -1016,14 +1028,10 @@ int32_t IotcSleSetSleName(const char *name, uint8_t len)
     return IOTC_OK;
 }
 
-
 int32_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
 {
-    // int32_t ret = SsapsStartService(serviceId, serviceHandle);
-    // if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-    //     IOTC_LOGE("IotcSleSsapsStartService ret=%d", ret);
-    //     return IOTC_ERROR;
-    // }
+    (void)serviceId;
+    (void)serviceHandle;
     return IOTC_OK;
 }
 
@@ -1079,7 +1087,13 @@ int32_t IotcSleSetSeekParam(const IotcAdptSleSeekParam *param)
 
 int32_t IotcSleStartSeek(void)
 {
-    return SleStartSeek();
+    if (SleStartSeek() != IOTC_OK) {
+        IOTC_LOGE("SLE start seek failed!");
+        return IOTC_ERROR;
+    }
+
+    g_clientState = IOTC_SLE_SEEK_ENABLE;
+    return IOTC_OK;
 }
 
 int32_t IotcSleStoptSeek(void)

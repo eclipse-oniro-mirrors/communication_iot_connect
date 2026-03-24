@@ -446,53 +446,17 @@ int32_t SleGetSeviceHandle(const char *svcUuid, int32_t *handle)
     IOTC_LOGE("no find svc");
     return IOTC_CORE_SLE_INVALID_SVC_UUID;
 }
-/*
-static int32_t GetCharHandle(const char *svcUuid, const char *charUuid, int32_t *handle)
-{
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (strcmp(svcUuid, GetSleSsapMgtApp()->svc[i].uuid) != 0) {
-            continue;
-        }
-        for (uint8_t j = 0; j < GetSleSsapMgtApp()->svc[i].charNum; j++) {
-            if (strcmp(charUuid, GetSleSsapMgtApp()->svc[i].character[j].uuid) != 0) {
-                continue;
-            }
-            *handle = GetSleSsapMgtApp()->svc[i].character[j].charHandle;
-            return IOTC_OK;
-        }
-    }
-    IOTC_LOGE("no find char");
-    return IOTC_CORE_SLE_INVALID_CHAR_UUID;
-}
 
-static int32_t GetCharProperty(const char *svcUuid, const char *charUuid, uint32_t *property)
-{
-    for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
-        if (strcmp(svcUuid, GetSleSsapMgtApp()->svc[i].uuid) != 0) {
-            continue;
-        }
-        for (uint8_t j = 0; j < GetSleSsapMgtApp()->svc[i].charNum; j++) {
-            if (strcmp(charUuid, GetSleSsapMgtApp()->svc[i].character[j].uuid) != 0) {
-                continue;
-            }
-            *property = GetSleSsapMgtApp()->svc[i].character[j].property;
-            return IOTC_OK;
-        }
-    }
-    IOTC_LOGE("no find char");
-    return IOTC_CORE_SLE_INVALID_CHAR_UUID;
-}
-*/
 static bool IsAttrHandleInCharacterTbl(int32_t attrHandle, IotcAdptSleSsapsChar *character, uint8_t charNum)
 {
-    IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl attrHandle:%d",attrHandle);
+    IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl attrHandle:%d", attrHandle);
     for (uint8_t i = 0; i < charNum; i++) {
         if (character[i].charHandle == attrHandle) {
-            IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl charHandle:%d",character[i].charHandle);
+            IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl charHandle:%d", character[i].charHandle);
             return true;
         }
         for (uint8_t j = 0; j < character[i].descNum; j++) {
-            IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl descHandle:%d",character[i].desc[j].descHandle);
+            IOTC_LOGI("SleSsapReqWrite IsAttrHandleInCharacterTbl descHandle:%d", character[i].desc[j].descHandle);
             if (character[i].desc[j].descHandle == attrHandle) {
                 return true;
             }
@@ -655,7 +619,7 @@ int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, i
         IotcFree(param.value);
         param.value = NULL;
         param.valueLen = 0;
-        (void)IotcSleSendSsapsResponse(serverId,connId,&param);
+        (void)IotcSleSendSsapsResponse(serverId, connId, &param);
         return IOTC_ERROR;
     }
     ret = IotcSleSendSsapsResponse(serverId, connId, &param);

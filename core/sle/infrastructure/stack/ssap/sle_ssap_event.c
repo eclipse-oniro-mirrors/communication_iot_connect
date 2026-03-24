@@ -73,16 +73,11 @@ int32_t IotcSleSendIndicateData(const char *svcUuid, const char *charUuid,
 
 int32_t SleSsapEventInit(void)
 {
-    int32_t ret = SleSsapServiceEventInit(); //init server or client event
-    if (ret != IOTC_OK) { 
+    int32_t ret = SleSsapServiceEventInit();
+    if (ret != IOTC_OK) {
         IOTC_LOGE("sle ssap init err ret=%d", ret);
         return ret;
     }
 
-    ret = SleConnectionEventInit();
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("sle conn init err ret=%d", ret);
-        return ret;
-    }
     return IOTC_OK;
 }

@@ -183,7 +183,6 @@ int32_t SleLinkLayerProcessData(uint32_t connId, const uint8_t *buff, uint32_t l
     CHECK_RETURN_LOGE((buff != NULL) && (len > SLE_PKG_HEAD_LEN), IOTC_ERR_PARAM_INVALID,
         "ll process sle data param invalid, len:%u", len);
 
-
     PkgHead pkgHead = { 0 };
     SleParsePkgHead(buff, len, &pkgHead);
     IOTC_LOGI("recv sle data pkg(%u/%u), encType:%u", pkgHead.pkgIdx, pkgHead.pkgNum, pkgHead.encryptType);

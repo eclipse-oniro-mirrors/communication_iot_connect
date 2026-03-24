@@ -22,6 +22,7 @@
 #include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_common.h"
+#include "sle_conn_event.h"
 
 typedef struct {
     IotcAdptSleSsapClientEvent connectionEvent;
@@ -172,11 +173,19 @@ static int32_t SleSsapClientEventHandler(IotcAdptSleSsapClientEvent discEvent,
 }
 
 int32_t SleSsapServiceEventInit(void)
-{   
+{
     int32_t ret = SleDiscEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("sle disc init err ret=%d", ret);
         return ret;
     }
+
+    IOTC_LOGI("sle ssap init start");
+    ret = SleConnectionEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle conn init err ret=%d", ret);
+        return ret;
+    }
+
     return IotcSleRegisterSsapClientCallbacks(SleSsapClientEventHandler);
 }

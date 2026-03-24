@@ -84,9 +84,11 @@ int32_t SleLinkLayerRegisterSessKeyCb(SleLinkLayerSessKeyCallback cb);
 /* 接收与上报相关 */
 int32_t SleLinkLayerProcessData(uint32_t connId, const uint8_t *buff, uint32_t len);
 
-int32_t SleLinkLayerReportSvcData(int32_t connId, const char *service, const uint8_t *data, uint32_t len, SleOpType opType);
+int32_t SleLinkLayerReportSvcData(int32_t connId, const char *service, const uint8_t *data, uint32_t len,
+    SleOpType opType);
 
-int32_t SleLinkLayerReportSvcDataEnc(int32_t connId, const char *service, const uint8_t *data, uint32_t len, SleOpType opType);
+int32_t SleLinkLayerReportSvcDataEnc(int32_t connId, const char *service, const uint8_t *data, uint32_t len,
+    SleOpType opType);
 
 /* 接收分包缓存相关 */
 void SleLinkLayerClearAllCachePkg(void);

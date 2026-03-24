@@ -31,7 +31,8 @@ typedef struct {
     int32_t (*decryptCb)(uint32_t connId, uint8_t *data, uint32_t *dataLen);
 } SleEncryptHandler;
 
-static int32_t UnencryptedBuffEnc(uint32_t connId,const uint8_t *data, uint32_t dataLen, uint8_t **outData, uint32_t *outDataLen)
+static int32_t UnencryptedBuffEnc(uint32_t connId, const uint8_t *data, uint32_t dataLen,
+    uint8_t **outData, uint32_t *outDataLen)
 {
     NOT_USED(connId);
     *outData = UtilsMallocCopy(data, dataLen);
