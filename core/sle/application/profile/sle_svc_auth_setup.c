@@ -145,7 +145,7 @@ static int32_t SaveAuthSetupConfigInfo(IotcJson *req)
 static int32_t SaveAuthSetupToConnInfo(uint16_t connId, IotcJson *root)
 {
     IOTC_LOGI("GetSleSvcAuthSetup 111111");
-    SleDeviceInfo* deviceInfo = SleGetSleConnRetDeviceInfo(connId);
+    IotcConDeviceInfo* deviceInfo = SleGetConnectionInfoByConnId(connId);
     if (deviceInfo == NULL) {
         IOTC_LOGE("malloc err");
         return IOTC_ERR_NOT_INIT;

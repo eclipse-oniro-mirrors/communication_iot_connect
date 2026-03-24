@@ -37,6 +37,7 @@ typedef struct {
     int32_t (*onProfPutCharState)(const IotcCharState state[], uint32_t num);
     int32_t (*onProfGetCharState)(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num);
     int32_t (*onProfReportAll)(void);
+    int32_t (*onProfReportByDevId)(const char *devId);
     int32_t (*onProfGetPincode)(uint8_t *buf, uint32_t bufLen);
     int32_t (*onProfGetAcKey)(uint8_t *buf, uint32_t bufLen);
     void (*onProfFree)(void *ptr);
@@ -52,6 +53,7 @@ int32_t ProductGetSurfacePower(int8_t *power);
 int32_t ProductProfPutCharState(const IotcCharState state[], uint32_t num);
 int32_t ProductProfGetCharState(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num);
 int32_t ProductProfReportAll(void);
+int32_t ProductProfReportByDevId(const char *devId);
 int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen);
 int32_t ProductProfGetAcKey(uint8_t *buf, uint32_t bufLen);
 void ProductProfFree(void *ptr);

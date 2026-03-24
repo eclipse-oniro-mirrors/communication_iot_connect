@@ -28,6 +28,8 @@ typedef int32_t (*IotcSleRecvNetCfgInfoCallback)(const char *netInfo, uint32_t l
 
 typedef int32_t (*IotcSleRecvCustomSecDataCallback)(const uint8_t *data, uint32_t len);
 
+typedef int32_t (*IotcSleProfReportByDevIdCallback)(const char *devId);
+
 IOTC_API_PUBLIC int32_t IotcOhSleEnable(void);
 
 IOTC_API_PUBLIC int32_t IotcOhSleStartSeek(void);

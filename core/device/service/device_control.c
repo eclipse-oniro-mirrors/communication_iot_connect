@@ -46,6 +46,28 @@ int32_t DeviceControlReportAll(DevReportType type)
     return ret;
 }
 
+static void ReportByDevIdServiceExecutorCallback(void *userData)
+{
+    int32_t ret = ProductProfReportByDevId((const char *)userData);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("report by devid [%s] error %d",(const char *)userData, ret);
+    }
+}
+
+int32_t DeviceControlReportByDevId(DevReportType type, const char *devId)
+{
+    int32_t ret;
+    if (type == DEV_REPORT_TYPE_ASYNC) {
+        ret = SchedAsyncExecutor(ReportByDevIdServiceExecutorCallback, (void*)devId);
+    } else {
+        ret = ProductProfReportByDevId(devId);
+    }
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("report by devid [%s] error %d",(const char *)devId, ret);
+    }
+    return ret;
+}
+
 static void ProductCharStateFree(char *data[], uint32_t num)
 {
     CHECK_V_RETURN(data != NULL && num != 0);

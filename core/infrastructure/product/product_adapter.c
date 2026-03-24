@@ -31,6 +31,7 @@ typedef int32_t (*ProfGetAcKeyCallback)(uint8_t *buf, uint32_t bufLen);
 typedef void (*ProfFreeCallback)(void *ptr);
 typedef int32_t (*DevRebootCallback)(int32_t res);
 typedef int32_t (*DevTrngCallback)(uint8_t *buf, uint32_t len);
+typedef int32_t (*IotcSleProfReportByDevIdCallback)(const char *devId);
 
 static ProductHooks g_hooks = {0};
 
@@ -69,6 +70,7 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfPutCharState);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetCharState);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfReportAll);
+    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfReportByDevId);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetPincode);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetAcKey);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfFree);
@@ -184,6 +186,18 @@ int32_t ProductProfReportAll(void)
     int32_t ret = cb();
     if (ret != IOTC_OK) {
         IOTC_LOGW("report all error %d", ret);
+    }
+    return ret;
+}
+
+int32_t ProductProfReportByDevId(const char *devId)
+{
+    IotcSleProfReportByDevIdCallback cb;
+    GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfReportByDevId);
+
+    int32_t ret = cb(devId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("report all error %d devId = %s", ret, devId);
     }
     return ret;
 }

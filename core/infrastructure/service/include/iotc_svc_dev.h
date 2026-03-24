@@ -62,6 +62,7 @@ typedef struct {
 
 typedef int32_t (*DevProfReportCharState)(const IotcCharState state[], uint32_t num);
 typedef int32_t (*DevCtlReportAll)(DevReportType type);
+typedef int32_t (*DevCtlReportByDevId)(DevReportType type, const char *devId);
 typedef int32_t (*DevCtlGetCharStates)(const IotcJson *inArray, IotcJson **outArray);
 typedef int32_t (*DevCtlPutCharStates)(const IotcJson *inArray, IotcJson **outArray);
 typedef const IotcDeviceInfo *(*DevMdlGetDevInfo)(void);
@@ -80,6 +81,7 @@ typedef void (*DevSetOnlineStatus)(bool isOnline);
 
 typedef struct {
     DevCtlReportAll onReportAll;
+    DevCtlReportByDevId onReportByDevId;
     DevCtlGetCharStates onGetChar;
     DevCtlPutCharStates onPutChar;
     DevProfReportCharState onReportChar;
@@ -104,6 +106,7 @@ typedef enum {
 int32_t DevSvcProxyRecvBindInfo(const IotcJson *json);
 int32_t DevSvcProxyCtlGetCharStates(const IotcJson *inArray, IotcJson **outArray);
 int32_t DevSvcProxyCtlReportAll(DevReportType type);
+int32_t DevSvcProxyCtlReportByDevId(DevReportType type, const char *devId);
 int32_t DevSvcProxyCtlPutCharStates(const IotcJson *inArray, IotcJson **outArray);
 DevBindStatus DevSvcProxyGetBindStatus(void);
 int32_t DevSvcProxyProfReportCharState(const IotcCharState state[], uint32_t num);

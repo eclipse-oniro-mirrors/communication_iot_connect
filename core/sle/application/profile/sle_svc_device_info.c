@@ -208,8 +208,8 @@ static int32_t GetSleSvcDeviceInfoRsp(const uint16_t connId, uint8_t **out, uint
 
 static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
 {
-    SleDeviceInfo* deviceInfo = SleGetSleConnRetDeviceInfo(connId);
-    if (deviceInfo == NULL) {
+    IotcConDeviceInfo* deviceConnInfo = SleGetConnectionInfoByConnId(connId);
+    if (deviceConnInfo == NULL) {
         IOTC_LOGE("malloc err");
         return IOTC_ERR_NOT_INIT;
     }
@@ -219,27 +219,15 @@ static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
         IOTC_LOGE("Failed to get JSON object for key '%s' ", STR_JSON_VENDOR);
         return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
     }
-    int32_t ret = UtilsJsonGetString(vendor,  STR_JSON_DEVID, deviceInfo->devInfo.devId , DEVICE_ID_MAX_STR_LEN+ 1);
-    if(ret != IOTC_OK)
-    {
-        IOTC_LOGE("devId copy err %d", ret);
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
 
-    if(strcmp(deviceInfo->devInfo.devId, deviceInfo->devId) !=0)
-    {
-        IOTC_LOGE("devId not equal"); //比较获取auth 和setup的devId。
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    ret = UtilsJsonGetString(root,  STR_JSON_PRODUCT_ID , deviceInfo->devInfo.prodId, SLE_CONN_DEV_INFO_PROD_ID);
+    int32_t ret = SleJsonGetString(root,  STR_JSON_PRODUCT_ID , &deviceConnInfo->devInfo->prodId);
     if(ret != IOTC_OK)
     {
         IOTC_LOGE("prodId copy err %d", ret);
         return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
     }
 
-    ret = UtilsJsonGetString(root,  STR_JSON_SN ,deviceInfo->devInfo.sn, SLE_CONN_DEV_INFO_SN);
+    ret = SleJsonGetString(root,  STR_JSON_SN ,&deviceConnInfo->devInfo->sn);
     if(ret != IOTC_OK)
     {
         IOTC_LOGE("sn copy err %d", ret );
@@ -254,29 +242,46 @@ static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
     }
 
 
-    if(UtilsJsonGetString(devInfoJson,  STR_JSON_MODEL , deviceInfo->devInfo.model,SLE_CONN_DEV_INFO_MODEL) != IOTC_OK)
+    if(SleJsonGetString(devInfoJson,  STR_JSON_MODEL , &deviceConnInfo->devInfo->model) != IOTC_OK)
     {
         IOTC_LOGE("model copy err");
         return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
     }
 
-    if(UtilsJsonGetString(devInfoJson,  STR_JSON_DEV_TYPE ,deviceInfo->devInfo.devTypeId, SLE_CONN_DEV_INFO_DEV_TYPE) != IOTC_OK)
+    if(SleJsonGetString(devInfoJson,  STR_JSON_DEV_TYPE ,&deviceConnInfo->devInfo->devTypeId) != IOTC_OK)
     {
         IOTC_LOGE("devType copy err");
         return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
     }
 
-    if(UtilsJsonGetString(devInfoJson,  STR_JSON_MANU ,deviceInfo->devInfo.manuId, SLE_CONN_DEV_INFO_MANU) != IOTC_OK)
+    if(SleJsonGetString(devInfoJson,  STR_JSON_MANU ,&deviceConnInfo->devInfo->manuId) != IOTC_OK)
     {
         IOTC_LOGE("manu copy err");
         return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
     }
 
-    SlePrintfData((const uint8_t*)deviceInfo->devInfo.devId, DEVICE_ID_MAX_STR_LEN+ 1);
-    IOTC_LOGI("devId=%s", deviceInfo->devInfo.devId);
+    if(SleJsonGetString(devInfoJson,  STR_JSON_FWV ,&deviceConnInfo->devInfo->fwv) != IOTC_OK)
+    {
+        IOTC_LOGE("vendor copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+
+    if(SleJsonGetString(devInfoJson,  STR_JSON_HWV ,&deviceConnInfo->devInfo->hwv) != IOTC_OK)
+    {
+        IOTC_LOGE("hwv copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+
+    if(SleJsonGetString(devInfoJson,  STR_JSON_SWV ,&deviceConnInfo->devInfo->swv) != IOTC_OK)
+    {
+        IOTC_LOGE("swv copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+
     IOTC_LOGI("SaveDeviceInfo end!! ");
     return IOTC_OK;
 }
+
 int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
 

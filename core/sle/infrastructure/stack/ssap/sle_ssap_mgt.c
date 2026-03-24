@@ -408,6 +408,7 @@ void SleSsapMgtDestroy(void)
 int32_t DelSleSsapMgtPeerDevInfo(uint32_t connId)
 {
     ListEntry *item;
+    (void)UtilsGlobalMutexLock();
     LIST_FOR_EACH_ITEM(item, &g_SleSsapApp.peerDevInfo->node) {
         SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
         if (peerDevInfo->connId == connId) {
@@ -416,6 +417,7 @@ int32_t DelSleSsapMgtPeerDevInfo(uint32_t connId)
             return IOTC_OK;
         }
     }
+    (void)UtilsGlobalMutexLock();
     IOTC_LOGE("no find connId");
     return IOTC_ERROR;
 }

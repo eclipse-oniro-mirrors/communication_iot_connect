@@ -26,6 +26,9 @@ extern "C" {
 
 int32_t DeviceControlReportAll(DevReportType type);
 
+// devId 控制对应的设备
+int32_t DeviceControlReportByDevId(DevReportType type, const char *devId);
+
 int32_t DeviceControlGetCharStates(const IotcJson *inArray, IotcJson **outArray);
 
 /* outArray为空则不会返回属性修改结果，无论是否为空，都会一次触发异步上报 */

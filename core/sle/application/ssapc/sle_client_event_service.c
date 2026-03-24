@@ -108,7 +108,7 @@ int32_t ClientSleSpekeStartSession(uint16_t connId){
     return ret;
 }
 
-int32_t ClientGetSleDeviceInfo(uint16_t connId){
+int32_t ClientGetIotcConDeviceInfo(uint16_t connId){
 
     uint8_t *msg = NULL;
     uint32_t len = 0;
@@ -146,6 +146,40 @@ static int32_t BuildIotcSleSeekParam(IotcAdptSleSeekParam *param)
     return IOTC_OK;
 }
 
+// 设备断开连接
+int32_t SleDisconnectService(const char *devId)
+{
+    IOTC_LOGI("%s: devId=%s", __func__, devId);
+    IotcConDeviceInfo* node = SleGetConnectionInfoByDevId(devId);
+    if (node == NULL) {
+        IOTC_LOGE("%s: devId=%s not found", __func__, devId);
+        return IOTC_ERROR;
+    }
+
+    IotcAdptSleDeviceAddr devAddr = {0};
+    devAddr.type = node->type;
+    if(memcpy_s(devAddr.addr, IOTC_ADPT_SLE_ADDR_LEN, node->devAddr, IOTC_ADPT_SLE_ADDR_LEN))
+    {
+        IOTC_LOGE("%s: memcpy_s failed", __func__);
+        return IOTC_ERROR;
+    }
+
+    // 断开连接
+    if (IotcSleDisconnectRemoteDevice(&devAddr) != IOTC_OK) {
+        IOTC_LOGE("%s: do SleSsapDisconnect failed. Error.", __func__);
+        return IOTC_ERROR;
+    }
+
+    // 删除管理信息
+    if(DelSleSsapMgtPeerDevInfo(node->connID) != IOTC_OK)
+    {
+        IOTC_LOGE("%s: DelSleSsapMgtPeerDevInfo failed", __func__);
+        return IOTC_ERROR;
+    }
+    // 删除连接管理信息
+    SleDeleteConnDev(node->connID);
+    return IOTC_OK;
+}
 
 static void IotcSlePrintData(const uint16_t valueLen,const uint8_t *value) {
     size_t buf_len = (size_t)valueLen * 3 + 1;
@@ -254,10 +288,9 @@ static void SleClientConnectStateCallback(uint32_t event, void *param, uint32_t 
         SleConnRetDeviceInfo retDevInfo;
         retDevInfo.connID = eventParam->sleConnectStateChanged.connId;
         memset_s(retDevInfo.devAddr, IOTC_ADPT_SLE_ADDR_LEN, 0, IOTC_ADPT_SLE_ADDR_LEN);
-        memcpy_s(retDevInfo.devAddr, IOTC_ADPT_SLE_ADDR_LEN,
-            eventParam->sleConnectStateChanged.addr.addr,
-            sizeof(eventParam->sleConnectStateChanged.addr.addr));
-        retDevInfo.status = (uint16_t)eventParam->sleConnectStateChanged.connState;
+        memcpy_s(retDevInfo.devAddr, IOTC_ADPT_SLE_ADDR_LEN, eventParam->sleConnectStateChanged.addr.addr, sizeof(eventParam->sleConnectStateChanged.addr.addr));
+        retDevInfo.status = (uint16_t)eventParam->sleConnectStateChanged.conn_state;
+        retDevInfo.type = eventParam->sleConnectStateChanged.addr.type;
 
         int32_t ret = SleConnDevMgt(&retDevInfo);
         if (ret != IOTC_OK) {
@@ -315,9 +348,11 @@ static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, 
     IotcAdptSleSsapClientEventParam *eventParam = (IotcAdptSleSsapClientEventParam *)param;
     IOTC_LOGI("[uuid client] %s: status = %d", __func__, eventParam->ssapcFindStructureResult.status);
 
-    if (eventParam->ssapcFindStructureResult.status == IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        SleDeviceInfo *info = SleGetSleConnRetDeviceInfo(eventParam->ssapcFindStructureResult.connId);
-        if (info == NULL) {
+    if(eventParam->ssapcFindStructureResult.status == IOTC_ADPT_SLE_STATUS_SUCCESS)
+    {
+        IotcConDeviceInfo* info = SleGetConnectionInfoByConnId(eventParam->ssapcFindStructureResult.connId);
+        if(info == NULL)
+        {
             IOTC_LOGE("[uuid client] %s: info is NULL.", __func__);
             return;
         }
@@ -491,14 +526,14 @@ int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    IotcConDeviceInfo* node = SleFindRetDeviceInfoNode(devId);
-    IotcConDeviceInfo *external_copy = (IotcConDeviceInfo *)IotcMalloc(sizeof(IotcConDeviceInfo));
+    IotcDeviceInfo* node = SleGetDeviceInfoByDevId(devId);
+    IotcDeviceInfo *external_copy = (IotcDeviceInfo *)IotcMalloc(sizeof(IotcDeviceInfo));
     if (external_copy == NULL) {
         IOTC_LOGE("Memory allocation failed | Size:%zu",
-                 sizeof(IotcConDeviceInfo));
+                 sizeof(IotcDeviceInfo));
         return IOTC_ERR_PARAM_INVALID;
     }
-    memcpy_s(external_copy,sizeof(IotcConDeviceInfo), node, sizeof(IotcConDeviceInfo));
+    memcpy_s(external_copy,sizeof(IotcDeviceInfo), node, sizeof(IotcDeviceInfo));
 
     *info = external_copy;
     return IOTC_OK;

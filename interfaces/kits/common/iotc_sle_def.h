@@ -163,6 +163,7 @@ typedef struct {
     uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
     uint16_t connID;
     IotcConnSleState status;
+    uint8_t type;
 } SleConnRetDeviceInfo;
 
 #ifdef __cplusplus

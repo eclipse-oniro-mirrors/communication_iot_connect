@@ -136,6 +136,23 @@ static int32_t OptionSetSleRecvCustomSecDataCallback(va_list args)
     return IOTC_OK;
 }
 
+
+static int32_t OptionSetSleReportCallback(va_list args)
+{
+    IotcSleProfReportByDevIdCallback cb = va_arg(args, IotcSleProfReportByDevIdCallback);
+    CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    ProductHooks hooks = {0};
+    hooks.onProfReportByDevId = cb;
+    int32_t ret = ProductRegisterHooks(&hooks, PROD_HOOK_REG_POLICY_COVER_NON_NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("set custom data cb error %d", ret);
+        return ret;
+    }
+
+    IOTC_LOGN("set custom data cb");
+    return IOTC_OK;
+}
+
 static int32_t OptionSetSleStartUpAdvTimeout(va_list args)
 {
     uint32_t timeout = va_arg(args, uint32_t);
@@ -167,6 +184,7 @@ static const OptionItem SLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_SLE_EXIT_AFTER_NETCFG, NULL },
     { IOTC_OH_OPTION_SLE_RECV_NETCFG_CALLBACK, OptionSetSleRecvNetcfgCallback },
     { IOTC_OH_OPTION_SLE_RECV_CUSTOM_DATA_CALLBACK, OptionSetSleRecvCustomSecDataCallback },
+    { IOTC_OH_OPTION_SLE_REPORT_BY_DEVID_CALLBACK, OptionSetSleReportCallback },
     { IOTC_OH_OPTION_SLE_START_UP_ADV_TIMEOUT, OptionSetSleStartUpAdvTimeout },
     { IOTC_OH_OPTION_SLE_GATT_PROFILE_SVC_LIST, OptionSetSleSsapProfileSvcList },
 };

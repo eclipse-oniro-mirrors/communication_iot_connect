@@ -60,6 +60,16 @@ int32_t DevSvcProxyCtlReportAll(DevReportType type)
     return devApi->onReportAll(type);
 }
 
+int32_t DevSvcProxyCtlReportByDevId(DevReportType type, const char *devId)
+{
+    const DevSvcApi *devApi = GetDevSvcApi();
+    if (devApi == NULL || devApi->onReportByDevId == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return devApi->onReportByDevId(type, devId);
+}
+
 int32_t DevSvcProxyCtlPutCharStates(const IotcJson *inArray, IotcJson **outArray)
 {
     const DevSvcApi *devApi = GetDevSvcApi();

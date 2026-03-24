@@ -26,6 +26,7 @@
 #include "iotc_svc_dev.h"
 #include "iotc_errcode.h"
 #include "product_adapter.h"
+#include "sle_conn_device_info.h"
 
 static int32_t GetSeq(IotcJson *root, uint32_t *seq)
 {
@@ -183,12 +184,17 @@ static int32_t SleCustomSecDataProcess(IotcJson *vendorItem, uint8_t **out, uint
         IOTC_LOGW("svc size error %u", size);
         return IOTC_SDK_AILIFE_SLE_ERR_CUSTOM_SEC_DATA_SVC_NUM;
     }
+    char devId[DEVICE_ID_MAX_STR_LEN + 1] = {0};
+    if(SleGetDevIdByConnId(connId,  devId)!= IOTC_OK){
+        IOTC_LOGW("get dev id by conn id = [%d] err", connId);
+        return IOTC_ERR_PARAM_INVALID;
+    }
 
     /* 基于是否有data字段来判断是否为控制指令 */
     bool isGetCmd = (IotcJsonGetObj(IotcJsonGetArrayItem(vendorItem, 0), STR_JSON_DATA) == NULL);
     if (isGetCmd) {
         if (IsAllServicesSid(vendorItem)) {
-            return DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
+            return  DevSvcProxyCtlReportByDevId(DEV_REPORT_TYPE_ASYNC, devId);
         } else {
             return SleCustomSecDataGetChar(vendorItem, out, outLen, DevSvcProxyCtlGetCharStates);
         }
