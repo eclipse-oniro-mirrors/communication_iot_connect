@@ -21,6 +21,7 @@
 #include "iotc_mem.h"
 #include "securec.h"
 #include "iotc_errcode.h"
+#include "sle_print_data.h"
 
 #define SLE_SERVICE_NUM_LIMIT    64
 #define BITS_PER_BYTE 8
@@ -209,7 +210,7 @@ int32_t SleLinkLayerProcessRspData(uint32_t connId, const SleLinkLayerProcessRsp
         CHECK_RETURN_LOGE(svcInfo->putSleFunc != NULL, IOTC_ERR_CALLBACK_NULL,
             "svc:%s put cb NULL", cmdParam.service);
         ret = svcInfo->putSleFunc(&cmdParam, &response, &responseLen);
-    } else if (cmdParam.opType == SLE_OPTYPE_GET) {
+    } else if ((cmdParam.opType == SLE_OPTYPE_GET) || (cmdParam.opType == SLE_OPTYPE_RPT)) {
         CHECK_RETURN_LOGE(svcInfo->getSleFunc != NULL, IOTC_ERR_CALLBACK_NULL,
             "svc:%s get cb NULL", cmdParam.service);
         ret = svcInfo->getSleFunc(&cmdParam, &response, &responseLen);
@@ -217,6 +218,12 @@ int32_t SleLinkLayerProcessRspData(uint32_t connId, const SleLinkLayerProcessRsp
         IOTC_LOGE("sle svc opType err:%d", cmdParam.opType);
         ret = IOTC_CORE_SLE_LL_ERR_SVC_OPTYPE;
     }
+
+    if(ret == IOTC_OK && cmdParam.opType == SLE_OPTYPE_RPT)
+    {
+        return IOTC_SLE_REPORT_SUPPORT;
+    }
+
     CHECK_RETURN(ret == IOTC_OK, ret);
 
     if(strcmp(cmdParam.service ,  "speke") != 0) //不是speke类型的查找服务从这里过的都属于响应给客户端
@@ -282,7 +289,7 @@ int32_t SleLinkLayerReportSvcDataEnc(int32_t connId, const char *service, const 
 {
     CHECK_RETURN_LOGE((service != NULL) && (data != NULL) && (len > 0),
         IOTC_ERR_PARAM_INVALID, "ll rpt cmd enc invalid param, len:%u", len);
-
-    SleRptCmdParam rptParam = { connId, service, data, len, true, opType };
-    return SleCreateAndSendRptCmdData(&rptParam);
+    IOTC_LOGI("report enc data");
+    SlePrintfData(data, len);
+    return SleCreateAndSendRptCmdData(connId, service, data, len, true,opType);
 }

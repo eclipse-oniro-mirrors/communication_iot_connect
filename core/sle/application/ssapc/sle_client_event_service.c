@@ -367,7 +367,7 @@ static void SleClientSpekeFinishedCallback(uint32_t event, void *param, uint32_t
         }
         IotcFree(msg);
 
-        sleep(1000); //延迟查询devid
+        // sleep(1); //延迟查询devid
         if(CreateSvcAuthSetupGetReq(&msg, &len) != IOTC_OK)
         {
             IOTC_LOGE("[uuid client] %s: CreateSvcAuthSetupGetReq failed.", __func__);
@@ -491,13 +491,14 @@ int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    SleConnDeviceInfo *node = SleFindRetDeviceInfoNode(devId);
-    SleConnDeviceInfo *external_copy = (SleConnDeviceInfo *)IotcMalloc(sizeof(SleConnDeviceInfo));
+    IotcConDeviceInfo* node = SleFindRetDeviceInfoNode(devId);
+    IotcConDeviceInfo *external_copy = (IotcConDeviceInfo *)IotcMalloc(sizeof(IotcConDeviceInfo));
     if (external_copy == NULL) {
-        IOTC_LOGE("Memory allocation failed | Size:%zu", sizeof(SleConnDeviceInfo));
+        IOTC_LOGE("Memory allocation failed | Size:%zu",
+                 sizeof(IotcConDeviceInfo));
         return IOTC_ERR_PARAM_INVALID;
     }
-    memcpy_s(external_copy, sizeof(SleConnDeviceInfo), node, sizeof(SleConnDeviceInfo));
+    memcpy_s(external_copy,sizeof(IotcConDeviceInfo), node, sizeof(IotcConDeviceInfo));
 
     *info = external_copy;
     return IOTC_OK;

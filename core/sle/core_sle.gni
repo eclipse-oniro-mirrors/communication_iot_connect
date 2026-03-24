@@ -71,6 +71,7 @@ iotc_core_sle_src = [
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_recv.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_send.c",
   "$iotc_core_path/sle/infrastructure/linklayer/sle_linklayer_service.c",
+  "$iotc_core_path/sle/application/base/sle_print_data.c"
 ]
 
 

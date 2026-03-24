@@ -24,6 +24,7 @@
 #include "event_bus_pub.h"
 #include "sle_comm_status.h"
 #include "iotc_event.h"
+#include "sle_print_data.h"
 
 static int32_t GetSleSvcAuthSetupInfoReq(uint8_t **out, uint32_t *outLen)
 {
@@ -73,7 +74,7 @@ static int32_t GetSleSvcAuthSetupInfoReq(uint8_t **out, uint32_t *outLen)
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
-    if(IotcJsonAddNum2Obj(devSetup, AUTH_DATA_MESSAGE_JSON, MSG_AUTH_TYPE_NONE)!= IOTC_OK)
+    if(IotcJsonAddNum2Obj(devSetup, AUTH_DATA_MESSAGE_JSON, MSG_AUTH_TYPE_RSP)!= IOTC_OK)
     {
         IOTC_LOGE("add msg message err ret=%d", ret);
         return IOTC_ERR_SECUREC_SPRINTF;
@@ -109,7 +110,7 @@ static int32_t GetSleSvcAuthSetupInfoRsp(uint8_t **out, uint32_t *outLen)
         }
         if (IotcJsonAddNum2Obj(root, AUTH_DATA_ERRCODE, 0) != IOTC_OK) {
             IOTC_LOGE("add prod id err");
-            return IOTC_ADAPTER_JSON_ERR_ADD;
+            break;
         }
 
         char *outStr = UtilsJsonPrintByMalloc(root);
@@ -122,7 +123,7 @@ static int32_t GetSleSvcAuthSetupInfoRsp(uint8_t **out, uint32_t *outLen)
         *outLen = strlen(outStr);
         ret = IOTC_OK;
     } while (false);
-
+    IotcJsonDelete(root);
     return ret;
 }
 
@@ -143,34 +144,35 @@ static int32_t SaveAuthSetupConfigInfo(IotcJson *req)
 // 保存从生态设备获取到的设备信息到连接信息中
 static int32_t SaveAuthSetupToConnInfo(uint16_t connId, IotcJson *root)
 {
+    IOTC_LOGI("GetSleSvcAuthSetup 111111");
     SleDeviceInfo* deviceInfo = SleGetSleConnRetDeviceInfo(connId);
     if (deviceInfo == NULL) {
         IOTC_LOGE("malloc err");
         return IOTC_ERR_NOT_INIT;
     }
 
-    if(UtilsJsonGetString(root,  STR_JSON_PROD_ID, deviceInfo->devId, DEVICE_ID_MAX_STR_LEN + 1)!= IOTC_OK)
+    if(UtilsJsonGetString(root,  STR_JSON_DEVID, deviceInfo->devId, DEVICE_ID_MAX_STR_LEN + 1)!= IOTC_OK)
     {
-        IOTC_LOGE("GetSleSvcAuthSetup proc reqPayload err");
+        IOTC_LOGE("GetSleSvcAuthSetup %s proc reqPayload err", STR_JSON_DEVID);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
 
     if(UtilsJsonGetString(root,  STR_JSON_UIDHASH, deviceInfo->uidHash, BLE_UID_HASH_LEN) != IOTC_OK)
     {
-        IOTC_LOGE("GetSleSvcAuthSetup proc reqPayload err");
+        IOTC_LOGE("GetSleSvcAuthSetup %s proc reqPayload err", STR_JSON_UIDHASH);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
     if(UtilsJsonGetString(root, STR_JSON_AUTHCODE_ID, deviceInfo->authCodeId, BLE_AUTHCODE_ID_LEN) != IOTC_OK)
     {
-        IOTC_LOGE("GetSleSvcAuthSetup proc reqPayload err");
+        IOTC_LOGE("GetSleSvcAuthSetup %s proc reqPayload err", STR_JSON_AUTHCODE_ID);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
     if(UtilsJsonGetString(root, STR_JSON_AUTHCODE, deviceInfo->authCode, BLE_AUTHCODE_LEN) != IOTC_OK)
     {
-        IOTC_LOGE("GetSleSvcAuthSetup proc reqPayload err");
+        IOTC_LOGE("GetSleSvcAuthSetup %s proc reqPayload err", STR_JSON_AUTHCODE);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
@@ -204,6 +206,7 @@ int32_t GetSleSvcAuthSetup(const SleCmdParam *param, uint8_t **out, uint32_t *ou
         return ret;
     }
 
+    IOTC_LOGI("GetSleSvcAuthSetup msgTypeInt=%d", msgTypeInt);
     switch ((msgAuthType)msgTypeInt)
     {
         case MSG_AUTH_TYPE_REQ:

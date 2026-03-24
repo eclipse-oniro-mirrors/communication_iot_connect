@@ -373,7 +373,7 @@ int32_t SleSsapMgtInit(void)
     }
     PrintSleSsapServiceList(g_SleSsapApp.svc, g_SleSsapApp.svcNum);
     IOTC_LOGI(" ---> uuid:%s", g_SleSsapApp.svc[0].uuid);
-    
+
     ret = SleSsapEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGE("ssap event init err ret=%d", ret);
@@ -559,19 +559,7 @@ static IotcAdptSleSsapWriteFunc ServiceIdFindAttrHandleNotifyFunc(int8_t service
 }
 
 
-void SleSsapDisconnectAll(void)
-{
-    ListEntry *item;
-    LIST_FOR_EACH_ITEM(item, &g_SleSsapApp.peerDevInfo->node) {
-        SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
-        int32_t ret = IotcSleDisconnectSsap(peerDevInfo->devAddr.addr, IOTC_ADPT_SLE_ADDR_LEN);
-        if (ret != IOTC_OK) {
-            continue;
-        }
-        LIST_REMOVE(item);
-        IotcFree(peerDevInfo);
-    }
-}
+
 
 int32_t SetSleConnectParam(void)
 {
@@ -579,7 +567,8 @@ int32_t SetSleConnectParam(void)
     param.isDiscover = true;
     param.isConnect = true;
     param.isBond = SleIsPair();
-    return IotcSleSetConnectParam(&param);
+    return 0;
+    // return IotcSleSetConnectParam(&param);
 }
 
 int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, int16_t requestId)

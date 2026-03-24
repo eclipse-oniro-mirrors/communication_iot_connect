@@ -34,7 +34,7 @@ int32_t CreateSvcAuthSetupIssueReq(uint8_t **out, uint32_t *outLen)
 
     int32_t ret = IOTC_OK;
     do {
-        ret = IotcJsonAddNum2Obj(root, AUTH_DATA_MESSAGE_JSON, MSG_AUTH_TYPE_REQ);
+        ret = IotcJsonAddNum2Obj(root, AUTH_DATA_MESSAGE_JSON, MSG_AUTH_TYPE_ISSUE);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add msg type err ret=%d", ret);
             break;
@@ -45,17 +45,20 @@ int32_t CreateSvcAuthSetupIssueReq(uint8_t **out, uint32_t *outLen)
             IOTC_LOGE("add devId err ret=%d", ret);
             break;
         }
-        ret = IotcJsonAddStr2Obj(root, STR_JSON_AUTHCODE, "123456789012346");
+
+        const char hexStr[] = "48656C6C6F";
+        ret = IotcJsonAddStr2Obj(root, STR_JSON_AUTHCODE, hexStr);
         if (ret != IOTC_OK) {
             IOTC_LOGE("add devType err ret=%d", ret);
             break;
         }
-        ret = IotcJsonAddStr2Obj(root, STR_JSON_AUTHCODE_ID, "12345678901234567890123456789012");
+        ret = IotcJsonAddStr2Obj(root, STR_JSON_AUTHCODE_ID, "12345678901234567890123456789");
         if (ret != IOTC_OK) {
             IOTC_LOGE("add sn err ret=%d", ret);
             break;
         }
-        ret = IotcJsonAddStr2Obj(root, STR_JSON_UIDHASH, "1234567890123456789012345678901234567890012345678901234567890000");
+
+        ret = IotcJsonAddStr2Obj(root, STR_JSON_UIDHASH, "12345678901234567890123456789012345678900");
         if (ret != IOTC_OK) {
             IOTC_LOGE("add model err ret=%d", ret);
             break;

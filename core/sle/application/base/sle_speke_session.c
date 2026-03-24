@@ -46,10 +46,7 @@ static int32_t GetSleSessionConnId(SpekeSession *sleSpekeSess, uint16_t *connId)
 {
     ListEntry *item;
 
-    if (UtilsGlobalMutexLock() != IOTC_OK) {
-        IOTC_LOGE("Failed to acquire mutex lock");
-        return IOTC_ERROR;
-    }
+    (void)UtilsGlobalMutexLock();
 
     bool found = false;
     LIST_FOR_EACH_ITEM(item, &g_sleSpekeSessList) {

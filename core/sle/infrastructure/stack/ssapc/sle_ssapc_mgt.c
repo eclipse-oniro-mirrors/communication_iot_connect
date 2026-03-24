@@ -20,6 +20,7 @@
 #include "utils_assert.h"
 #include "iotc_log.h"
 #include "iotc_mem.h"
+#include "iotc_sle_client.h"
 
 int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint32_t connId,
     const uint8_t *value, uint32_t valueLen)
@@ -52,3 +53,38 @@ int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid, uint
     }
     return ret;
 }
+
+void SleSsapDisconnectAll(void)
+{
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, &(GetSleSsapMgtApp()->peerDevInfo->node)) {
+        SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
+        int32_t ret = IotcSleDisconnectSsap(peerDevInfo->devAddr.addr, IOTC_ADPT_SLE_ADDR_LEN);
+        if (ret != IOTC_OK){
+            continue;
+        }
+        LIST_REMOVE(item);
+        IotcFree(peerDevInfo);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

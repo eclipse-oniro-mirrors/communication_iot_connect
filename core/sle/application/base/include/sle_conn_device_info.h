@@ -24,18 +24,18 @@
 extern "C" {
 #endif
 
+#define SLE_CONN_DEV_INFO_SN            50
+#define SLE_CONN_DEV_INFO_MODEL         50
+#define SLE_CONN_DEV_INFO_DEV_TYPE      50
+#define SLE_CONN_DEV_INFO_MANU          50
+#define SLE_CONN_DEV_INFO_PROD_ID       50
 typedef struct {
-    char *sn;
-    char *prodId;
-    char *subProdId;
-    char *model;
-    char *devTypeId;
-    char *devTypeName;
-    char *manuId;
-    char *manuName;
-    char *fwv;
-    char *hwv;
-    char *swv;
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    char sn[SLE_CONN_DEV_INFO_SN];
+    char model[SLE_CONN_DEV_INFO_MODEL];
+    char devTypeId[SLE_CONN_DEV_INFO_DEV_TYPE];
+    char manuId[SLE_CONN_DEV_INFO_MANU];
+    char prodId[SLE_CONN_DEV_INFO_PROD_ID];
 } IotcConDeviceInfo;
 
 typedef struct {
@@ -53,11 +53,6 @@ typedef struct {
     SpekeState isSecure;
 } SleDeviceInfo;
 
-#define SLE_CONN_DEV_INFO_SN            50
-#define SLE_CONN_DEV_INFO_MODEL         50
-#define SLE_CONN_DEV_INFO_DEV_TYPE      50
-#define SLE_CONN_DEV_INFO_MANU          50
-#define SLE_CONN_DEV_INFO_PROD_ID       50
 
 typedef struct {
     SleDeviceInfo info;
@@ -91,9 +86,9 @@ void DestroySleConnDevList(void);
 void PrintSleConnDevList();
 bool IsExitSleConnDev(const uint16_t connID);
 
-SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId);
-int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info);
-SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint32_t connId);
+IotcConDeviceInfo* SleFindRetDeviceInfoNode(const char *devId);
+
+SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint16_t connId);
 
 #ifdef __cplusplus
 }
