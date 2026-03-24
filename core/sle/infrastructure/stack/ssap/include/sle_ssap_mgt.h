@@ -81,6 +81,7 @@ int32_t SleAddSsapSvc(const IotcSleSsapProfileSvc *svc);
 int32_t SleSsapMgtInit(void);
 void SleSsapMgtDestroy(void);
 SleSsapMgtApp *GetSleSsapMgtApp(void);
+int32_t SleGetSeviceHandle(const char *svcUuid, int32_t *handle);
 int32_t DelSleSsapMgtPeerDevInfo(uint32_t connId);
 SlePeerDevInfo *GetSleSsapMgtPeerDevInfo(uint32_t connId);
 bool SleIsPair(void);

@@ -461,7 +461,7 @@ SleSsapMgtApp *GetSleSsapMgtApp(void)
     return &g_SleSsapApp;
 }
 
-static int32_t GetSeviceHandle(const char *svcUuid, int32_t *handle)
+int32_t SleGetSeviceHandle(const char *svcUuid, int32_t *handle)
 {
     for (uint8_t i = 0; i < GetSleSsapMgtApp()->svcNum; i++) {
         if (strcmp(svcUuid, GetSleSsapMgtApp()->svc[i].uuid) != 0) {
@@ -621,42 +621,6 @@ static IotcAdptSleSsapWriteFunc ServiceIdFindAttrHandleNotifyFunc(int8_t service
     return NULL;
 }
 
-int32_t SleSendIndicateDataInner(const char *svcUuid, const char *charUuid,
-    uint32_t connId, const uint8_t *value, uint32_t valueLen)
-{
-    CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
-        IOTC_ERR_PARAM_INVALID, "invalid param");
-    if ((GetSleSsapMgtApp()->connNum == 0) || (GetSleSsapMgtApp()->peerDevInfo == NULL)) {
-        IOTC_LOGE("no connect");
-        return IOTC_CORE_SLE_NO_CONNECT;
-    }
-    IotcAdptSleSendIndicateParam param;
-    (void)memset_s(&param, sizeof(param), 0, sizeof(param));
-    int32_t handle = param.handle;
-    int32_t ret = GetSeviceHandle(svcUuid, &handle);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("get svc handle err ret=%d", ret);
-        return ret;
-    }
-
-    SlePeerDevInfo *devInfo = GetSleSsapMgtPeerDevInfo(connId);
-    if (devInfo == NULL) {
-        IOTC_LOGE("no find peer dev info");
-        return IOTC_CORE_SLE_INVALID_CONNID;
-    }
-    if (devInfo->connState != IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED) {
-        return IOTC_CORE_SLE_CONNECT_STATE_ERROR;
-    }
-    param.handle = (devInfo->handler.startHdl);
-    param.type   = devInfo->type;
-    param.value  = (uint8_t *)value;
-    param.valueLen = valueLen;
-    ret = IotcSleSendSsapsIndicate(devInfo->serverId, connId, &param);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("send indicate msg err ret=%d", ret);
-    }
-    return ret;
-}
 
 void SleSsapDisconnectAll(void)
 {

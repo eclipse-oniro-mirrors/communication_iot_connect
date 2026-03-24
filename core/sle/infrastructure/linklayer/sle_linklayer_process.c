@@ -181,19 +181,23 @@ static int32_t SleSendRspData(uint32_t connId, const uint8_t *reqBuff, uint8_t e
 int32_t SleLinkLayerProcessData(uint32_t connId, const uint8_t *buff, uint32_t len)
 {
     CHECK_RETURN_LOGE((buff != NULL) && (len > SLE_PKG_HEAD_LEN), IOTC_ERR_PARAM_INVALID,
-        "ll process bt data param invalid, len:%u", len);
+        "ll process sle data param invalid, len:%u", len);
+
 
     PkgHead pkgHead = { 0 };
     SleParsePkgHead(buff, len, &pkgHead);
     IOTC_LOGI("recv sle data pkg(%u/%u), encType:%u", pkgHead.pkgIdx, pkgHead.pkgNum, pkgHead.encryptType);
+    IOTC_LOGI("recv sle data token:%u, pkgNum:%u,  ret:%u", pkgHead.token, pkgHead.pkgNum, pkgHead.ret);
 
     int32_t ret = SleLinkLayerRecvPkgInsert(pkgHead.token, pkgHead.pkgNum, pkgHead.pkgIdx,
         buff + SLE_PKG_HEAD_LEN, len - SLE_PKG_HEAD_LEN);
+    IOTC_LOGI("ll process sle data ret:%u", ret);
     CHECK_RETURN(ret == IOTC_OK, ret);
 
     ret = SleLinkLayerSetEncryptType(pkgHead.encryptType);
     CHECK_RETURN(ret == IOTC_OK, ret);
     bool isComplete = false;
+
     ret = SleLinkLayerRecvCompleteCheck(pkgHead.token, &isComplete);
     CHECK_RETURN((ret == IOTC_OK) && isComplete, ret);
 

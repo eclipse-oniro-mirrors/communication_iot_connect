@@ -102,7 +102,7 @@ int32_t ClientSleSpekeStartSession(uint32_t connId){
         return ret;
     }
 
-    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_SPEKE, msg, len,SLE_OPTYPE_GET);
+    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_SPEKE, msg, len,SLE_OPTYPE_PUT);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
@@ -121,7 +121,7 @@ int32_t ClientSleSpekeProcessMsg(uint32_t connId)
     }
 
     // ret = SleLinkLayerReportSvcDataEnc(connId,SLE_SVC_DEVICE_INFO, msg, len);
-    ret = SleLinkLayerReportSvcData(connId,SLE_SVC_DEVICE_INFO, msg, len,SLE_OPTYPE_GET);
+    ret = SleLinkLayerReportSvcData(connId,SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
     if(ret != IOTC_OK)
     {
         IOTC_LOGE("[uuid client] report msg failed!");
@@ -148,7 +148,7 @@ static int32_t BuildIotcSleSeekParam(IotcAdptSleSeekParam *param)
     return IOTC_OK;
 }
 
-// bool compare_device_addr(const IotcAdptSleDeviceAddr* addr, const char* target_str) {
+// bool CompareDeviceAddr(const IotcAdptSleDeviceAddr* addr, const char* target_str) {
 //     uint8_t target[IOTC_ADPT_SLE_ADDR_LEN] = {0};
 //     int parsed = sscanf(target_str, "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
 //                         &target[0], &target[1], &target[2],
@@ -158,6 +158,27 @@ static int32_t BuildIotcSleSeekParam(IotcAdptSleSeekParam *param)
 //            (memcmp(addr->addr, target, IOTC_ADPT_SLE_ADDR_LEN) == 0);
 // }
 
+static void IotcSlePrintData(const uint16_t valueLen,const uint8_t *value) {
+    size_t buf_len = (size_t)valueLen * 3 + 1;
+    char *hex_str = malloc(buf_len);
+    if (!hex_str) {
+        IOTC_LOGI("IotcSlePrintData malloc failed");
+        return;
+    }
+    char *p = hex_str;
+    size_t remaining = buf_len;
+
+    for (uint32_t i = 0; i < valueLen ; i++) {
+        int n = snprintf(p, remaining, "%02X ", value[i]);
+        if (n < 0 || (size_t)n >= remaining) {
+            break;
+        }
+        p += n;
+        remaining -= n;
+    }
+    IOTC_LOGI("IotcSlePrintData First %u bytes: %s", valueLen, hex_str);
+    free(hex_str);
+}
 static void SleClientSeekResultCallBack(uint32_t event, void *param, uint32_t len)
 {
     if (param == NULL) {
@@ -170,18 +191,11 @@ static void SleClientSeekResultCallBack(uint32_t event, void *param, uint32_t le
     IotcAdptSleDeviceAddr g_sle_remote_addr;
     IOTC_LOGI("[uuid client] seekResult.data: %s", (const char *)eventParam->seekResult.data);
 
-    /*
-    const char* TARGET_ADDR_STR = "00:01:09:06:64:ed";
+    IotcSlePrintData(eventParam->seekResult.dataLength,eventParam->seekResult.data);
 
-    if(compare_device_addr(&eventParam->seekResult.addr, TARGET_ADDR_STR))
-    {
-        memcpy_s(&g_sle_remote_addr, sizeof(IotcAdptSleDeviceAddr), &(eventParam->seekResult.addr), sizeof(IotcAdptSleDeviceAddr));
-        int32_t ret = IotcSleConnectRemoteDevice(&g_sle_remote_addr); //链接
-        IOTC_LOGI("[uuid client]  connect remote device %d!", ret);
-    }
-    */
 
-    if (strstr((const char *)eventParam->seekResult.data, "KhFactoryTest-SLE") != NULL)
+    // if (strstr((const char *)eventParam->seekResult.data, "KhFactoryTest-SLE") != NULL)
+    if (eventParam->seekResult.data[0] == 0x02 && eventParam->seekResult.data[1] == 0x01 && eventParam->seekResult.data[2] == 0x06)
     {
         IOTC_LOGI("[uuid client] %s target found, addr: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
                     eventParam->seekResult.addr.addr[0], eventParam->seekResult.addr.addr[1],
@@ -286,7 +300,7 @@ static void SleClientFindStructureCallBack(uint32_t event, void *param, uint32_t
     IotcAdptSleSsapClientEventParam *eventParam = (IotcAdptSleSsapClientEventParam *)param;
 
     int32_t ret = SleSetServiceAtt(eventParam->ssapcFindServiceResult.clientId,
-        eventParam->ssapcFindServiceResult.service.startHdl,
+        (eventParam->ssapcFindServiceResult.service.startHdl) + 1,
         eventParam->ssapcFindServiceResult.service.endHdl);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] %s: set service att failed.", __func__);
