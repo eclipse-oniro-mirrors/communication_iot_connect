@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <stddef.h>
+#include <unistd.h>
 #include "sle_client_event_service.h"
 #include "sle_svc_device_info.h"
 #include "security_speke.h"
@@ -23,7 +24,6 @@
 #include "iotc_event.h"
 #include "sle_disc_ctrl.h"
 #include "iotc_sle_client.h"
-#include "sle_conn_event.h"
 #include "sle_profile.h"
 #include "sle_ssap_mgt.h"
 #include "event_bus.h"
@@ -31,8 +31,11 @@
 #include "securec.h"
 #include "sle_ssap_service.h"
 #include "sle_svc_ctx.h"
-#include <stddef.h>
-#include "sle_conn_mgt.h"
+
+#include "sle_conn_device_info.h"
+#include "sle_client_auth_setup.h"
+#include "sle_client_auth_setup.h"
+#include "sle_comm_status.h"
 
 /* 部分星闪扫描参数 */
 #define IOTC_SLE_CLOSE_FILTER           0
@@ -81,10 +84,10 @@ typedef enum {
 
 static uint8_t g_clientId = 1;
 
-int32_t ClientSleSpekeStartSession(uint32_t connId)
-{
-    int32_t ret = CreateSleSpekeSess(SPEKE_TYPE_CLIENT, connId);
-    if (ret != IOTC_OK) {
+
+int32_t ClientSleSpekeStartSession(uint16_t connId){
+    int32_t ret = CreateSleSpekeSess(SPEKE_TYPE_CLIENT,connId);
+    if(ret != IOTC_OK){
         IOTC_LOGE("[uuid client] create speke failed ret = %d!", ret);
         return ret;
     }
@@ -105,18 +108,20 @@ int32_t ClientSleSpekeStartSession(uint32_t connId)
     return ret;
 }
 
-int32_t ClientSleSpekeProcessMsg(uint32_t connId)
-{
+int32_t ClientGetSleDeviceInfo(uint16_t connId){
+
     uint8_t *msg = NULL;
     uint32_t len = 0;
-    int32_t ret = GetSleSvcDeviceInfoReq(&msg, &len);
-    if (ret != IOTC_OK) {
+    int32_t ret = CreateSvcDeviceInfoReq(&msg, &len);
+    if(ret != IOTC_OK)
+    {
         IOTC_LOGE("[uuid client] get device info failed!");
         return ret;
     }
 
-    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
-    if (ret != IOTC_OK) {
+    ret = SleLinkLayerReportSvcDataEnc(connId,SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
+    if(ret != IOTC_OK)
+    {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
     }
@@ -141,18 +146,11 @@ static int32_t BuildIotcSleSeekParam(IotcAdptSleSeekParam *param)
     return IOTC_OK;
 }
 
-#define SLE_ADV_FLAGS_LEN_VAL    0x02
-#define SLE_ADV_FLAGS_AD_TYPE    0x01
-#define SLE_ADV_FLAGS_VALUE      0x06
-#define SLE_ADV_FLAGS_LEN_IDX    0
-#define SLE_ADV_FLAGS_TYPE_IDX   1
-#define SLE_ADV_FLAGS_VAL_IDX    2
 
-static void IotcSlePrintData(const uint16_t valueLen, const uint8_t *value)
-{
-    size_t bufLen = (size_t)valueLen * 3 + 1;
-    char *hexStr = malloc(bufLen);
-    if (!hexStr) {
+static void IotcSlePrintData(const uint16_t valueLen,const uint8_t *value) {
+    size_t buf_len = (size_t)valueLen * 3 + 1;
+    char *hex_str = malloc(buf_len);
+    if (!hex_str) {
         IOTC_LOGI("IotcSlePrintData malloc failed");
         return;
     }
@@ -237,7 +235,10 @@ static void SleClientConnectStateCallback(uint32_t event, void *param, uint32_t 
         IOTC_LOGI("[uuid client]  connect remote device state none connId = %d!", devInfo->connId);
         return;
     }
-    if (eventParam->sleConnectStateChanged.connState == IOTC_SLE_SSAP_CONNECT_STATE_DISCONNECTED) {
+    if(eventParam->sleConnectStateChanged.conn_state == IOTC_SLE_SSAP_CONNECT_STATE_DISCONNECTED)
+    {
+        //断开连接后把连接信息删除
+        SleDeleteConnDev(devInfo->connId);
         IOTC_LOGI("[uuid client]  connect remote device state disconnected connId = %d!", devInfo->connId);
         return;
     }
@@ -329,6 +330,7 @@ static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, 
             IOTC_LOGE("[uuid client] %s: ClientSleSpekeStartSession failed, ret:%d\r\n", __func__, ret);
         }
         info->isSecure = IOTC_SPEKE_SLE_STATE_INIT;
+        SleScanServiceStop();
     }
 }
 
@@ -341,6 +343,67 @@ static void SleClientConnectParamUpdateCallback(uint32_t event, void *param, uin
     IotcAdptSleConnectionEventParam *eventParam = (IotcAdptSleConnectionEventParam *)param;
     IOTC_LOGI("[uuid client] %s: conn_id:%d status:%d \r\n", __func__,
         eventParam->sleConnectParamUpdateReq.connId, eventParam->sleConnectParamUpdateReq.status);
+}
+
+static void SleClientSpekeFinishedCallback(uint32_t event, void *param, uint32_t len)
+{
+    NotifyFinishedStatus * spekeStatus = (NotifyFinishedStatus *)param;
+    if(spekeStatus->errorCode == IOTC_OK)
+    {
+        IOTC_LOGI("[uuid client] %s: SleClientSpekeFinishedCallback success.", __func__);
+        uint8_t *msg = NULL;
+        uint32_t len = 0;
+        //接通ble下发的authcode的时候就把这个测试注释掉
+        if(CreateSvcAuthSetupIssueReq(&msg, &len)!= IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] %s: CreateSvcAuthSetupIssueReq failed.", __func__);
+            return ;
+        }
+
+        if(SleLinkLayerReportSvcDataEnc(spekeStatus->connSessionId,SLE_SVC_AUTH_SETUP, msg, len, SLE_OPTYPE_GET) != IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] report msg failed!");
+            return ;
+        }
+        IotcFree(msg);
+
+        sleep(1000); //延迟查询devid
+        if(CreateSvcAuthSetupGetReq(&msg, &len) != IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] %s: CreateSvcAuthSetupGetReq failed.", __func__);
+            return ;
+        }
+
+        if(SleLinkLayerReportSvcDataEnc(spekeStatus->connSessionId, SLE_SVC_AUTH_SETUP, msg, len, SLE_OPTYPE_GET)!= IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] report msg failed!");
+            return ;
+        }
+    }
+}
+
+//Auth Setup 完成之后查询设备信息
+static void SleClientAuthSetupFinishedCallback(uint32_t event, void *param, uint32_t len)
+{
+    NotifyFinishedStatus * spekeStatus = (NotifyFinishedStatus *)param;
+    if(spekeStatus->errorCode == IOTC_OK)
+    {
+        IOTC_LOGI("[uuid client] %s: SleClientAuthSetupFinishedCallback success.", __func__);
+        uint8_t *msg = NULL;
+        uint32_t len = 0;
+        int32_t ret = CreateSvcDeviceInfoReq(&msg, &len);
+        if(ret != IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] get device info failed!");
+            return ;
+        }
+
+        ret = SleLinkLayerReportSvcDataEnc(spekeStatus->connSessionId,SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
+        if(ret != IOTC_OK)
+        {
+            IOTC_LOGE("[uuid client] report msg failed!");
+        }
+    }
 }
 
 static int32_t SleClientBusinessCallbackInit(void)
@@ -368,6 +431,13 @@ static int32_t SleClientBusinessCallbackInit(void)
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
         "[uuid client] subscribe gatt SleClientConnectParamUpdateCallback err:%d", ret);
 
+    ret = EventBusSubscribe(SleClientSpekeFinishedCallback, IOTC_CORE_SLE_EVENT_SPEKE_FINISHED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientSpekeFinishedCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientAuthSetupFinishedCallback, IOTC_CORE_SLE_EVENT_AUTH_SETUP_FINISHED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientAuthSetupFinishedCallback err:%d", ret);
+
+
     return ret;
 }
 
@@ -390,9 +460,28 @@ int32_t SleScanServiceStart(void)
 
 int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
-    IOTC_LOGI("%s: devId=%s, protType=%d, len=%d", __func__, devId, protType, len);
-    int32_t connId = 0;
-    return ClientSleSpekeProcessMsg(connId);
+    // 停止扫描
+    if (SleSeekCtrlStop() != IOTC_OK) {
+        IOTC_LOGE("%s: do SleStopSeek failed. Error.", __func__);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t SleSendCustomSecDataService(const char *devId, const uint8_t *data, uint32_t len)
+{
+    if (devId == NULL || data == NULL) {
+        IOTC_LOGE("%s: Invalid input parameters (devId=%p, data=%p)", __func__, devId, data);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    uint16_t connId = 0;
+    if(!SleFindConnDevByDevId(devId, &connId))
+    {
+        IOTC_LOGE("%s: devId=%s not found", __func__, devId);
+        return IOTC_ERROR;
+    }
+    return SleLinkLayerReportSvcDataEnc(connId, SLE_SVC_CUSTOM_SEC_DATA, data, len, SLE_OPTYPE_GET);
 }
 
 int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)

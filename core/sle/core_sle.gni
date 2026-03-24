@@ -34,7 +34,6 @@ iotc_core_sle_inc = [
   "$iotc_core_path/ble/infrastructure/linklayer/include",
   "$iotc_core_path/sle/infrastructure/linklayer",
   "$iotc_core_path/sle/infrastructure/linklayer/include",
-  "$iotc_core_path/sle/infrastructure/stack/conn_dev_mgt",
 ]
 
 
@@ -57,6 +56,7 @@ iotc_core_sle_src = [
   "$iotc_core_path/sle/application/profile/sle_svc_create_session.c",
   "$iotc_core_path/sle/application/profile/sle_svc_custom_sec_data.c",
   "$iotc_core_path/sle/application/profile/sle_svc_device_info.c",
+  "$iotc_core_path/sle/application/base/sle_conn_device_info.c",
   "$iotc_core_path/sle/application/profile/sle_svc_net_cfg_ver.c",
   "$iotc_core_path/sle/application/profile/sle_svc_netcfg.c",
   "$iotc_core_path/sle/application/profile/sle_svc_speke.c",
@@ -99,10 +99,11 @@ if (!defined(ohos_lite)) {
   ]
   iotc_core_sle_src += [
     "$iotc_core_path/sle/application/ssapc/sle_client_event_service.c",
+    "$iotc_core_path/sle/application/ssapc/sle_client_auth_setup.c",
+    "$iotc_core_path/sle/application/ssapc/sle_client_device_info.c",
     "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_ctrl.c",
     "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_event.c",
     "$iotc_core_path/sle/application/ssapc/sle_client_stubs.c",
-    "$iotc_core_path/sle/infrastructure/stack/conn_dev_mgt/sle_conn_mgt.c",
     "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_mgt.c"
   ]
 }

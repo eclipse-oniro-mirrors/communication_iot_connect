@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-/* SLE connected device management */
-
-#include "sle_conn_mgt.h"
+#include "sle_conn_device_info.h"
 #include "securec.h"
 #include "iotc_errcode.h"
 #include "iotc_log.h"
@@ -36,21 +34,6 @@ typedef struct {
     ListEntry node;
 } SlDeviceInfoNode;
 
-static void ReleaseStrings(uint8_t **strs)
-{
-    if (strs == NULL) {
-        return;
-    }
-    int i = 0;
-    while (strs[i] != NULL) {
-        free(strs[i]);
-        strs[i] = NULL;
-        ++i;
-    }
-    free(strs);
-    strs = NULL;
-    return;
-}
 
 static ListEntry *GetSleConnDevListHead(void)
 {
@@ -134,7 +117,12 @@ SleConnDeviceInfo *SleFindRetDeviceInfoNode(const char *devId)
     ListEntry *item;
     LIST_FOR_EACH_ITEM(item, &g_sleDeviceInfoList) {
         SlDeviceInfoNode *node = CONTAINER_OF(item, SlDeviceInfoNode, node);
-        if (memcmp(node->info.devId, devId, strlen(devId)) == 0) {
+        if(node == NULL) {
+            IOTC_LOGE("invalid param");
+            return NULL;
+        }
+
+        if(memcmp(node->info.devId, devId, strlen(devId)) == 0) {
             return &node->info;
         }
     }
@@ -225,64 +213,6 @@ void PrintSleConnDevList(void)
     }
 }
 
-void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo)
-{
-    if (deviceInfo == NULL) {
-        return;
-    }
-
-    uint32_t len = 0;
-    uint8_t **msg = (uint8_t **)IotcCalloc(1, sizeof(uint8_t *));
-    if (msg == NULL) {
-        return;
-    }
-
-    GetSleSvcDeviceInfo(NULL, msg, &len);
-    IotcJson *root = IotcJsonParse((char *)*msg);
-
-    IotcJson *vendorJson = IotcJsonGetObj(root, STR_JSON_VENDOR);
-    if (vendorJson == NULL) {
-        return;
-    }
-
-    IotcJson *devInfoJson = IotcJsonGetObj(vendorJson, STR_JSON_DEV_INFO);
-    if (devInfoJson == NULL) {
-        return;
-    }
-
-    IotcJson *snJson = IotcJsonGetObj(devInfoJson, STR_JSON_SN);
-    const char *sn = IotcJsonGetStr(snJson);
-    if (sn != NULL) {
-        memcpy_s(deviceInfo->sn, sizeof(deviceInfo->sn), sn, strlen(sn) + 1);
-    }
-
-    IotcJson *modelJson = IotcJsonGetObj(root, STR_JSON_MODEL);
-    const char *model = IotcJsonGetStr(modelJson);
-    if (model != NULL) {
-        memcpy_s(deviceInfo->model, sizeof(deviceInfo->model), model, strlen(model) + 1);
-    }
-
-    IotcJson *devTypeJson = IotcJsonGetObj(root, STR_JSON_DEV_TYPE);
-    const char *devType = IotcJsonGetStr(devTypeJson);
-    if (devType != NULL) {
-        memcpy_s(deviceInfo->devType, sizeof(deviceInfo->devType), devType, strlen(devType) + 1);
-    }
-
-    IotcJson *manuNameJson = IotcJsonGetObj(root, STR_JSON_MANU);
-    const char *manuName = IotcJsonGetStr(manuNameJson);
-    if (manuName != NULL) {
-        memcpy_s(deviceInfo->manu, sizeof(deviceInfo->manu), manuName, strlen(manuName) + 1);
-    }
-
-    IotcJson *prodIdJson = IotcJsonGetObj(root, STR_JSON_PROD_ID);
-    const char *prodId = IotcJsonGetStr(prodIdJson);
-    if (prodId != NULL) {
-        memcpy_s(deviceInfo->prodId, sizeof(deviceInfo->prodId), prodId, strlen(prodId) + 1);
-    }
-
-    ReleaseStrings(msg);
-    return;
-}
 
 void IotcOhSendCustomSecData(const char *devId, const char *service, const uint8_t *data, uint32_t len)
 {

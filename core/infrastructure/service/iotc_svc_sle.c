@@ -59,14 +59,14 @@ int32_t SleSvcProxyStopAdv(void)
     return sleApi->onStopAdv();
 }
 
-int32_t SleSvcProxySendCustomSecData(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
+int32_t SleSvcProxySendCustomSecData(const char *devId, const uint8_t *data, uint32_t len)
 {
     const SleSvcApi *sleApi = GetSleSvcApi();
     if (sleApi == NULL || sleApi->onSendCustomSecData == NULL) {
         return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
     }
 
-    return sleApi->onSendCustomSecData(devId, protType, data, len);
+    return sleApi->onSendCustomSecData(devId,  data, len);
 }
 
 int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,

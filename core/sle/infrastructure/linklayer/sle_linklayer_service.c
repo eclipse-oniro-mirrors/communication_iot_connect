@@ -176,8 +176,12 @@ static int32_t EncodeCmdSleData(const SleCmdParam *cmdParam, const uint8_t *payl
 
 static int32_t SvcCheckEncType(const SleSvcInfo *svcInfo, SleLinkLayerEncryptType encryptType)
 {
+    IOTC_LOGI("svc:%s, enc type:%d", svcInfo->service, encryptType);
     CHECK_RETURN_LOGE(encryptType < sizeof(svcInfo->suppEncType) * BITS_PER_BYTE,
         IOTC_CORE_SLE_LL_ERR_ENCRYPT_TYPE, "enc type too large:%d", encryptType);
+
+    CHECK_RETURN_LOGE((svcInfo->suppEncType & (1 << encryptType)) > 0,
+        IOTC_CORE_SLE_LL_ERR_SVC_NOT_SUPP_ENCTYPE, "svc:%s not supp enc type:%d", svcInfo->service, encryptType);
     return IOTC_OK;
 }
 
@@ -215,7 +219,12 @@ int32_t SleLinkLayerProcessRspData(uint32_t connId, const SleLinkLayerProcessRsp
     }
     CHECK_RETURN(ret == IOTC_OK, ret);
 
-    ret = EncodeCmdSleData(&cmdParam, response, responseLen, param->outBuff, param->outLen);
+    if(strcmp(cmdParam.service ,  "speke") != 0) //不是speke类型的查找服务从这里过的都属于响应给客户端
+    {
+        cmdParam.opType = SLE_OPTYPE_RPT;
+    }
+
+    ret = EncodeCmdSleData(&cmdParam, response, responseLen, outBuff, outLen);
     if (response != NULL) {
         IotcFree(response);
     }

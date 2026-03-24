@@ -29,7 +29,7 @@ int32_t SleAdvServiceStart(uint32_t ms);
 int32_t SleAdvServiceStop(void);
 void SleAdvSetType(SleSvcAdvDataType type);
 
-int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len);
+int32_t SleSendCustomSecDataService(const char *devId,const uint8_t *data, uint32_t len);
 
 int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info);
 

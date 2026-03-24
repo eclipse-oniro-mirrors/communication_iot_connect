@@ -34,21 +34,114 @@
 #define SEQ_MAX_INTERVAL    30  /* seq有效范围为已收到最大值的正负30内 */
 #define ITER_TIMES          1 /* 基于authcode派生，迭代一次表示依赖authcode安全强度 */
 
-#define SLE_SESS_INIT { \
-    .negoFinish = false, \
-    .sessInfo = { \
-        .maxRecvSeq = 0, \
-        .recvBitMap = 0, \
-        .nextSendSeq = 1, \
-        .sessId = { 0 }, \
-        .salt = { 0 }, \
-        .key = { 0 } \
-    } \
+
+static ListEntry g_sleSessParmList = LIST_DECLARE_INIT(&g_sleSessParmList);
+
+typedef struct {
+    SleSessParam *sessParam;
+    uint16_t connId;
+    ListEntry node;
+} SleSessionParmNode;
+
+
+static SleSessionParmNode *GetSleSessionParmNode(uint16_t connId)
+{
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, &g_sleSessParmList) {
+        SleSessionParmNode *sessNode = CONTAINER_OF(item, SleSessionParmNode, node);
+        if (sessNode->connId == connId) {
+            return sessNode;
+        }
+    }
+    return NULL;
 }
 
-static SleSessParam g_sessParam = SLE_SESS_INIT;
+static int32_t SleSessionNodeRegister(SleSessParam *sessNode, uint16_t connId)
+{
+    IOTC_LOGI("register sle session session id:%x",sessNode);
+    if(sessNode == NULL)
+    {
+        IOTC_LOGE("create  session is null");
+        return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
+    }
+    if(connId >= SLE_SESSION_MAX)
+    {
+        IOTC_LOGE("sle  key:%u out of range", connId);
+        return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
+    }
 
-void SleSessRecvSeqInit(uint32_t recvSeq)
+    if(GetSleSessionParmNode(connId) != NULL) {
+        IOTC_LOGE("sle  key:%u exist", connId);
+        return IOTC_OK;
+    }
+
+    SleSessionParmNode *sleSessNode = (SleSessionParmNode *)IotcCalloc(1, sizeof(SleSessionParmNode));
+    CHECK_RETURN_LOGE(sleSessNode != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc sleSessionNode err");
+    sleSessNode->sessParam = sessNode;
+    LIST_INSERT_BEFORE(&sleSessNode->node, &g_sleSessParmList);
+
+    return IOTC_OK;
+}
+
+static void SleSessionNodeRelease(void)
+{
+    ListEntry *item;
+    ListEntry *next;
+    LIST_FOR_EACH_ITEM_SAFE(item, next, &g_sleSessParmList) {
+        SleSessionParmNode *sessNode = CONTAINER_OF(item, SleSessionParmNode, node);
+        LIST_REMOVE(&sessNode->node);
+    }
+}
+
+int32_t SleSessDelNode(uint16_t connId)
+{
+    SleSessionParmNode *sessNode = GetSleSessionParmNode(connId);
+    if (sessNode == NULL) {
+        IOTC_LOGE("sle session node is null");
+        return IOTC_OK;
+    }
+
+    LIST_REMOVE(&sessNode->node);
+    IotcFree(sessNode);
+    IOTC_LOGI("sle session node del %d ok!", connId);
+    return IOTC_OK;
+}
+
+static int32_t SleSessCreate(uint16_t connId)
+{
+    SleSessionParmNode *sessNode = GetSleSessionParmNode(connId);
+    if (sessNode != NULL) {
+        IOTC_LOGI("sle session node already exist");
+        return IOTC_OK;
+    }
+
+    SleSessParam *sessParam = (SleSessParam *)IotcCalloc(1, sizeof(SleSessParam));
+    if(sessParam == NULL)
+    {
+        IOTC_LOGE("calloc sle session node err");
+        return IOTC_ADAPTER_MEM_ERR_CALLOC;
+    }
+
+    sessParam->negoFinish = false;
+    sessParam->sessInfo.maxRecvSeq = 0;
+    sessParam->sessInfo.recvBitMap = 0;
+    sessParam->sessInfo.nextSendSeq = 1;
+    memset(sessParam->sessInfo.sessId, 0, SESSION_ID_LEN);
+    memset(sessParam->sessInfo.salt, 0, SALT_LEN);
+    memset(sessParam->sessInfo.key, 0, SESSION_KEY_LEN);
+
+    if(SleSessionNodeRegister(sessParam, connId) != IOTC_OK)
+    {
+        IOTC_LOGE("sle session node register err");
+        IotcFree(sessParam);
+        return IOTC_ADAPTER_MEM_ERR_CALLOC;
+    }
+    IOTC_LOGI("sle session node create %d ok!", connId);
+    return IOTC_OK;
+}
+
+
+void DestroySleSess(void)
 {
     SleSessKeyInfo *sessInfo = &g_sessParam.sessInfo;
     sessInfo->maxRecvSeq = recvSeq;
@@ -184,7 +277,8 @@ int32_t SleSessKeyGen(const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, u
     ret = IotcPkcs5Pbkdf2Hmac(&param, sessInfo->key, SESSION_KEY_LEN);
     (void)memset_s(&authInfo, sizeof(DevAuthInfo), 0, sizeof(DevAuthInfo));
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "sle sess key gen err:%d", ret);
-    g_sessParam.negoFinish = true;
+
+    sessNode->sessParam->negoFinish = true;
     return IOTC_OK;
 }
 
@@ -203,7 +297,13 @@ uint8_t *SleSessIdGet(void)
 
 bool SleSessIsExist(void)
 {
-    return g_sessParam.negoFinish;
+    SleSessionParmNode *sessNode = GetSleSessionParmNode(connId);
+    if(sessNode == NULL)
+    {
+        IOTC_LOGE("sess not exist");
+        return false;
+    }
+    return sessNode->sessParam->negoFinish;
 }
 
 /* 生成随机 iv 进行加密, 并拼接 iv + encData + sessId 输出至 outBuff 中
@@ -246,7 +346,7 @@ static int32_t SleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     /* 填充 sessId */
     ret = memcpy_s(outBuff + outLen - SESSION_ID_LEN, SESSION_ID_LEN, sessInfo->sessId, SESSION_ID_LEN);
     CHECK_RETURN(ret == EOK, IOTC_ERR_SECUREC_MEMCPY);
-    
+
     return IOTC_OK;
 }
 
@@ -284,7 +384,7 @@ static int32_t SleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
     #endif
     ret = IotcAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen decData err:%d", ret);
-    
+
     return IOTC_OK;
 }
 

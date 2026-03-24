@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-/* 蓝牙通信内置服务 */
+/* Sle通信内置服务 */
 #define SLE_SVC_NET_CFG_VER "netCfgVer"
 #define SLE_SVC_DEVICE_INFO "deviceInfo"
 #define SLE_SVC_AUTH_SETUP "authSetup"

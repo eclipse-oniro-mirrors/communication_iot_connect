@@ -50,11 +50,9 @@ int32_t SleScanServiceStart(void)
 {
     return IOTC_OK;
 }
-
-int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
+int32_t SleSendCustomSecDataService(const char *devId, const uint8_t *data, uint32_t len)
 {
     NOT_USED(devId);
-    NOT_USED(protType);
     NOT_USED(data);
     NOT_USED(len);
     return IOTC_OK;

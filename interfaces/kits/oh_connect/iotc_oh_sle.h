@@ -40,7 +40,7 @@ IOTC_API_PUBLIC int32_t IotcOhSleStartAdv(uint32_t ms);
 
 IOTC_API_PUBLIC int32_t IotcOhSleStopAdv(void);
 
-IOTC_API_PUBLIC int32_t IotcOhSleSendCustomSecData(const char *devId, uint8_t portType, uint8_t *data, uint32_t len);
+IOTC_API_PUBLIC int32_t IotcOhSleSendCustomSecData(const char *devId, uint8_t *data, uint32_t len);
 
 IOTC_API_PUBLIC int32_t IotcOhSleSendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);

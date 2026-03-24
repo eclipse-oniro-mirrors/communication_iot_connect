@@ -76,6 +76,8 @@ SleLinkLayerEncryptType SleLinkLayerGetEncryptType(void)
     if (SleLinkLayerSessKeyExist()) {
         return SLE_ENC_TYPE_SESSKEY;
     }
+    IOTC_LOGI("ll get enc type:%d", g_encryptSleType);
+    g_encryptSleType = SLE_ENC_TYPE_SPEKE;
     return g_encryptSleType;
 }
 

@@ -24,11 +24,41 @@
 extern "C" {
 #endif
 
+typedef struct {
+    char *sn;
+    char *prodId;
+    char *subProdId;
+    char *model;
+    char *devTypeId;
+    char *devTypeName;
+    char *manuId;
+    char *manuName;
+    char *fwv;
+    char *hwv;
+    char *swv;
+} IotcConDeviceInfo;
+
+typedef struct {
+    IotcConDeviceInfo devInfo; // 下挂的生态设备信息（SLE连接后,从生态设备处获取）
+    uint8_t linkType; // 链路类型
+    // 云端下发的生态设备信息（SLE连接后，从生态设备处获取，详见配网和注册激活流程）
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    char secret[CLOUD_SECRET_MAX_STR_LEN + 1];
+    uint8_t psk[CLOUD_PSK_MAX_LEN];
+    char uidHash[BLE_UID_HASH_LEN + 1];
+    char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
+    char authCode[BLE_AUTHCODE_LEN];
+    uint16_t connID;
+    uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
+    SpekeState isSecure;
+} SleDeviceInfo;
+
 #define SLE_CONN_DEV_INFO_SN            50
 #define SLE_CONN_DEV_INFO_MODEL         50
 #define SLE_CONN_DEV_INFO_DEV_TYPE      50
 #define SLE_CONN_DEV_INFO_MANU          50
 #define SLE_CONN_DEV_INFO_PROD_ID       50
+
 typedef struct {
     SleDeviceInfo info;
     ListEntry list;
@@ -61,7 +91,6 @@ void DestroySleConnDevList(void);
 void PrintSleConnDevList();
 bool IsExitSleConnDev(const uint16_t connID);
 
-void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo);
 SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId);
 int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info);
 SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint32_t connId);

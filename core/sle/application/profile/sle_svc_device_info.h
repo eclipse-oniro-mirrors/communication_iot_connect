@@ -21,9 +21,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define DATA_MESSAGE_JSON   "message"
+#define DATA_ERRCODE        "errcode"
+#define PROT_TYPE_MAX_LEN 4
+
+typedef enum{
+    MSG_TYPE_NONE = 0x0000,
+    MSG_TYPE_REQ  = 0x0001,
+    MSG_TYPE_RSP  = 0x0002,
+}msgType;
 
 int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
+int32_t CreateSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
 
 #ifdef __cplusplus
 }
