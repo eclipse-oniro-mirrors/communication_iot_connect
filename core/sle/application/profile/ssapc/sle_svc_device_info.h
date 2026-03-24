@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,29 +12,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef SLE_CLIENT_DEVICE_INFO_H
-#define SLE_CLIENT_DEVICE_INFO_H
+#ifndef SLE_SVC_DEVICE_INFO_H
+#define SLE_SVC_DEVICE_INFO_H
 
 #include <stdint.h>
 #include "sle_linklayer.h"
+#include "sle_profile.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define PROT_TYPE_MAX_LEN 4
 
 /**
- * @brief 创建设备信息请求
+ * @brief Get SLE device info
  *
- * @param out The output buffer
- * @param outLen The output buffer length
+ * @param param Command parameter
+ * @param out Output buffer
+ * @param outLen Output buffer length
  *
- * @return 0 on 成功, -1 on failure
- */
+ * @return 0: success, others: fail
+*/
+int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
+
+/**
+ * @brief Create SLE device info request
+ *
+ * @param out Output buffer
+ * @param outLen Output buffer length
+ *
+ * @return 0: success, others: fail
+*/
 int32_t CreateSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_CLIENT_DEVICE_INFO_H */
+#endif /* SLE_SVC_DEVICE_INFO_H */

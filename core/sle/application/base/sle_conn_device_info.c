@@ -25,6 +25,12 @@
 #include "sle_svc_device_info.h"
 #include "iotc_json.h"
 
+#define MAC_ADDR_STR_LEN 18
+#define MAC_ADDR_BYTE_IDX_2 2
+#define MAC_ADDR_BYTE_IDX_3 3
+#define MAC_ADDR_BYTE_IDX_4 4
+#define MAC_ADDR_BYTE_IDX_5 5
+
 static uint32_t g_sleConnDevListNum = 0;
 static ListEntry g_sleConnDevList = LIST_DECLARE_INIT(&g_sleConnDevList);
 
@@ -88,9 +94,12 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
         IotcFree(newNode);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
-    newNode->info.devInfo = deviceInfo;
 
     (void)memset_s(newNode, sizeof(SleConnDevList), 0, sizeof(SleConnDevList));
+    (void)memset_s(deviceInfo, sizeof(IotcDeviceInfo), 0, sizeof(IotcDeviceInfo));
+
+    newNode->info.devInfo = deviceInfo;
+
     newNode->info.connID = retDev->connID;
     memcpy_s(newNode->info.devAddr, IOTC_ADPT_SLE_ADDR_LEN, retDev->devAddr, sizeof(retDev->devAddr));
 
@@ -118,7 +127,7 @@ int32_t SleGetDevIdByConnId(uint16_t connId, char *devId)
 {
     // 参数校验
     CHECK_RETURN_LOGW(devId != NULL, IOTC_ERR_PARAM_INVALID, "invalid param: devId is NULL");
-    if (connId < 0 ) {
+    if (connId < 0) {
         IOTC_LOGE("invalid param: connId=%u", connId);
         return IOTC_ERR_PARAM_INVALID;
     }
@@ -134,7 +143,7 @@ int32_t SleGetDevIdByConnId(uint16_t connId, char *devId)
 
         if (node->info.connID == connId) {
             uint32_t devIdLen = strlen(node->info.devId);
-            if (devIdLen >= (DEVICE_ID_MAX_STR_LEN + 1) ) {
+            if (devIdLen >= (DEVICE_ID_MAX_STR_LEN + 1)) {
                 IOTC_LOGE("buffer overflow: devId length exceeds max limit, connId=%u", connId);
                 return IOTC_ERR_PARAM_INVALID;
             }
@@ -183,9 +192,8 @@ IotcConDeviceInfo* SleGetConnectionInfoByDevId(const char *devId)
 }
 
 
-IotcDeviceInfo* SleGetDeviceInfoByDevId(const char *devId)
+IotcDeviceInfo *SleGetDeviceInfoByDevId(const char *devId)
 {
-
     if (devId == NULL) {
         IOTC_LOGE("devId is NULL");
         return NULL;
@@ -256,8 +264,7 @@ bool SleFindConnDevByDevId(const char *devID, uint16_t *connID)
 
     LIST_FOR_EACH_ITEM_SAFE(item, next, listHead) {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
-        if(node == NULL)
-        {
+        if (node == NULL) {
             IOTC_LOGE("Unexpected: node is NULL");
             continue;
         }
@@ -299,10 +306,14 @@ void PrintSleConnDevList(void)
             continue;
         }
 
-        char devAddrStr[18];
-        snprintf(devAddrStr, sizeof(devAddrStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-                 node->info.devAddr[0], node->info.devAddr[1], node->info.devAddr[2],
-                 node->info.devAddr[3], node->info.devAddr[4], node->info.devAddr[5]);
+        char devAddrStr[MAC_ADDR_STR_LEN];
+        if (snprintf_s(devAddrStr, sizeof(devAddrStr), sizeof(devAddrStr) - 1,
+            "%02X:%02X:%02X:%02X:%02X:%02X",
+            node->info.devAddr[0], node->info.devAddr[1], node->info.devAddr[MAC_ADDR_BYTE_IDX_2],
+            node->info.devAddr[MAC_ADDR_BYTE_IDX_3], node->info.devAddr[MAC_ADDR_BYTE_IDX_4],
+            node->info.devAddr[MAC_ADDR_BYTE_IDX_5]) < 0) {
+            continue;
+        }
         IOTC_LOGI("connID:[%u], devAddr[%s]", node->info.connID, devAddrStr);
     }
 }
@@ -326,5 +337,4 @@ void IotcOhSendCustomSecData(const char *devId, const char *service, const uint8
     if (result != IOTC_OK) {
         IOTC_LOGE("Failed to report service data, connID=%u, service=%s, error=%d", connId, service, result);
     }
-
 }

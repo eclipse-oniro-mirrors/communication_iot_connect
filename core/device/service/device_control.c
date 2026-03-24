@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "device_control.h"
 #include "char_state_mdl.h"
 #include "utils_assert.h"
@@ -50,7 +51,7 @@ static void ReportByDevIdServiceExecutorCallback(void *userData)
 {
     int32_t ret = ProductProfReportByDevId((const char *)userData);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("report by devid [%s] error %d",(const char *)userData, ret);
+        IOTC_LOGW("report by devid [%s] error %d", (const char *)userData, ret);
     }
 }
 
@@ -58,12 +59,12 @@ int32_t DeviceControlReportByDevId(DevReportType type, const char *devId)
 {
     int32_t ret;
     if (type == DEV_REPORT_TYPE_ASYNC) {
-        ret = SchedAsyncExecutor(ReportByDevIdServiceExecutorCallback, (void*)devId);
+        ret = SchedAsyncExecutor(ReportByDevIdServiceExecutorCallback, (void *)devId);
     } else {
         ret = ProductProfReportByDevId(devId);
     }
     if (ret != IOTC_OK) {
-        IOTC_LOGW("report by devid [%s] error %d",(const char *)devId, ret);
+        IOTC_LOGW("report by devid [%s] error %d", (const char *)devId, ret);
     }
     return ret;
 }

@@ -560,9 +560,6 @@ static IotcAdptSleSsapWriteFunc ServiceIdFindAttrHandleNotifyFunc(int8_t service
     return NULL;
 }
 
-
-
-
 int32_t SetSleConnectParam(void)
 {
     IotcAdptSleConnectParam param = {0};
@@ -570,7 +567,6 @@ int32_t SetSleConnectParam(void)
     param.isConnect = true;
     param.isBond = SleIsPair();
     return 0;
-    // return IotcSleSetConnectParam(&param);
 }
 
 int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, int16_t requestId)

@@ -25,7 +25,6 @@
 #include "service_proxy.h"
 #include "iotc_svc.h"
 #include "dev_info.h"
-#include "sle_conn_device_info.h"
 #include "config_authinfo.h"
 #include "sle_print_data.h"
 
@@ -71,19 +70,16 @@ static int32_t BuildVendor(IotcJson *root)
 
     DevAuthInfo authInfo = {0};
     bool isAuthInfoExist = false;
-    if(DevSvcProxyGetAuthInfo(&isAuthInfoExist, &authInfo)!= IOTC_OK)
-    {
+    if (DevSvcProxyGetAuthInfo(&isAuthInfoExist, &authInfo) != IOTC_OK) {
         IOTC_LOGE("get auth info err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
     int32_t ret = IotcJsonAddStr2Obj(root, STR_JSON_DEVID, authInfo.devId);
-    if(ret!=IOTC_OK)
-    {
+    if (ret != IOTC_OK) {
         IOTC_LOGE("get auth info err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
-
 
     ret = BuildDeviceInfo(devInfo);
     if (ret != IOTC_OK) {
@@ -131,8 +127,6 @@ static int32_t BuildAll(IotcJson *root)
     return IOTC_OK;
 }
 
-
-// 获取设备信息请求
 static int32_t GetSleSvcDeviceInfoReq(const uint16_t connId, uint8_t **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
@@ -145,7 +139,7 @@ static int32_t GetSleSvcDeviceInfoReq(const uint16_t connId, uint8_t **out, uint
     }
     int32_t ret = 0;
     do {
-        if (IotcJsonAddNum2Obj(root, DATA_MESSAGE_JSON, MSG_TYPE_RSP) != IOTC_OK) {
+        if (IotcJsonAddNum2Obj(root, PROFILE_DATA_MESSAGE_JSON, MSG_PROFILE_TYPE_RSP) != IOTC_OK) {
             IOTC_LOGE("add msg type err ret=%d", ret);
             break;
         }
@@ -169,164 +163,20 @@ static int32_t GetSleSvcDeviceInfoReq(const uint16_t connId, uint8_t **out, uint
     return ret;
 }
 
-// 获取设备信息响应 clent
-static int32_t GetSleSvcDeviceInfoRsp(const uint16_t connId, uint8_t **out, uint32_t *outLen)
-{
-    CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
-    *out = NULL;
-    *outLen = 0;
-    IotcJson *root = IotcJsonCreate();
-    if (root == NULL) {
-        IOTC_LOGE("create err");
-        return IOTC_ADAPTER_JSON_ERR_CREATE;
-    }
-    int32_t ret = 0;
-    do {
-        //给sevser返回收到
-        if (IotcJsonAddNum2Obj(root, DATA_MESSAGE_JSON, MSG_TYPE_NONE) != IOTC_OK) {
-            IOTC_LOGE("add msg type err ret=%d", ret);
-            break;
-        }
-        if (IotcJsonAddNum2Obj(root, DATA_ERRCODE, 0) != IOTC_OK) {
-            IOTC_LOGE("add prod id err");
-            return IOTC_ADAPTER_JSON_ERR_ADD;
-        }
-
-        char *outStr = UtilsJsonPrintByMalloc(root);
-        if (outStr == NULL) {
-            IOTC_LOGE("json print err");
-            ret = IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
-            break;
-        }
-        *out = (uint8_t *)outStr;
-        *outLen = strlen(outStr);
-        ret = IOTC_OK;
-    } while (false);
-
-    return ret;
-}
-
-static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
-{
-    IotcConDeviceInfo* deviceConnInfo = SleGetConnectionInfoByConnId(connId);
-    if (deviceConnInfo == NULL) {
-        IOTC_LOGE("malloc err");
-        return IOTC_ERR_NOT_INIT;
-    }
-
-    IotcJson *vendor = IotcJsonGetObj(root, STR_JSON_VENDOR);
-    if (vendor == NULL) {
-        IOTC_LOGE("Failed to get JSON object for key '%s' ", STR_JSON_VENDOR);
-        return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
-    }
-
-    int32_t ret = SleJsonGetString(root,  STR_JSON_PRODUCT_ID , &deviceConnInfo->devInfo->prodId);
-    if(ret != IOTC_OK)
-    {
-        IOTC_LOGE("prodId copy err %d", ret);
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    ret = SleJsonGetString(root,  STR_JSON_SN ,&deviceConnInfo->devInfo->sn);
-    if(ret != IOTC_OK)
-    {
-        IOTC_LOGE("sn copy err %d", ret );
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-
-    IotcJson * devInfoJson= IotcJsonGetObj(vendor, STR_JSON_DEVICE_INFO);
-    if (devInfoJson == NULL) {
-        IOTC_LOGE("Failed to get JSON object for key '%s' ", STR_JSON_DEVICE_INFO);
-        return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
-    }
-
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_MODEL , &deviceConnInfo->devInfo->model) != IOTC_OK)
-    {
-        IOTC_LOGE("model copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_DEV_TYPE ,&deviceConnInfo->devInfo->devTypeId) != IOTC_OK)
-    {
-        IOTC_LOGE("devType copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_MANU ,&deviceConnInfo->devInfo->manuId) != IOTC_OK)
-    {
-        IOTC_LOGE("manu copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_FWV ,&deviceConnInfo->devInfo->fwv) != IOTC_OK)
-    {
-        IOTC_LOGE("vendor copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_HWV ,&deviceConnInfo->devInfo->hwv) != IOTC_OK)
-    {
-        IOTC_LOGE("hwv copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_SWV ,&deviceConnInfo->devInfo->swv) != IOTC_OK)
-    {
-        IOTC_LOGE("swv copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    IOTC_LOGI("SaveDeviceInfo end!! ");
-    return IOTC_OK;
-}
-
 int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
 {
-
-    CHECK_RETURN_LOGW((param != NULL)&&(out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
+    CHECK_RETURN_LOGW((param != NULL) && (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
     IotcJson *root = IotcJsonParse((const char *)param->request);
     if (root == NULL) {
         IOTC_LOGE("DeviceInfo proc reqPayload err");
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
-    IotcJson *msgTypeObj = IotcJsonGetObj(root, DATA_MESSAGE_JSON);
-    if (msgTypeObj == NULL) {
-        IOTC_LOGE("DeviceInfo parse msgType JSON err");
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
-    }
-    int64_t msgTypeInt = 0;
-    int32_t ret = IotcJsonGetNum(msgTypeObj, &msgTypeInt);
+    int32_t ret = GetSleSvcDeviceInfoReq(param->connId, out, outLen);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("DeviceInfo parse msgType err");
-        return ret;
+        IOTC_LOGE("GetSleSvcDeviceInfoReq err");
     }
 
-    switch ((msgType)msgTypeInt)
-    {
-        case MSG_TYPE_REQ:
-            ret = GetSleSvcDeviceInfoReq(param->connId, out, outLen);
-            break;
-        case MSG_TYPE_RSP:
-            ret = SaveDeviceInfo(param->connId, root);
-            if(ret != IOTC_OK)
-            {
-                IOTC_LOGE("save device info fail");
-            }
-            ret = GetSleSvcDeviceInfoRsp(param->connId, out, outLen);
-            if(ret != IOTC_OK)
-            {
-                IOTC_LOGE("device info rsp fail");
-            }
-            break;
-        case MSG_TYPE_NONE:
-            *out = 0x00;
-            break;
-        default:
-            break;
-    }
     IotcJsonDelete(root);
     return ret;
 }

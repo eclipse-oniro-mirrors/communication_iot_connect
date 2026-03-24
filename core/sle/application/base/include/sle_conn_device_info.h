@@ -24,11 +24,6 @@
 extern "C" {
 #endif
 
-#define SLE_CONN_DEV_INFO_SN            50
-#define SLE_CONN_DEV_INFO_MODEL         50
-#define SLE_CONN_DEV_INFO_DEV_TYPE      50
-#define SLE_CONN_DEV_INFO_MANU          50
-#define SLE_CONN_DEV_INFO_PROD_ID       50
 
 typedef struct {
     IotcDeviceInfo *devInfo; // 下挂的生态设备信息（SLE连接后,从生态设备处获取）

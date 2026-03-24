@@ -1,3 +1,17 @@
+/*
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "sle_print_data.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -6,52 +20,57 @@
 #include "iotc_log.h"
 #include "securec.h"
 #include "comm_def.h"
-#include "iotc_log.h"
 #include "utils_assert.h"
 #include "utils_common.h"
 #include "iotc_conf.h"
 #include "iotc_errcode.h"
-static void IotcSlePrintData(const uint16_t valueLen,const uint8_t *value) {
-    size_t buf_len = (size_t)valueLen * 3 + 1;
-    char *hex_str = malloc(buf_len);
-    if (!hex_str) {
+#define HEX_BYTE_STR_LEN 3
+
+static void IotcSlePrintData(const uint16_t valueLen, const uint8_t *value)
+{
+    size_t bufLen = (size_t)valueLen * HEX_BYTE_STR_LEN + 1;
+    char *hexStr = malloc(bufLen);
+    if (!hexStr) {
         IOTC_LOGI("IotcSlePrintData malloc failed");
         return;
     }
-    char *p = hex_str;
-    size_t remaining = buf_len;
+    char *p = hexStr;
+    size_t remaining = bufLen;
 
-    for (uint32_t i = 0; i < valueLen ; i++) {
-        int n = snprintf(p, remaining, "%02X ", value[i]);
+    for (uint32_t i = 0; i < valueLen; i++) {
+        int n = snprintf_s(p, remaining, remaining - 1, "%02X ", value[i]);
         if (n < 0 || (size_t)n >= remaining) {
             break;
         }
         p += n;
         remaining -= n;
     }
-    IOTC_LOGI("IotcSlePrintData First %u bytes: %s", valueLen, hex_str);
-    free(hex_str);
+    IOTC_LOGI("IotcSlePrintData First %u bytes: %s", valueLen, hexStr);
+    free(hexStr);
 }
 
-void SlePrintfData(const uint8_t* data, uint16_t total_len) {
-    const uint16_t CHUNK_SIZE = 50;
+#define SLE_PRINT_CHUNK_SIZE 50
+
+void SlePrintfData(const uint8_t *data, uint16_t totalLen)
+{
+    const uint16_t chunkSize = SLE_PRINT_CHUNK_SIZE;
     uint16_t processed = 0;
 
-    while (processed < total_len) {
-        uint16_t remaining = total_len - processed;
-        uint16_t chunk_len = (remaining < CHUNK_SIZE) ? remaining : CHUNK_SIZE;
-        IotcSlePrintData(chunk_len, data + processed);
+    while (processed < totalLen) {
+        uint16_t remaining = totalLen - processed;
+        uint16_t chunkLen = (remaining < chunkSize) ? remaining : chunkSize;
+        IotcSlePrintData(chunkLen, data + processed);
 
-        processed += chunk_len;
+        processed += chunkLen;
     }
 }
 
-int32_t SleJsonGetString(const IotcJson *json, const char *key, const char **out_str)
+int32_t SleJsonGetString(const IotcJson *json, const char *key, const char **outStr)
 {
-    CHECK_RETURN(json   != NULL &&
-    key    != NULL &&
-    out_str!= NULL,
-    IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN(json != NULL &&
+        key != NULL &&
+        outStr != NULL,
+        IOTC_ERR_PARAM_INVALID);
 
     const char *src = IotcJsonGetStr(IotcJsonGetObj(json, key));
     if (src == NULL) {
@@ -59,23 +78,40 @@ int32_t SleJsonGetString(const IotcJson *json, const char *key, const char **out
         return IOTC_ADAPTER_JSON_ERR_GET_STRING;
     }
 
-    if (*out_str != NULL && strcmp(*out_str, src) == 0) {
+    if (*outStr != NULL && strcmp(*outStr, src) == 0) {
         IOTC_LOGD("string content is the same, no need to reallocate");
         return IOTC_OK;
     }
 
-    if (*out_str != NULL) {
-        IotcFree((char *)*out_str);
+    if (*outStr != NULL) {
+        IotcFree((char *)*outStr);
         IOTC_LOGW("free old string %s", key);
     }
 
     char *dup = strdup(src);
     if (dup == NULL) {
         IOTC_LOGE("strdup(%s) failed", key);
-        *out_str = NULL;
+        *outStr = NULL;
         return IOTC_ERROR;
     }
 
-    *out_str = dup;
+    *outStr = dup;
+    return IOTC_OK;
+}
+
+int32_t SleJsonGetNum(const IotcJson *json, const char *key, int64_t *outNum)
+{
+    CHECK_RETURN(json != NULL && key != NULL && outNum != NULL, IOTC_ERR_PARAM_INVALID);
+
+    IotcJson *seqObj = IotcJsonGetObj(json, key);
+    if (seqObj == NULL) {
+        return IOTC_ERROR;
+    }
+
+    int32_t ret = IotcJsonGetNum(seqObj, outNum);
+    if (ret != IOTC_OK) {
+        return ret;
+    }
+
     return IOTC_OK;
 }

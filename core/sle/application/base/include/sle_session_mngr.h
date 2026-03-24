@@ -17,6 +17,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "utils_common.h"
+#include "utils_assert.h"
+#include "utils_list.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,9 +44,28 @@ typedef struct {
     SleSessKeyInfo sessInfo;
 } SleSessParam;
 
-void SleSessRecvSeqInit(uint32_t recvSeq);
+typedef struct {
+    SleSessParam *sessParam;
+    uint16_t connId;
+    ListEntry node;
+} SleSessionParmNode;
 
-bool SleSessRecvSeqCheck(uint32_t recvSeq);
+typedef struct {
+    const uint8_t *sn1;
+    uint32_t sn1Len;
+    const uint8_t *sn2;
+    uint32_t sn2Len;
+    const uint8_t *password;
+    uint32_t passwordLen;
+    const uint8_t *sessId;
+    uint32_t sessIdLen;
+} SleSessionKeyGenParam;
+
+void SleSessRecvSeqInit(uint16_t connId, uint32_t recvSeq);
+
+bool SleSessionExistsByConnId(uint16_t connId);
+
+bool SleSessRecvSeqCheck(uint16_t connId, uint32_t recvSeq);
 
 void SleSessRecvSeqUpdate(uint32_t recvSeq);
 
@@ -51,7 +73,9 @@ void SleSessSendSeqUpdate(void);
 
 uint32_t SleSessSendSeqGet(void);
 
-int32_t SleSessKeyGen(const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, uint32_t sn2Len);
+int32_t SleSessionKeyGenerate(uint16_t connId, const SleSessionKeyGenParam *param);
+
+int32_t SleSessKeyGen(uint16_t connId, const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, uint32_t sn2Len);
 
 int32_t SleSessIdGen(void);
 

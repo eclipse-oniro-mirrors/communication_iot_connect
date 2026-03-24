@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #include "sle_ssap_mgt.h"
 #include "iotc_errcode.h"
 #include "securec.h"
@@ -60,31 +59,10 @@ void SleSsapDisconnectAll(void)
     LIST_FOR_EACH_ITEM(item, &(GetSleSsapMgtApp()->peerDevInfo->node)) {
         SlePeerDevInfo *peerDevInfo = CONTAINER_OF(item, SlePeerDevInfo, node);
         int32_t ret = IotcSleDisconnectSsap(peerDevInfo->devAddr.addr, IOTC_ADPT_SLE_ADDR_LEN);
-        if (ret != IOTC_OK){
+        if (ret != IOTC_OK) {
             continue;
         }
         LIST_REMOVE(item);
         IotcFree(peerDevInfo);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

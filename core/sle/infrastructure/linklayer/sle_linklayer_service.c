@@ -219,15 +219,13 @@ int32_t SleLinkLayerProcessRspData(uint32_t connId, const SleLinkLayerProcessRsp
         ret = IOTC_CORE_SLE_LL_ERR_SVC_OPTYPE;
     }
 
-    if(ret == IOTC_OK && cmdParam.opType == SLE_OPTYPE_RPT)
-    {
+    if (ret == IOTC_OK && cmdParam.opType == SLE_OPTYPE_RPT) {
         return IOTC_SLE_REPORT_SUPPORT;
     }
 
     CHECK_RETURN(ret == IOTC_OK, ret);
 
-    if(strcmp(cmdParam.service ,  "speke") != 0) //不是speke类型的查找服务从这里过的都属于响应给客户端
-    {
+    if (strcmp(cmdParam.service, "speke") != 0) {
         cmdParam.opType = SLE_OPTYPE_RPT;
     }
 
@@ -291,5 +289,5 @@ int32_t SleLinkLayerReportSvcDataEnc(int32_t connId, const char *service, const 
         IOTC_ERR_PARAM_INVALID, "ll rpt cmd enc invalid param, len:%u", len);
     IOTC_LOGI("report enc data");
     SlePrintfData(data, len);
-    return SleCreateAndSendRptCmdData(connId, service, data, len, true,opType);
+    return SleCreateAndSendRptCmdData(connId, service, data, len, true, opType);
 }

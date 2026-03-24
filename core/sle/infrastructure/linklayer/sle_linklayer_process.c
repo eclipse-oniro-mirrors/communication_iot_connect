@@ -215,8 +215,7 @@ int32_t SleLinkLayerProcessData(uint32_t connId, const uint8_t *buff, uint32_t l
     uint8_t *rspBuff = NULL;
     uint32_t rspBuffLen = 0;
     ret = SleLinkLayerProcessRspData(connId, completeBuff, completeBuffLen, pkgHead.encryptType, &rspBuff, &rspBuffLen);
-    if(ret == IOTC_SLE_REPORT_SUPPORT)
-    {
+    if (ret == IOTC_SLE_REPORT_SUPPORT) {
         return IOTC_OK;
     }
     if ((ret != IOTC_OK) || (rspBuff == NULL) || (rspBuffLen == 0)) {

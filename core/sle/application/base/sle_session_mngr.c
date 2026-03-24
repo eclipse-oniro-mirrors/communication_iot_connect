@@ -14,8 +14,6 @@
  */
 #include "sle_session_mngr.h"
 #include "config_authinfo.h"
-#include "utils_common.h"
-#include "utils_assert.h"
 #include "iotc_kdf.h"
 #include "security_random.h"
 #include "iotc_aes.h"
@@ -26,6 +24,8 @@
 #include "iotc_errcode.h"
 #include "iotc_event.h"
 #include "dev_info.h"
+#include "utils_list.h"
+#include "sle_print_data.h"
 
 #define SESS_HMAC_LEN   32
 #define SESS_IV_LEN     12
@@ -36,13 +36,6 @@
 
 
 static ListEntry g_sleSessParmList = LIST_DECLARE_INIT(&g_sleSessParmList);
-
-typedef struct {
-    SleSessParam *sessParam;
-    uint16_t connId;
-    ListEntry node;
-} SleSessionParmNode;
-
 
 static SleSessionParmNode *GetSleSessionParmNode(uint16_t connId)
 {
@@ -56,22 +49,25 @@ static SleSessionParmNode *GetSleSessionParmNode(uint16_t connId)
     return NULL;
 }
 
+bool SleSessionExistsByConnId(uint16_t connId)
+{
+    return (GetSleSessionParmNode(connId) != NULL);
+}
+
 static int32_t SleSessionNodeRegister(SleSessParam *sessNode, uint16_t connId)
 {
-    IOTC_LOGI("register sle session session id:%x",sessNode);
-    if(sessNode == NULL)
-    {
-        IOTC_LOGE("create  session is null");
+    IOTC_LOGI("register sle session session id:%x", sessNode);
+    if (sessNode == NULL) {
+        IOTC_LOGE("create session is null");
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
     }
-    if(connId >= SLE_SESSION_MAX)
-    {
-        IOTC_LOGE("sle  key:%u out of range", connId);
+    if (connId >= SLE_SESSION_MAX) {
+        IOTC_LOGE("sle key:%u out of range", connId);
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
     }
 
-    if(GetSleSessionParmNode(connId) != NULL) {
-        IOTC_LOGE("sle  key:%u exist", connId);
+    if (GetSleSessionParmNode(connId) != NULL) {
+        IOTC_LOGE("sle key:%u exist", connId);
         return IOTC_OK;
     }
 
@@ -116,8 +112,7 @@ static int32_t SleSessCreate(uint16_t connId)
     }
 
     SleSessParam *sessParam = (SleSessParam *)IotcCalloc(1, sizeof(SleSessParam));
-    if(sessParam == NULL)
-    {
+    if (sessParam == NULL) {
         IOTC_LOGE("calloc sle session node err");
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
@@ -126,12 +121,11 @@ static int32_t SleSessCreate(uint16_t connId)
     sessParam->sessInfo.maxRecvSeq = 0;
     sessParam->sessInfo.recvBitMap = 0;
     sessParam->sessInfo.nextSendSeq = 1;
-    memset(sessParam->sessInfo.sessId, 0, SESSION_ID_LEN);
-    memset(sessParam->sessInfo.salt, 0, SALT_LEN);
-    memset(sessParam->sessInfo.key, 0, SESSION_KEY_LEN);
+    memset_s(sessParam->sessInfo.sessId, SESSION_ID_LEN, 0, SESSION_ID_LEN);
+    memset_s(sessParam->sessInfo.salt, SALT_LEN, 0, SALT_LEN);
+    memset_s(sessParam->sessInfo.key, SESSION_KEY_LEN, 0, SESSION_KEY_LEN);
 
-    if(SleSessionNodeRegister(sessParam, connId) != IOTC_OK)
-    {
+    if (SleSessionNodeRegister(sessParam, connId) != IOTC_OK) {
         IOTC_LOGE("sle session node register err");
         IotcFree(sessParam);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
@@ -243,7 +237,51 @@ uint32_t SleSessSendSeqGet(void)
     return g_sessParam.sessInfo.nextSendSeq;
 }
 
-int32_t SleSessKeyGen(const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, uint32_t sn2Len)
+int32_t SleSessionKeyGenerate(uint16_t connId, const SleSessionKeyGenParam *param)
+{
+    CHECK_RETURN_LOGE((param->sn1 != NULL) && (param->sn1Len > 0) &&
+                      (param->sn2 != NULL) && (param->sn2Len > 0) &&
+                      (param->password != NULL) && (param->passwordLen > 0),
+        IOTC_ERR_PARAM_INVALID, "param invalid, sn1Len:%u, sn2Len:%u, passwordLen:%u",
+        param->sn1Len, param->sn2Len, param->passwordLen);
+
+    CHECK_RETURN_LOGE(param->sn1Len <= RAND_SN_LEN && param->sn2Len <= RAND_SN_LEN,
+        IOTC_ERR_PARAM_INVALID, "sn length exceeds RAND_SN_LEN: %u vs %u", param->sn1Len, RAND_SN_LEN);
+
+    SleSessionParmNode *sessNode = GetSleSessionParmNode(connId);
+    if (sessNode == NULL) {
+        IOTC_LOGE("sess not exist");
+        return IOTC_CORE_SLE_ERR_SESSION_NOT_CREATE;
+    }
+
+    SleSessKeyInfo *sessInfo = &(sessNode->sessParam->sessInfo);
+
+    int32_t ret = memcpy_s(sessInfo->salt, RAND_SN_LEN, param->sn1, param->sn1Len);
+    CHECK_RETURN_LOGE(ret == EOK, IOTC_ERR_SECUREC_MEMCPY, "cpy sn1 err:%d", ret);
+
+    ret = memcpy_s(sessInfo->salt + RAND_SN_LEN, RAND_SN_LEN, param->sn2, param->sn2Len);
+    CHECK_RETURN_LOGE(ret == EOK, IOTC_ERR_SECUREC_MEMCPY, "cpy sn2 err:%d", ret);
+
+    IotcPbkdf2HmacParam pbkdf2Param = {
+        .md = IOTC_MD_SHA256,
+        .password = param->password,
+        .passwordLen = param->passwordLen,
+        .salt = sessInfo->salt,
+        .saltLen = SALT_LEN,
+        .iterCount = ITER_TIMES
+    };
+
+    ret = IotcPkcs5Pbkdf2Hmac(&pbkdf2Param, sessInfo->key, SESSION_KEY_LEN);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "sle sess key gen err:%d", ret);
+
+    ret = memcpy_s(sessInfo->sessId, SESSION_ID_LEN, param->sessId, param->sessIdLen);
+    CHECK_RETURN_LOGE(ret == EOK, ret, "memcpy sessId err:%d", ret);
+
+    sessNode->sessParam->negoFinish = true;
+    return IOTC_OK;
+}
+
+int32_t SleSessKeyGen(uint16_t connId, const uint8_t *sn1, uint32_t sn1Len, const uint8_t *sn2, uint32_t sn2Len)
 {
     CHECK_RETURN_LOGE((sn1 != NULL) && (sn1Len > 0) && (sn2 != NULL) && (sn2Len > 0),
         IOTC_ERR_PARAM_INVALID, "param invalid, sn1Len:%u, sn2Len:%u", sn1Len, sn2Len);
@@ -298,8 +336,7 @@ uint8_t *SleSessIdGet(void)
 bool SleSessIsExist(void)
 {
     SleSessionParmNode *sessNode = GetSleSessionParmNode(connId);
-    if(sessNode == NULL)
-    {
+    if (sessNode == NULL) {
         IOTC_LOGE("sess not exist");
         return false;
     }

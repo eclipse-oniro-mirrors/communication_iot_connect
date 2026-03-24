@@ -12,29 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_AUTH_SETUP_H
-#define SLE_SVC_AUTH_SETUP_H
+#ifndef SLE_SVC_DEVICE_INFO_H
+#define SLE_SVC_DEVICE_INFO_H
 
 #include <stdint.h>
 #include "sle_linklayer.h"
+#include "sle_profile.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define PROT_TYPE_MAX_LEN 4
 
-#define AUTH_DATA_MESSAGE_JSON   "message"
-#define AUTH_DATA_ERRCODE        "errcode"
-typedef enum{
-    MSG_AUTH_TYPE_NONE = 0x0000,
-    MSG_AUTH_TYPE_REQ  = 0x0001,
-    MSG_AUTH_TYPE_RSP  = 0x0002,
-    MSG_AUTH_TYPE_ISSUE = 0x0003,
-}msgAuthType;
-
-int32_t GetSleSvcAuthSetup(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
+/**
+ * @brief Get the Sle Svc Device Info object
+ *
+ * @param param [IN] The SleCmdParam
+ * @param out [OUT] The output data
+ * @param outLen [OUT] The output data length
+ * @return 0: Success, others: Failed
+ */
+int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_SVC_AUTH_SETUP_H */
+#endif /* SLE_SVC_DEVICE_INFO_H */

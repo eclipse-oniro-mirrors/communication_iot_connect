@@ -74,8 +74,7 @@ static SpekeSession *GetSleSessionNode(uint8_t connSessionId)
     (void)UtilsGlobalMutexLock();
     LIST_FOR_EACH_ITEM(item, &g_sleSpekeSessList) {
         SleSessionNode *spekeNode = CONTAINER_OF(item, SleSessionNode, node);
-        if(spekeNode == NULL)
-        {
+        if (spekeNode == NULL) {
             IOTC_LOGE("spekeNode is null");
             return NULL;
         }
@@ -97,8 +96,7 @@ static void SleSessionNodeRelease(void)
     (void)UtilsGlobalMutexLock();
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_sleSpekeSessList) {
         SleSessionNode *spekeNode = CONTAINER_OF(item, SleSessionNode, node);
-        if(spekeNode == NULL)
-        {
+        if (spekeNode == NULL) {
             IOTC_LOGE("spekeNode is null");
             return;
         }
@@ -153,8 +151,7 @@ static int32_t NotifySpekeFinished(SpekeSession *session, void *user, int32_t er
     IOTC_LOGN("speke errcode:%d", errorCode);
 
     uint16_t connSessionId = 0;
-    if(GetSleSessionConnId(session, &connSessionId)!= IOTC_OK)
-    {
+    if (GetSleSessionConnId(session, &connSessionId) != IOTC_OK) {
         IOTC_LOGE("get sle session connId failed");
         return IOTC_ERROR;
     }

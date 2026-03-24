@@ -12,8 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "sle_svc_create_session.h"
 #include "sle_session_mngr.h"
+#include "sle_profile.h"
 #include "securec.h"
 #include "utils_common.h"
 #include "utils_assert.h"
@@ -150,7 +152,6 @@ static int32_t SleCreateSession(const uint8_t *in, uint8_t **out, uint32_t *outL
 {
     IotcJson *req = IotcJsonParse((const char *)in);
     CHECK_RETURN_LOGE(req != NULL, IOTC_ADAPTER_JSON_ERR_PARSE, "parse json err");
-
     IotcJson *rsp = IotcJsonCreate();
     if (rsp == NULL) {
         IOTC_LOGE("create");
@@ -190,3 +191,4 @@ int32_t GetSleSvcCreateSession(const SleCmdParam *param, uint8_t **out, uint32_t
     }
     return IOTC_OK;
 }
+
