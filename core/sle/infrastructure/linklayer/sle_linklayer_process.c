@@ -185,7 +185,7 @@ int32_t SleLinkLayerProcessData(uint32_t connId, const uint8_t *buff, uint32_t l
 
     PkgHead pkgHead = { 0 };
     SleParsePkgHead(buff, len, &pkgHead);
-    IOTC_LOGI("recv bt data pkg(%u/%u), encType:%u", pkgHead.pkgIdx, pkgHead.pkgNum, pkgHead.encryptType);
+    IOTC_LOGI("recv sle data pkg(%u/%u), encType:%u", pkgHead.pkgIdx, pkgHead.pkgNum, pkgHead.encryptType);
 
     int32_t ret = SleLinkLayerRecvPkgInsert(pkgHead.token, pkgHead.pkgNum, pkgHead.pkgIdx,
         buff + SLE_PKG_HEAD_LEN, len - SLE_PKG_HEAD_LEN);

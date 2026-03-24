@@ -22,7 +22,13 @@
 
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
 {
-    int32_t ret = SleAdvInit();
+    int32_t ret = SleConnectionEventInit();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("sle conn init err ret=%d", ret);
+        return ret;
+    }
+
+    ret = SleAdvInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("adv init error %d", ret);
         return ret;

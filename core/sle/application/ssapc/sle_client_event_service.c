@@ -86,11 +86,11 @@ static uint8_t g_clientId = 1;
 
 static bool g_SleSsapClinetEventInit = false;
 
-int32_t ClientSleSpekeStartSession(uint32_t connId)
-{
-    int32_t ret = CreateSleSpekeSess(SPEKE_TYPE_CLIENT, connId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("[uuid client] create speke failed!");
+
+int32_t ClientSleSpekeStartSession(uint32_t connId){
+    int32_t ret = CreateSleSpekeSess(SPEKE_TYPE_CLIENT,connId);
+    if(ret != IOTC_OK){
+        IOTC_LOGE("[uuid client] create speke failed ret = %d!", ret);
         return ret;
     }
 
@@ -102,7 +102,7 @@ int32_t ClientSleSpekeStartSession(uint32_t connId)
         return ret;
     }
 
-    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_SPEKE, msg, len);
+    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_SPEKE, msg, len,SLE_OPTYPE_GET);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
@@ -120,8 +120,10 @@ int32_t ClientSleSpekeProcessMsg(uint32_t connId)
         return ret;
     }
 
-    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_DEVICE_INFO, msg, len);
-    if (ret != IOTC_OK) {
+    // ret = SleLinkLayerReportSvcDataEnc(connId,SLE_SVC_DEVICE_INFO, msg, len);
+    ret = SleLinkLayerReportSvcData(connId,SLE_SVC_DEVICE_INFO, msg, len,SLE_OPTYPE_GET);
+    if(ret != IOTC_OK)
+    {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
     }
@@ -146,6 +148,16 @@ static int32_t BuildIotcSleSeekParam(IotcAdptSleSeekParam *param)
     return IOTC_OK;
 }
 
+// bool compare_device_addr(const IotcAdptSleDeviceAddr* addr, const char* target_str) {
+//     uint8_t target[IOTC_ADPT_SLE_ADDR_LEN] = {0};
+//     int parsed = sscanf(target_str, "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
+//                         &target[0], &target[1], &target[2],
+//                         &target[3], &target[4], &target[5]);
+
+//     return (parsed == IOTC_ADPT_SLE_ADDR_LEN) &&
+//            (memcmp(addr->addr, target, IOTC_ADPT_SLE_ADDR_LEN) == 0);
+// }
+
 static void SleClientSeekResultCallBack(uint32_t event, void *param, uint32_t len)
 {
     if (param == NULL) {
@@ -157,29 +169,35 @@ static void SleClientSeekResultCallBack(uint32_t event, void *param, uint32_t le
 
     IotcAdptSleDeviceAddr g_sle_remote_addr;
     IOTC_LOGI("[uuid client] seekResult.data: %s", (const char *)eventParam->seekResult.data);
-    if (strstr((const char *)eventParam->seekResult.data, "KhFactoryTest-SLE") != NULL) {
-        IOTC_LOGI("[uuid client] %s target found, addr: " SLE_LOG_ADDR_FMT "\r\n", __func__,
-            eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_0],
-            eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_1],
-            eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_2],
-            eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_3],
-            eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_4],
-            eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_5]);
 
-        memcpy_s(&g_sle_remote_addr, sizeof(IotcAdptSleDeviceAddr),
-            &(eventParam->seekResult.addr), sizeof(IotcAdptSleDeviceAddr));
+    /*
+    const char* TARGET_ADDR_STR = "00:01:09:06:64:ed";
 
-        int32_t ret = IotcSleConnectRemoteDevice(&g_sle_remote_addr);
+    if(compare_device_addr(&eventParam->seekResult.addr, TARGET_ADDR_STR))
+    {
+        memcpy_s(&g_sle_remote_addr, sizeof(IotcAdptSleDeviceAddr), &(eventParam->seekResult.addr), sizeof(IotcAdptSleDeviceAddr));
+        int32_t ret = IotcSleConnectRemoteDevice(&g_sle_remote_addr); //链接
+        IOTC_LOGI("[uuid client]  connect remote device %d!", ret);
+    }
+    */
+
+    if (strstr((const char *)eventParam->seekResult.data, "KhFactoryTest-SLE") != NULL)
+    {
+        IOTC_LOGI("[uuid client] %s target found, addr: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                    eventParam->seekResult.addr.addr[0], eventParam->seekResult.addr.addr[1],
+                    eventParam->seekResult.addr.addr[2], eventParam->seekResult.addr.addr[3],
+                    eventParam->seekResult.addr.addr[4], eventParam->seekResult.addr.addr[5]);
+
+        memcpy_s(&g_sle_remote_addr, sizeof(IotcAdptSleDeviceAddr), &(eventParam->seekResult.addr), sizeof(IotcAdptSleDeviceAddr));
+        int32_t ret = IotcSleConnectRemoteDevice(&g_sle_remote_addr); //链接
         IOTC_LOGI("[uuid client]  connect remote device %d!", ret);
     }
 
-    IOTC_LOGI("[uuid client] seek result, addr:" SLE_LOG_ADDR_FMT ", addrtype:%d, rssi:%d, len = %d",
-        eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_0],
-        eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_1],
-        eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_2],
-        eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_3],
-        eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_4],
-        eventParam->seekResult.addr.addr[SLE_ADDR_BYTE_IDX_5],
+
+    IOTC_LOGI("[uuid client] seek result, addr:%02x:%02x:%02x:%02x:%02x:%02x, addrtype:%d, rssi:%d, len = %d",
+        eventParam->seekResult.addr.addr[0], eventParam->seekResult.addr.addr[1],
+        eventParam->seekResult.addr.addr[2], eventParam->seekResult.addr.addr[3],
+        eventParam->seekResult.addr.addr[4], eventParam->seekResult.addr.addr[5],
         eventParam->seekResult.eventType, eventParam->seekResult.rssi, len);
 }
 
@@ -285,9 +303,11 @@ static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, 
     IotcAdptSleSsapClientEventParam *eventParam = (IotcAdptSleSsapClientEventParam *)param;
     IOTC_LOGI("[uuid client] %s: status = %d", __func__, eventParam->ssapcFindStructureResult.status);
 
-    if (eventParam->ssapcFindStructureResult.status == IOTC_SLE_SSAP_CONNECT_STATE_CONNECTED) {
-        SleDeviceInfo *info = SleGetSleConnRetDeviceInfo(eventParam->ssapcFindStructureResult.connId);
-        if (info == NULL) {
+    if(eventParam->ssapcFindStructureResult.status == IOTC_ADPT_SLE_STATUS_SUCCESS)
+    {
+        SleDeviceInfo* info = SleGetSleConnRetDeviceInfo(eventParam->ssapcFindStructureResult.connId);
+        if(info == NULL)
+        {
             IOTC_LOGE("[uuid client] %s: info is NULL.", __func__);
             return;
         }

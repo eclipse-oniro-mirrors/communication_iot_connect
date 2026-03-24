@@ -296,6 +296,6 @@ void IotcOhSendCustomSecData(const char *devId, const char *service, const uint8
         free(connId);
         return;
     }
-    SleLinkLayerReportSvcDataEnc(*connId, service, data, len);
+    SleLinkLayerReportSvcDataEnc(*connId, service, data, len,SLE_OPTYPE_GET);
     free(connId);
 }
