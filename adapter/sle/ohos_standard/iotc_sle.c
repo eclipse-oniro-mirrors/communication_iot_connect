@@ -12,8 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "iotc_sle_server.h"
-#include "iotc_sle_announce.h"
+#include "iotc_sle_ssap_common.h"
 #include "iotc_sle_client.h"
 #include <time.h>
 #include <stdio.h>
@@ -26,8 +25,6 @@
 #include "iotc_log.h"
 
 #include "sle_errcode.h"
-#include "sle_ssap_server.h"
-#include "sle_ssap_server_config.h"
 #include "sle_device_discovery.h"
 #include "sle_connection_manager.h"
 #include "sle_ssap_client.h"
@@ -38,82 +35,12 @@ static IotcAdptSleAnnounceSeekCallback g_sleAnnounceSeekEventHandler = NULL;
 static IotcAdptSleConnectionCallback g_sleConnectionEventHandler = NULL;
 static IotcAdptSleSsapClientCallback g_sleSsapClientEventHandler = NULL;
 
-static int32_t SleSetAnnounceData(uint8_t announceId, const IotcAdptSleAdvData *advData)
-{
-    sle_announce_data_t data_sdk = {
-        .announce_data_len = advData->announceDataLen,
-        .seek_rsp_data_len = advData->seekRspDataLen,
-        .announce_data = (uint8_t *)advData->announceData,
-        .seek_rsp_data = (uint8_t *)advData->seekRspData,
-    };
-    return sle_set_announce_data(announceId, &data_sdk);
-}
+#define SLE_ADDR_LEN 6
 
-static int32_t SleSetAnnounceParam(uint8_t announceId, const IotcAdptSleAdvParam *param)
-{
-    sle_announce_param_t param_sdk;
-    param_sdk.announce_handle = param->announceHandle,
-    param_sdk.announce_mode = param->announceMode,
-    param_sdk.announce_gt_role = param->announceGtRole,
-    param_sdk.announce_level = param->announceLevel,
-    param_sdk.announce_interval_min = param->announceIntervalMin,
-    param_sdk.announce_interval_max = param->announceIntervalMax,
-    param_sdk.announce_channel_map = param->announceChannelMap,
-    param_sdk.announce_tx_power = param->announce_tx_power,
-    param_sdk.conn_interval_min = param->connIntervalMin,
-    param_sdk.conn_interval_max = param->connIntervalMax,
-    param_sdk.conn_max_latency = param->connMaxLatency,
-    param_sdk.conn_supervision_timeout = param->connSupervisionTimeout,
-    param_sdk.ext_param = (void*)param->extParam,
-    param_sdk.own_addr.type = (uint8_t)param->ownAddr.type;
-    if (memcpy_s(param_sdk.own_addr.addr, sizeof(param_sdk.own_addr.addr),
-        param->ownAddr.addr, sizeof(param_sdk.own_addr.addr)) != EOK) {
-        return IOTC_ERROR;
-    }
-    param_sdk.peer_addr.type = (uint8_t)param->peerAddr.type;
-    if (memcpy_s(param_sdk.peer_addr.addr, sizeof(param_sdk.peer_addr.addr),
-        param->peerAddr.addr, sizeof(param_sdk.peer_addr.addr)) != EOK) {
-        return IOTC_ERROR;
-    }
-    return sle_set_announce_param(announceId, &param_sdk);
-}
-
-static int32_t SleStartAnnounce(uint8_t announceId)
-{
-    return sle_start_announce(announceId);
-}
-
-static int32_t SleStopAnnounce(uint8_t announceId)
-{
-    return sle_stop_announce(announceId);
-}
-
-static int32_t SsapsStartService(uint8_t serverId, uint16_t serviceHandle)
-{
-    return ssaps_start_service(serverId, serviceHandle);
-}
-
-int32_t IotcInitSleAnnounceService(void)
-{
-    return IOTC_OK;
-}
-
-int32_t IotcRegisterAnnounceCallbacks(IotcAdptSleAnnounceCallback callback)
-{
-    (void)callback;
-    return IOTC_OK;
-}
-
-int32_t IotcAddAnnounce(uint8_t *announceId)
-{
-    (void)announceId;
-    return IOTC_OK;
-}
-
-int32_t IotcInitSleSsapsService(void)
-{
-    return IOTC_OK;
-}
+#define SPEED_DEFAULT_CONN_INTERVAL 0x09
+#define SPEED_DEFAULT_TIMEOUT_MULTIPLIER 0x1f4
+#define SPEED_DEFAULT_SCAN_INTERVAL 400
+#define SPEED_DEFAULT_SCAN_WINDOW 20
 
 static int32_t IotcSleStartServiceEx(uint8_t *serverId)
 {
@@ -155,7 +82,7 @@ int32_t IotcSleSsapsStartServiceExt(IotcAdptSleSsapService *svc, uint8_t svcNum)
 
 #define SLE_CONNECT_UPDATE_INTERVAL_HDI 20
 
-uint64_t SleClockGettimeUsKhLite(void)
+static uint64_t IotcSleClockGettimeUsLite(void)
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -164,7 +91,8 @@ uint64_t SleClockGettimeUsKhLite(void)
 
 uint8_t gle_tx_acb_data_num_get(void);
 
-pthread_mutex_t g_sendMutexServer;
+pthread_mutex_t g_sendMutexClient;
+
 
 int32_t SlePairRemoteDevice(const IotcAdptSleDeviceAddr *addr)
 {
@@ -192,73 +120,11 @@ static int32_t SleSetLocalName(const char *name, uint8_t len)
     return sle_set_local_name((uint8_t *)name, len);
 }
 
-static void AddServiceCb(uint8_t serverId, sle_uuid_t *uuid, uint16_t handle, uint32_t status)
-{
-    IOTC_LOGD("SLE AddServiceCb:status:%d,serverId:%d,Handle=%d", status, serverId, handle);
-}
-
-static void AddPropertyCb(uint8_t serverId, sle_uuid_t *uuid, uint16_t serviceHandle,
-    uint16_t handle, uint32_t status)
-{
-    IOTC_LOGD("SLE AddPropertyCb:status:%d,serverId:%d,Handle=%d", status, serverId, handle);
-}
-
-static void AddDescriptorCb(uint8_t serverId, sle_uuid_t *uuid, uint16_t serviceHandle,
-    uint16_t propertyHandle, uint32_t status)
-{
-    IOTC_LOGD("SLE AddDescriptorCb:status:%d,serverId:%d,Handle=%d", status, serverId, serviceHandle);
-}
-
 static IotcAdptSleStatus OhosStatusToAdapterStatus(int32_t status)
 {
     return (status == IOTC_ADPT_SLE_STATUS_SUCCESS) ? IOTC_ADPT_SLE_STATUS_SUCCESS : IOTC_ADPT_SLE_STATUS_FAIL;
 }
 
-static void ServiceStartCb(uint8_t serverId, uint16_t handle, uint32_t status)
-{
-    IOTC_LOGD("SLE service start cb:status:%d,serverId:%d,Handle=%d", status, serverId, handle);
-    IotcAdptSleSsapEventParam eventParam;
-    eventParam.startSvc.status = OhosStatusToAdapterStatus(status);
-    eventParam.startSvc.serverId = serverId;
-    eventParam.startSvc.svcHandle = handle;
-    if (g_sleSsapEventHandler != NULL &&
-        g_sleSsapEventHandler(IOTC_ADPT_SLE_SSAP_EVENT_START_SVC_RESULT, &eventParam) != IOTC_OK) {
-        IOTC_LOGE("doing gatt event");
-    }
-}
-
-static void DeleteAllServiceCb(uint8_t serverId, uint32_t status)
-{
-    IOTC_LOGD("SLE DeleteAllServiceCb:status:%d,serverId:%d", status, serverId);
-}
-
-static void ReadRequestCb(uint8_t serverId, uint16_t connId, ssaps_req_read_cb_t *read_cb_para,
-    uint32_t status)
-{
-    IOTC_LOGD("SLE  ReadRequestCb:status:%d,serverId:%d,conn_id=%d", status, serverId, connId);
-}
-
-static void WriteRequestCb(uint8_t serverId, uint16_t connId, ssaps_req_write_cb_t *write_cb_para,
-    uint32_t status)
-{
-    IOTC_LOGD("SLE  WriteRequestCb:status:%d,serverId:%d,conn_id=%d", status, serverId, connId);
-}
-
-static void MtuChangeCb(uint8_t serverId, uint16_t connId, ssap_exchange_info_t *info, uint32_t status)
-{
-    IOTC_LOGD("SLE  MtuChangeCb:status:%d,serverId:%d,conn_id=%d", status, serverId, connId);
-}
-
-static ssaps_callbacks_t g_sleSsapsCb = {
-    .add_service_cb = AddServiceCb,
-    .add_property_cb = AddPropertyCb,
-    .add_descriptor_cb = AddDescriptorCb,
-    .start_service_cb = ServiceStartCb,
-    .delete_all_service_cb = DeleteAllServiceCb,
-    .read_request_cb = ReadRequestCb,
-    .write_request_cb = WriteRequestCb,
-    .mtu_changed_cb = MtuChangeCb,
-};
 
 static void SleAnnounceEnableCallback(uint32_t announce_id, errcode_t status)
 {
@@ -413,12 +279,12 @@ static void SleConnectStateChangedCallback(uint16_t conn_id, const sle_addr_t *a
         conn_id, conn_state, pair_state, disc_reason);
     IotcAdptSleConnectionEventParam param = {0};
     (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleConnectionEventParam));
-    param.sleConnectStateChanged.conn_id = conn_id;
+    param.sleConnectStateChanged.connId = conn_id;
     param.sleConnectStateChanged.addr.type = addr->type;
     (void)memcpy_s(param.sleConnectStateChanged.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, SLE_ADDR_LEN);
-    param.sleConnectStateChanged.conn_state = (IotcAdptSleAcbState)conn_state;
-    param.sleConnectStateChanged.pair_state = (IotcAdptSlePairState)pair_state;
-    param.sleConnectStateChanged.disc_reason = (IotcAdptSleDiscReason)disc_reason;
+    param.sleConnectStateChanged.connState = (IotcAdptSleAcbState)conn_state;
+    param.sleConnectStateChanged.pairState = (IotcAdptSlePairState)pair_state;
+    param.sleConnectStateChanged.discReason = (IotcAdptSleDiscReason)disc_reason;
     if (g_sleConnectionEventHandler != NULL) {
         int32_t ret = g_sleConnectionEventHandler(IOTC_ADPT_SLE_CONNECT_STATE_CHANGED_EVENT, &param);
         IOTC_LOGD("SLE ConnectStateChanged cb:ret:%d", ret);
@@ -436,7 +302,7 @@ static void SleConnectParamUpdateCallback(uint16_t conn_id, errcode_t status,
         conn_id, status, param->interval, param->latency);
     IotcAdptSleConnectionEventParam updateParam = {0};
     (void)memset_s(&updateParam, sizeof(updateParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    updateParam.sleConnectParamUpdate.conn_id = conn_id;
+    updateParam.sleConnectParamUpdate.connId = conn_id;
     updateParam.sleConnectParamUpdate.status = OhosStatusToAdapterStatus(status);
     updateParam.sleConnectParamUpdate.param.interval = param->interval;
     updateParam.sleConnectParamUpdate.param.latency = param->latency;
@@ -457,7 +323,7 @@ static void SleConnectParamUpdateReqCallback(uint16_t conn_id, errcode_t status,
     IOTC_LOGD("SLE ConnectParamUpdateReq cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam updateReqParam = {0};
     (void)memset_s(&updateReqParam, sizeof(updateReqParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    updateReqParam.sleConnectParamUpdateReq.conn_id = conn_id;
+    updateReqParam.sleConnectParamUpdateReq.connId = conn_id;
     updateReqParam.sleConnectParamUpdateReq.status = OhosStatusToAdapterStatus(status);
     updateReqParam.sleConnectParamUpdateReq.param.intervalMin = param->interval_min;
     updateReqParam.sleConnectParamUpdateReq.param.intervalMax = param->interval_max;
@@ -479,7 +345,7 @@ static void SleAuthCompleteCallback(uint16_t conn_id, const sle_addr_t *addr, er
     IOTC_LOGD("SLE AuthComplete cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam authParam = {0};
     (void)memset_s(&authParam, sizeof(authParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    authParam.sleAuthComplete.conn_id = conn_id;
+    authParam.sleAuthComplete.connId = conn_id;
     authParam.sleAuthComplete.status = OhosStatusToAdapterStatus(status);
     authParam.sleAuthComplete.addr.type = addr->type;
     (void)memcpy_s(authParam.sleAuthComplete.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, SLE_ADDR_LEN);
@@ -502,7 +368,7 @@ static void SlePairCompleteCallback(uint16_t conn_id, const sle_addr_t *addr, er
     IOTC_LOGD("SLE PairComplete cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam pairParam = {0};
     (void)memset_s(&pairParam, sizeof(pairParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    pairParam.slePairComplete.conn_id = conn_id;
+    pairParam.slePairComplete.connId = conn_id;
     pairParam.slePairComplete.status = OhosStatusToAdapterStatus(status);
     pairParam.slePairComplete.addr.type = addr->type;
     (void)memcpy_s(pairParam.slePairComplete.addr.addr, IOTC_ADPT_SLE_ADDR_LEN, addr->addr, SLE_ADDR_LEN);
@@ -517,7 +383,7 @@ static void SleReadRssiCallback(uint16_t conn_id, int8_t rssi, errcode_t status)
     IOTC_LOGD("SLE PairComplete cb:conn_id:%d,status:%d, rssi:%d", conn_id, status, rssi);
     IotcAdptSleConnectionEventParam rssiParam = {0};
     (void)memset_s(&rssiParam, sizeof(rssiParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    rssiParam.sleReadRssi.conn_id = conn_id;
+    rssiParam.sleReadRssi.connId = conn_id;
     rssiParam.sleReadRssi.rssi = rssi;
     rssiParam.sleReadRssi.status = OhosStatusToAdapterStatus(status);
     if (g_sleConnectionEventHandler != NULL) {
@@ -554,7 +420,7 @@ static void SleSetPhyCallback(uint16_t conn_id, errcode_t status, const sle_set_
     IOTC_LOGD("SLE SetPhy cb:conn_id:%d,status:%d", conn_id, status);
     IotcAdptSleConnectionEventParam phyParam = {0};
     (void)memset_s(&phyParam, sizeof(phyParam), 0, sizeof(IotcAdptSleConnectionEventParam));
-    phyParam.sleSetPhy.conn_id = conn_id;
+    phyParam.sleSetPhy.connId = conn_id;
     phyParam.sleSetPhy.status = status;
     phyParam.sleSetPhy.param.gFeedback = param->g_feedback;
     phyParam.sleSetPhy.param.rxFormat = param->rx_format;
@@ -580,11 +446,6 @@ static sle_connection_callbacks_t g_SleConnectionCb = {
     .low_latency_cb = SleLowLatencyCallback,
     .set_phy_cb = SleSetPhyCallback,
 };
-
-static int32_t SsapsRegisterCallbacks(ssaps_callbacks_t *cb)
-{
-    return ssaps_register_callbacks(cb);
-}
 
 static int32_t AnnounceSeekRegisterCallbacks(sle_announce_seek_callbacks_t *cb)
 {
@@ -776,7 +637,7 @@ void SsapcWriteCfmCallback(uint8_t client_id, uint16_t conn_id, ssapc_write_resu
         IOTC_LOGE("invalid param");
         return;
     }
-    IOTC_LOGD("Ssapc Write Cfm cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
+    IOTC_LOGI("Ssapc Write Cfm cb:client_id:%d,conn_id:%d,status:%d", client_id, conn_id, status);
     IotcAdptSleSsapClientEventParam param = {0};
     (void)memset_s(&param, sizeof(param), 0, sizeof(IotcAdptSleSsapClientEventParam));
     param.ssapcWriteResult.clientId = client_id;
@@ -898,9 +759,48 @@ static int32_t SsapcReadReq(uint8_t client_id, uint16_t conn_id, uint16_t handle
     return ssapc_read_req(client_id, conn_id, handle, type);
 }
 
+static int32_t IotcSleWriteSync(uint8_t client_id, uint16_t conn_id, ssapc_write_param_t *param, bool isReq)
+{
+    int32_t ret = -1;
+    int sflag = 0;
+    uint64_t khtBeforeGetJiffies = 0;
+    uint64_t khtAfterGetJiffies = 0;
+    uint64_t afterUs = 0;
+    uint32_t waitMinTimeUs = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125);
+    int retry = 2000;
+    khtBeforeGetJiffies = IotcSleClockGettimeUsLite();
+    afterUs = khtBeforeGetJiffies + waitMinTimeUs;
+
+    bool keepLooping = true;
+    while (keepLooping) {
+        if (sflag == 0 && gle_tx_acb_data_num_get() > 0) {
+            if (isReq) {
+                ret = ssapc_write_req(client_id, conn_id, param);
+            } else {
+                ret = ssapc_write_cmd(client_id, conn_id, param);
+            }
+            sflag = 1;
+        }
+
+        khtAfterGetJiffies = IotcSleClockGettimeUsLite();
+        if ((int)(khtAfterGetJiffies - afterUs) < 0) {
+            sched_yield();
+        } else {
+            if (sflag == 0 && (--retry) > 0) {
+                afterUs += waitMinTimeUs;
+                sched_yield();
+            } else {
+                keepLooping = false;
+            }
+        }
+    }
+    return ret;
+}
+
 static int32_t SsapcWriteReq(uint8_t client_id, uint16_t conn_id, ssapc_write_param_t *param)
 {
-    return ssapc_write_req(client_id, conn_id, param);
+    int32_t ret = IotcSleWriteSync(client_id, conn_id, param, true);
+    return ret;
 }
 
 static int32_t SsapcExchangeInfoReq(uint8_t client_id, uint16_t conn_id, ssap_exchange_info_t* param)
@@ -920,7 +820,31 @@ int32_t IotcSleRegisterHostCallbacks(void)
 
 int32_t IotcSleEnable(void)
 {
-    int32_t ret = EnableSle();
+    if (g_clientState != IOTC_SLE_STOP) {
+        IOTC_LOGE("sle enable state=%d", g_clientState);
+        return IOTC_OK;
+    }
+    int32_t ret = 0;
+
+    ret = AnnounceSeekRegisterCallbacks(&g_SleAnnounceSeek);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register announce seek callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    ret = ConnectionRegisterCallbacks(&g_SleConnectionCb);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register connection callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    ret = SsapClientRegisterCallbacks(&g_SsapcCallbacks);
+    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
+        IOTC_LOGE("register ssap client callback ret=%d", ret);
+        return IOTC_ERROR;
+    }
+
+    ret = EnableSle();
     if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
         IOTC_LOGE("init stack ret=%d", ret);
         return IOTC_ERROR;
@@ -951,11 +875,7 @@ int32_t IotcSleSsapsRegisterServer(const IotcAdptSleSsapCallback callback)
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleSsapEventHandler = callback;
-    int32_t ret =  SsapsRegisterCallbacks(&g_sleSsapsCb);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register ssap callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
+
     return IOTC_OK;
 }
 
@@ -966,11 +886,6 @@ int32_t IotcSleRegisterAnnounceSeekCallbacks(const IotcAdptSleAnnounceSeekCallba
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleAnnounceSeekEventHandler = callback;
-    int32_t ret = AnnounceSeekRegisterCallbacks(&g_SleAnnounceSeek);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register announce seek callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
     return IOTC_OK;
 }
 
@@ -981,11 +896,7 @@ int32_t IotcSleRegisterConnectionCallbacks(const IotcAdptSleConnectionCallback c
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleConnectionEventHandler = callback;
-    int32_t ret = ConnectionRegisterCallbacks(&g_SleConnectionCb);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register connection callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
+
     return IOTC_OK;
 }
 
@@ -996,11 +907,7 @@ int32_t IotcSleRegisterSsapClientCallbacks(const IotcAdptSleSsapClientCallback c
         return IOTC_ERR_PARAM_INVALID;
     }
     g_sleSsapClientEventHandler = callback;
-    int32_t ret = SsapClientRegisterCallbacks(&g_SsapcCallbacks);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("register ssap client callback ret=%d", ret);
-        return IOTC_ERROR;
-    }
+
     return IOTC_OK;
 }
 
@@ -1121,54 +1028,10 @@ int32_t IotcSleSetSleName(const char *name, uint8_t len)
     return IOTC_OK;
 }
 
-int32_t IotcStartAnnounce(uint8_t announceId, const IotcAdptSleAnnounceData *advData,
-    const IotcAdptSleAnnounceParam *advParam)
-{
-    if ((advParam == NULL) || (advData == NULL)) {
-        IOTC_LOGE("invalid param");
-        return IOTC_ERR_PARAM_INVALID;
-    }
-
-    int32_t ret = SleSetAnnounceData(announceId, advData);
-    if (ret != ERRCODE_SLE_SUCCESS) {
-        IOTC_LOGE("start adv set data=%d", ret);
-        return ret;
-    }
-
-    int32_t paramRet = SleSetAnnounceParam(announceId, advParam);
-    if (paramRet != ERRCODE_SLE_SUCCESS) {
-        IOTC_LOGE("start adv set param=%d", paramRet);
-        return paramRet;
-    }
-
-    ret = SleStartAnnounce(announceId);
-    if (ret != ERRCODE_SLE_SUCCESS) {
-        IOTC_LOGE("start adv ret=%d", ret);
-        return ret;
-    }
-    IOTC_LOGD("start adv success");
-    return ERRCODE_SLE_SUCCESS;
-}
-
-int32_t IotcStopAnnounce(uint8_t announceId)
-{
-    /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
-    int32_t ret = SleStopAnnounce(announceId);
-    if (ret != ERRCODE_SLE_SUCCESS) {
-        IOTC_LOGE("stop adv ret=%d", ret);
-        return ret;
-    }
-    IOTC_LOGD("stop adv success");
-    return ERRCODE_SLE_SUCCESS;
-}
-
 int32_t IotcSleSsapsStartService(uint8_t serviceId, uint16_t serviceHandle)
 {
-    int32_t ret = SsapsStartService(serviceId, serviceHandle);
-    if (ret != IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        IOTC_LOGE("IotcSleSsapsStartService ret=%d", ret);
-        return IOTC_ERROR;
-    }
+    (void)serviceId;
+    (void)serviceHandle;
     return IOTC_OK;
 }
 
@@ -1224,7 +1087,13 @@ int32_t IotcSleSetSeekParam(const IotcAdptSleSeekParam *param)
 
 int32_t IotcSleStartSeek(void)
 {
-    return SleStartSeek();
+    if (SleStartSeek() != IOTC_OK) {
+        IOTC_LOGE("SLE start seek failed!");
+        return IOTC_ERROR;
+    }
+
+    g_clientState = IOTC_SLE_SEEK_ENABLE;
+    return IOTC_OK;
 }
 
 int32_t IotcSleStoptSeek(void)

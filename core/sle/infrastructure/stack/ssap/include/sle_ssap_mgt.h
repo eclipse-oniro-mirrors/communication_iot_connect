@@ -25,7 +25,6 @@
 extern "C" {
 #endif
 
-#define SLE_DEV_NAME                "IotcBT"
 #define SLE_DEFAULT_MAX_CONN_NUM    10
 #define SLE_CONN_HEAD_NODE          11
 #define SLE_MTU_SIZE                500
@@ -81,6 +80,7 @@ int32_t SleAddSsapSvc(const IotcSleSsapProfileSvc *svc);
 int32_t SleSsapMgtInit(void);
 void SleSsapMgtDestroy(void);
 SleSsapMgtApp *GetSleSsapMgtApp(void);
+int32_t SleGetSeviceHandle(const char *svcUuid, int32_t *handle);
 int32_t DelSleSsapMgtPeerDevInfo(uint32_t connId);
 SlePeerDevInfo *GetSleSsapMgtPeerDevInfo(uint32_t connId);
 bool SleIsPair(void);

@@ -77,7 +77,7 @@ static int32_t LinkLayerExecutorWaitCallback(void *inData, void **outData)
     const LinkLayerExecutorParam *param = (const LinkLayerExecutorParam *)inData;
 
     int32_t ret = SleLinkLayerProcessData(param->connId, param->value, param->valueLen);
-    IOTC_LOGI("process bt data, len=%u,ret=%d", param->valueLen, ret);
+    IOTC_LOGI("process sle data, len=%u,ret=%d", param->valueLen, ret);
     return ret;
 }
 

@@ -12,19 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef IOT_CONNECT_CORE_SLE_INFRASTRUCTURE_STACK_SSAPC_INCLUDE_SLE_SSAPC_EVENT_H_
-#define IOT_CONNECT_CORE_SLE_INFRASTRUCTURE_STACK_SSAPC_INCLUDE_SLE_SSAPC_EVENT_H_
 
-#include <stdint.h>
+#ifndef SLE_SSAPC_MGT_H
+#define SLE_SSAPC_MGT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int32_t SleSsapClinetEventInit(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* SLE_SSAPC_MGT_H */

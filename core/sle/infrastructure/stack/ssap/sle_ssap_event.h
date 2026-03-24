@@ -27,6 +27,7 @@ extern "C" {
  * @return 0 成功，非0 失败
  */
 int32_t SleSsapEventInit(void);
+int32_t SleSsapServiceEventInit(void);
 
 #ifdef __cplusplus
 }

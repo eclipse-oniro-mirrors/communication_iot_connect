@@ -65,11 +65,15 @@ static void SleSessionNodeRelease(void)
 
 static int32_t SleSessionNodeRegister(SpekeSession *sessNode, uint32_t connSessionId)
 {
-    CHECK_RETURN_LOGE((sessNode != NULL) && (connSessionId > 0) && (connSessionId <= SLE_SESSION_NUM_LIMIT),
-        IOTC_ERR_PARAM_INVALID,
-        "register sle param err, connSessionId:%u, limit:%d", connSessionId, SLE_SESSION_NUM_LIMIT);
-    CHECK_RETURN_LOGE(connSessionId <= SLE_SESSION_NUM_LIMIT, IOTC_CORE_BLE_LL_ERR_SVC_NUM,
-        "register sle key:%u over limit:%d", connSessionId, SLE_SESSION_NUM_LIMIT);
+    IOTC_LOGI("register sle session session id:%x", sessNode);
+    if (sessNode == NULL) {
+        IOTC_LOGE("create speke session is null");
+        return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
+    }
+    if (connSessionId >= SLE_SESSION_NUM_LIMIT) {
+        IOTC_LOGE("sle session key:%u out of range", connSessionId);
+        return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
+    }
 
     if (GetSleSessionNode(connSessionId) != NULL) {
         IOTC_LOGE("sle session key:%u exist", connSessionId);

@@ -31,9 +31,26 @@ typedef struct {
     int32_t (*decryptCb)(uint32_t connId, uint8_t *data, uint32_t *dataLen);
 } SleEncryptHandler;
 
+static int32_t UnencryptedBuffEnc(uint32_t connId, const uint8_t *data, uint32_t dataLen,
+    uint8_t **outData, uint32_t *outDataLen)
+{
+    NOT_USED(connId);
+    *outData = UtilsMallocCopy(data, dataLen);
+    CHECK_RETURN(*outData != NULL, IOTC_ADAPTER_MEM_ERR_MALLOC);
+    *outDataLen = dataLen;
+    return IOTC_OK;
+}
+
+static int32_t UnencryptedBuffDec(uint32_t connId, uint8_t *data, uint32_t *dataLen)
+{
+    NOT_USED(connId);
+    NOT_USED(data);
+    NOT_USED(dataLen);
+    return IOTC_OK;
+}
 
 static SleEncryptHandler g_encryptSleHandler[] = {
-
+    { SLE_ENC_TYPE_UNENCRYPTED, UnencryptedBuffEnc, UnencryptedBuffDec },
     { SLE_ENC_TYPE_SPEKE, SleLinkLayerSpekeEncrypt, SleLinkLayerSpekeDecrypt },
 };
 

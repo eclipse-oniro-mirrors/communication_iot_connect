@@ -86,7 +86,8 @@ if (defined(ohos_lite))
     "$iotc_core_path/sle/application/adv/sle_adv_data.c",
     "$iotc_core_path/sle/application/adv/sle_adv_param.c",
     "$iotc_core_path/sle/application/adv/sle_adv.c",
-    "$iotc_core_path/sle/application/ssaps/sle_server_event_service.c"
+    "$iotc_core_path/sle/application/ssaps/sle_server_event_service.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssaps/sle_ssaps_event.c"
   ]
 }
 
@@ -102,6 +103,7 @@ if (!defined(ohos_lite)) {
     "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_event.c",
     "$iotc_core_path/sle/application/ssapc/sle_client_stubs.c",
     "$iotc_core_path/sle/infrastructure/stack/conn_dev_mgt/sle_conn_mgt.c",
+    "$iotc_core_path/sle/infrastructure/stack/ssapc/sle_ssapc_mgt.c"
   ]
 }
 
