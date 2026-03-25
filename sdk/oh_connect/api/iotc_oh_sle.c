@@ -125,7 +125,7 @@ static int32_t OptionSetSleRecvCustomSecDataCallback(va_list args)
     IotcSleRecvCustomSecDataCallback cb = va_arg(args, IotcSleRecvCustomSecDataCallback);
     CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     ProductHooks hooks = {0};
-    hooks.onRecvCustomSecData = cb;
+    hooks.onSleRecvCustomSecData = cb;
     int32_t ret = ProductRegisterHooks(&hooks, PROD_HOOK_REG_POLICY_COVER_NON_NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGW("set custom data cb error %d", ret);

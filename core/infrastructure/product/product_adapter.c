@@ -66,6 +66,7 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetRootCaCert);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvNetCfgInfo);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvCustomSecData);
+    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onSleRecvCustomSecData);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetSurfacePower);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfPutCharState);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetCharState);
@@ -131,6 +132,20 @@ int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len)
     int32_t ret = cb(data, len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("recv custom sec data process error %d", ret);
+    }
+    return ret;
+}
+
+int32_t ProductSleRecvCustomSecData(const uint8_t *data, uint32_t len)
+{
+    CHECK_RETURN_LOGW(data != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    RecvCustomSecDataCallback cb;
+    GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onSleRecvCustomSecData);
+
+    int32_t ret = cb(data, len);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("recv sle custom sec data process error %d", ret);
     }
     return ret;
 }

@@ -264,7 +264,7 @@ static int32_t ForwardCustomSecData(IotcJson *root, uint8_t **out, uint32_t *out
     }
 
     /* custom sec data 优先由外部回调处理 */
-    int32_t ret = ProductRecvCustomSecData((const uint8_t *)vendor, strlen(vendor));
+    int32_t ret = ProductSleRecvCustomSecData((const uint8_t *)vendor, strlen(vendor));
     IotcJsonFreePrint(vendor);
     if (ret == IOTC_OK) {
         return IOTC_OK;
