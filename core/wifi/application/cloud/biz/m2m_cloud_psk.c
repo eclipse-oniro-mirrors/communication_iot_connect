@@ -47,8 +47,8 @@ const CloudOption *M2mCloudGetPskOption(void)
     static const CloudOption PSK_OPTION = {
         .uri = sysPsk,
         .num = ARRAY_SIZE(sysPsk),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID),
     };
     return &PSK_OPTION;
@@ -107,7 +107,6 @@ int32_t M2mCloudParsePskResponse(M2mCloudContext *ctx, const CoapPacket *resp, i
     CHECK_RETURN_LOGW(ctx != NULL && resp != NULL && errcode != NULL && resp->payload.data != NULL &&
         resp->payload.len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
     char sn2Str[HEXIFY_LEN(SESSION_KEY_LEN + 1) + 1] = {0};
-    char keyStr[HEXIFY_LEN(SESSION_KEY_LEN) + 1] = { 0 };
     char encryptModeStr[130] = {0};  //128字节
 
     IotcJson *respJson = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
@@ -153,8 +152,6 @@ int32_t M2mCloudParsePskResponse(M2mCloudContext *ctx, const CoapPacket *resp, i
     UtilsUnhexify(sn2Str, strlen(sn2Str), sn2, sizeof(sn2));
     // 根据sn1 sn2 生成PSK
     StationSessKeyGen(ctx, sn1, SESS_SN_LEN, sn2, SESS_SN_LEN);
-    UtilsHexify(ctx->pskInfo.key, sizeof(ctx->pskInfo.key), keyStr, sizeof(keyStr));
-    IOTC_LOGI("%s StationSessKeyGen pskInfo:[%s]", __func__, keyStr);
 
     return IOTC_OK;
 }
@@ -169,11 +166,6 @@ int32_t StationSessKeyGen(M2mCloudContext *ctx, const uint8_t *sn1, uint32_t sn1
     ret = memcpy_s(ctx->pskInfo.salt + RAND_SN_LEN, RAND_SN_LEN, sn2, sn2Len);
     CHECK_RETURN_LOGE(ret == EOK, IOTC_ERR_SECUREC_MEMCPY, "cpy sn2 err:%d", ret);
     
-    // ctx->authCodeInfo
-    char authcodeStr[HEXIFY_LEN(BLE_AUTHCODE_LEN) + 1] = {0};
-    UtilsHexify(ctx->authInfo.regInfo.psk, sizeof(ctx->authInfo.regInfo.psk), authcodeStr, sizeof(authcodeStr));
-    IOTC_LOGI("%s authcodeStr:[%s]", __func__, authcodeStr);
-
     IotcPbkdf2HmacParam param = {
         .md = IOTC_MD_SHA256,
         .password = ctx->authCodeInfo.authCode,
@@ -207,10 +199,6 @@ int32_t PskEncryptData(M2mCloudContext *ctx, const uint8_t *data, uint32_t dataL
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
     (void)memset_s(outData, outDataLen, 0, outDataLen);
-
-    char pskInfoStr[HEXIFY_LEN(SESSION_KEY_LEN) + 1] = {0};
-    UtilsHexify(ctx->pskInfo.key, sizeof(ctx->pskInfo.key), pskInfoStr, sizeof(pskInfoStr));
-    IOTC_LOGI("%s pskInfo:[%s]", __func__, pskInfoStr);
 
     IotcAesCbcParam param = {
         .mode = ADAPTER_PADDING_PKCS7,
@@ -292,10 +280,6 @@ int32_t StationSessCalHmac(M2mCloudContext *ctx, const uint8_t *data, uint32_t d
     };
     int32_t ret = IotcPkcs5Pbkdf2Hmac(&param, hmacKey, SESS_HMAC_LEN);
     CHECK_RETURN(ret == IOTC_OK, ret);
-
-    char hmacKeyStr[HEXIFY_LEN(SESS_HMAC_LEN) + 1] = {0};
-    UtilsHexify(hmacKey, sizeof(hmacKey), hmacKeyStr, sizeof(hmacKeyStr));
-    IOTC_LOGI("%s hmacKeyStr:[%s]", __func__, hmacKeyStr);
 
     IotcHmacParam hmacParam = {
         .md = IOTC_MD_SHA256,

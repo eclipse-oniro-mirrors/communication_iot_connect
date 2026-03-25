@@ -44,9 +44,9 @@ const CloudOption *M2mCloudGetRevokeOption(void)
     static const CloudOption REVOKE_OPTION = {
         .uri = SYS_REVOKE,
         .num = ARRAY_SIZE(SYS_REVOKE),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &REVOKE_OPTION;

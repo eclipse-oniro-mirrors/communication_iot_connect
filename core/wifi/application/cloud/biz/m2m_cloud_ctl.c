@@ -191,7 +191,7 @@ ERROR_EXIT:
     return NULL;
 }
 
-static int32_t SendCloudCtlMsg(CoapEndpoint *endpoint, const CoapPacket *req,
+static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *req,
     const SocketAddr *addr, const M2mCloudContext *ctx, IotcJson *respJson)
 {
     int32_t ret = IOTC_OK;
@@ -212,18 +212,15 @@ static int32_t SendCloudCtlMsg(CoapEndpoint *endpoint, const CoapPacket *req,
             ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_USER_ID;
             break;
         }
-        const CoapOption *seqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_SEQ_NUM_ID, &seg);
-        if (uerIdOpt == NULL || seg != 1 || seqIdOpt->value.data == NULL || seqIdOpt->value.len == 0) {
-            ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_SEQ_NUM_ID;
-            break;
-        }
+        uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
         const CoapOption options[] = {
             {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->tokenInfo.access, strlen(ctx->tokenInfo.access)}},
             {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)reqIdOpt->value.data, reqIdOpt->value.len}},
             {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)devIdOpt->value.data, devIdOpt->value.len}},
             {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)uerIdOpt->value.data, uerIdOpt->value.len}},
-            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seqIdOpt->value.data, seqIdOpt->value.len}},
+            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)*seq, sizeof(uint32_t)}},
         };
+        (*seq)++;
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
             options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
         CoapPacket packet;
@@ -275,7 +272,7 @@ static int32_t SendCloudCtlMsgResp(CoapEndpoint *endpoint, const CoapPacket *req
             IotcJsonDelete(respJson);
         }
     }
-    SendCloudCtlMsg(endpoint, req, addr, ctx, respJson);
+    BuildCloudCtlRespMsg(endpoint, req, addr, ctx, respJson);
     IotcJsonDelete(dataJsonArray);
     dataJsonArray = NULL;
     IotcJsonDelete(respJson);

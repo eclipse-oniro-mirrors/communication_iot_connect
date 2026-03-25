@@ -31,9 +31,9 @@ const CloudOption *M2mCloudGetAuthCodeOption(void)
     static const CloudOption AUTHCODE_OPTION = {
         .uri = sysActivate,
         .num = ARRAY_SIZE(sysActivate),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &AUTHCODE_OPTION;
@@ -51,13 +51,11 @@ IotcJson *M2mCloudBuildAuthCodeRequest(M2mCloudContext *ctx)
     }
 
     ret = IotcJsonAddStr2Obj(rootJson, STR_NETINFO_DEVICE_ID, ctx->authInfo.loginInfo.devId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add devid error %d", ret);
-        return NULL;
-    }
 
     if (ret == IOTC_OK) {
         return rootJson;
+    } else {
+        IOTC_LOGW("add devid error %d", ret);
     }
 
     IotcJsonDelete(rootJson);
@@ -96,7 +94,6 @@ int32_t M2mCloudParseAuthCodeResponse(M2mCloudContext *ctx, const CoapPacket *re
         IotcJsonDelete(respJson);
         return ret;
     }
-    IOTC_LOGI("%s json get STR_JSON_AUTHCODE  %s", __func__, authcodeStr);
     UtilsUnhexify(authcodeStr, strlen(authcodeStr), ctx->authCodeInfo.authCode, sizeof(ctx->authCodeInfo.authCode));
     ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE_ID, (char *)authcodeIdStr, sizeof(authcodeIdStr));
     if (ret != IOTC_OK) {
@@ -104,11 +101,20 @@ int32_t M2mCloudParseAuthCodeResponse(M2mCloudContext *ctx, const CoapPacket *re
         IotcJsonDelete(respJson);
         return ret;
     }
-    IOTC_LOGI("%s json get STR_JSON_AUTHCODE_ID  %s", __func__, authcodeIdStr);
     UtilsUnhexify(authcodeIdStr, strlen(authcodeIdStr), ctx->authCodeInfo.authCodeId,
         sizeof(ctx->authCodeInfo.authCodeId));
 
     ret = UtilsJsonGetNum(respJson, STR_JSON_TIMEOUT, (int32_t *)&(ctx->authCodeInfo.timeout));
+    if(ret != IOTC_OK) {
+        IotcJsonDelete(respJson);
+        return ret;
+    }
+    if(timeout > UINT32_MAX / UTILS_MS_PER_SECOND) {
+        return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_TOKEN_TIMEOUT_INVALID;
+    }
+    ctx->authCodeInfo.timeout = timeout;
+    (void)memset_s(authcodeStr, sizeof(authcodeStr), 0, sizeof(authcodeStr));
+    (void)memset_s(authcodeIdStr, sizeof(authcodeIdStr), 0, sizeof(authcodeIdStr));
     return IOTC_OK;
 }
 

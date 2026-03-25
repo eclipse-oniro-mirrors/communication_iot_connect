@@ -43,7 +43,6 @@ int32_t M2mCloudAddDevInfoToJson(IotcJson *rootObj)
 
     UtilsJsonStrItem strItem[] = {
         {STR_JSON_MAC, macStr},
-        {STR_JSON_HIV, HILINK_VERSION},
     };
 
     ret = UtilsJsonAddStrTable(devInfoObj, strItem, ARRAY_SIZE(strItem));

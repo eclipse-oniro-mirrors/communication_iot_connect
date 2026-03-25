@@ -79,16 +79,15 @@ static CoapOption *BuildCloudOption(M2mCloudContext *ctx, const CloudOption *opt
             ops[index++].value.len = strlen(ctx->authInfo.loginInfo.devId);
         }
     }
-    if (UTILS_IS_BIT_SET(option->opBitMap, CLOUD_OPTION_BIT_SEQ_NUM_ID)) {
-        ops[index].option = COAP_OPTION_TYPE_SEQ_NUM_ID;
-        uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
-        ops[index].value.data = IotcMalloc(sizeof(uint32_t));
-        if (ops[index].value.data != NULL) {
-            *((uint32_t *)(ops[index].value.data)) = IotcHtonl(*seq);
-        }
-        ops[index++].value.len = sizeof(uint32_t);
-        (*seq)++;
+    ops[index].option = COAP_OPTION_TYPE_SEQ_NUM_ID;
+    uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
+    ops[index].value.data = IotcMalloc(sizeof(uint32_t));
+    if (ops[index].value.data != NULL) {
+        *((uint32_t *)(ops[index].value.data)) = IotcHtonl(*seq);
     }
+    ops[index++].value.len = sizeof(uint32_t);
+    (*seq)++;
+
     *opsNum = index;
     return ops;
 }

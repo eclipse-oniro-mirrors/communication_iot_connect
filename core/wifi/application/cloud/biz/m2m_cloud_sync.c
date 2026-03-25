@@ -138,11 +138,11 @@ const CloudOption *M2mCloudGetDevInfoSyncOption(void)
 {
     static const char *sysSync[] = {STR_URI_PATH_SYS, STR_URI_PATH_SYNC};
     static const CloudOption SYNC_OPTION = {
-        .uri = SYS_SYNC,
-        .num = ARRAY_SIZE(SYS_SYNC),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
+        .uri = sysSync,
+        .num = ARRAY_SIZE(sysSync),
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &SYNC_OPTION;
