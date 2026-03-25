@@ -24,13 +24,25 @@
 extern "C" {
 #endif
 
-#define SLE_CONN_DEV_INFO_SN            50
-#define SLE_CONN_DEV_INFO_MODEL         50
-#define SLE_CONN_DEV_INFO_DEV_TYPE      50
-#define SLE_CONN_DEV_INFO_MANU          50
-#define SLE_CONN_DEV_INFO_PROD_ID       50
+
 typedef struct {
-    SleDeviceInfo info;
+    IotcDeviceInfo *devInfo; // 下挂的生态设备信息（SLE连接后,从生态设备处获取）
+    uint8_t type; // 设备地址类型
+    // 云端下发的生态设备信息（SLE连接后，从生态设备处获取，详见配网和注册激活流程）
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    char secret[CLOUD_SECRET_MAX_STR_LEN + 1];
+    uint8_t psk[CLOUD_PSK_MAX_LEN];
+    char uidHash[BLE_UID_HASH_LEN + 1];
+    char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
+    char authCode[BLE_AUTHCODE_LEN];
+    uint16_t connID;
+    uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
+    SpekeState isSecure;
+} IotcConDeviceInfo;
+
+
+typedef struct {
+    IotcConDeviceInfo info;
     ListEntry list;
 } SleConnDevList;
 
@@ -44,14 +56,6 @@ typedef struct { // 一个端侧生态设备 和云端进行控制交互，屏�
     uint8_t type; // 端侧设备类型是SLE或BLE，后面根据类型做消息发布（发送）
 }M2mEndDeviceInfo;
 
-typedef struct {
-    char devId[DEVICE_ID_MAX_STR_LEN + 1];
-    char sn[SLE_CONN_DEV_INFO_SN];
-    char model[SLE_CONN_DEV_INFO_MODEL];
-    char devType[SLE_CONN_DEV_INFO_DEV_TYPE];
-    char manu[SLE_CONN_DEV_INFO_MANU];
-    char prodId[SLE_CONN_DEV_INFO_PROD_ID];
-}SleConnDeviceInfo;
 
 int32_t SleConnDevMgt(const SleConnRetDeviceInfo *retDev);
 int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev);
@@ -61,10 +65,17 @@ void DestroySleConnDevList(void);
 void PrintSleConnDevList();
 bool IsExitSleConnDev(const uint16_t connID);
 
-void IotcOhSleFindDeviceInfo(const char *devId, SleConnDeviceInfo *deviceInfo);
-SleConnDeviceInfo* SleFindRetDeviceInfoNode(const char *devId);
-int32_t SleAddDeviceInfoNode(SleConnDeviceInfo *info);
-SleDeviceInfo* SleGetSleConnRetDeviceInfo(uint32_t connId);
+// 根据devId获取返回的连接信息
+IotcDeviceInfo* SleGetDeviceInfoByDevId(const char *devId);
+
+// 根据devId获取连接信息
+IotcConDeviceInfo* SleGetConnectionInfoByDevId(const char *devId);
+
+// 根据connId获取连接信息
+IotcConDeviceInfo* SleGetConnectionInfoByConnId(uint16_t connId);
+
+// 根据connId获取连接devId
+int32_t SleGetDevIdByConnId(uint16_t connId, char *devId);
 
 #ifdef __cplusplus
 }

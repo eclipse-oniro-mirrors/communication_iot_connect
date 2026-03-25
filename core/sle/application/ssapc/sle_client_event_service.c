@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <stddef.h>
+#include <unistd.h>
 #include "sle_client_event_service.h"
 #include "sle_svc_device_info.h"
 #include "security_speke.h"
@@ -23,7 +24,6 @@
 #include "iotc_event.h"
 #include "sle_disc_ctrl.h"
 #include "iotc_sle_client.h"
-#include "sle_conn_event.h"
 #include "sle_profile.h"
 #include "sle_ssap_mgt.h"
 #include "event_bus.h"
@@ -31,8 +31,11 @@
 #include "securec.h"
 #include "sle_ssap_service.h"
 #include "sle_svc_ctx.h"
-#include <stddef.h>
-#include "sle_conn_mgt.h"
+#include "utils_common.h"
+#include "sle_conn_device_info.h"
+#include "sle_svc_auth_setup.h"
+#include "sle_comm_status.h"
+#include "sle_svc_create_session.h"
 
 /* 部分星闪扫描参数 */
 #define IOTC_SLE_CLOSE_FILTER           0
@@ -79,9 +82,18 @@ typedef enum {
     IOTC_SLE_SEEK_ACTIVE  = 0x01,
 } SoftbusSleSeekType;
 
+
+typedef struct {
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
+    char authCode[BLE_AUTHCODE_LEN];
+} SleIssueAuthCode;
+
+
 static uint8_t g_clientId = 1;
 
-int32_t ClientSleSpekeStartSession(uint32_t connId)
+
+int32_t ClientSleSpekeStartSession(uint16_t connId)
 {
     int32_t ret = CreateSleSpekeSess(SPEKE_TYPE_CLIENT, connId);
     if (ret != IOTC_OK) {
@@ -105,17 +117,17 @@ int32_t ClientSleSpekeStartSession(uint32_t connId)
     return ret;
 }
 
-int32_t ClientSleSpekeProcessMsg(uint32_t connId)
+int32_t ClientGetIotcConDeviceInfo(uint16_t connId)
 {
     uint8_t *msg = NULL;
     uint32_t len = 0;
-    int32_t ret = GetSleSvcDeviceInfoReq(&msg, &len);
+    int32_t ret = CreateSvcDeviceInfoReq(&msg, &len);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] get device info failed!");
         return ret;
     }
 
-    ret = SleLinkLayerReportSvcData(connId, SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
+    ret = SleLinkLayerReportSvcDataEnc(connId, SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
@@ -141,12 +153,38 @@ static int32_t BuildIotcSleSeekParam(IotcAdptSleSeekParam *param)
     return IOTC_OK;
 }
 
-#define SLE_ADV_FLAGS_LEN_VAL    0x02
-#define SLE_ADV_FLAGS_AD_TYPE    0x01
-#define SLE_ADV_FLAGS_VALUE      0x06
-#define SLE_ADV_FLAGS_LEN_IDX    0
-#define SLE_ADV_FLAGS_TYPE_IDX   1
-#define SLE_ADV_FLAGS_VAL_IDX    2
+// 设备断开连接
+int32_t SleDisconnectService(const char *devId)
+{
+    IOTC_LOGI("%s: devId=%s", __func__, devId);
+    IotcConDeviceInfo* node = SleGetConnectionInfoByDevId(devId);
+    if (node == NULL) {
+        IOTC_LOGE("%s: devId=%s not found", __func__, devId);
+        return IOTC_ERROR;
+    }
+
+    IotcAdptSleDeviceAddr devAddr = {0};
+    devAddr.type = node->type;
+    if (memcpy_s(devAddr.addr, IOTC_ADPT_SLE_ADDR_LEN, node->devAddr, IOTC_ADPT_SLE_ADDR_LEN)) {
+        IOTC_LOGE("%s: memcpy_s failed", __func__);
+        return IOTC_ERROR;
+    }
+
+    // 断开连接
+    if (IotcSleDisconnectRemoteDevice(&devAddr) != IOTC_OK) {
+        IOTC_LOGE("%s: do SleSsapDisconnect failed. Error.", __func__);
+        return IOTC_ERROR;
+    }
+
+    // 删除管理信息
+    if (DelSleSsapMgtPeerDevInfo(node->connID) != IOTC_OK) {
+        IOTC_LOGE("%s: DelSleSsapMgtPeerDevInfo failed", __func__);
+        return IOTC_ERROR;
+    }
+    // 删除连接管理信息
+    SleDeleteConnDev(node->connID);
+    return IOTC_OK;
+}
 
 static void IotcSlePrintData(const uint16_t valueLen, const uint8_t *value)
 {
@@ -238,6 +276,7 @@ static void SleClientConnectStateCallback(uint32_t event, void *param, uint32_t 
         return;
     }
     if (eventParam->sleConnectStateChanged.connState == IOTC_SLE_SSAP_CONNECT_STATE_DISCONNECTED) {
+        SleDeleteConnDev(devInfo->connId);
         IOTC_LOGI("[uuid client]  connect remote device state disconnected connId = %d!", devInfo->connId);
         return;
     }
@@ -257,6 +296,7 @@ static void SleClientConnectStateCallback(uint32_t event, void *param, uint32_t 
             eventParam->sleConnectStateChanged.addr.addr,
             sizeof(eventParam->sleConnectStateChanged.addr.addr));
         retDevInfo.status = (uint16_t)eventParam->sleConnectStateChanged.connState;
+        retDevInfo.type = eventParam->sleConnectStateChanged.addr.type;
 
         int32_t ret = SleConnDevMgt(&retDevInfo);
         if (ret != IOTC_OK) {
@@ -315,7 +355,7 @@ static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, 
     IOTC_LOGI("[uuid client] %s: status = %d", __func__, eventParam->ssapcFindStructureResult.status);
 
     if (eventParam->ssapcFindStructureResult.status == IOTC_ADPT_SLE_STATUS_SUCCESS) {
-        SleDeviceInfo *info = SleGetSleConnRetDeviceInfo(eventParam->ssapcFindStructureResult.connId);
+        IotcConDeviceInfo *info = SleGetConnectionInfoByConnId(eventParam->ssapcFindStructureResult.connId);
         if (info == NULL) {
             IOTC_LOGE("[uuid client] %s: info is NULL.", __func__);
             return;
@@ -329,6 +369,7 @@ static void SleClientFindStructureCompleteCallback(uint32_t event, void *param, 
             IOTC_LOGE("[uuid client] %s: ClientSleSpekeStartSession failed, ret:%d\r\n", __func__, ret);
         }
         info->isSecure = IOTC_SPEKE_SLE_STATE_INIT;
+        SleScanServiceStop();
     }
 }
 
@@ -341,6 +382,182 @@ static void SleClientConnectParamUpdateCallback(uint32_t event, void *param, uin
     IotcAdptSleConnectionEventParam *eventParam = (IotcAdptSleConnectionEventParam *)param;
     IOTC_LOGI("[uuid client] %s: conn_id:%d status:%d \r\n", __func__,
         eventParam->sleConnectParamUpdateReq.connId, eventParam->sleConnectParamUpdateReq.status);
+}
+
+static void SleClientSpekeFinishedCallback(uint32_t event, void *param, uint32_t len)
+{
+    NotifyFinishedStatus *spekeStatus = (NotifyFinishedStatus *)param;
+    if (spekeStatus->errorCode == IOTC_OK) {
+        IOTC_LOGI("[uuid client] %s: SleClientSpekeFinishedCallback success.", __func__);
+        uint8_t *msg = NULL;
+        uint32_t msgLen = 0;
+        if (CreateSvcAuthSetupGet(&msg, &msgLen) != IOTC_OK) {
+            IOTC_LOGE("[uuid client] %s: CreateSvcAuthSetupGetReq failed.", __func__);
+            return;
+        }
+
+        if (SleLinkLayerReportSvcDataEnc(spekeStatus->connSessionId, SLE_SVC_AUTH_SETUP,
+            msg, msgLen, SLE_OPTYPE_GET) != IOTC_OK) {
+            IOTC_LOGE("[uuid client] report msg failed!");
+            return;
+        }
+
+        IotcFree(msg);
+        msg = NULL;
+    }
+}
+
+// 云下发的authcode拿到之后就开始创建sessionKey上线
+static void SleClientCloudIssueAuthCodeCallback(uint32_t event, void *param, uint32_t len)
+{
+    SleIssueAuthCode *authCodeInfo = (SleIssueAuthCode *)param;
+    IotcConDeviceInfo *devInfo = SleGetConnectionInfoByDevId(authCodeInfo->devId);
+    if (devInfo == NULL) {
+        IOTC_LOGE("[uuid client] cloud issue auth code callback, devId:%s", (const char*)authCodeInfo->devId);
+        return;
+    }
+    if (memcpy_s(devInfo->authCode, sizeof(devInfo->authCode),
+        authCodeInfo->authCode, sizeof(devInfo->authCode)) != EOK) {
+        IOTC_LOGE("[uuid client] cloud issue auth code callback, memcpy_s failed");
+        return;
+    }
+    if (memcpy_s(devInfo->authCodeId, sizeof(devInfo->authCodeId),
+        authCodeInfo->authCodeId, sizeof(devInfo->authCodeId)) != EOK) {
+        IOTC_LOGE("[uuid client] cloud issue auth code callback, memcpy_s failed");
+        return;
+    }
+
+    IOTC_LOGI("start CreateSession");
+    uint8_t *msg = NULL;
+    len = 0;
+
+    IOTC_LOGI("[uuid client] %s: CreateSvcAuthSetupGet success.", __func__);
+    if (CreateSvcSessionIssue(devInfo->connID, &msg, &len) != IOTC_OK) {
+        IOTC_LOGE("[uuid client] %s: CreateSvcSessionIssueReq failed.", __func__);
+        return;
+    }
+
+    if (SleLinkLayerReportSvcData(devInfo->connID, SLE_SVC_CREATE_SESSION, msg, len, SLE_OPTYPE_GET) != IOTC_OK) {
+        IOTC_LOGE("[uuid client] report msg failed!");
+        return;
+    }
+    IotcFree(msg);
+    IOTC_LOGI("[uuid client] %s: CreateSvcSessionIssueReq success.", __func__);
+}
+
+//Auth Setup 完成之后查询设备信息
+static void SleClientAuthSetupFinishedCallback(uint32_t event, void *param, uint32_t len)
+{
+    NotifyFinishedStatus *spekeStatus = (NotifyFinishedStatus *)param;
+    if (spekeStatus->errorCode == IOTC_OK) {
+        IOTC_LOGI("[uuid client] %s: SleClientAuthSetupFinishedCallback success.", __func__);
+
+        uint8_t *msg = NULL;
+        len = 0;
+        IOTC_LOGI("[uuid client] %s: CreateSvcSessionIssue success.", __func__);
+
+        int32_t ret = CreateSvcDeviceInfoReq(&msg, &msgLen);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("[uuid client] get device info failed!");
+            return;
+        }
+
+        ret = SleLinkLayerReportSvcDataEnc(spekeStatus->connSessionId, SLE_SVC_DEVICE_INFO,
+            msg, msgLen, SLE_OPTYPE_GET);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("[uuid client] report msg failed!");
+        }
+
+        IotcFree(msg);
+        msg = NULL;
+    }
+}
+
+int32_t SleScanServiceStart(void)
+{
+    //调用扫描，说明已经登录了云，拿到了authcode
+    if (AuthSetupAndDevInfo() != IOTC_OK) {
+        return IOTC_ERROR;
+    }
+
+    // 打包扫描参数
+    IotcAdptSleSeekParam param;
+    if (BuildIotcSleSeekParam(&param) != IOTC_OK) {
+        return IOTC_ERROR;
+    }
+
+    if (SleSeekCtrlParamSet(&param) != IOTC_OK) {
+        return IOTC_ERROR;
+    }
+
+    if (SleSeekCtrlStart() != IOTC_OK) {
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
+{
+    // 停止扫描
+    if (SleSeekCtrlStop() != IOTC_OK) {
+        IOTC_LOGE("%s: do SleStopSeek failed. Error.", __func__);
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
+int32_t SleSendCustomSecDataService(const char *devId, const uint8_t *data, uint32_t len)
+{
+    if (devId == NULL || data == NULL) {
+        IOTC_LOGE("%s: Invalid input parameters (devId=%p, data=%p)", __func__, devId, data);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    uint16_t connId = 0;
+    if (!SleFindConnDevByDevId(devId, &connId)) {
+        IOTC_LOGE("%s: devId=%s not found", __func__, devId);
+        return IOTC_ERROR;
+    }
+    return SleLinkLayerReportSvcDataEnc(connId, SLE_SVC_CUSTOM_SEC_DATA, data, len, SLE_OPTYPE_PUT);
+}
+
+int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)
+{
+    if (devId == NULL || info == NULL) {
+        IOTC_LOGE("%s: Invalid input parameters (devId=%p, info=%p)", __func__, devId, info);
+        return IOTC_ERR_PARAM_INVALID;
+    }
+
+    IotcDeviceInfo *node = SleGetDeviceInfoByDevId(devId);
+    IotcDeviceInfo *external_copy = (IotcDeviceInfo *)IotcMalloc(sizeof(IotcDeviceInfo));
+    if (external_copy == NULL) {
+        IOTC_LOGE("Memory allocation failed | Size:%zu",
+            sizeof(IotcDeviceInfo));
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    memcpy_s(external_copy, sizeof(IotcDeviceInfo), node, sizeof(IotcDeviceInfo));
+
+    *info = external_copy;
+    return IOTC_OK;
+}
+
+int32_t IotcClientFindConnIdAndAddrList(void)
+{
+    PrintSleSsapConnidAndAddr();
+    return IOTC_OK;
+}
+
+
+static void SleClientCloudStartSeekCallback(uint32_t event, void *param, uint32_t len)
+{
+    NOT_USED(event);
+    NOT_USED(len);
+    NOT_USED(param);
+    IOTC_LOGI("[uuid client] %s: SleClientCloudStartSeekCallback success.", __func__);
+    if (SleScanServiceStart() != IOTC_OK) {
+        IOTC_LOGE("[uuid client] %s: SleScanServiceStart failed.", __func__);
+        return;
+    }
 }
 
 static int32_t SleClientBusinessCallbackInit(void)
@@ -359,8 +576,7 @@ static int32_t SleClientBusinessCallbackInit(void)
     ret = EventBusSubscribe(SleClientFindStructureCallBack, IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt FindStructure err:%d", ret);
 
-    ret = EventBusSubscribe(SleClientFindStructureCompleteCallback,
-        IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE_COMPLETE);
+    ret = EventBusSubscribe(SleClientFindStructureCompleteCallback, IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE_COMPLETE);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
         "[uuid client] subscribe gatt SleClientFindStructureCompleteCallback err:%d", ret);
 
@@ -368,56 +584,21 @@ static int32_t SleClientBusinessCallbackInit(void)
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
         "[uuid client] subscribe gatt SleClientConnectParamUpdateCallback err:%d", ret);
 
+    ret = EventBusSubscribe(SleClientSpekeFinishedCallback, IOTC_CORE_SLE_EVENT_SPEKE_FINISHED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
+        "[uuid client] subscribe gatt SleClientSpekeFinishedCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientAuthSetupFinishedCallback, IOTC_CORE_SLE_EVENT_AUTH_SETUP_FINISHED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
+        "[uuid client] subscribe gatt SleClientAuthSetupFinishedCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientCloudIssueAuthCodeCallback, IOTC_CORE_SLE_EVENT_AUTH_CODE_SETUP);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
+        "[uuid client] subscribe gatt SleClientCloudIssueAuthCodeCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientCloudStartSeekCallback, IOTC_CORE_SLE_EVENT_START_SEEK_SETUP);
+
     return ret;
-}
-
-int32_t SleScanServiceStart(void)
-{
-    IotcAdptSleSeekParam param;
-    if (BuildIotcSleSeekParam(&param) != IOTC_OK) {
-        return IOTC_ERROR;
-    }
-
-    if (SleSeekCtrlParamSet(&param) != IOTC_OK) {
-        return IOTC_ERROR;
-    }
-
-    if (SleSeekCtrlStart() != IOTC_OK) {
-        return IOTC_ERROR;
-    }
-    return IOTC_OK;
-}
-
-int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
-{
-    IOTC_LOGI("%s: devId=%s, protType=%d, len=%d", __func__, devId, protType, len);
-    int32_t connId = 0;
-    return ClientSleSpekeProcessMsg(connId);
-}
-
-int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info)
-{
-    if (devId == NULL || info == NULL) {
-        IOTC_LOGE("%s: Invalid input parameters (devId=%p, info=%p)", __func__, devId, info);
-        return IOTC_ERR_PARAM_INVALID;
-    }
-
-    SleConnDeviceInfo *node = SleFindRetDeviceInfoNode(devId);
-    SleConnDeviceInfo *external_copy = (SleConnDeviceInfo *)IotcMalloc(sizeof(SleConnDeviceInfo));
-    if (external_copy == NULL) {
-        IOTC_LOGE("Memory allocation failed | Size:%zu", sizeof(SleConnDeviceInfo));
-        return IOTC_ERR_PARAM_INVALID;
-    }
-    memcpy_s(external_copy, sizeof(SleConnDeviceInfo), node, sizeof(SleConnDeviceInfo));
-
-    *info = external_copy;
-    return IOTC_OK;
-}
-
-int32_t IotcClientFindConnIdAndAddrList(void)
-{
-    PrintSleSsapConnidAndAddr();
-    return IOTC_OK;
 }
 
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)

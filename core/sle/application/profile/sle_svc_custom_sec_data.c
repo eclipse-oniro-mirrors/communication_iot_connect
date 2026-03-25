@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <string.h>
 #include "sle_svc_custom_sec_data.h"
 #include "iotc_json.h"
@@ -26,6 +27,7 @@
 #include "iotc_svc_dev.h"
 #include "iotc_errcode.h"
 #include "product_adapter.h"
+#include "sle_conn_device_info.h"
 
 static int32_t GetSeq(IotcJson *root, uint32_t *seq)
 {
@@ -183,12 +185,17 @@ static int32_t SleCustomSecDataProcess(IotcJson *vendorItem, uint8_t **out, uint
         IOTC_LOGW("svc size error %u", size);
         return IOTC_SDK_AILIFE_SLE_ERR_CUSTOM_SEC_DATA_SVC_NUM;
     }
+    char devId[DEVICE_ID_MAX_STR_LEN + 1] = { 0 };
+    if (SleGetDevIdByConnId(connId, devId) != IOTC_OK) {
+        IOTC_LOGW("get dev id by conn id = [%d] err", connId);
+        return IOTC_ERR_PARAM_INVALID;
+    }
 
     /* 基于是否有data字段来判断是否为控制指令 */
     bool isGetCmd = (IotcJsonGetObj(IotcJsonGetArrayItem(vendorItem, 0), STR_JSON_DATA) == NULL);
     if (isGetCmd) {
         if (IsAllServicesSid(vendorItem)) {
-            return DevSvcProxyCtlReportAll(DEV_REPORT_TYPE_ASYNC);
+            return DevSvcProxyCtlReportByDevId(DEV_REPORT_TYPE_ASYNC, devId);
         } else {
             return SleCustomSecDataGetChar(vendorItem, out, outLen, DevSvcProxyCtlGetCharStates);
         }
@@ -257,7 +264,7 @@ static int32_t ForwardCustomSecData(IotcJson *root, uint8_t **out, uint32_t *out
     }
 
     /* custom sec data 优先由外部回调处理 */
-    int32_t ret = ProductRecvCustomSecData((const uint8_t *)vendor, strlen(vendor));
+    int32_t ret = ProductSleRecvCustomSecData((const uint8_t *)vendor, strlen(vendor));
     IotcJsonFreePrint(vendor);
     if (ret == IOTC_OK) {
         return IOTC_OK;
@@ -265,7 +272,7 @@ static int32_t ForwardCustomSecData(IotcJson *root, uint8_t **out, uint32_t *out
         IOTC_LOGW("custom sec data product error %d", ret);
         return ret;
     }
-
+    //后面的可以删掉的
     if (!IotcJsonIsArray(vendorItem)) {
         IotcJson *vendorArray = NULL;
         ret = BuildVendorArrayFromItem(vendorItem, &vendorArray);
@@ -317,7 +324,7 @@ int32_t PutSleSvcCustomSecData(const SleCmdParam *param, uint8_t **out, uint32_t
 
     *out = NULL;
     *outLen = 0;
-    int32_t ret = PutCustomSecData((char*)param->request, out, outLen);
+    int32_t ret = PutCustomSecData((char *)param->request, out, outLen);
     if (ret != IOTC_OK || *out == NULL) {
         return UtilsGenErrcodeJsonStr(ret, (char **)out, outLen);
     }

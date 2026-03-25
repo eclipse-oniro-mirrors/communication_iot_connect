@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef SLE_PROFILE_H
 #define SLE_PROFILE_H
 
@@ -21,7 +22,7 @@
 extern "C" {
 #endif
 
-/* 蓝牙通信内置服务 */
+/* Sle通信内置服务 */
 #define SLE_SVC_NET_CFG_VER "netCfgVer"
 #define SLE_SVC_DEVICE_INFO "deviceInfo"
 #define SLE_SVC_AUTH_SETUP "authSetup"
@@ -30,6 +31,16 @@ extern "C" {
 #define SLE_SVC_NETCFG "netCfg"
 #define SLE_SVC_CREATE_SESSION "createSession"
 #define SLE_SVC_CUSTOM_SEC_DATA "customSecData"
+
+#define PROFILE_DATA_MESSAGE_JSON   "message"
+#define PROFILE_DATA_ERRCODE        "errcode"
+typedef enum {
+    MSG_PROFILE_TYPE_NONE = 0x0000,
+    MSG_PROFILE_TYPE_REQ  = 0x0001,
+    MSG_PROFILE_TYPE_RSP  = 0x0002,
+    MSG_PROFILE_TYPE_ISSUE = 0x0003,
+} MsgProfileType;
+
 
 int32_t SleProfileInit(void);
 void SleProfileDeinit(void);

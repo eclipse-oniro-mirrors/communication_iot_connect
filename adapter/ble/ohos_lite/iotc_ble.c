@@ -308,6 +308,16 @@ static void MtuChangeCb(int32_t connId, int32_t mtu)
     }
 }
 
+void RegisterServerCb(int32_t status, int32_t serverId, BtUuid *appUuid)
+{
+    (void)(appUuid);
+    
+    IOTC_LOGD("register server cb:status=%d, serverId=%d", status, serverId);
+    g_regGattAppResult.status = status;
+    g_regGattAppResult.serverId = serverId;
+    g_regGattAppResult.has = true;
+}
+
 static BtGattServerCallbacks g_bleGattsCb = {
     .connectServerCb = ConnectServerCb,
     .disconnectServerCb = DisconnectServerCb,
@@ -420,6 +430,8 @@ static int32_t AdapterDescToOhosDesc(IotcAdptBleGattCharDesc *in, BleGattAttr *t
 
 static int32_t AdapterServiceCopyToOhosGattAttr(IotcAdptBleGattService *svc, BleGattAttr *attrList, uint32_t attrNum)
 {
+    (void)(attrNum);
+
     if (svc->uuid == NULL) {
         IOTC_LOGE("uuid is null");
         return IOTC_ERROR;

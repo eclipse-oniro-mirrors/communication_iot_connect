@@ -31,6 +31,7 @@
 #include "m2m_cloud_heartbeat.h"
 #include "m2m_cloud_psk.h"
 #include "m2m_cloud_authcode.h"
+#include "m2m_cloud_dev_mgr.h"
 #include "event_bus.h"
 #include "m2m_cloud_link.h"
 #include "securec.h"
@@ -418,6 +419,11 @@ static void M2mCloudAuthCodeRegRespHandler(const CoapPacket *resp,
     if (ret != IOTC_OK) {
         IOTC_LOGE("start lan search error %d", ret);
     }
+
+    //开启Sle扫描以及初始化
+    if (SleDeviceCloudFsmInit() != IOTC_OK) {
+        IOTC_LOGE("SleDeviceCloudFsmInit error");
+    }
 }
 
 static int32_t CloudFsmAuthCodeHandler(void *param, int32_t cur)
@@ -482,6 +488,21 @@ static int32_t CloudFsmDevInfoSyncHandler(void *param, int32_t cur)
     return M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC_WAIT_RESP;
 }
 
+static int32_t CloudFsmDevIdGetAuthCodeHandler(void *param, int32_t cur)
+{
+    NOT_USED(cur);
+    M2mCloudContext *ctx = (M2mCloudContext *)param;
+
+    int32_t ret = M2mCloudSendRequest(ctx, M2mCloudDevIdRespHandler,
+        M2mCloudBuildDevIdRequest, M2mCloudGetAuthCodeByDevIdSyncOption());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("dev info sync error %d", ret);
+        return M2M_CLOUD_FSM_STATE_CONNECT;
+    }
+
+    return M2M_CLOUD_FSM_STATE_GET_AUTHCODE_WAIT_RESP;
+}
+
 static UtilsFsm *GetM2mCloudFsm(void)
 {
     static const UtilsFsmStateNode CLOUD_FSM[] = {
@@ -502,6 +523,8 @@ static UtilsFsm *GetM2mCloudFsm(void)
         { M2M_CLOUD_FSM_STATE_DEV_INFO_SYNC_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_ONLINE, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_DELETE, NULL },
+        { M2M_CLOUD_FSM_STATE_GET_AUTHCODE, CloudFsmDevIdGetAuthCodeHandler },
+        { M2M_CLOUD_FSM_STATE_GET_AUTHCODE_WAIT_RESP, UtilsFsmStateSelfCirculation },
     };
     static UtilsFsm fsm = UTILS_FSM_DECLARE_INIT("cloud", M2M_CLOUD_FSM_STATE_INIT,
         M2mCloudFsmOnStateChange, CLOUD_FSM);

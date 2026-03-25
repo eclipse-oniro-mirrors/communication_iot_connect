@@ -150,21 +150,6 @@ typedef enum {
     IOTC_SPEKE_SLE_STATE_INIT         = 0x01,
 } SpekeState;
 
-typedef struct {
-    IotcDeviceInfo devInfo; // 下挂的生态设备信息（SLE连接后,从生态设备处获取）
-    uint8_t linkType; // 链路类型
-    // 云端下发的生态设备信息（SLE连接后，从生态设备处获取，详见配网和注册激活流程）
-    char devId[DEVICE_ID_MAX_STR_LEN + 1];
-    char secret[CLOUD_SECRET_MAX_STR_LEN + 1];
-    uint8_t psk[CLOUD_PSK_MAX_LEN];
-    char uidHash[BLE_UID_HASH_LEN + 1];
-    char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
-    uint8_t authCode[BLE_AUTHCODE_LEN];
-    uint16_t connID;
-    uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
-    SpekeState isSecure;
-} SleDeviceInfo;
-
 typedef enum {
     IOTC_CONN_SLE_STATE_NONE          = 0x00,   /*!< @if Eng SLE ACB connect state of none
                                                @else   SLE ACB 未连接状态 @endif */
@@ -178,6 +163,7 @@ typedef struct {
     uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
     uint16_t connID;
     IotcConnSleState status;
+    uint8_t type;
 } SleConnRetDeviceInfo;
 
 #ifdef __cplusplus

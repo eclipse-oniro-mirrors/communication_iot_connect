@@ -15,12 +15,9 @@
 set(IOTC_SRC_LIST
     ${IOTC_SRC_LIST}
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_profile.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_auth_setup.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_clear_dev_reg_info.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_create_session.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_ctx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_custom_sec_data.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_device_info.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_net_cfg_ver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_netcfg.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_svc_speke.c

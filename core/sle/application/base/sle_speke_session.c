@@ -17,6 +17,7 @@
 #include "utils_assert.h"
 #include "security_speke.h"
 #include "event_bus_sub.h"
+#include "event_bus_pub.h"
 #include "sle_linklayer.h"
 #include "ble_linklayer.h"
 #include "iotc_errcode.h"
@@ -26,11 +27,14 @@
 #include "product_adapter.h"
 #include "utils_list.h"
 #include "sle_linklayer_encrypt_speke.h"
+#include "utils_mutex_global.h"
+#include "sle_comm_status.h"
 
 #define SLE_SESSION_NUM_LIMIT    64
 typedef struct {
     SpekeSession *sleSpekeSess;
-    uint32_t connSessionId;
+    uint16_t connSessionId;
+    uint8_t use; // 0: not used, 1: used
     ListEntry node;
 } SleSessionNode;
 
@@ -38,16 +42,50 @@ typedef struct {
 static ListEntry g_sleSpekeSessList = LIST_DECLARE_INIT(&g_sleSpekeSessList);
 static int32_t g_sleSpekeErrCode = IOTC_OK;
 
+static int32_t GetSleSessionConnId(SpekeSession *sleSpekeSess, uint16_t *connId)
+{
+    ListEntry *item;
+
+    (void)UtilsGlobalMutexLock();
+
+    bool found = false;
+    LIST_FOR_EACH_ITEM(item, &g_sleSpekeSessList) {
+        SleSessionNode *spekeNode = CONTAINER_OF(item, SleSessionNode, node);
+        if (spekeNode->sleSpekeSess == sleSpekeSess) {
+            *connId = spekeNode->connSessionId;
+            found = true;
+            break;
+        }
+    }
+
+    UtilsGlobalMutexUnlock();
+
+    if (found) {
+        return IOTC_OK;
+    } else {
+        IOTC_LOGE("No matching session found in the list");
+        return IOTC_ERROR;
+    }
+}
 
 static SpekeSession *GetSleSessionNode(uint8_t connSessionId)
 {
     ListEntry *item;
+    (void)UtilsGlobalMutexLock();
     LIST_FOR_EACH_ITEM(item, &g_sleSpekeSessList) {
         SleSessionNode *spekeNode = CONTAINER_OF(item, SleSessionNode, node);
+        if (spekeNode == NULL) {
+            IOTC_LOGE("spekeNode is null");
+            return NULL;
+        }
+
         if (spekeNode->connSessionId == connSessionId) {
+            spekeNode->use = 1;
+            UtilsGlobalMutexUnlock();
             return spekeNode->sleSpekeSess;
         }
     }
+    UtilsGlobalMutexUnlock();
     return NULL;
 }
 
@@ -55,11 +93,17 @@ static void SleSessionNodeRelease(void)
 {
     ListEntry *item;
     ListEntry *next;
+    (void)UtilsGlobalMutexLock();
     LIST_FOR_EACH_ITEM_SAFE(item, next, &g_sleSpekeSessList) {
         SleSessionNode *spekeNode = CONTAINER_OF(item, SleSessionNode, node);
+        if (spekeNode == NULL) {
+            IOTC_LOGE("spekeNode is null");
+            return;
+        }
         LIST_REMOVE(&spekeNode->node);
         SpekeFreeSession(spekeNode->sleSpekeSess);
     }
+    UtilsGlobalMutexUnlock();
 }
 
 
@@ -83,7 +127,9 @@ static int32_t SleSessionNodeRegister(SpekeSession *sessNode, uint32_t connSessi
     SleSessionNode *sleSessionNode = (SleSessionNode *)IotcCalloc(1, sizeof(SleSessionNode));
     CHECK_RETURN_LOGE(sleSessionNode != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc sleSessionNode err");
     sleSessionNode->sleSpekeSess = sessNode;
+    (void)UtilsGlobalMutexLock();
     LIST_INSERT_BEFORE(&sleSessionNode->node, &g_sleSpekeSessList);
+    UtilsGlobalMutexUnlock();
 
     return IOTC_OK;
 }
@@ -100,10 +146,20 @@ static int32_t GetPinCode(SpekeSession *session, void *user, uint8_t *pinCode, u
 
 static int32_t NotifySpekeFinished(SpekeSession *session, void *user, int32_t errorCode)
 {
-    NOT_USED(session);
     NOT_USED(user);
     g_sleSpekeErrCode = errorCode;
     IOTC_LOGN("speke errcode:%d", errorCode);
+
+    uint16_t connSessionId = 0;
+    if (GetSleSessionConnId(session, &connSessionId) != IOTC_OK) {
+        IOTC_LOGE("get sle session connId failed");
+        return IOTC_ERROR;
+    }
+    NotifyFinishedStatus status = {0};
+    status.errorCode = errorCode;
+    status.connSessionId = connSessionId;
+
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_SPEKE_FINISHED, (void *)&status, sizeof(NotifyFinishedStatus));
     return IOTC_OK;
 }
 

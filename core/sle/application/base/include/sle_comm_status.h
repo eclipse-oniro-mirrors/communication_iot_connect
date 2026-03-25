@@ -12,21 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_DEVICE_INFO_H
-#define SLE_SVC_DEVICE_INFO_H
+
+#ifndef SLE_COMM_STATUS_H
+#define SLE_COMM_STATUS_H
 
 #include <stdint.h>
-#include "sle_linklayer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct {
+    int32_t errorCode;
+    uint16_t connSessionId;
+} NotifyFinishedStatus;
 
-int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SLE_SVC_DEVICE_INFO_H */
+#endif /* SLE_COMM_STATUS_H */

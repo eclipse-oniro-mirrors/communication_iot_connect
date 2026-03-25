@@ -12,20 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SLE_SVC_AUTH_SETUP_H
-#define SLE_SVC_AUTH_SETUP_H
-
+#ifndef SLE_PRINT_DATA_H
+#define SLE_PRINT_DATA_H
+#include "utils_json.h"
 #include <stdint.h>
-#include "sle_linklayer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t GetSleSvcAuthSetup(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
+void SlePrintfData(const uint8_t *data, uint16_t totalLen);
+int32_t SleJsonGetString(const IotcJson *json, const char *key, const char **outStr);
+int32_t SleJsonGetNum(const IotcJson *json, const char *key, int64_t *outNum);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SLE_SVC_AUTH_SETUP_H */
+#endif /* SLE_PRINT_DATA_H*/

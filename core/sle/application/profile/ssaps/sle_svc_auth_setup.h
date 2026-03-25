@@ -12,30 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DEVICE_CONTROL_H
-#define DEVICE_CONTROL_H
+#ifndef SLE_SVC_AUTH_SETUP_H
+#define SLE_SVC_AUTH_SETUP_H
 
-#include <stdbool.h>
 #include <stdint.h>
-#include "iotc_json.h"
-#include "iotc_svc_dev.h"
-
+#include "sle_linklayer.h"
+#include "sle_profile.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t DeviceControlReportAll(DevReportType type);
-
-// devId 控制对应的设备
-int32_t DeviceControlReportByDevId(DevReportType type, const char *devId);
-
-int32_t DeviceControlGetCharStates(const IotcJson *inArray, IotcJson **outArray);
-
-/* outArray为空则不会返回属性修改结果，无论是否为空，都会一次触发异步上报 */
-int32_t DeviceControlPutCharStates(const IotcJson *inArray, IotcJson **outArray);
+/**
+ * @brief Get SLE service auth setup
+ *
+ * @param param Command parameter
+ * @param out Output buffer
+ * @param outLen Output buffer length
+ *
+ * @return 0: Success, others: Failed
+ */
+int32_t GetSleSvcAuthSetup(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DEVICE_CONTROL_H */
+#endif /* SLE_SVC_AUTH_SETUP_H */

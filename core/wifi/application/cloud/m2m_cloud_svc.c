@@ -20,8 +20,10 @@
 #include "m2m_cloud_ctx.h"
 #include "m2m_cloud_fsm.h"
 #include "m2m_cloud_report.h"
+#include "m2m_cloud_response.h"
 #include "utils_assert.h"
 #include "m2m_cloud_link.h"
+#include <string.h>
 
 static const char *M2M_CLOUD_SVC_NAME = "CLOUD";
 
@@ -31,12 +33,34 @@ static void M2mCloudServiceStopInner(M2mCloudContext *ctx)
     M2mCloudLinkDeinit(ctx);
 }
 
+static int32_t M2mCloudIsRespMessageType(const IotcJson *msg)
+{
+    if (msg == NULL) {
+        IOTC_LOGE("msg is null");
+        return IOTC_ERROR;
+    }
+    const char *src = IotcJsonGetStr(IotcJsonGetObj(msg, STR_JSON_MSG_ID));
+    if (strcmp(src, "0") != 0) {
+        return IOTC_OK;
+    }
+    IOTC_LOGI("msg is not response message");
+    return IOTC_ERROR;
+}
+
 static int32_t M2mCloudDeviceReportMessageHandler(const ServiceMessage *req, ServiceResponseInfo *resp)
 {
     NOT_USED(resp);
     CHECK_RETURN_LOGW(req != NULL && req->msg != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    int32_t ret = M2mCloudReportMessage(req->msg, GetM2mCloudCtx());
+    int32_t ret = IOTC_OK;
+
+    //判断是否是响应消息
+    if (M2mCloudIsRespMessageType(req->msg) == IOTC_OK) {
+        ret = M2mCloudResponseMessage(req->msg);
+    } else {
+        ret = M2mCloudReportMessage(req->msg, GetM2mCloudCtx());
+    }
+
     if (ret != IOTC_OK) {
         IOTC_LOGW("local ctl report error %d", ret);
         return ret;

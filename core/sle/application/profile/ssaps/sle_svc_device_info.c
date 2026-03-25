@@ -25,8 +25,8 @@
 #include "service_proxy.h"
 #include "iotc_svc.h"
 #include "dev_info.h"
-
-#define PROT_TYPE_MAX_LEN 4
+#include "config_authinfo.h"
+#include "sle_print_data.h"
 
 static int32_t BuildDeviceInfo(IotcJson *root)
 {
@@ -67,18 +67,27 @@ static int32_t BuildVendor(IotcJson *root)
         IOTC_LOGE("create vendor err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
-    int32_t ret = BuildDeviceInfo(devInfo);
+
+    DevAuthInfo authInfo = {0};
+    bool isAuthInfoExist = false;
+    if (DevSvcProxyGetAuthInfo(&isAuthInfoExist, &authInfo) != IOTC_OK) {
+        IOTC_LOGE("get auth info err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+
+    int32_t ret = IotcJsonAddStr2Obj(root, STR_JSON_DEVID, authInfo.devId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("get auth info err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+
+    ret = BuildDeviceInfo(devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("build vendor err ret=%d", ret);
         IotcJsonDelete(devInfo);
         return ret;
     }
-    ret = IotcJsonAddStr2Obj(devInfo, STR_JSON_DEVID, "devId1234567890" /* h获取设备id */);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("add device id err ret=%d", ret);
-        IotcJsonDelete(devInfo);
-        return ret;
-    }
+
     ret = IotcJsonAddItem2Obj(root, STR_JSON_DEVICE_INFO, devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add device info err ret=%d", ret);
@@ -118,7 +127,7 @@ static int32_t BuildAll(IotcJson *root)
     return IOTC_OK;
 }
 
-int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen)
+static int32_t GetSleSvcDeviceInfoReq(const uint16_t connId, uint8_t **out, uint32_t *outLen)
 {
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
     *out = NULL;
@@ -128,42 +137,13 @@ int32_t GetSleSvcDeviceInfoReq(uint8_t **out, uint32_t *outLen)
         IOTC_LOGE("create err");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
-
-    int32_t ret;
+    int32_t ret = 0;
     do {
-        if (IotcJsonAddStr2Obj(root, STR_JSON_PRODUCT_ID, ModelGetDevProId()) != IOTC_OK) {
-            IOTC_LOGE("add prod id err");
-            return IOTC_ADAPTER_JSON_ERR_ADD;
-        }
-
-        char *outStr = UtilsJsonPrintByMalloc(root);
-        if (outStr == NULL) {
-            IOTC_LOGE("json print err");
-            ret = IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
+        if (IotcJsonAddNum2Obj(root, PROFILE_DATA_MESSAGE_JSON, MSG_PROFILE_TYPE_RSP) != IOTC_OK) {
+            IOTC_LOGE("add msg type err ret=%d", ret);
             break;
         }
-        *out = (uint8_t *)outStr;
-        *outLen = strlen(outStr);
-        ret = IOTC_OK;
-    } while (false);
-    IotcJsonDelete(root);
-    return ret;
-}
 
-int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
-{
-    NOT_USED(param);
-    CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
-
-    *out = NULL;
-    *outLen = 0;
-    IotcJson *root = IotcJsonCreate();
-    if (root == NULL) {
-        IOTC_LOGE("create err");
-        return IOTC_ADAPTER_JSON_ERR_CREATE;
-    }
-    int32_t ret;
-    do {
         ret = BuildAll(root);
         if (ret != IOTC_OK) {
             IOTC_LOGE("build err ret=%d", ret);
@@ -180,6 +160,23 @@ int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *o
         ret = IOTC_OK;
     } while (false);
     IotcJsonDelete(root);
+    return ret;
+}
 
+int32_t GetSleSvcDeviceInfo(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
+{
+    CHECK_RETURN_LOGW((param != NULL) && (out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
+    IotcJson *root = IotcJsonParse((const char *)param->request);
+    if (root == NULL) {
+        IOTC_LOGE("DeviceInfo proc reqPayload err");
+        return IOTC_ADAPTER_JSON_ERR_PARSE;
+    }
+
+    int32_t ret = GetSleSvcDeviceInfoReq(param->connId, out, outLen);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("GetSleSvcDeviceInfoReq err");
+    }
+
+    IotcJsonDelete(root);
     return ret;
 }

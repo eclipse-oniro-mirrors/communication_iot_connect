@@ -100,6 +100,7 @@ typedef struct {
 #define STR_JSON_MODE_RESP      "modeResp"
 #define STR_JSON_VER "ver"
 #define STR_JSON_SEQ "seq"
+#define STR_JSON_MSG_ID      "msgId"
 #define STR_JSON_DEVICE_INFO "deviceInfo"
 #define STR_JSON_MAC "mac"
 #define STR_JSON_BLE_MAC "bleMac"

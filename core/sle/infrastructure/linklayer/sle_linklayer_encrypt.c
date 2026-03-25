@@ -52,6 +52,7 @@ static int32_t UnencryptedBuffDec(uint32_t connId, uint8_t *data, uint32_t *data
 static SleEncryptHandler g_encryptSleHandler[] = {
     { SLE_ENC_TYPE_UNENCRYPTED, UnencryptedBuffEnc, UnencryptedBuffDec },
     { SLE_ENC_TYPE_SPEKE, SleLinkLayerSpekeEncrypt, SleLinkLayerSpekeDecrypt },
+    { SLE_ENC_TYPE_SESSKEY, SleLinkLayerSleSessKeyEncrypt, SleLinkLayerSleSessKeyDecrypt },
 };
 
 static SleLinkLayerEncryptType g_encryptSleType = SLE_ENC_TYPE_SPEKE;
@@ -76,6 +77,8 @@ SleLinkLayerEncryptType SleLinkLayerGetEncryptType(void)
     if (SleLinkLayerSessKeyExist()) {
         return SLE_ENC_TYPE_SESSKEY;
     }
+    IOTC_LOGI("ll get enc type:%d", g_encryptSleType);
+    g_encryptSleType = SLE_ENC_TYPE_SPEKE;
     return g_encryptSleType;
 }
 
@@ -91,7 +94,7 @@ int32_t SleLinkLayerDecryptData(uint32_t connId, uint8_t *data, uint32_t *dataLe
         return g_encryptSleHandler[i].decryptCb(connId, data, dataLen);
     }
 
-    IOTC_LOGE("ble link layer decrypt type:%d err", encryptType);
+    IOTC_LOGE("Sle link layer decrypt type:%d err", encryptType);
     return IOTC_CORE_SLE_LL_ERR_ENCRYPT_TYPE;
 }
 
@@ -110,6 +113,6 @@ int32_t SleLinkLayerEncryptData(uint32_t connId, const SleLinkLayerEncryptParam 
             param->encData, param->encDataLen);
     }
 
-    IOTC_LOGE("ble link layer encrypt type:%d err", param->encryptType);
+    IOTC_LOGE("Sle link layer encrypt type:%d err", encryptType);
     return IOTC_CORE_SLE_LL_ERR_ENCRYPT_TYPE;
 }

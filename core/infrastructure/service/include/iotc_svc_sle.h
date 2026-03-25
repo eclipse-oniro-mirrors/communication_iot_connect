@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef IOTC_SERVICE_SLE_H
 #define IOTC_SERVICE_SLE_H
 #include <stdint.h>
@@ -50,7 +51,7 @@ typedef int32_t (*SleDisconnectDevice)(const IotcAdptSleDeviceAddr *addr);
 typedef int32_t (*SleDefConnectionParamSet)(const IotcAdptSleDefaultConnectParam *param);
 typedef int32_t (*SleRecvNetCfgInfo)(const char *netInfo, uint32_t len);
 typedef int32_t (*SleRecvCustomSecData)(const uint8_t *data, uint32_t len);
-typedef int32_t (*SleSendCustomSecData)(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len);
+typedef int32_t (*SleSendCustomSecData)(const char *devId, const uint8_t *data, uint32_t len);
 typedef int32_t (*SleSendIndicateData)(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 
@@ -77,7 +78,7 @@ typedef struct {
 
 int32_t SleSvcProxyStartAdv(uint32_t ms);
 int32_t SleSvcProxyStopAdv(void);
-int32_t SleSvcProxySendCustomSecData(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len);
+int32_t SleSvcProxySendCustomSecData(const char *devId, const uint8_t *data, uint32_t len);
 int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 

@@ -58,6 +58,8 @@ static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **state
             ret = IOTC_CORE_PROF_MDL_ERR_SVC_NO_SID;
             break;
         }
+        statesTmp[i].devId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_DEV_ID)));
+        statesTmp[i].msgId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_MSG_ID)));
         statesTmp[i].data = (char *)UtilsJsonPrintByMalloc(IotcJsonGetObj(cur, STR_JSON_DATA));
         if (statesTmp[i].data != NULL) {
             statesTmp[i].len = strlen(statesTmp[i].data);
@@ -148,8 +150,19 @@ void MdlFreeGetCharStatesData(GetCharStatesData *charData)
     UTILS_FREE_2_NULL(charData->len);
 }
 
-static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, IotcJson *array)
+static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, IotcJson *data)
 {
+    IotcJson *array = IotcJsonCreateArray();
+    if (IotcJsonAddItem2Obj(data, STR_JSON_VENDOR, array) != IOTC_OK) {
+        IOTC_LOGE("add services error");
+        IotcJsonDelete(array);
+        return IOTC_ADAPTER_JSON_ERR_ADD;
+    }
+    if (num > 0) {
+        IotcJsonAddStr2Obj(data, STR_JSON_DEV_ID, state[0].devId);
+        IotcJsonAddStr2Obj(data, STR_JSON_MSG_ID, state[0].msgId);
+    }
+
     for (uint32_t i = 0; i < num; ++i) {
         IotcJson *curJsonObj = IotcJsonCreate();
         CHECK_RETURN(curJsonObj != NULL, IOTC_ADAPTER_JSON_ERR_CREATE);
@@ -182,20 +195,20 @@ int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, IotcJson 
     CHECK_RETURN_LOGE(state != NULL && num != 0 && num <= IOTC_CONF_PROF_MAX_SVC_NUM && array != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    IotcJson *arrayTmp = IotcJsonCreateArray();
-    if (arrayTmp == NULL) {
+    IotcJson *dataJson = IotcJsonCreate();
+    if (dataJson == NULL) {
         IOTC_LOGW("create array error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
-    int32_t ret = BuildCharStateJson(state, num, arrayTmp);
+    int32_t ret = BuildCharStateJson(state, num, dataJson);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build char states array error %d", ret);
-        IotcJsonDelete(arrayTmp);
+        IotcJsonDelete(dataJson);
         return ret;
     }
 
-    *array = arrayTmp;
+    *array = dataJson;
     return IOTC_OK;
 }
 

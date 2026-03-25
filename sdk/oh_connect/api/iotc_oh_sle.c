@@ -125,7 +125,24 @@ static int32_t OptionSetSleRecvCustomSecDataCallback(va_list args)
     IotcSleRecvCustomSecDataCallback cb = va_arg(args, IotcSleRecvCustomSecDataCallback);
     CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     ProductHooks hooks = {0};
-    hooks.onRecvCustomSecData = cb;
+    hooks.onSleRecvCustomSecData = cb;
+    int32_t ret = ProductRegisterHooks(&hooks, PROD_HOOK_REG_POLICY_COVER_NON_NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("set custom data cb error %d", ret);
+        return ret;
+    }
+
+    IOTC_LOGN("set custom data cb");
+    return IOTC_OK;
+}
+
+
+static int32_t OptionSetSleReportCallback(va_list args)
+{
+    IotcSleProfReportByDevIdCallback cb = va_arg(args, IotcSleProfReportByDevIdCallback);
+    CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    ProductHooks hooks = {0};
+    hooks.onProfReportByDevId = cb;
     int32_t ret = ProductRegisterHooks(&hooks, PROD_HOOK_REG_POLICY_COVER_NON_NULL);
     if (ret != IOTC_OK) {
         IOTC_LOGW("set custom data cb error %d", ret);
@@ -167,6 +184,7 @@ static const OptionItem SLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_SLE_EXIT_AFTER_NETCFG, NULL },
     { IOTC_OH_OPTION_SLE_RECV_NETCFG_CALLBACK, OptionSetSleRecvNetcfgCallback },
     { IOTC_OH_OPTION_SLE_RECV_CUSTOM_DATA_CALLBACK, OptionSetSleRecvCustomSecDataCallback },
+    { IOTC_OH_OPTION_SLE_REPORT_BY_DEVID_CALLBACK, OptionSetSleReportCallback },
     { IOTC_OH_OPTION_SLE_START_UP_ADV_TIMEOUT, OptionSetSleStartUpAdvTimeout },
     { IOTC_OH_OPTION_SLE_GATT_PROFILE_SVC_LIST, OptionSetSleSsapProfileSvcList },
 };
@@ -349,7 +367,6 @@ int32_t IotcOhSleSendIndicateData(const char *svcUuid, const char *charUuid,
 #define SLE_DEVICE_ID_MAX_STR_LEN 40
 typedef struct {
     char devId[SLE_DEVICE_ID_MAX_STR_LEN + 1];
-    uint8_t protType;
     const uint8_t *data;
     uint32_t len;
 } OhSleCustomDataParam;
@@ -360,10 +377,10 @@ static int32_t ReportSvcExecutorCallback(void *inData, void **outData)
     CHECK_RETURN_LOGE(inData != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     OhSleCustomDataParam *param = (OhSleCustomDataParam *)inData;
 
-    return SleSvcProxySendCustomSecData(param->devId, param->protType, param->data, param->len);
+    return SleSvcProxySendCustomSecData(param->devId,  param->data, param->len);
 }
 
-int32_t IotcOhSleSendCustomSecData(const char *devId, uint8_t portType, uint8_t *data, uint32_t len)
+int32_t IotcOhSleSendCustomSecData(const char *devId, uint8_t *data, uint32_t len)
 {
     CHECK_RETURN_LOGE(data != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
@@ -373,7 +390,6 @@ int32_t IotcOhSleSendCustomSecData(const char *devId, uint8_t portType, uint8_t 
         IOTC_LOGE(" sle ext devId cpy fail");
         return -1;
     }
-    param.protType = portType;
     param.data = data;
     param.len = len;
 
@@ -390,32 +406,11 @@ int32_t IotcOhSleSendCustomSecData(const char *devId, uint8_t portType, uint8_t 
     return IOTC_OK;
 }
 
-static int32_t FindDeviceInfoCallback(void* inData, void** outData)
-{
-    const char* devId = (const char*)inData;
-    return SleSvcProxyFindDeviceInfo(devId, outData);
-}
-
-typedef struct {
-    char devId[SLE_DEVICE_ID_MAX_STR_LEN + 1];
-    void *info;
-} OhSleFindDeviceInfoParam;
 
 int32_t IotcOhFindDeviceInfo(const char *devId, void **info)
 {
     CHECK_RETURN_LOGE(devId && info, IOTC_ERR_PARAM_INVALID, "null pointer");
     CHECK_RETURN_LOGE(*info == NULL, IOTC_ERR_PARAM_INVALID, "info not null initialized");
 
-    int32_t errcode = IOTC_OK;
-    int32_t ret = SchedAsyncExecutorWait(
-        FindDeviceInfoCallback,
-        (void*)devId,
-        info,
-        &errcode,
-        IOTC_CONF_API_WAIT_MAX_TIME);
-    if (ret != IOTC_OK) {
-        IOTC_LOGF("executor find device info error %d", ret);
-        return ret;
-    }
-    return IOTC_OK;
+    return SleSvcProxyFindDeviceInfo(devId, info);
 }

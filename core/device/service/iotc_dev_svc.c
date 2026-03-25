@@ -168,6 +168,7 @@ int32_t DeviceServiceInit(void)
 
     static const DevSvcApi DEVICE_SERVICE_API = {
         .onReportAll = DeviceControlReportAll,
+        .onReportByDevId = DeviceControlReportByDevId,
         .onGetChar = DeviceControlGetCharStates,
         .onPutChar = DeviceControlPutCharStates,
         .onReportChar = ProfileReportCharState,
