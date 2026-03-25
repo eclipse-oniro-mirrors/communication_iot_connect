@@ -24,7 +24,13 @@ static const SleSvcApi *GetSleSvcApi(void)
     int32_t ret = ServiceProxyGetApiHandler(IOTC_SERVICE_ID_SLE, (const void **)&sleApi);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get sle api error %d", ret);
+        /* service 1792 无效等异常场景下，尝试轻量级自恢复：先拉起 SLE 服务再重试一次 */
+        (void)ServiceProxyStartService(IOTC_SERVICE_ID_SLE, NULL);
+        ret = ServiceProxyGetApiHandler(IOTC_SERVICE_ID_SLE, (const void **)&sleApi);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("retry get sle api error %d", ret);
         return NULL;
+    }
     }
     return sleApi;
 }

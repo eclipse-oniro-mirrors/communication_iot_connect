@@ -46,8 +46,8 @@ static void EventBusStartSleSvcCallback(uint32_t event, void *param, uint32_t le
     NOT_USED(len);
     if (UtilsGetComboType() == COMBO_TYPE_COMBO &&
         DevSvcProxyGetBindStatus() == DEV_BIND_STATUS_BIND) {
-        IOTC_LOGN("binded");
-        return;
+        /* 设备已绑定场景下仍然需要通过 SLE 下发控制指令，不再禁止启动 SLE 服务 */
+        IOTC_LOGN("binded, start sle service for control");
     }
 
     SleSvcInitParam svcParam = {0};
@@ -74,9 +74,8 @@ static void CloseSleService(uint32_t event, void *param, uint32_t len)
     if (!DevSvcProxyGetOnlineStatus()) {
         return;
     }
-    (void)EventBusUnsubscribe(CloseSleService);
-    (void)ServiceProxyStopService(IOTC_SERVICE_ID_SLE, NULL);
-    IOTC_LOGN("stop sle service success");
+    /* 设备在线且需要通过 SLE 进行控制，下发期间保持 SLE 服务常驻 */
+    IOTC_LOGN("CloseSleService event, keep sle service running for control");
 }
 
 static int32_t IotcOhSleMainInit(void)

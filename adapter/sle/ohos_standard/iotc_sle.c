@@ -784,14 +784,16 @@ static int32_t IotcSleWriteSync(uint8_t client_id, uint16_t conn_id, ssapc_write
 {
     int32_t ret = -1;
     int sflag = 0;
-    uint64_t kht_before_get_jiffies = 0, kht_after_get_jiffies = 0;
-    uint64_t after_us = 0;
-    uint32_t wait_min_time_us = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125); // 最少等待1个发送间隔(可以是连接间隔)
+    uint64_t khtBeforeGetJiffies = 0;
+    uint64_t khtAfterGetJiffies = 0;
+    uint64_t afterUs = 0;
+    uint32_t waitMinTimeUs = (SLE_CONNECT_UPDATE_INTERVAL_HDI * 125); // 最少等待1个发送间隔(可以是连接间隔)
     int retry = 2000; // 最多等待2000个连接间隔时间
-    kht_before_get_jiffies = IotcSleClockGettimeUsLite();
-    after_us = kht_before_get_jiffies + wait_min_time_us; // 防止溢出回卷, 等待超时时间
+    khtBeforeGetJiffies = IotcSleClockGettimeUsLite();
+    afterUs = khtBeforeGetJiffies + waitMinTimeUs; // 防止溢出回卷, 等待超时时间
+    bool keepLooping = true;
 
-    while (1) {
+    while (keepLooping) {
         if (sflag == 0 && gle_tx_acb_data_num_get() > 0) {
             if (isReq) {
                 ret = ssapc_write_req(client_id, conn_id, param);
@@ -1093,14 +1095,6 @@ int32_t IotcSleSetSeekParam(const IotcAdptSleSeekParam *param)
 
 int32_t IotcSleStartSeek(void)
 {
-    /*
-    if(g_clientState != IOTC_SLE_ENABLE)
-    {
-        IOTC_LOGE("SLE is not enabled or seek has already started state = %d!", g_clientState);
-        return IOTC_ERROR;
-    }
-        */
-
     if (SleStartSeek() != IOTC_OK) {
         IOTC_LOGE("SLE start seek failed!");
         return IOTC_ERROR;

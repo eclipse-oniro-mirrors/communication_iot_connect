@@ -587,7 +587,8 @@ const CloudOption *M2mCloudEcoDevStateSyncOption(void)
     return &SYNC_OPTION;
 }
 
-int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode, char *devId)
+int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp,
+    int32_t *errcode, char *devId, size_t devIdLen)
 {
     CHECK_RETURN_LOGW(
         ctx != NULL && resp != NULL && errcode != NULL && resp->payload.data != NULL && resp->payload.len != 0,
@@ -606,9 +607,9 @@ int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacke
         return ret;
     }
 
-    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, sizeof(devId));
+    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, devIdLen);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("json get errcode error %d", ret);
+        IOTC_LOGE("json get devId error %d", ret);
         IotcJsonDelete(respJson);
         return ret;
     }

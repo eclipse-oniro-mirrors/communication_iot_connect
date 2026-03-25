@@ -98,6 +98,35 @@ static int32_t SaveDeviceInfoDetails(const IotcJson *devInfoJson, IotcConDeviceI
     return IOTC_OK;
 }
 
+static int32_t ParseAndCopyDevInfo(const IotcJson *devInfoJson, IotcConDeviceInfo *deviceConnInfo)
+{
+    if (SleJsonGetString(devInfoJson, STR_JSON_MODEL, &deviceConnInfo->devInfo->model) != IOTC_OK) {
+        IOTC_LOGE("model copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_DEV_TYPE, &deviceConnInfo->devInfo->devTypeId) != IOTC_OK) {
+        IOTC_LOGE("devType copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_MANU, &deviceConnInfo->devInfo->manuId) != IOTC_OK) {
+        IOTC_LOGE("manu copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_FWV, &deviceConnInfo->devInfo->fwv) != IOTC_OK) {
+        IOTC_LOGE("vendor copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_HWV, &deviceConnInfo->devInfo->hwv) != IOTC_OK) {
+        IOTC_LOGE("hwv copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_SWV, &deviceConnInfo->devInfo->swv) != IOTC_OK) {
+        IOTC_LOGE("swv copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    return IOTC_OK;
+}
+
 static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
 {
     IotcConDeviceInfo *deviceConnInfo = SleGetConnectionInfoByConnId(connId);
@@ -141,40 +170,9 @@ static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
 
     IOTC_LOGD("get devInfoJson '%s' ", IotcJsonPrint(devInfoJson));
 
-    if(SleJsonGetString(devInfoJson,  STR_JSON_MODEL , &deviceConnInfo->devInfo->model) != IOTC_OK)
-    {
-        IOTC_LOGE("model copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_DEV_TYPE ,&deviceConnInfo->devInfo->devTypeId) != IOTC_OK)
-    {
-        IOTC_LOGE("devType copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_MANU ,&deviceConnInfo->devInfo->manuId) != IOTC_OK)
-    {
-        IOTC_LOGE("manu copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_FWV ,&deviceConnInfo->devInfo->fwv) != IOTC_OK)
-    {
-        IOTC_LOGE("vendor copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_HWV ,&deviceConnInfo->devInfo->hwv) != IOTC_OK)
-    {
-        IOTC_LOGE("hwv copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
-    }
-
-    if(SleJsonGetString(devInfoJson,  STR_JSON_SWV ,&deviceConnInfo->devInfo->swv) != IOTC_OK)
-    {
-        IOTC_LOGE("swv copy err");
-        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    int32_t retDev = ParseAndCopyDevInfo(devInfoJson, deviceConnInfo);
+    if (retDev != IOTC_OK) {
+        return retDev;
     }
 
     IOTC_LOGI("SaveDeviceInfo end!! ");

@@ -28,7 +28,8 @@ IotcJson *M2mCloudBuildDevStatusSyncRequest(M2mCloudContext *ctx);
 
 int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode);
 
-int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode, char* devId);
+int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp,
+    int32_t *errcode, char *devId, size_t devIdLen);
 
 const CloudOption *M2mCloudGetDevInfoSyncOption(void);
 

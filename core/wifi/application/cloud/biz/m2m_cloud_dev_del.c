@@ -24,35 +24,25 @@
 #include "iotc_event.h"
 #include "fwk_main.h"
 
-static int32_t SendData2SubDev(const CoapPacket *req)
+static IotcJson *BuildRestartNotifyJson(const char *devId)
 {
-    /* 获取Devid */
-    IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
-    if (dataObj == NULL) {
-        IOTC_LOGW("invalid data json");
-        return IOTC_ERROR;
-    }
-    const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
-
-    /* 创建JSON指针 */
-    /* {"data":[{"st":"restart","data":{"restart":1}}],"sid":"restart","msgId":"123456789","devId":"xxx"} */
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
         IOTC_LOGE("Failed to create respJson JSON");
-        return IOTC_ERROR;
+        return NULL;
     }
     IotcJson *payload = IotcJsonCreate();
     if (payload == NULL) {
         IOTC_LOGE("Failed to create payload JSON");
         IotcJsonDelete(respJson);
-        return IOTC_ERROR;
+        return NULL;
     }
     IotcJson *dataarray = IotcJsonCreateArray();
     if (dataarray == NULL) {
         IOTC_LOGE("Failed to create dataarray JSON");
         IotcJsonDelete(respJson);
         IotcJsonDelete(payload);
-        return IOTC_ERROR;
+        return NULL;
     }
     IotcJson *data = IotcJsonCreate();
     if (data == NULL) {
@@ -60,7 +50,7 @@ static int32_t SendData2SubDev(const CoapPacket *req)
         IotcJsonDelete(respJson);
         IotcJsonDelete(payload);
         IotcJsonDelete(dataarray);
-        return IOTC_ERROR;
+        return NULL;
     }
     IotcJsonAddNum2Obj(data, "restart", 1);
     IotcJsonAddItem2Obj(payload, "data", data);
@@ -70,6 +60,23 @@ static int32_t SendData2SubDev(const CoapPacket *req)
     IotcJsonAddStr2Obj(respJson, "sid", "restart");
     IotcJsonAddStr2Obj(respJson, "msgId", "123456789");
     IotcJsonAddStr2Obj(respJson, "devId", devId);
+    return respJson;
+}
+
+static int32_t SendData2SubDev(const CoapPacket *req)
+{
+    IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    if (dataObj == NULL) {
+        IOTC_LOGW("invalid data json");
+        return IOTC_ERROR;
+    }
+    const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
+
+    IotcJson *respJson = BuildRestartNotifyJson(devId);
+    IotcJsonDelete(dataObj);
+    if (respJson == NULL) {
+        return IOTC_ERROR;
+    }
 
     IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
@@ -81,7 +88,6 @@ static int32_t SendData2SubDev(const CoapPacket *req)
 
     int32_t ret = DevSvcProxyCtlPutCharStates(array, NULL);
     IotcJsonDelete(array);
-
     return ret;
 }
 

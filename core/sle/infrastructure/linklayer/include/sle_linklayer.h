@@ -72,10 +72,14 @@ typedef struct {
 
 
 typedef struct {
-    int32_t (*sleSessKeyEncrypt)(uint16_t connId, const uint8_t *data, uint32_t dataLen, uint8_t *outBuff, uint32_t outBuffLen);
-    int32_t (*sleSessKeyDecrypt)(uint16_t connId, const uint8_t *data, uint32_t dataLen, uint8_t *outBuff, uint32_t outBuffLen);
-    int32_t (*sleSessKeyCalHmac)(uint16_t connId, const uint8_t *data, uint32_t dataLen, uint8_t *calHmac, uint32_t calHmacLen);
-    int32_t (*sleSessKeyCheckHmac)(uint16_t connId, const uint8_t *data, uint32_t dataLen, const uint8_t *hmacBuf, uint32_t hmacLen);
+    int32_t (*sleSessKeyEncrypt)(uint16_t connId, const uint8_t *data, uint32_t dataLen,
+        uint8_t *outBuff, uint32_t outBuffLen);
+    int32_t (*sleSessKeyDecrypt)(uint16_t connId, const uint8_t *data, uint32_t dataLen,
+        uint8_t *outBuff, uint32_t outBuffLen);
+    int32_t (*sleSessKeyCalHmac)(uint16_t connId, const uint8_t *data, uint32_t dataLen,
+        uint8_t *calHmac, uint32_t calHmacLen);
+    int32_t (*sleSessKeyCheckHmac)(uint16_t connId, const uint8_t *data, uint32_t dataLen,
+        const uint8_t *hmacBuf, uint32_t hmacLen);
     bool (*sleSessKeyCheckExist)(uint16_t connId);
     int32_t (*sleSessDelNode)(uint16_t connId);
 } SleLinkLayerSessKeyCallback;

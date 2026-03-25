@@ -266,9 +266,9 @@ int32_t SleDisconnectService(const char *devId)
 
 static void IotcSlePrintData(const uint16_t valueLen, const uint8_t *value)
 {
-    size_t buf_len = (size_t)valueLen * 3 + 1;
-    char *hex_str = malloc(buf_len);
-    if (!hex_str) {
+    size_t bufLen = (size_t)valueLen * 3 + 1;
+    char *hexStr = malloc(bufLen);
+    if (!hexStr) {
         IOTC_LOGI("IotcSlePrintData malloc failed");
         return;
     }
@@ -276,7 +276,7 @@ static void IotcSlePrintData(const uint16_t valueLen, const uint8_t *value)
     size_t remaining = bufLen;
 
     for (uint32_t i = 0; i < valueLen; i++) {
-        int n = snprintf(p, remaining, "%02X ", value[i]);
+        int n = snprintf_s(p, remaining, remaining - 1, "%02X ", value[i]);
         if (n < 0 || (size_t)n >= remaining) {
             break;
         }
@@ -534,7 +534,6 @@ int32_t SleScanServiceStart(void)
 {
     // 调用扫描，说明已经登录了云，拿到了authcode
     if (AuthSetupAndDevInfo() != IOTC_OK) {
-        // DLOGE("AuthSetupAndDevInfo failed");
         return IOTC_ERROR;
     }
 
@@ -545,7 +544,6 @@ int32_t SleScanServiceStart(void)
     }
 
     if (SleSeekCtrlParamSet(&param) != IOTC_OK) {
-        // DLOGE("set seek param failed");
         return IOTC_ERROR;
     }
 

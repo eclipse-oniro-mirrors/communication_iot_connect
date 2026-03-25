@@ -117,17 +117,6 @@ static IotcJson *GenReportJson(const IotcJson *reqJson, const M2mCloudContext *c
         IOTC_LOGW("json add item error %d", ret);
         return NULL;
     }
-    IotcJson *array = IotcJsonCreateArray();
-    if (array == NULL) {
-        IOTC_LOGW("json create error");
-        return NULL;
-    }
-
-    if (ret != IOTC_OK) {
-        IotcJsonDelete(reportJson);
-        IOTC_LOGW("json add item error %d", ret);
-        return NULL;
-    }
     return WrapReportJsonInArray(reportJson);
 }
 
