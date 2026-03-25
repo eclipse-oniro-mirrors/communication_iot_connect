@@ -69,7 +69,7 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvNetCfgInfo);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvCustomSecData);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsBleEnable);
-    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsWifiEnable); 
+    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsWifiEnable);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onSleRecvCustomSecData);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetSurfacePower);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfPutCharState);

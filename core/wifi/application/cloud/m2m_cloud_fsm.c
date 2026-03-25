@@ -421,12 +421,9 @@ static void M2mCloudAuthCodeRegRespHandler(const CoapPacket *resp,
     }
 
     //开启Sle扫描以及初始化
-    if(SleDeviceCloudFsmInit()!= IOTC_OK)
-    {
+    if (SleDeviceCloudFsmInit() != IOTC_OK) {
         IOTC_LOGE("SleDeviceCloudFsmInit error");
     }
-
-
 }
 
 static int32_t CloudFsmAuthCodeHandler(void *param, int32_t cur)

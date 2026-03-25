@@ -33,16 +33,14 @@ static void M2mCloudServiceStopInner(M2mCloudContext *ctx)
     M2mCloudLinkDeinit(ctx);
 }
 
-static int32_t M2mCloudIsRespMessageType(const IotcJson* msg)
+static int32_t M2mCloudIsRespMessageType(const IotcJson *msg)
 {
-    if(msg == NULL)
-    {
+    if (msg == NULL) {
         IOTC_LOGE("msg is null");
         return IOTC_ERROR;
     }
     const char *src = IotcJsonGetStr(IotcJsonGetObj(msg, STR_JSON_MSG_ID));
-    if(strcmp(src, "0") != 0)
-    {
+    if (strcmp(src, "0") != 0) {
         return IOTC_OK;
     }
     IOTC_LOGI("msg is not response message");
@@ -57,12 +55,9 @@ static int32_t M2mCloudDeviceReportMessageHandler(const ServiceMessage *req, Ser
     int32_t ret = IOTC_OK;
 
     //判断是否是响应消息
-    if(M2mCloudIsRespMessageType(req->msg) == IOTC_OK)
-    {
+    if (M2mCloudIsRespMessageType(req->msg) == IOTC_OK) {
         ret = M2mCloudResponseMessage(req->msg);
-    }
-    else
-    {
+    } else {
         ret = M2mCloudReportMessage(req->msg, GetM2mCloudCtx());
     }
 

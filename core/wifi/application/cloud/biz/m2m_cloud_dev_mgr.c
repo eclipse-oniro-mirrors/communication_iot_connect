@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Shenzhe Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,9 +30,12 @@
 #include "utils_fsm.h"
 #include "utils_bit_map.h"
 
-#define MGR_CHANGE_FSM_TO(ctx, state) UtilsFsmSwitch((ctx)->stateManager.fsmCtx, (state));
+static inline void MgrChangeFsmTo(M2mCloudContext *ctx, int32_t state)
+{
+    UtilsFsmSwitch(ctx->stateManager.fsmCtx, state);
+}
 
-typedef enum{
+typedef enum {
     M2M_CLOUD_DEV_STATE_OFFLINE = 0,
     M2M_CLOUD_DEV_STATE_ONLINE = 1,
     M2M_CLOUD_DEV_STATE_PENDING = 2,
@@ -58,13 +61,12 @@ static CloudDeviceListManager g_manager = {
     .online_count = 0
 };
 
-typedef struct
-{
+typedef struct {
     char devId[DEVICE_ID_MAX_STR_LEN + 1];
     char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
     char authCode[BLE_AUTHCODE_LEN];
     int32_t timeout;
-}CloudIssueAuthCode;
+} CloudIssueAuthCode;
 
 static CloudDevInfo *GetCloudDeviceInfo(const char *devId, ListEntry *list)
 {
@@ -84,8 +86,7 @@ static CloudDevInfo *GetCloudDeviceInfo(const char *devId, ListEntry *list)
 
 static CloudDevInfo *GetCloudDeviceInfoOnOne(void)
 {
-    if(LIST_EMPTY(&g_manager.pending_list))
-    {
+    if (LIST_EMPTY(&g_manager.pending_list)) {
         IOTC_LOGW("pending list is empty");
         return NULL;
     }
@@ -93,15 +94,12 @@ static CloudDevInfo *GetCloudDeviceInfoOnOne(void)
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_manager.pending_list) {
         CloudDevInfo *devInfo = CONTAINER_OF(item, CloudDevInfo, list_node);
-        if(devInfo->state == M2M_CLOUD_DEV_STATE_PENDING)
-        {
+        if (devInfo->state == M2M_CLOUD_DEV_STATE_PENDING) {
             return devInfo;
         }
     }
     return NULL;
-
 }
-
 
 static bool IsCloudDeviceInfoExist(const char *devId, ListEntry *list)
 {
@@ -148,15 +146,13 @@ static int32_t AddCloudDeviceInfo(M2mEndDeviceInfo *devInfo, ListEntry *list)
 
 static int32_t MoveCloudDeviceToOnline(const char *devId)
 {
-    if(devId == NULL || devId[0] == '\0')
-    {
+    if (devId == NULL || devId[0] == '\0') {
         IOTC_LOGE("devId is null");
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    CloudDevInfo * cdInfo = GetCloudDeviceInfo(devId, &g_manager.pending_list);
-    if(cdInfo == NULL)
-    {
+    CloudDevInfo *cdInfo = GetCloudDeviceInfo(devId, &g_manager.pending_list);
+    if (cdInfo == NULL) {
         IOTC_LOGW("Device not found in pending list");
         return IOTC_ERROR;
     }
@@ -174,12 +170,10 @@ static int32_t MoveCloudDeviceToOnline(const char *devId)
     LIST_INSERT_BEFORE(&cdInfo->list_node, &g_manager.online_list);
     (void)UtilsGlobalMutexUnlock();
     return IOTC_OK;
-
 }
 
-
-IotcJson *M2mCloudBuildDevIdRequest(M2mCloudContext *ctx){
-
+IotcJson *M2mCloudBuildDevIdRequest(M2mCloudContext *ctx)
+{
     CHECK_RETURN_LOGW(ctx != NULL, NULL, "param invalid");
     IotcJson *devInfoArr = IotcJsonCreateArray();
     CHECK_RETURN_LOGW(devInfoArr != NULL, NULL, "create json error");
@@ -195,16 +189,14 @@ IotcJson *M2mCloudBuildDevIdRequest(M2mCloudContext *ctx){
         }
 
         CloudDevInfo *oneDevId = GetCloudDeviceInfoOnOne();
-        if(oneDevId == NULL)
-        {
+        if (oneDevId == NULL) {
             IOTC_LOGW("no device info found");
             ret = IOTC_ERROR;
             break;
         }
 
         ret = IotcJsonAddStr2Obj(devinfoObj, STR_JSON_DEVID, oneDevId->info.deviceId);
-        if(ret != IOTC_OK)
-        {
+        if (ret != IOTC_OK) {
             IOTC_LOGW("add devId error %d", ret);
             break;
         }
@@ -220,7 +212,31 @@ IotcJson *M2mCloudBuildDevIdRequest(M2mCloudContext *ctx){
 
     IotcJsonDelete(devInfoArr);
     return NULL;
+}
 
+static int32_t ParseAuthCodeFields(IotcJson *respJson, CloudIssueAuthCode *authcode)
+{
+    int32_t ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, authcode->devId, sizeof(authcode->devId));
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("cloud devId error %d", ret);
+        return IOTC_OK;
+    }
+
+    ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE, authcode->authCode, sizeof(authcode->authCode));
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("json get authcode error %d", ret);
+        return ret;
+    }
+    IOTC_LOGI("%s json get STR_JSON_AUTHCODE  %s", __func__, authcode->authCode);
+
+    ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE_ID, authcode->authCodeId, sizeof(authcode->authCodeId));
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("json get authcodeId error %d", ret);
+        return ret;
+    }
+    IOTC_LOGI("%s json get STR_JSON_AUTHCODE_ID  %s", __func__, authcode->authCodeId);
+    UtilsJsonGetNum(respJson, STR_JSON_TIMEOUT, &authcode->timeout);
+    return IOTC_OK;
 }
 
 int32_t M2mCloudParseAuthCodeByResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode)
@@ -248,38 +264,17 @@ int32_t M2mCloudParseAuthCodeByResponse(M2mCloudContext *ctx, const CoapPacket *
     }
 
     CloudIssueAuthCode respAuthcode = {0};
-    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, respAuthcode.devId, sizeof(respAuthcode.devId));
-    if(ret != IOTC_OK)
-    {
-        IOTC_LOGE("cloud devId error %d", ret);
-        IotcJsonDelete(respJson);
-        return IOTC_OK;
-    }
-
-    ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE, respAuthcode.authCode, sizeof(respAuthcode.authCode));
+    ret = ParseAuthCodeFields(respJson, &respAuthcode);
+    IotcJsonDelete(respJson);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("json get authcode error %d", ret);
-        IotcJsonDelete(respJson);
         return ret;
     }
-    IOTC_LOGI("%s json get STR_JSON_AUTHCODE  %s", __func__, respAuthcode.authCode);
-
-    ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE_ID, respAuthcode.authCodeId, sizeof(respAuthcode.authCodeId));
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("json get authcodeId error %d", ret);
-        IotcJsonDelete(respJson);
-        return ret;
-    }
-    IOTC_LOGI("%s json get STR_JSON_AUTHCODE_ID  %s", __func__, respAuthcode.authCodeId);
-    ret = UtilsJsonGetNum(respJson, STR_JSON_TIMEOUT, &respAuthcode.timeout);
 
     //通知sle模块
-    EventBusPublishSync(IOTC_CORE_SLE_EVENT_AUTH_CODE_SETUP, (void *)&respAuthcode,  sizeof(respAuthcode));
-    IotcJsonDelete(respJson);
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_AUTH_CODE_SETUP, (void *)&respAuthcode, sizeof(respAuthcode));
 
     //切换云测存储的状态
-    if(MoveCloudDeviceToOnline(respAuthcode.devId)!= IOTC_OK)
-    {
+    if (MoveCloudDeviceToOnline(respAuthcode.devId) != IOTC_OK) {
         IOTC_LOGE("move cloud device to online error");
         return IOTC_ERROR;
     }
@@ -300,7 +295,7 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
     }
 
     if (timeout) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -310,7 +305,7 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
 
     int32_t ret = M2mCloudParseAuthCodeByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -318,10 +313,10 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
 
 const CloudOption *M2mCloudGetAuthCodeByDevIdSyncOption(void)
 {
-    static const char *SYS_SYNC[] = {STR_URI_PATH_SYS, STR_URI_PATH_SYNC};
+    static const char *sysSyncUri[] = {STR_URI_PATH_SYS, STR_URI_PATH_SYNC};
     static const CloudOption SYNC_OPTION = {
-        .uri = SYS_SYNC,
-        .num = ARRAY_SIZE(SYS_SYNC),
+        .uri = sysSyncUri,
+        .num = ARRAY_SIZE(sysSyncUri),
         .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
                     UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
                     UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
@@ -332,21 +327,19 @@ const CloudOption *M2mCloudGetAuthCodeByDevIdSyncOption(void)
 
 static void CloudProcessSubData(uint32_t event, void *param, uint32_t len)
 {
-    M2mEndDeviceInfo * devInfo = (M2mEndDeviceInfo *)param;
+    M2mEndDeviceInfo *devInfo = (M2mEndDeviceInfo *)param;
     if (devInfo == NULL) {
         IOTC_LOGE("devInfo is NULL");
         return;
     }
 
     //已经在待同步云测的设备列表中，无需再刷新
-    if(IsCloudDeviceInfoExist(devInfo->deviceId, &g_manager.pending_list))
-    {
+    if (IsCloudDeviceInfoExist(devInfo->deviceId, &g_manager.pending_list)) {
         IOTC_LOGE("deviceId %s is already in pending list", devInfo->deviceId);
         return;
     }
 
-    if(IsCloudDeviceInfoExist(devInfo->deviceId, &g_manager.online_list))
-    {
+    if (IsCloudDeviceInfoExist(devInfo->deviceId, &g_manager.online_list)) {
         IOTC_LOGE("deviceId %s is already in  online list", devInfo->deviceId);
         return;
     }
@@ -354,29 +347,25 @@ static void CloudProcessSubData(uint32_t event, void *param, uint32_t len)
     M2mEndDeviceInfo *deviceInfo = (M2mEndDeviceInfo *)IotcMalloc(sizeof(M2mEndDeviceInfo));
     if (deviceInfo == NULL) {
         IOTC_LOGW("malloc error");
-        return ;
+        return;
     }
 
     (void)memset_s(deviceInfo, sizeof(M2mEndDeviceInfo), 0, sizeof(M2mEndDeviceInfo));
     strcpy_s(deviceInfo->deviceId, DEVICE_ID_MAX_STR_LEN + 1, devInfo->deviceId);
     deviceInfo->online = devInfo->online;
 
-    if(AddCloudDeviceInfo(deviceInfo, &g_manager.pending_list) != IOTC_OK)
-    {
+    if (AddCloudDeviceInfo(deviceInfo, &g_manager.pending_list) != IOTC_OK) {
         IotcFree(deviceInfo);
-        return ;
+        return;
     }
 
     //把状态切换到获取认证码状态
     M2mCloudContext *ctx = GetM2mCloudCtx();
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_GET_AUTHCODE);
-    return ;
-
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_GET_AUTHCODE);
 }
 
 int32_t SleDeviceCloudFsmInit()
 {
-
     static bool isInitialized = false;
 
     if (isInitialized) {
@@ -390,7 +379,7 @@ int32_t SleDeviceCloudFsmInit()
         return ret;
     }
 
-    EventBusPublishSync(IOTC_CORE_SLE_EVENT_START_SEEK_SETUP, NULL,  0);
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_START_SEEK_SETUP, NULL, 0);
 
     isInitialized = true;
     return ret;

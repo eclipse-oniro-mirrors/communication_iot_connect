@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,8 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 
 #ifndef __M2M_CLOUD_RESPONSE_H__
 #define __M2M_CLOUD_RESPONSE_H__
@@ -55,7 +53,8 @@ int32_t M2mCloudResponseMessage(const IotcJson *dataArray);
  * @param cloud_ctx 指向M2M云上下文的指针，包含云交互的必要信息
  * @return 返回新创建的COAP响应节点的指针，用于后续处理或响应
  */
-CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_pkt,const SocketAddr *sock_addr, const M2mCloudContext *cloud_ctx);
+CoapResponeNode *M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_pkt,
+    const SocketAddr *sock_addr, const M2mCloudContext *cloud_ctx);
 
 /**
  * 根据消息ID查找COAP响应节点
@@ -67,7 +66,7 @@ CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_
  * @param devId 设备ID字符串，表示消息所属的设备
  * @return 返回找到的COAP响应节点的指针，如果没有找到则返回NULL
  */
-CoapResponeNode* M2mCloudFindNodeByMsgId( const char *msgId, const char *devId);
+CoapResponeNode *M2mCloudFindNodeByMsgId(const char *msgId, const char *devId);
 
 /**
  * 移除M2M云中的COAP响应节点

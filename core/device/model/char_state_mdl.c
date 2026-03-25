@@ -59,15 +59,7 @@ static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **state
             break;
         }
         statesTmp[i].devId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_DEV_ID)));
-        // if (statesTmp[i].devId == NULL) {
-        //     ret = IOTC_CORE_PROF_MDL_ERR_SVC_NO_SID;
-        //     break;
-        // }
         statesTmp[i].msgId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_MSG_ID)));
-        // if (statesTmp[i].msgId == NULL) {
-        //     ret = IOTC_CORE_PROF_MDL_ERR_SVC_NO_SID;
-        //     break;
-        // }
         statesTmp[i].data = (char *)UtilsJsonPrintByMalloc(IotcJsonGetObj(cur, STR_JSON_DATA));
         if (statesTmp[i].data != NULL) {
             statesTmp[i].len = strlen(statesTmp[i].data);
@@ -161,13 +153,12 @@ void MdlFreeGetCharStatesData(GetCharStatesData *charData)
 static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, IotcJson *data)
 {
     IotcJson *array = IotcJsonCreateArray();
-    if(IotcJsonAddItem2Obj(data, STR_JSON_VENDOR, array)!= IOTC_OK) {
+    if (IotcJsonAddItem2Obj(data, STR_JSON_VENDOR, array) != IOTC_OK) {
         IOTC_LOGE("add services error");
         IotcJsonDelete(array);
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
-    if(num > 0 )
-    {
+    if (num > 0) {
         IotcJsonAddStr2Obj(data, STR_JSON_DEV_ID, state[0].devId);
         IotcJsonAddStr2Obj(data, STR_JSON_MSG_ID, state[0].msgId);
     }

@@ -78,12 +78,9 @@ static int32_t BuildBleCustomSecDataService(IotcJson *item, uint8_t **out, uint3
     }
 
     IotcJson *dupItem = NULL;
-    if(IotcJsonGetObj(item, STR_JSON_VENDOR))
-    {
+    if (IotcJsonGetObj(item, STR_JSON_VENDOR)) {
         dupItem = IotcDuplicateJson(IotcJsonGetObj(item, STR_JSON_VENDOR), true);
-    }
-    else
-    {
+    } else {
         dupItem = IotcDuplicateJson(item, true);
     }
 

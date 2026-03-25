@@ -22,12 +22,27 @@
 #include "iotc_json.h"
 #include "security_random.h"
 
+static IotcJson *WrapReportJsonInArray(IotcJson *reportJson)
+{
+    IotcJson *array = IotcJsonCreateArray();
+    if (array == NULL) {
+        IOTC_LOGW("json create error");
+        return NULL;
+    }
+    int32_t ret = IotcJsonAddItem2Array(array, reportJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add to array error %d", ret);
+        IotcJsonDelete(reportJson);
+        IotcJsonDelete(array);
+        return NULL;
+    }
+    return array;
+}
+
 static IotcJson *GenReportJson(const IotcJson *reqJson, const M2mCloudContext *ctx)
 {
-
-    IotcJson* dataArray = IotcJsonGetObj(reqJson, STR_JSON_VENDOR);
-    if(dataArray == NULL)
-    {
+    IotcJson *dataArray = IotcJsonGetObj(reqJson, STR_JSON_VENDOR);
+    if (dataArray == NULL) {
         IOTC_LOGE("Get Vendor failed");
         return NULL;
     }
@@ -55,35 +70,18 @@ static IotcJson *GenReportJson(const IotcJson *reqJson, const M2mCloudContext *c
 
     //判断是否是桥设备的本身上报
     const char *devId = IotcJsonGetStr(IotcJsonGetObj(reqJson, STR_JSON_DEVID));
-    if(strcmp(devId, "0") != 0)
-    {
+    if (strcmp(devId, "0") != 0) {
         ret = IotcJsonAddStr2Obj(reportJson, STR_JSON_DEVID, ctx->authInfo.loginInfo.devId);
-    }else
-    {
+    } else {
         ret = IotcJsonAddStr2Obj(reportJson, STR_JSON_DEVID, devId);
     }
-
 
     if (ret != IOTC_OK) {
         IotcJsonDelete(reportJson);
         IOTC_LOGW("json add item error %d", ret);
         return NULL;
     }
-    IotcJson *array = IotcJsonCreateArray();
-    if (array == NULL) {
-        IOTC_LOGW("json create error");
-        return NULL;
-    }
-
-    ret = IotcJsonAddItem2Array(array, reportJson);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add to array error %d", ret);
-        IotcJsonDelete(reportJson);
-        IotcJsonDelete(array);
-        return NULL;
-    }
-
-    return array;
+    return WrapReportJsonInArray(reportJson);
 }
 
 int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)

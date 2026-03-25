@@ -35,36 +35,78 @@ typedef struct DeviceInfoReport {
     char     *lastChange;
 } DeviceInfoReport;
 
-
-static int32_t ConstCharCopy(const char *src, const char **out_str)
+static int32_t ConstCharCopy(const char *src, const char **outStr)
 {
-
-    if (*out_str != NULL) {
-        IotcFree((char *)*out_str);
+    if (*outStr != NULL) {
+        IotcFree((char *)*outStr);
     }
 
     char *dup = strdup(src);
     if (dup == NULL) {
         IOTC_LOGE("strdup(%s) failed", src);
-        *out_str = NULL;
+        *outStr = NULL;
         return IOTC_ERROR;
     }
 
-    *out_str = dup;
+    *outStr = dup;
     return IOTC_OK;
 }
 
+static int32_t PopulateDeviceInfo(IotcConDeviceInfo *deviceInfo, const DevAuthInfo *authInfo)
+{
+    if (memcpy_s(deviceInfo->devId, DEVICE_ID_MAX_STR_LEN, authInfo->devId, DEVICE_ID_MAX_STR_LEN) != EOK) {
+        IOTC_LOGE("mencpy_s devId err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (memcpy_s(deviceInfo->uidHash, BLE_UID_HASH_LEN, authInfo->uidHash, BLE_UID_HASH_LEN) != EOK) {
+        IOTC_LOGE("mencpy_s uidHash err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevSn(), &deviceInfo->devInfo->sn) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy sn err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevModel(), &deviceInfo->devInfo->model) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy model err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevTypeId(), &deviceInfo->devInfo->devTypeId) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy devTypeId err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevManuId(), &deviceInfo->devInfo->manuId) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy manuId err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevProId(), &deviceInfo->devInfo->prodId) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy hwv err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevFwv(), &deviceInfo->devInfo->fwv) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy fwv err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevHwv(), &deviceInfo->devInfo->hwv) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy hwv err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    if (ConstCharCopy(ModelGetDevSwv(), &deviceInfo->devInfo->swv) != IOTC_OK) {
+        IOTC_LOGE("ConstCharCopy swv err");
+        return IOTC_ERR_SECUREC_SPRINTF;
+    }
+    return IOTC_OK;
+}
 
 int32_t AuthSetupAndDevInfo()
 {
     SleConnRetDeviceInfo retDev = {0};
-    retDev.connID = GATEWAY_CONNID;//桥设备的假连接ID
+    retDev.connID = GATEWAY_CONNID; //桥设备的假连接ID
     retDev.status = IOTC_CONN_SLE_STATE_CONNECTED;
-    if(SleAddConnDev(&retDev)!= IOTC_OK) {
+    if (SleAddConnDev(&retDev) != IOTC_OK) {
         return IOTC_ERROR;
     }
 
-    IotcConDeviceInfo* deviceInfo = SleGetConnectionInfoByConnId(retDev.connID);
+    IotcConDeviceInfo *deviceInfo = SleGetConnectionInfoByConnId(retDev.connID);
     if (deviceInfo == NULL) {
         IOTC_LOGE("malloc err");
         return IOTC_ERR_NOT_INIT;
@@ -74,80 +116,24 @@ int32_t AuthSetupAndDevInfo()
 
     DevAuthInfo authInfo = {0};
     bool isAuthInfoExist = false;
-    if(DevSvcProxyGetAuthInfo(&isAuthInfoExist, &authInfo)!= IOTC_OK)
-    {
+    if (DevSvcProxyGetAuthInfo(&isAuthInfoExist, &authInfo) != IOTC_OK) {
         IOTC_LOGE("get auth info err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
-    if(!isAuthInfoExist)
-    {
+    if (!isAuthInfoExist) {
         IOTC_LOGE("get auth info err");
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
-    if(memcpy_s(deviceInfo->devId, DEVICE_ID_MAX_STR_LEN, authInfo.devId, DEVICE_ID_MAX_STR_LEN) != EOK)
-    {
-        IOTC_LOGE("mencpy_s devId err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(memcpy_s(deviceInfo->uidHash, BLE_UID_HASH_LEN, authInfo.uidHash, BLE_UID_HASH_LEN) != EOK)
-    {
-        IOTC_LOGE("mencpy_s uidHash err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(ConstCharCopy(ModelGetDevSn(), &deviceInfo->devInfo->sn) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy sn err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if(ConstCharCopy(ModelGetDevModel(), &deviceInfo->devInfo->model) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy model err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if(ConstCharCopy(ModelGetDevTypeId(), &deviceInfo->devInfo->devTypeId) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy devTypeId err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(ConstCharCopy(ModelGetDevManuId(), &deviceInfo->devInfo->manuId) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy manuId err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(ConstCharCopy(ModelGetDevProId(), &deviceInfo->devInfo->prodId) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy hwv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(ConstCharCopy(ModelGetDevFwv(), &deviceInfo->devInfo->fwv) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy fwv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(ConstCharCopy(ModelGetDevHwv(), &deviceInfo->devInfo->hwv) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy hwv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-
-    if(ConstCharCopy(ModelGetDevSwv(), &deviceInfo->devInfo->swv) != IOTC_OK)
-    {
-        IOTC_LOGE("ConstCharCopy swv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
+    int32_t ret = PopulateDeviceInfo(deviceInfo, &authInfo);
+    if (ret != IOTC_OK) {
+        return ret;
     }
 
     IOTC_LOGI("AuthSetupAndDevInfo success ");
     return IOTC_OK;
 }
-
 
 // 保存从生态设备获取到的设备信息到连接信息中
 static int32_t SaveAuthSetupConfigInfo(uint16_t connId, IotcJson *root)
@@ -174,28 +160,15 @@ static int32_t SaveAuthSetupConfigInfo(uint16_t connId, IotcJson *root)
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
-    // if(UtilsJsonGetString(root, STR_JSON_AUTHCODE, deviceInfo->authCode, BLE_AUTHCODE_LEN+ 1) != IOTC_OK)
-    // {
-    //     IOTC_LOGE("GetSleSvcAuthSetup %s proc reqPayload err", STR_JSON_AUTHCODE);
-    //     return IOTC_ADAPTER_JSON_ERR_PARSE;
-    // }
-
     DeviceInfoReport devIdReport = {0};
     devIdReport.online = 1;
-    if(strncpy_s(devIdReport.deviceId, DEVICE_ID_MAX_STR_LEN + 1,deviceInfo->devId, sizeof(deviceInfo->devId))!= EOK)
-    {
+    if (strncpy_s(devIdReport.deviceId, DEVICE_ID_MAX_STR_LEN + 1,
+        deviceInfo->devId, sizeof(deviceInfo->devId)) != EOK) {
         IOTC_LOGE("GetSleSvcAuthSetup strncpy_s %s proc deviceId err", devIdReport.deviceId);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
     //通知云测该设备id上线，获取authcode再下一步
-    EventBusPublishSync(IOTC_EVENT_INNER_CLOUD_SLE_SETUP, (void *)&devIdReport,  sizeof(DeviceInfoReport));
-
-
-    //完成通知
-    // NotifyFinishedStatus status = {0};
-    // status.errorCode = IOTC_OK;
-    // status.connSessionId = connId;
-    // EventBusPublishSync(IOTC_CORE_SLE_EVENT_AUTH_SETUP_FINISHED, (void *)&status, sizeof(NotifyFinishedStatus));
+    EventBusPublishSync(IOTC_EVENT_INNER_CLOUD_SLE_SETUP, (void *)&devIdReport, sizeof(DeviceInfoReport));
 
     return IOTC_OK;
 }
@@ -307,4 +280,3 @@ int32_t GetSleSvcAuthSetup(const SleCmdParam *param, uint8_t **out, uint32_t *ou
     IotcJsonDelete(root);
     return ret;
 }
-
