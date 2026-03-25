@@ -26,9 +26,7 @@
 
 static int32_t SendData2SubDev(const CoapPacket *req)
 {
-    int32_t ret = IOTC_OK;
-
-    /* 鑾峰彇Devid */
+    /* 获取Devid */
     IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (dataObj == NULL) {
         IOTC_LOGW("invalid data json");
@@ -36,7 +34,7 @@ static int32_t SendData2SubDev(const CoapPacket *req)
     }
     const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
 
-    /* 鍒涘缓JSON鎸囬拡 */
+    /* 创建JSON指针 */
     /* {"data":[{"st":"restart","data":{"restart":1}}],"sid":"restart","msgId":"123456789","devId":"xxx"} */
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
@@ -81,7 +79,7 @@ static int32_t SendData2SubDev(const CoapPacket *req)
     }
     IotcJsonAddItem2Array(array, respJson);
 
-    ret = DevSvcProxyCtlPutCharStates(array, NULL);
+    int32_t ret = DevSvcProxyCtlPutCharStates(array, NULL);
     IotcJsonDelete(array);
 
     return ret;
