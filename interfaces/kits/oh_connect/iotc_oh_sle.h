@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "iotc_def.h"
+#include "sle_conn_device_info.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,6 +49,8 @@ IOTC_API_PUBLIC int32_t IotcOhSleSendIndicateData(const char *svcUuid, const cha
     const uint8_t *value, uint32_t valueLen);
 
 IOTC_API_PUBLIC int32_t IotcOhFindDeviceInfo(const char *devId, void **info);
+
+IOTC_API_PUBLIC int32_t IotcOhFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info);
 
 #ifdef __cplusplus
 }

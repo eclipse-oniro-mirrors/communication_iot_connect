@@ -28,14 +28,31 @@ extern "C" {
 
 typedef struct M2mEndDeviceInfo {
     char      deviceId[DEVICE_ID_MAX_STR_LEN + 1];
+    char      gatewayId[DEVICE_ID_MAX_STR_LEN + 1];
     uint8_t   online;
     char     *lastChange;
+    IotcJson *devInfo;
 } M2mEndDeviceInfo;
 
+IotcJson *M2mCloudBuildEcoDevInfoRequest(M2mCloudContext *ctx);
+
+IotcJson *M2mCloudBuildEcoDevStateRequest(M2mCloudContext *ctx);
+
+const CloudOption *M2mCloudEcoDevInfoSyncOption(void);
+
+const CloudOption *M2mCloudEcoDevStateSyncOption(void);
+
+void M2mCloudEcoDevInfoRespHandler(const CoapPacket *resp, const SocketAddr *addr,
+                                   M2mCloudContext *userData, bool timeout);
+
+void M2mCloudEcoDevStateRespHandler(const CoapPacket *resp,
+    const SocketAddr *addr, M2mCloudContext *userData, bool timeout);
 
 IotcJson *M2mCloudBuildDevIdRequest(M2mCloudContext *ctx);
 
 int32_t M2mCloudParseDevInfoSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode);
+
+int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode, char* devId);
 
 int32_t SleDeviceCloudFsmInit(void);
 

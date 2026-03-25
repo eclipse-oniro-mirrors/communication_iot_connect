@@ -217,6 +217,7 @@ int32_t SleConnectServiceInit(void)
         .onSendCustomSecData = SleSendCustomSecDataService,
         .onSendIndicateData = IotcSleSendIndicateData,
         .onFindDeviceInfo = IotcOhSleFindDeviceInfoService,
+        .onFindDeviceInfoByName = IotcOhSleFindDeviceInfoByNameService,
     };
 
     ServiceInstance instance = {

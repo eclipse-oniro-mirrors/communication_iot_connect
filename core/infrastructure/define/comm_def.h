@@ -54,6 +54,9 @@ typedef struct {
 #define LAN_SEARCH_PORT 5683
 #define WIFI_SOFTAP_UDP_PORT 5683
 #define LOCAL_CONTROL_REPORT_PORT 5683
+#define COAP_DEFAULT_PORT 5683
+#define PORT_BYTE_LENGTH 2
+#define BITS_PER_BYTE 8
 
 #define STR_URI_LOCAL_CONTROL_SESS_MNGR ".sys/sessMngr"
 #define STR_URI_LOCAL_CONTROL_SEARCH ".well-known/core?st=ohLocalControl"
@@ -65,6 +68,8 @@ typedef struct {
 #define STR_URI_PATH_ACTIVATE "activate"
 #define STR_URI_PATH_LOGIN "login"
 #define STR_URI_PATH_SYNC "devInfoSync"
+#define STR_URI_PATH_STATUS_SYNC "statusSync"
+#define STR_URI_PATH_DEVCONTROL "devControl"
 #define STR_URI_PATH_TOKEN "refresh"
 #define STR_URI_PATH_HB "heartbeat"
 #define STR_URI_PATH_DEV_DEL ".sys/delDevice"
@@ -88,6 +93,7 @@ typedef struct {
 #define STR_JSON_ENCRYPT "encryptMode"
 #define STR_JSON_PLAINTEXT "plaintext"
 #define STR_JSON_DEVID          "devId"
+#define STR_JSON_GATEWAY_ID     "gateWayId"
 #define STR_JSON_AUTHCODE       "authCode"
 #define STR_JSON_UIDHASH        "uidHash"
 #define STR_JSON_AUTHCODE_ID    "authCodeId"
@@ -127,9 +133,12 @@ typedef struct {
 #define STR_JSON_SUB_PROD_ID "subProdId"
 #define STR_JSON_PROT_TYPE "protType"
 #define STR_JSON_DEV_TYPE "devType"
+#define STR_JSON_DEV_TYPE_NAME "devTypeName"
 #define STR_JSON_DISC_TYPE "discType"
 #define STR_JSON_MODEL "model"
 #define STR_JSON_MANU "manu"
+#define STR_JSON_DEV_NAME "devName"
+#define STR_JSON_MANU_NAME "manuName"
 #define STR_JSON_FWV "fwv"
 #define STR_JSON_SWV "swv"
 #define STR_JSON_HWV "hwv"
@@ -138,6 +147,10 @@ typedef struct {
 #define STR_JSON_DEVICE_DELAY "devicedelay"
 #define STR_E2E_DATA_CHANGE "e2eDataChange"
 #define STR_E2E_CONTROL "e2eCtrl"
+#define STR_JSON_ERR_CODE "errcode"
+#define DEVICE_STATUS_ONLINE   "online"
+#define DEVICE_STATUS_OFFLINE  "offline"
+#define DEVICE_STATUS_INBOX    "inbox"
 
 #define HILINK_VERSION "1.0"
 

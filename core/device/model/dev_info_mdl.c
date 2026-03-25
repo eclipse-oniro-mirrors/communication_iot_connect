@@ -48,6 +48,6 @@ IotcJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
         IotcJsonDelete(devInfoObj);
         return NULL;
     }
-    
+
     return devInfoObj;
 }

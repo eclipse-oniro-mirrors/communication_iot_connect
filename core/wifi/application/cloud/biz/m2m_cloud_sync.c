@@ -67,32 +67,32 @@ IotcJson *M2mCloudBuildDevInfoSyncRequest(M2mCloudContext *ctx)
     IotcJson *devInfoArr = IotcJsonCreateArray();
     CHECK_RETURN_LOGW(devInfoArr != NULL, NULL, "create json error");
 
-    IotcJson *devInfoObj = NULL;
+    IotcJson *devinfoObj = NULL;
     int32_t ret;
     do {
-        devInfoObj = IotcJsonCreate();
-        if (devInfoObj == NULL) {
+        devinfoObj = IotcJsonCreate();
+        if (devinfoObj == NULL) {
             IOTC_LOGW("create json error");
             ret = IOTC_ADAPTER_JSON_ERR_CREATE;
             break;
         }
-        ret = M2mCloudAddDevInfoToJson(devInfoObj);
+        ret = M2mCloudAddDevInfoToJson(devinfoObj);
         if (ret != IOTC_OK) {
-            IotcJsonDelete(devInfoObj);
+            IotcJsonDelete(devinfoObj);
             IOTC_LOGW("add dev info error %d", ret);
             break;
         }
 
-        ret = BuildDevInfoSyncSvcInfo(devInfoObj, (const M2mCloudContext *)ctx);
+        ret = BuildDevInfoSyncSvcInfo(devinfoObj, (const M2mCloudContext *)ctx);
         if (ret != IOTC_OK) {
-            IotcJsonDelete(devInfoObj);
+            IotcJsonDelete(devinfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }
 
-        ret = IotcJsonAddItem2Array(devInfoArr, devInfoObj);
+        ret = IotcJsonAddItem2Array(devInfoArr, devinfoObj);
         if (ret != IOTC_OK) {
-            IotcJsonDelete(devInfoObj);
+            IotcJsonDelete(devinfoObj);
             IOTC_LOGW("add svc info error %d", ret);
             break;
         }

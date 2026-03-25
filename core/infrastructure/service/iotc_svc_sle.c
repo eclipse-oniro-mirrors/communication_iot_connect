@@ -89,3 +89,13 @@ int32_t SleSvcProxyFindDeviceInfo(const char *devId, void **info)
 
     return sleApi->onFindDeviceInfo(devId, info);
 }
+
+int32_t SleSvcProxyFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info)
+{
+    const SleSvcApi *sleApi = GetSleSvcApi();
+    if (sleApi == NULL || sleApi->onFindDeviceInfoByName == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return sleApi->onFindDeviceInfoByName(name, info);
+}

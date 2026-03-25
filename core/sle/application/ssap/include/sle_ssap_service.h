@@ -33,6 +33,7 @@ void SleAdvSetType(SleSvcAdvDataType type);
 int32_t SleSendCustomSecDataService(const char *devId, const uint8_t *data, uint32_t len);
 
 int32_t IotcOhSleFindDeviceInfoService(const char *devId, void **info);
+int32_t IotcOhSleFindDeviceInfoByNameService(const char *name, IotcConDeviceInfo **info);
 
 #ifdef __cplusplus
 }

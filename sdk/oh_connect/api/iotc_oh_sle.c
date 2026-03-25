@@ -414,3 +414,11 @@ int32_t IotcOhFindDeviceInfo(const char *devId, void **info)
 
     return SleSvcProxyFindDeviceInfo(devId, info);
 }
+
+int32_t IotcOhFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info)
+{
+    CHECK_RETURN_LOGE(name && info, IOTC_ERR_PARAM_INVALID, "null pointer");
+    CHECK_RETURN_LOGE(*info == NULL, IOTC_ERR_PARAM_INVALID, "info not null initialized");
+
+    return SleSvcProxyFindDeviceInfoByName(name, info);
+}

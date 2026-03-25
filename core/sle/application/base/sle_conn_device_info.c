@@ -64,7 +64,8 @@ int32_t SleConnDevMgt(const SleConnRetDeviceInfo *retDev)
 bool IsExitSleConnDev(const uint16_t connID)
 {
     ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &g_sleConnDevList) {
+    LIST_FOR_EACH_ITEM(item, &g_sleConnDevList)
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         if (node->info.connID == connID) {
             return true;
@@ -77,7 +78,7 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
 {
     CHECK_RETURN_LOGW(retDev != NULL, IOTC_ERR_PARAM_INVALID, "invalid param");
 
-    if (IsExitSleConnDev(retDev->connID)) {
+    if (true == IsExitSleConnDev(retDev->connID)) {
         IOTC_LOGI("connID is exited:%u", retDev->connID);
         return IOTC_OK;
     }
@@ -111,10 +112,11 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev)
     return IOTC_OK;
 }
 
-IotcConDeviceInfo* SleGetConnectionInfoByConnId(uint16_t connId)
+IotcConDeviceInfo *SleGetConnectionInfoByConnId(uint16_t connId)
 {
     ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &g_sleConnDevList) {
+    LIST_FOR_EACH_ITEM(item, &g_sleConnDevList)
+    {
         SleConnDevList *list = CONTAINER_OF(item, SleConnDevList, list);
         if (list->info.connID == connId) {
             return &list->info;
@@ -134,7 +136,8 @@ int32_t SleGetDevIdByConnId(uint16_t connId, char *devId)
 
     // 遍历列表
     ListEntry *item;
-    LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead()) {
+    LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead())
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         if (node == NULL) {
             IOTC_LOGE("invalid node: node is NULL in list, connId=%u", connId);
@@ -160,7 +163,7 @@ int32_t SleGetDevIdByConnId(uint16_t connId, char *devId)
     return IOTC_ERR_PARAM_INVALID;
 }
 
-IotcConDeviceInfo* SleGetConnectionInfoByDevId(const char *devId)
+IotcConDeviceInfo *SleGetConnectionInfoByDevId(const char *devId)
 {
     if (devId == NULL || strlen(devId) == 0) {
         IOTC_LOGE("invalid devId");
@@ -176,7 +179,8 @@ IotcConDeviceInfo* SleGetConnectionInfoByDevId(const char *devId)
     uint32_t devIdLen = strlen(devId);
 
     ListEntry *item;
-    LIST_FOR_EACH_ITEM(item, listHead) {
+    LIST_FOR_EACH_ITEM(item, listHead)
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         if (node == NULL || node->info.devId[0] == '\0') {
             IOTC_LOGE("invalid node or devId in list");
@@ -191,7 +195,6 @@ IotcConDeviceInfo* SleGetConnectionInfoByDevId(const char *devId)
     return NULL;
 }
 
-
 IotcDeviceInfo *SleGetDeviceInfoByDevId(const char *devId)
 {
     if (devId == NULL) {
@@ -200,7 +203,8 @@ IotcDeviceInfo *SleGetDeviceInfoByDevId(const char *devId)
     }
 
     ListEntry *item;
-    LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead()) {
+    LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead())
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         if (node == NULL) {
             IOTC_LOGE("Unexpected: node is NULL");
@@ -216,6 +220,35 @@ IotcDeviceInfo *SleGetDeviceInfoByDevId(const char *devId)
     return NULL;
 }
 
+IotcConDeviceInfo *SleGetDeviceInfoByDevTypeName(const char *name)
+{
+    if (name == NULL) {
+        IOTC_LOGE("name is NULL");
+        return NULL;
+    }
+
+    ListEntry *item;
+    LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead())
+    {
+        SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
+        if (node->info.devInfo == NULL) {
+            IOTC_LOGE("node->info.devInfo is null");
+            return NULL;
+        }
+        if (node->info.devInfo->model == NULL) {
+            IOTC_LOGE("node->info.model is null");
+            return NULL;
+        }
+        if (strcmp(node->info.devInfo->model, name) == 0) {
+            IOTC_LOGI("get info.devInfo model is sucess");
+            return &(node->info);
+        } else {
+            continue;
+        }
+    }
+    return NULL;
+}
+
 void SleDeleteConnDev(uint16_t connID)
 {
     (void)UtilsGlobalMutexLock();
@@ -228,10 +261,12 @@ void SleDeleteConnDev(uint16_t connID)
         return;
     }
 
-    LIST_FOR_EACH_ITEM_SAFE(item, next, head) {
+    LIST_FOR_EACH_ITEM_SAFE(item, next, head)
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         if (node->info.connID == connID) {
             LIST_REMOVE(&node->list);
+            IotcFree(node->info.devInfo);
             IotcFree(node);
             IOTC_LOGI("delete connID:[%u]", connID);
             break;
@@ -262,7 +297,8 @@ bool SleFindConnDevByDevId(const char *devID, uint16_t *connID)
         return false;
     }
 
-    LIST_FOR_EACH_ITEM_SAFE(item, next, listHead) {
+    LIST_FOR_EACH_ITEM_SAFE(item, next, listHead)
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         if (node == NULL) {
             IOTC_LOGE("Unexpected: node is NULL");
@@ -286,7 +322,8 @@ void DestroySleConnDevList(void)
     (void)UtilsGlobalMutexLock();
     ListEntry *item;
     ListEntry *next;
-    LIST_FOR_EACH_ITEM_SAFE(item, next, GetSleConnDevListHead()) {
+    LIST_FOR_EACH_ITEM_SAFE(item, next, GetSleConnDevListHead())
+    {
         SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
         LIST_REMOVE(&node->list);
         IotcFree(node);
@@ -294,30 +331,6 @@ void DestroySleConnDevList(void)
     g_sleConnDevListNum = 0;
     UtilsGlobalMutexUnlock();
 }
-
-void PrintSleConnDevList(void)
-{
-    (void)UtilsGlobalMutexLock();
-    ListEntry *item;
-    LIST_FOR_EACH_ITEM(item, GetSleConnDevListHead()) {
-        SleConnDevList *node = CONTAINER_OF(item, SleConnDevList, list);
-        if (node == NULL || node->info.devId[0] == '\0') {
-            IOTC_LOGW("Invalid node or devAddr in list");
-            continue;
-        }
-
-        char devAddrStr[MAC_ADDR_STR_LEN];
-        if (snprintf_s(devAddrStr, sizeof(devAddrStr), sizeof(devAddrStr) - 1,
-            "%02X:%02X:%02X:%02X:%02X:%02X",
-            node->info.devAddr[0], node->info.devAddr[1], node->info.devAddr[MAC_ADDR_BYTE_IDX_2],
-            node->info.devAddr[MAC_ADDR_BYTE_IDX_3], node->info.devAddr[MAC_ADDR_BYTE_IDX_4],
-            node->info.devAddr[MAC_ADDR_BYTE_IDX_5]) < 0) {
-            continue;
-        }
-        IOTC_LOGI("connID:[%u], devAddr[%s]", node->info.connID, devAddrStr);
-    }
-}
-
 
 void IotcOhSendCustomSecData(const char *devId, const char *service, const uint8_t *data, uint32_t len)
 {
