@@ -56,6 +56,14 @@ int32_t CreateSvcAuthSetupGet(uint8_t **out, uint32_t *outLen);
  */
 int32_t GetSleSvcAuthSetup(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
 
+/**
+ * @brief AuthSetupAndDevInfo
+ * 获取桥设备信息返回的AuthSetup信息
+ *
+ * @return 0: success, others: fail
+ */
+int32_t AuthSetupAndDevInfo();
+
 #ifdef __cplusplus
 }
 #endif

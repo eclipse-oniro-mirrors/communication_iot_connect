@@ -104,10 +104,13 @@ int32_t SleUplinkReportMethod(const IotcJson *dataArray)
 
 static int32_t DeviceServiceReportMessageHandler(const ServiceMessage *req, ServiceResponseInfo *resp)
 {
+    //TODO
+    uint16_t connId = 0;
     NOT_USED(resp);
     CHECK_RETURN_LOGW(req != NULL && req->msg != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    int32_t ret = SleUplinkReportMethod(req->msg);
+    IotcJson* vendorArr = IotcJsonGetObj(req->msg, STR_JSON_VENDOR);
+    int32_t ret = SleUplinkReportMethod(connId, vendorArr);
     if (ret != IOTC_OK) {
         IOTC_LOGW("sle report error %d", ret);
         return ret;

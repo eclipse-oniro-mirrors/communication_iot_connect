@@ -80,6 +80,8 @@ iotc_core_wifi_src = [
   "$wifi_core_path/application/cloud/biz/m2m_cloud_reg.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_psk.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_authcode.c",
+  "$wifi_core_path/application/cloud/biz/m2m_cloud_dev_mgr.c",
+  "$wifi_core_path/application/cloud/biz/m2m_cloud_response.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_send.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_sync.c",
   "$wifi_core_path/application/cloud/biz/m2m_cloud_token.c",

@@ -56,10 +56,11 @@ static int32_t GetSleSvcAuthSetupInfoReq(uint8_t **out, uint32_t *outLen)
         return IOTC_ERR_SECUREC_SPRINTF;
     }
 
-    if (IotcJsonAddStr2Obj(devSetup, STR_JSON_AUTHCODE, (const char*)authInfo.authCode) != IOTC_OK) {
-        IOTC_LOGE("add model err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
+    // if(IotcJsonAddStr2Obj(devSetup, STR_JSON_AUTHCODE, (const char*)authInfo.authCode) != IOTC_OK)
+    // {
+    //     IOTC_LOGE("add model err");
+    //     return IOTC_ERR_SECUREC_SPRINTF;
+    // }
 
     if (IotcJsonAddNum2Obj(devSetup, PROFILE_DATA_MESSAGE_JSON, MSG_PROFILE_TYPE_RSP) != IOTC_OK) {
         IOTC_LOGE("add msg message err ret=%d", ret);

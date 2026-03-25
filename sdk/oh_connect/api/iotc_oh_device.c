@@ -189,7 +189,7 @@ static int32_t OptionSetDevInfo(va_list args)
 {
     const IotcDeviceInfo *devInfo = va_arg(args, const IotcDeviceInfo *);
     CHECK_RETURN_LOGE(devInfo != NULL && CheckDevInfo(devInfo), IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     int32_t ret = ModelDevInfoInit(devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("dev info init error %d", ret);
@@ -203,7 +203,7 @@ static int32_t OptionSetSvcInfo(va_list args)
     uint32_t num = va_arg(args, uint32_t);
     CHECK_RETURN_LOGE(svcInfo != NULL && num != 0 && CheckSvcInfo(svcInfo, num),
         IOTC_ERR_PARAM_INVALID, "param invalid");
-    
+
     int32_t ret = ModelSvcInfoInit(svcInfo, num);
     if (ret != IOTC_OK) {
         IOTC_LOGE("svc info init error %d", ret);

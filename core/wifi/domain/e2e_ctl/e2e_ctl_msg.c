@@ -122,6 +122,7 @@ int32_t E2eCtrlMsgProcess(const IotcJson *req, E2eCtrlMsgReportAfterGetCmd repor
         return ret;
     }
 
+
     /* data为空时触发全量异步上报 */
     if (dataJsonArraySize == 0) {
         IOTC_LOGI("report all async");

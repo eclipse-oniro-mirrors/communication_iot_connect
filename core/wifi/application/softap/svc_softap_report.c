@@ -129,8 +129,9 @@ int32_t SoftapServiceReportToAllPeer(const IotcJson *dataArray)
         return IOTC_CORE_WIFI_NETCFG_ERR_SOFTAP_INVALID_CTX;
     }
 
+    IotcJson* respJson = IotcJsonGetObj(dataArray, STR_JSON_VENDOR);
     IotcJson *root = NULL;
-    int32_t ret = CreateReportJson(dataArray, &root);
+    int32_t ret = CreateReportJson(respJson, &root);
     if (ret != IOTC_OK) {
         IOTC_LOGW("create report json error %d", ret);
         return ret;

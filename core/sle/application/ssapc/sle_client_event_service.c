@@ -31,7 +31,7 @@
 #include "securec.h"
 #include "sle_ssap_service.h"
 #include "sle_svc_ctx.h"
-
+#include "utils_common.h"
 #include "sle_conn_device_info.h"
 #include "sle_svc_auth_setup.h"
 #include "sle_comm_status.h"
@@ -81,6 +81,15 @@ typedef enum {
     IOTC_SLE_SEEK_PASSIVE = 0x00,
     IOTC_SLE_SEEK_ACTIVE  = 0x01,
 } SoftbusSleSeekType;
+
+
+typedef struct
+{
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
+    char authCode[BLE_AUTHCODE_LEN];
+} SleIssueAuthCode;
+
 
 static uint8_t g_clientId = 1;
 
@@ -399,28 +408,59 @@ static void SleClientSpekeFinishedCallback(uint32_t event, void *param, uint32_t
     }
 }
 
+// 云下发的authcode拿到之后就开始创建sessionKey上线
+static void SleClientCloudIssueAuthCodeCallback(uint32_t event, void *param, uint32_t len)
+{
+    SleIssueAuthCode *authCodeInfo = (SleIssueAuthCode *)param;
+    IotcConDeviceInfo*  devInfo = SleGetConnectionInfoByDevId(authCodeInfo->devId);
+    if(devInfo == NULL)
+    {
+        IOTC_LOGE("[uuid client] cloud issue auth code callback, devId:%s", (const char*)authCodeInfo->devId);
+        return;
+    }
+    if(memcpy_s(devInfo->authCode, sizeof(devInfo->authCode), authCodeInfo->authCode, sizeof(devInfo->authCode))!= EOK)
+    {
+        IOTC_LOGE("[uuid client] cloud issue auth code callback, memcpy_s failed");
+        return;
+    }
+    if(memcpy_s(devInfo->authCodeId, sizeof(devInfo->authCodeId), authCodeInfo->authCodeId, sizeof(devInfo->authCodeId))!= EOK)
+    {
+        IOTC_LOGE("[uuid client] cloud issue auth code callback, memcpy_s failed");
+        return;
+    }
+
+    IOTC_LOGI("start CreateSession");
+    uint8_t *msg = NULL;
+    len = 0;
+
+    IOTC_LOGI("[uuid client] %s: CreateSvcAuthSetupGet success.", __func__);
+    if(CreateSvcSessionIssue(devInfo->connID, &msg, &len)!= IOTC_OK)
+    {
+        IOTC_LOGE("[uuid client] %s: CreateSvcSessionIssueReq failed.", __func__);
+        return ;
+    }
+
+    if(SleLinkLayerReportSvcData(devInfo->connID, SLE_SVC_CREATE_SESSION, msg, len, SLE_OPTYPE_GET)!= IOTC_OK)
+    {
+        IOTC_LOGE("[uuid client] report msg failed!");
+        return ;
+    }
+    IotcFree(msg);
+    IOTC_LOGI("[uuid client] %s: CreateSvcSessionIssueReq success.", __func__);
+
+}
+
+
+
 //Auth Setup 完成之后查询设备信息
 static void SleClientAuthSetupFinishedCallback(uint32_t event, void *param, uint32_t len)
 {
     NotifyFinishedStatus *spekeStatus = (NotifyFinishedStatus *)param;
     if (spekeStatus->errorCode == IOTC_OK) {
         IOTC_LOGI("[uuid client] %s: SleClientAuthSetupFinishedCallback success.", __func__);
+
         uint8_t *msg = NULL;
-        uint32_t msgLen = 0;
-
-        IOTC_LOGI("[uuid client] %s: CreateSvcAuthSetupGet success.", __func__);
-        if (CreateSvcSessionIssue(spekeStatus->connSessionId, &msg, &msgLen) != IOTC_OK) {
-            IOTC_LOGE("[uuid client] %s: CreateSvcSessionIssueReq failed.", __func__);
-            return;
-        }
-
-        if (SleLinkLayerReportSvcData(spekeStatus->connSessionId, SLE_SVC_CREATE_SESSION,
-            msg, msgLen, SLE_OPTYPE_GET) != IOTC_OK) {
-            IOTC_LOGE("[uuid client] report msg failed!");
-            return;
-        }
-        IotcFree(msg);
-        msg = NULL;
+        len = 0;
         IOTC_LOGI("[uuid client] %s: CreateSvcSessionIssue success.", __func__);
 
         int32_t ret = CreateSvcDeviceInfoReq(&msg, &msgLen);
@@ -440,44 +480,15 @@ static void SleClientAuthSetupFinishedCallback(uint32_t event, void *param, uint
     }
 }
 
-static int32_t SleClientBusinessCallbackInit(void)
-{
-    int32_t ret;
-
-    ret = EventBusSubscribe(SleClientSeekResultCallBack, IOTC_CORE_SLE_EVENT_SEEK_RESULT);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleSeek err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientConnectStateCallback, IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleConnect err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientExchangeInfoCallBack, IOTC_CORE_SLE_EVENT_SSAPC_EXCHANGE_INFO);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleConnect err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientFindStructureCallBack, IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt FindStructure err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientFindStructureCompleteCallback,
-        IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE_COMPLETE);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
-        "[uuid client] subscribe gatt SleClientFindStructureCompleteCallback err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientConnectParamUpdateCallback, IOTC_CORE_SLE_EVENT_CONNECT_PARAM_UPDATE_REQ);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
-        "[uuid client] subscribe gatt SleClientConnectParamUpdateCallback err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientSpekeFinishedCallback, IOTC_CORE_SLE_EVENT_SPEKE_FINISHED);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
-        "[uuid client] subscribe gatt SleClientSpekeFinishedCallback err:%d", ret);
-
-    ret = EventBusSubscribe(SleClientAuthSetupFinishedCallback, IOTC_CORE_SLE_EVENT_AUTH_SETUP_FINISHED);
-    CHECK_RETURN_LOGE(ret == IOTC_OK, ret,
-        "[uuid client] subscribe gatt SleClientAuthSetupFinishedCallback err:%d", ret);
-
-    return ret;
-}
-
 int32_t SleScanServiceStart(void)
 {
+    //调用扫描，说明已经登录了云，拿到了authcode
+    if(AuthSetupAndDevInfo() != IOTC_OK) {
+        // DLOGE("AuthSetupAndDevInfo failed");
+        return IOTC_ERROR;
+    }
+
+    // 打包扫描参数
     IotcAdptSleSeekParam param;
     if (BuildIotcSleSeekParam(&param) != IOTC_OK) {
         return IOTC_ERROR;
@@ -543,6 +554,58 @@ int32_t IotcClientFindConnIdAndAddrList(void)
     PrintSleSsapConnidAndAddr();
     return IOTC_OK;
 }
+
+
+static void SleClientCloudStartSeekCallback(uint32_t event, void *param, uint32_t len)
+{
+    NOT_USED(event);
+    NOT_USED(len);
+    NOT_USED(param);
+    IOTC_LOGI("[uuid client] %s: SleClientCloudStartSeekCallback success.", __func__);
+    if(SleScanServiceStart() != IOTC_OK)
+    {
+        IOTC_LOGE("[uuid client] %s: SleScanServiceStart failed.", __func__);
+        return ;
+    }
+
+}
+
+static int32_t SleClientBusinessCallbackInit(void)
+{
+    int32_t ret;
+
+    ret = EventBusSubscribe(SleClientSeekResultCallBack, IOTC_CORE_SLE_EVENT_SEEK_RESULT);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleSeek err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientConnectStateCallback, IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleConnect err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientExchangeInfoCallBack, IOTC_CORE_SLE_EVENT_SSAPC_EXCHANGE_INFO);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt ClientSleConnect err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientFindStructureCallBack, IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt FindStructure err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientFindStructureCompleteCallback, IOTC_CORE_SLE_EVENT_SSAPC_FIND_STRUCTURE_COMPLETE);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientFindStructureCompleteCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientConnectParamUpdateCallback, IOTC_CORE_SLE_EVENT_CONNECT_PARAM_UPDATE_REQ);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientConnectParamUpdateCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientSpekeFinishedCallback, IOTC_CORE_SLE_EVENT_SPEKE_FINISHED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientSpekeFinishedCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientAuthSetupFinishedCallback, IOTC_CORE_SLE_EVENT_AUTH_SETUP_FINISHED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientAuthSetupFinishedCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientCloudIssueAuthCodeCallback, IOTC_CORE_SLE_EVENT_AUTH_CODE_SETUP);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "[uuid client] subscribe gatt SleClientCloudIssueAuthCodeCallback err:%d", ret);
+
+    ret = EventBusSubscribe(SleClientCloudStartSeekCallback, IOTC_CORE_SLE_EVENT_START_SEEK_SETUP);
+
+    return ret;
+}
+
 
 int32_t SleSsapServiceSvcInit(SleSvcCtx *ctx)
 {

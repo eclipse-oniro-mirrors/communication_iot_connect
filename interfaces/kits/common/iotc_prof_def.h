@@ -64,6 +64,8 @@ typedef struct {
     const char *svcId;
     const char *data;
     uint32_t len;
+    const char *devId;
+    const char *msgId;
 } IotcCharState;
 
 #ifdef __cplusplus

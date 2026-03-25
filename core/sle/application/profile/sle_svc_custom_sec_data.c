@@ -272,7 +272,7 @@ static int32_t ForwardCustomSecData(IotcJson *root, uint8_t **out, uint32_t *out
         IOTC_LOGW("custom sec data product error %d", ret);
         return ret;
     }
-
+    //后面的可以删掉的
     if (!IotcJsonIsArray(vendorItem)) {
         IotcJson *vendorArray = NULL;
         ret = BuildVendorArrayFromItem(vendorItem, &vendorArray);
