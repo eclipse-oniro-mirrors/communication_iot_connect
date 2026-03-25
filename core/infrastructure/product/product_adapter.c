@@ -22,6 +22,8 @@
 typedef int32_t (*GetRootCaCertCallback)(const char **ca[], uint32_t *num);
 typedef int32_t (*RecvNetCfgInfoCallback)(const char *netInfo, uint32_t len);
 typedef int32_t (*RecvCustomSecDataCallback)(const uint8_t *data, uint32_t len);
+typedef int32_t (*MakeOsBleEnableCallback)(void);
+typedef int32_t (*MakeOsWifiEnableCallback)(void);
 typedef int32_t (*ProfPutCharStateCallback)(const IotcCharState state[], uint32_t num);
 typedef int32_t (*GetSurfacePowerCallback)(int8_t *power);
 typedef int32_t (*ProfGetCharStateCallback)(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num);
@@ -66,6 +68,8 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetRootCaCert);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvNetCfgInfo);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvCustomSecData);
+    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsBleEnable);
+    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsWifiEnable); 
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onSleRecvCustomSecData);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetSurfacePower);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfPutCharState);
@@ -132,6 +136,30 @@ int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len)
     int32_t ret = cb(data, len);
     if (ret != IOTC_OK) {
         IOTC_LOGW("recv custom sec data process error %d", ret);
+    }
+    return ret;
+}
+
+int32_t ProductMakeOsBleEnable(void)
+{
+    MakeOsBleEnableCallback cb;
+    GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onMakeOsBleEnable);
+
+    int32_t ret = cb();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("call make os ble enable error %d", ret);
+    }
+    return ret;
+}
+
+int32_t ProductMakeOsWifiEnable(void)
+{
+    MakeOsWifiEnableCallback cb;
+    GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onMakeOsWifiEnable);
+
+    int32_t ret = cb();
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("call make os wifi enable error %d", ret);
     }
     return ret;
 }

@@ -33,6 +33,8 @@ typedef struct {
     int32_t (*onGetRootCaCert)(const char **ca[], uint32_t *num);
     int32_t (*onRecvNetCfgInfo)(const char *netInfo, uint32_t len);
     int32_t (*onRecvCustomSecData)(const uint8_t *data, uint32_t len);
+    int32_t (*onMakeOsBleEnable)(void);
+    int32_t (*onMakeOsWifiEnable)(void);
     int32_t (*onSleRecvCustomSecData)(const uint8_t *data, uint32_t len);
     int32_t (*onGetSurfacePower)(int8_t *power);
     int32_t (*onProfPutCharState)(const IotcCharState state[], uint32_t num);
@@ -50,6 +52,8 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
 int32_t ProductGetRootCaCert(const char **ca[], uint32_t *num);
 int32_t ProductRecvNetCfgInfo(const char *netInfo, uint32_t len);
 int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len);
+int32_t ProductMakeOsBleEnable(void);
+int32_t ProductMakeOsWifiEnable(void);
 int32_t ProductSleRecvCustomSecData(const uint8_t *data, uint32_t len);
 int32_t ProductGetSurfacePower(int8_t *power);
 int32_t ProductProfPutCharState(const IotcCharState state[], uint32_t num);

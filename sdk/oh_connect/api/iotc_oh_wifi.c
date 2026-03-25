@@ -36,7 +36,6 @@
 #include "iotc_event_inner.h"
 #include "iotc_svc_conn.h"
 #include "service_proxy.h"
-#include "wifi_device.h"
 
 static int32_t StartWifiSoftapSvc(void)
 {
@@ -101,6 +100,11 @@ static int32_t IotcOhWifiMainInit(void)
     if (ret != IOTC_OK) {
         IOTC_LOGW("sub dev svc error %d", ret);
         return ret;
+    }
+
+    ret = ProductMakeOsWifiEnable();
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("Failed to call system app enable Wifi function ret=%d", ret);
     }
     return IOTC_OK;
 }
@@ -182,12 +186,29 @@ static int32_t OptionSetGetCertCallback(va_list args)
     return IOTC_OK;
 }
 
+static int32_t OptionSetMakeOsWifiEnableCallback(va_list args)
+{
+    IotcMakeOsWifiEnableCallback cb = va_arg(args, IotcMakeOsWifiEnableCallback);
+    CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    ProductHooks hooks = {0};
+    hooks.onMakeOsWifiEnable = cb;
+    int32_t ret = ProductRegisterHooks(&hooks, PROD_HOOK_REG_POLICY_COVER_NON_NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("set custom data cb error %d", ret);
+        return ret;
+    }
+
+    IOTC_LOGN("set custom data cb");
+    return IOTC_OK;
+}
+
 static const OptionItem WIFI_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_WIFI_SEND_BUFFER_SIZE, OptionSetWifiSendBufferSize },
     { IOTC_OH_OPTION_WIFI_RECV_BUFFER_SIZE, OptionSetWifiRecvBufferSize },
     { IOTC_OH_OPTION_WIFI_NETCFG_MODE, OptionSetWifiNetcfgMode },
     { IOTC_OH_OPTION_WIFI_NETCFG_TIMEOUT, OptionSetWifiNetcfgTimeout },
     { IOTC_OH_OPTION_WIFI_GET_CERT_CALLBACK, OptionSetGetCertCallback },
+    { IOTC_OH_OPTION_WIFI_ENABLE_FUNC_CALLBACK, OptionSetMakeOsWifiEnableCallback },
 };
 
 int32_t IotcOhWifiEnable(void)

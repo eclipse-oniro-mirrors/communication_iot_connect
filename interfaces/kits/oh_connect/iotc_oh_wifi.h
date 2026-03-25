@@ -25,6 +25,8 @@ extern "C" {
 
 typedef int32_t (*IotcOhWifiGetCertCallback)(const char **ca[], uint32_t *num);
 
+typedef int32_t (*IotcMakeOsWifiEnableCallback)(void);
+
 IOTC_API_PUBLIC int32_t IotcOhWifiEnable(void);
 
 IOTC_API_PUBLIC int32_t IotcOhWifiDisable(void);
