@@ -49,15 +49,12 @@ IotcJson *M2mCloudBuildAuthCodeRequest(M2mCloudContext *ctx)
         IOTC_LOGW("create json error");
         return NULL;
     }
-
     ret = IotcJsonAddStr2Obj(rootJson, STR_NETINFO_DEVICE_ID, ctx->authInfo.loginInfo.devId);
-
     if (ret == IOTC_OK) {
         return rootJson;
     } else {
         IOTC_LOGW("add devid error %d", ret);
     }
-
     IotcJsonDelete(rootJson);
     return NULL;
 }
@@ -105,11 +102,11 @@ int32_t M2mCloudParseAuthCodeResponse(M2mCloudContext *ctx, const CoapPacket *re
         sizeof(ctx->authCodeInfo.authCodeId));
 
     ret = UtilsJsonGetNum(respJson, STR_JSON_TIMEOUT, (int32_t *)&(ctx->authCodeInfo.timeout));
-    if(ret != IOTC_OK) {
+    if (ret != IOTC_OK) {
         IotcJsonDelete(respJson);
         return ret;
     }
-    if(timeout > UINT32_MAX / UTILS_MS_PER_SECOND) {
+    if (timeout > UINT32_MAX / UTILS_MS_PER_SECOND) {
         return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_TOKEN_TIMEOUT_INVALID;
     }
     ctx->authCodeInfo.timeout = timeout;
