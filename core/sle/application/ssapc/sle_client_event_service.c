@@ -608,6 +608,10 @@ int32_t IotcOhSleFindDeviceInfoByNameService(const char *name, IotcConDeviceInfo
     }
 
     IotcConDeviceInfo *node = SleGetDeviceInfoByDevTypeName(name);
+    if (node == NULL) {
+        IOTC_LOGE("%s: Device info not found for name: %s", __func__, name);
+        return IOTC_ERR_PARAM_INVALID;
+    }
     IotcConDeviceInfo *external_copy = (IotcConDeviceInfo *)IotcMalloc(sizeof(IotcConDeviceInfo));
     if (external_copy == NULL) {
         IOTC_LOGE("Memory allocation failed | Size:%zu", sizeof(IotcConDeviceInfo));
