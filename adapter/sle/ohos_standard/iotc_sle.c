@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <sched.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "securec.h"
 #include "iotc_mem.h"
 #include "iotc_errcode.h"
@@ -54,19 +55,35 @@ static IotcClientState g_clientState = IOTC_SLE_STOP;
 
 static int32_t IotcSleStartServiceEx(uint8_t *serverId)
 {
-    int32_t ret;
+    int32_t ret = IOTC_ERROR;
     sleUUID appUuid = {0};
     appUuid.len = SLE_UUID_LEN;
-
     const uint8_t fixedUuid[SLE_UUID_LEN] = {
         0x39, 0xBE, 0xA8, 0x80, 0xFC, 0x70, 0x11, 0xEA, 0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
     if (memcpy_s(appUuid.id, SLE_UUID_LEN, fixedUuid, SLE_UUID_LEN) != EOK) {
+        IOTC_LOGE("memcpy_s error");
         return IOTC_ERROR;
     }
 
-    ret = IotcSleSsapcRegister(&appUuid, serverId);
-    IOTC_LOGI("[FIXED UUID] ssapc_register ret:0x%08X", ret);
+    int retryCount = 0;
+    const int maxRetries = 3;
+    const int sleepMs = 500;
+    const int msToUsMultiplier = 1000;
+
+    while (g_clientState != IOTC_SLE_ENABLE && retryCount < maxRetries) {
+        IOTC_LOGE("g_clientState not ENABLE, retry %d/%d, sleeping %dms...", retryCount + 1, maxRetries, sleepMs);
+        usleep(sleepMs * msToUsMultiplier);
+        retryCount++;
+    }
+
+    if (g_clientState == IOTC_SLE_ENABLE) {
+        ret = IotcSleSsapcRegister(&appUuid, serverId);
+        IOTC_LOGI("[FIXED UUID] ssapc_register ret:0x%08X", ret);
+    } else {
+        IOTC_LOGE("Failed to reach IOTC_SLE_ENABLE state after %d retries", maxRetries);
+    }
+
     return ret;
 }
 

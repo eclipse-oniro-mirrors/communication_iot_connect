@@ -415,6 +415,7 @@ int32_t IotcOhFindDeviceInfo(const char *devId, void **info)
     return SleSvcProxyFindDeviceInfo(devId, info);
 }
 
+#if IOTC_CONF_DEV_TYPE == 2
 int32_t IotcOhFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info)
 {
     CHECK_RETURN_LOGE(name && info, IOTC_ERR_PARAM_INVALID, "null pointer");
@@ -422,3 +423,4 @@ int32_t IotcOhFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info)
 
     return SleSvcProxyFindDeviceInfoByName(name, info);
 }
+#endif
