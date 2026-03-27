@@ -52,6 +52,8 @@ int32_t CreateSvcSessionIssue(uint16_t connId, uint8_t **out, uint32_t *outLen);
  */
 int32_t GetSleSvcCreateSession(const SleCmdParam *param, uint8_t **out, uint32_t *outLen);
 
+int32_t CreateSvcSessionSuccess(uint16_t connId);
+
 #ifdef __cplusplus
 }
 #endif

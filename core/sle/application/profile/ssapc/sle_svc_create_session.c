@@ -31,7 +31,7 @@
 #include "iotc_mem.h"
 #include "sle_print_data.h"
 #include "sle_session_mngr.h"
-
+#include "iotc_event.h"
 
 #define SLE_MESSAGES_VAL 1
 #define SLE_TYPE_VAL 1
@@ -40,11 +40,12 @@
 #define SLE_INIT_SEQ_NUM 1
 
 static ListEntry g_sleInitialSaltSn1 = LIST_DECLARE_INIT(&g_sleInitialSaltSn1);
-
+#define HEX_CHARS_PER_BYTE 2
 static SleInitialSaltSn1Part *SleSessGetSaltSn1ByConnId(uint16_t connId)
 {
     ListEntry *item;
-    LIST_FOR_EACH_ITEM(item, &g_sleInitialSaltSn1) {
+    LIST_FOR_EACH_ITEM(item, &g_sleInitialSaltSn1)
+    {
         SleInitialSaltSn1Part *saltSn1 = CONTAINER_OF(item, SleInitialSaltSn1Part, node);
         if (connId == saltSn1->connId) {
             return saltSn1;
@@ -52,6 +53,12 @@ static SleInitialSaltSn1Part *SleSessGetSaltSn1ByConnId(uint16_t connId)
     }
     return NULL;
 }
+
+typedef struct DeviceStatusReport {
+    char deviceId[DEVICE_ID_MAX_STR_LEN + 1];
+    uint8_t online;
+    char *lastChange;
+} DeviceStatusReport;
 
 static bool SleIsSessionInitSaltSn1Exist(uint16_t connId)
 {
@@ -105,19 +112,21 @@ static int32_t SleCreateSessInitSaltSn1(uint16_t connId, const uint8_t *password
         return IOTC_ERR_INVALID_PARAM;
     }
 
-    char *dup = strdup((const char *)password);
-    if (dup == NULL) {
-        IOTC_LOGE("strdup err");
+    uint8_t *pwdCopy = (uint8_t *)IotcMalloc(BLE_AUTHCODE_LEN);
+    if (pwdCopy == NULL) {
+        IOTC_LOGE("malloc for password failed");
         IotcFree(saltSn1);
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
 
-    if (saltSn1->password != NULL) {
-        IotcFree((char *)(saltSn1->password));
-        IOTC_LOGW("free old string connId = [%u]", connId);
+    if (memcpy_s(pwdCopy, BLE_AUTHCODE_LEN, password, BLE_AUTHCODE_LEN) != EOK) {
+        IOTC_LOGE("memcpy_s for password failed");
+        IotcFree(pwdCopy);
+        IotcFree(saltSn1);
+        return IOTC_ERR_INVALID_PARAM;
     }
 
-    saltSn1->password = (uint8_t *)dup;
+    saltSn1->password = pwdCopy;
 
     LIST_INSERT(&saltSn1->node, &g_sleInitialSaltSn1);
 
@@ -196,7 +205,7 @@ int32_t CreateSvcSessionIssue(uint16_t connId, uint8_t **out, uint32_t *outLen)
     *out = NULL;
     *outLen = 0;
 
-    uint8_t sn1[RAND_SN_LEN] = { 0 };
+    uint8_t sn1[RAND_SN_LEN] = {0};
     int32_t ret = SecurityRandom(sn1, sizeof(sn1));
     if (ret != IOTC_OK) {
         IOTC_LOGE("random err ret=%d", ret);
@@ -210,9 +219,6 @@ int32_t CreateSvcSessionIssue(uint16_t connId, uint8_t **out, uint32_t *outLen)
     }
 
     ret = BuildSessionIssueJson(sn1, connInfo, out, outLen);
-    if (ret != IOTC_OK) {
-        return ret;
-    }
 
     if (SleIsSessionInitSaltSn1Exist(connId)) {
         if (SleDelSessInitSaltSn1(connId) != IOTC_OK) {
@@ -231,23 +237,23 @@ int32_t CreateSvcSessionIssue(uint16_t connId, uint8_t **out, uint32_t *outLen)
 
 static int32_t GetSn2Hex(const IotcJson *req, uint8_t *out, uint32_t outLen)
 {
-    char sn1Str[HEXIFY_LEN(RAND_SN_LEN) + 1] = { 0 };
+    char sn1Str[HEXIFY_LEN(RAND_SN_LEN) + 1] = {0};
     int32_t ret = UtilsJsonGetString(req, STR_JSON_SN2, sn1Str, sizeof(sn1Str));
     CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_GET_NUM, "get sn2 str err");
 
-    CHECK_RETURN_LOGE(UtilsUnhexify(sn1Str, strlen(sn1Str), out, outLen),
-        IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY, "get sn2 hex err");
+    CHECK_RETURN_LOGE(
+        UtilsUnhexify(sn1Str, strlen(sn1Str), out, outLen), IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY, "get sn2 hex err");
     return IOTC_OK;
 }
 
 static int32_t GetSessHex(const IotcJson *req, uint8_t *out, uint32_t outLen)
 {
-    char sessStr[HEXIFY_LEN(SESSION_ID_LEN) + 1] = { 0 };
+    char sessStr[HEXIFY_LEN(SESSION_ID_LEN) + 1] = {0};
     int32_t ret = UtilsJsonGetString(req, STR_JSON_SESS_ID, sessStr, sizeof(sessStr));
     CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_GET_NUM, "get sess str err");
 
-    CHECK_RETURN_LOGE(UtilsUnhexify(sessStr, strlen(sessStr), out, outLen),
-        IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY, "get sess hex err");
+    CHECK_RETURN_LOGE(
+        UtilsUnhexify(sessStr, strlen(sessStr), out, outLen), IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY, "get sess hex err");
     return IOTC_OK;
 }
 
@@ -315,11 +321,15 @@ int32_t GetSleSvcCreateSession(const SleCmdParam *param, uint8_t **out, uint32_t
         goto ERROR_EXIT;
     }
 
-    if (GenerateSessionKey(param->connId, root, saltSn1Info) != IOTC_OK) {
+    int32_t ret = GenerateSessionKey(param->connId, root, saltSn1Info);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("session key generate err");
         goto ERROR_EXIT;
     }
 
     IOTC_LOGI("sle session create success connId = [%u]", param->connId);
+    (void)CreateSvcSessionSuccess(param->connId);
+
     IotcJsonDelete(root);
     return IOTC_OK;
 

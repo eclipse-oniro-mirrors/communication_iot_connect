@@ -19,7 +19,7 @@
 #include "iotc_sle_announce.h"
 #include "iotc_sle_server.h"
 #include "iotc_sle_client.h"
-
+#include "sle_conn_device_info.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,6 +56,7 @@ typedef int32_t (*SleSendIndicateData)(const char *svcUuid, const char *charUuid
     const uint8_t *value, uint32_t valueLen);
 
 typedef int32_t (*SleFindDeviceInfo)(const char *devId, void **info);
+typedef int32_t (*SleFindDeviceInfoByName)(const char *name, IotcConDeviceInfo **info);
 typedef struct {
     SleStartAdv onStartAdv;
     SleStopAdv onStopAdv;
@@ -69,6 +70,7 @@ typedef struct {
     SleSendCustomSecData onSendCustomSecData;
     SleSendIndicateData onSendIndicateData;
     SleFindDeviceInfo onFindDeviceInfo;
+    SleFindDeviceInfoByName onFindDeviceInfoByName;
 } SleSvcApi;
 
 typedef struct {
@@ -83,6 +85,7 @@ int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
 
 int32_t SleSvcProxyFindDeviceInfo(const char *devId, void **info);
+int32_t SleSvcProxyFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info);
 int32_t SleSvcProxyStartSeek(void);
 
 #ifdef __cplusplus

@@ -188,14 +188,13 @@ static int32_t SvcCheckEncType(const SleSvcInfo *svcInfo, SleLinkLayerEncryptTyp
 
 int32_t SleLinkLayerProcessRspData(uint32_t connId, const SleLinkLayerProcessRspParam *param)
 {
-    CHECK_RETURN_LOGE(param != NULL, IOTC_ERR_PARAM_INVALID, "ll process bt cmd null param");
-    CHECK_RETURN_LOGE((param->buff != NULL) && (param->len > 0) &&
-        (param->outBuff != NULL) && (param->outLen != NULL),
-        IOTC_ERR_PARAM_INVALID, "ll process bt cmd invalid param, len:%u", param->len);
-
+    CHECK_RETURN_LOGE((buff != NULL) && (len > 0) && (outBuff != NULL) && (outLen != NULL),
+        IOTC_ERR_PARAM_INVALID, "ll process bt cmd invalid param, len:%u", len);
     SleCmdParam cmdParam = { 0 };
     cmdParam.connId = connId;
-    int32_t ret = DecodeCmdSleData(param->buff, param->len, &cmdParam);
+
+    int32_t ret = DecodeCmdSleData(buff, len, &cmdParam);
+
     CHECK_RETURN(ret == IOTC_OK, ret);
 
     SleSvcInfo *svcInfo = GetSleSvcInfoByService(cmdParam.service);
@@ -261,7 +260,8 @@ static int32_t SleCreateAndSendRptCmdData(const SleRptCmdParam *rptParam)
 
     uint8_t *rptData = NULL;
     uint32_t rptDataLen = 0;
-    ret = EncodeCmdSleData(&cmdParam, rptParam->data, rptParam->len, &rptData, &rptDataLen);
+    IOTC_LOGD("SleCreateAndSendRptCmdData: DATA=%s, LEN =%u", (data && *data) ? (const char *)data : "null", len);
+    ret = EncodeCmdSleData(&cmdParam, data, len, &rptData, &rptDataLen);
     CHECK_RETURN(ret == IOTC_OK, ret);
     if (rptParam->encrypt) {
         ret = SleLinkLayerReportEncryptCmdData(rptParam->connId, rptData, rptDataLen);

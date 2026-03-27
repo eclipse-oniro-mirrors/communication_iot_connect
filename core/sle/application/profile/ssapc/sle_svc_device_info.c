@@ -28,6 +28,8 @@
 #include "sle_conn_device_info.h"
 #include "config_authinfo.h"
 #include "sle_print_data.h"
+#include "event_bus_pub.h"
+#include "iotc_event.h"
 
 
 // 获取设备信息响应 clent
@@ -96,6 +98,35 @@ static int32_t SaveDeviceInfoDetails(const IotcJson *devInfoJson, IotcConDeviceI
     return IOTC_OK;
 }
 
+static int32_t ParseAndCopyDevInfo(const IotcJson *devInfoJson, IotcConDeviceInfo *deviceConnInfo)
+{
+    if (SleJsonGetString(devInfoJson, STR_JSON_MODEL, &deviceConnInfo->devInfo->model) != IOTC_OK) {
+        IOTC_LOGE("model copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_DEV_TYPE, &deviceConnInfo->devInfo->devTypeId) != IOTC_OK) {
+        IOTC_LOGE("devType copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_MANU, &deviceConnInfo->devInfo->manuId) != IOTC_OK) {
+        IOTC_LOGE("manu copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_FWV, &deviceConnInfo->devInfo->fwv) != IOTC_OK) {
+        IOTC_LOGE("vendor copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_HWV, &deviceConnInfo->devInfo->hwv) != IOTC_OK) {
+        IOTC_LOGE("hwv copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    if (SleJsonGetString(devInfoJson, STR_JSON_SWV, &deviceConnInfo->devInfo->swv) != IOTC_OK) {
+        IOTC_LOGE("swv copy err");
+        return IOTC_CORE_COMM_UTILS_ERR_MALLOC_COPY;
+    }
+    return IOTC_OK;
+}
+
 static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
 {
     IotcConDeviceInfo *deviceConnInfo = SleGetConnectionInfoByConnId(connId);
@@ -128,9 +159,20 @@ static int32_t SaveDeviceInfo(uint16_t connId, IotcJson *root)
         return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
     }
 
-    ret = SaveDeviceInfoDetails(devInfoJson, deviceConnInfo);
-    if (ret != IOTC_OK) {
-        return ret;
+    // 添加服务列表
+    IotcJson *services = IotcJsonGetObj(vendor, STR_JSON_SERVICES);
+    if (services == NULL) {
+        IOTC_LOGE("Failed to get JSON object for key '%s' ", STR_JSON_SERVICES);
+        return IOTC_ADAPTER_JSON_ERR_GET_OBJ;
+    }
+
+    deviceConnInfo->services = IotcDuplicateJson(services, true);
+
+    IOTC_LOGD("get devInfoJson '%s' ", IotcJsonPrint(devInfoJson));
+
+    int32_t retDev = ParseAndCopyDevInfo(devInfoJson, deviceConnInfo);
+    if (retDev != IOTC_OK) {
+        return retDev;
     }
 
     IOTC_LOGI("SaveDeviceInfo end!! ");

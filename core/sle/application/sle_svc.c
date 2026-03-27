@@ -110,7 +110,6 @@ static int32_t SleServiceInit(SleSvcCtx *ctx)
         return ret;
     }
 
-    IOTC_LOGW("sle enable cb %d", ret);
     ret = SleScheduleEventInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("sle event init error %d", ret);
@@ -217,6 +216,7 @@ int32_t SleConnectServiceInit(void)
         .onSendCustomSecData = SleSendCustomSecDataService,
         .onSendIndicateData = IotcSleSendIndicateData,
         .onFindDeviceInfo = IotcOhSleFindDeviceInfoService,
+        .onFindDeviceInfoByName = IotcOhSleFindDeviceInfoByNameService,
     };
 
     ServiceInstance instance = {

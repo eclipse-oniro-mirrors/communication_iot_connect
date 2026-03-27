@@ -74,6 +74,7 @@ static int32_t SleSessionNodeRegister(SleSessParam *sessNode, uint16_t connId)
     SleSessionParmNode *sleSessNode = (SleSessionParmNode *)IotcCalloc(1, sizeof(SleSessionParmNode));
     CHECK_RETURN_LOGE(sleSessNode != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc sleSessionNode err");
     sleSessNode->sessParam = sessNode;
+    sleSessNode->connId = connId;
     LIST_INSERT_BEFORE(&sleSessNode->node, &g_sleSessParmList);
 
     return IOTC_OK;
@@ -367,17 +368,15 @@ static int32_t SleSessEncryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .keyLen     = SESSION_KEY_LEN,
         .iv         = outBuff,
         .ivLen      = SESS_IV_LEN,
-        .add        = (const uint8_t *)pid,
-        .addLen     = strlen(pid),
+        .add        = NULL,
+        .addLen     = 0,
         .data       = data,
         .dataLen    = dataLen,
     };
-    #ifdef HI3863_SDK_CONFIG_PATH
-    param.add = NULL;
-    param.addLen = 0;
-    #endif
+
     ret = IotcAesGcmEncrypt(&param, outBuff + SESS_IV_LEN + dataLen, SESS_TAG_LEN,
         outBuff + SESS_IV_LEN);
+
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen encData err:%d", ret);
 
     /* 填充 sessId */
@@ -410,16 +409,14 @@ static int32_t SleSessDecryptData(const uint8_t *data, uint32_t dataLen, uint8_t
         .keyLen     = SESSION_KEY_LEN,
         .iv         = data,
         .ivLen      = SESS_IV_LEN,
-        .add        = (const uint8_t *)pid,
-        .addLen     = strlen(pid),
+        .add        = NULL,
+        .addLen     = 0,
         .data       = data + SESS_IV_LEN,
         .dataLen    = outLen,
     };
-    #ifdef HI3863_SDK_CONFIG_PATH
-    param.add = NULL;
-    param.addLen = 0;
-    #endif
+
     ret = IotcAesGcmDecrypt(&param, data + SESS_IV_LEN + outLen, SESS_TAG_LEN, outBuff);
+
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "gen decData err:%d", ret);
 
     return IOTC_OK;
@@ -489,12 +486,13 @@ int32_t SleSessInit(void)
     int32_t ret = EventBusSubscribe(SleSessSsapDisconnectCb, IOTC_CORE_SLE_EVENT_SSAP_DISCONNECT);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "subscribe err:%d", ret);
 
-    LinkLayerSessKeyCallback cb = {
-        .sessKeyEncrypt = SleSessEncryptData,
-        .sessKeyDecrypt = SleSessDecryptData,
-        .sessKeyCalHmac = SleSessCalHmac,
-        .sessKeyCheckHmac = SleSessCheckHmac,
-        .sessKeyCheckExist = SleSessIsExist
+    SleLinkLayerSessKeyCallback cb = {
+        .sleSessKeyEncrypt = SleSessEncryptData,
+        .sleSessKeyDecrypt = SleSessDecryptData,
+        .sleSessKeyCalHmac = SleSessCalHmac,
+        .sleSessKeyCheckHmac = SleSessCheckHmac,
+        .sleSessKeyCheckExist = SleSessIsExist,
+        .sleSessDelNode = SleSessDelNode,
     };
     return LinkLayerRegisterSessKeyCb(cb);
 }

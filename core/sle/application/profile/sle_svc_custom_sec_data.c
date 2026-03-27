@@ -165,7 +165,7 @@ static void PutCharReportExecutorCallback(void *userData)
         IOTC_LOGW("trans rpt json err:%d", ret);
         return;
     }
-    ret = LinkLayerReportSvcDataEnc(SLE_SVC_CUSTOM_SEC_DATA, data, len);
+    ret = SleLinkLayerReportSvcDataEnc(connId, SLE_SVC_CUSTOM_SEC_DATA, data, len, SLE_OPTYPE_GET);
     IotcFree(data);
     if (ret != IOTC_OK) {
         IOTC_LOGW("rpt custom sec data err:%d", ret);
