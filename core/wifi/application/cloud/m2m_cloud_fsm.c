@@ -62,6 +62,11 @@ static void RegisterTimeoutTimerHandler(int32_t id, void *userData)
     }
 }
 
+typedef struct {
+    int32_t errcode;
+    char devId[64];  // 或者 char *devId; 取决于你是否动态分配
+} StatusSyncResult;
+
 static void RemoveRegisterTimeoutTimer(uint32_t event, void *param, uint32_t len)
 {
     NOT_USED(event);
@@ -502,6 +507,33 @@ static int32_t CloudFsmDevIdGetAuthCodeHandler(void *param, int32_t cur)
 
     return M2M_CLOUD_FSM_STATE_GET_AUTHCODE_WAIT_RESP;
 }
+static int32_t CloudFsmEcoDevInfoSyncHandler(M2mCloudContext *param, int32_t cur)
+{
+    NOT_USED(cur);
+    M2mCloudContext *ctx = param;
+
+    int32_t ret = M2mCloudSendRequest(ctx, (CoapClientRespHandler)M2mCloudEcoDevInfoRespHandler,
+                                      M2mCloudBuildEcoDevInfoRequest, M2mCloudEcoDevInfoSyncOption());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("dev info sync error %d", ret);
+        return M2M_CLOUD_FSM_STATE_CONNECT;
+    }
+
+    return M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC_WAIT_RESP;
+}
+
+static int32_t CloudFsmEcoDevStateSyncHandler(M2mCloudContext *param, int32_t cur)
+{
+    NOT_USED(cur);
+    M2mCloudContext *ctx = param;
+    int32_t ret = M2mCloudSendRequest(ctx, (CoapClientRespHandler)M2mCloudEcoDevStateRespHandler,
+                                      M2mCloudBuildEcoDevStateRequest, M2mCloudEcoDevStateSyncOption());
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("dev info sync error %d", ret);
+        return M2M_CLOUD_FSM_STATE_CONNECT;
+    }
+    return M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC_WAIT_RESP;
+}
 
 static UtilsFsm *GetM2mCloudFsm(void)
 {
@@ -524,6 +556,10 @@ static UtilsFsm *GetM2mCloudFsm(void)
         { M2M_CLOUD_FSM_STATE_ONLINE, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_DELETE, NULL },
         { M2M_CLOUD_FSM_STATE_GET_AUTHCODE, CloudFsmDevIdGetAuthCodeHandler },
+        { M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC, (UtilsFsmStateHandler)CloudFsmEcoDevInfoSyncHandler },
+        { M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC_WAIT_RESP, UtilsFsmStateSelfCirculation },
+        { M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC, (UtilsFsmStateHandler)CloudFsmEcoDevStateSyncHandler },
+        { M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC_WAIT_RESP, UtilsFsmStateSelfCirculation },
         { M2M_CLOUD_FSM_STATE_GET_AUTHCODE_WAIT_RESP, UtilsFsmStateSelfCirculation },
     };
     static UtilsFsm fsm = UTILS_FSM_DECLARE_INIT("cloud", M2M_CLOUD_FSM_STATE_INIT,

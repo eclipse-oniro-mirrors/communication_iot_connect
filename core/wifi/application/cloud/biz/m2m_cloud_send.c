@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <string.h>
+#include <stdio.h>
 #include "m2m_cloud_send.h"
 #include "comm_def.h"
 #include "utils_common.h"
@@ -23,7 +24,7 @@
 #include "iotc_errcode.h"
 #include "iotc_socket.h"
 #include "security_random.h"
-
+#include "securec.h"
 static uint32_t CloudOptionNumCalc(const CloudOption *option)
 {
     uint32_t opNum = option->num;
@@ -93,11 +94,66 @@ static CoapOption *BuildCloudOption(M2mCloudContext *ctx, const CloudOption *opt
     return ops;
 }
 
-int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
-    M2mBuildRequest build, const CloudOption *option)
+static int32_t BuildCoapUri(const CoapOption *options, uint32_t opNum, char *uriBuf, size_t uriBufSize)
+{
+    char pathBuf[128] = {0};
+    char queryBuf[128] = {0};
+    char hostBuf[64] = {0};
+    uint16_t port = COAP_DEFAULT_PORT;
+
+    for (uint32_t i = 0; i < opNum; ++i) {
+        uint16_t type = options[i].option;
+        const uint8_t *data = options[i].value.data;
+        int len = (int)options[i].value.len;
+
+        switch (type) {
+            case COAP_OPTION_TYPE_URI_HOST:
+                if (snprintf_s(hostBuf, sizeof(hostBuf), sizeof(hostBuf) - 1, "%.*s", len, data) < 0) {
+                    IOTC_LOGE("snprintf_s error");
+                }
+                break;
+            case COAP_OPTION_TYPE_URI_PORT:
+                if (len == PORT_BYTE_LENGTH) {
+                    port = (data[0] << BITS_PER_BYTE) | data[1];
+                }
+                break;
+            case COAP_OPTION_TYPE_URI_PATH:
+                if (strncat_s(pathBuf, sizeof(pathBuf), "/", 1) != 0 ||
+                    strncat_s(pathBuf, sizeof(pathBuf), (const char *)data, len) != 0) {
+                    IOTC_LOGE("Data concatenation error");
+                }
+                break;
+            case COAP_OPTION_TYPE_URI_QUERY:
+                if (strlen(queryBuf) > 0 && strncat_s(queryBuf, sizeof(queryBuf), "&", 1) != 0) {
+                    IOTC_LOGE("Data concatenation error");
+                }
+                if (strncat_s(queryBuf, sizeof(queryBuf), (const char *)data, len) != 0) {
+                    IOTC_LOGE("Data concatenation error");
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (strlen(queryBuf) > 0) {
+        if (snprintf_s(uriBuf, uriBufSize, uriBufSize - 1, "coap://%s:%u%s?%s", hostBuf, port, pathBuf, queryBuf) < 0) {
+            IOTC_LOGE("Data concatenation error");
+        }
+    } else {
+        if (snprintf_s(uriBuf, uriBufSize, uriBufSize - 1, "coap://%s:%u%s", hostBuf, port, pathBuf) < 0) {
+            IOTC_LOGE("Data concatenation error");
+        }
+    }
+    return IOTC_OK;
+}
+
+int32_t M2mCloudSendRequest(
+    M2mCloudContext *ctx, CoapClientRespHandler resp, M2mBuildRequest build, const CloudOption *option)
 {
     CHECK_RETURN_LOGE(ctx != NULL && resp != NULL && build != NULL && option != NULL && option->uri != NULL &&
-        option->num != 0 && ctx->linkInfo.endpoint != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+            option->num != 0 && ctx->linkInfo.endpoint != NULL,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
 
     uint32_t opNum;
     CoapOption *options = BuildCloudOption(ctx, option, &opNum);
@@ -106,6 +162,12 @@ int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
         return IOTC_SDK_AILIFE_WIFI_ERR_CLOUD_BUILD_OPTION;
     }
 
+    char uriBuf[256] = {0};
+    int32_t ret = BuildCoapUri(options, opNum, uriBuf, sizeof(uriBuf));
+    if (ret != IOTC_OK) {
+        IotcFree(options);
+        return ret;
+    }
     IotcJson *reqJson = build(ctx);
     if (reqJson == NULL) {
         IotcFree(options);
@@ -126,7 +188,7 @@ int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
     };
 
     CoapPacket packet;
-    int32_t ret = CoapClientSendReq(ctx->linkInfo.endpoint, &param, NULL, &packet);
+    ret = CoapClientSendReq(ctx->linkInfo.endpoint, &param, NULL, &packet);
     for (uint32_t i = 0; i < opNum; ++i) {
         if (options[i].value.data != NULL && options[i].option == COAP_OPTION_TYPE_SEQ_NUM_ID) {
             IotcFree((void *)(options[i].value.data));
@@ -134,11 +196,7 @@ int32_t M2mCloudSendRequest(M2mCloudContext *ctx, CoapClientRespHandler resp,
     }
     IotcFree(options);
     IotcJsonDelete(reqJson);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("send req error %d", ret);
-        return ret;
-    }
-    return IOTC_OK;
+    return ret;
 }
 
 int32_t M2mCloudSendCSM(M2mCloudContext *ctx)

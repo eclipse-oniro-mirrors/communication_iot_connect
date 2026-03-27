@@ -25,37 +25,8 @@
 
 ListEntry g_m2mCloudResponseList = LIST_DECLARE_INIT(&g_m2mCloudResponseList);
 
-typedef struct {
-    const CoapOption *reqId;
-    const CoapOption *devId;
-    const CoapOption *userId;
-    const CoapOption *seqId;
-} CoapCtrlOptions;
-
-static int32_t ExtractCtrlOptions(const CoapPacket *req, CoapCtrlOptions *opts)
-{
-    uint32_t seg = 0;
-    opts->reqId = CoapUtilsFindOption(req, COAP_OPTION_TYPE_REQ_ID, &seg);
-    if (opts->reqId == NULL || seg != 1 || opts->reqId->value.data == NULL || opts->reqId->value.len == 0) {
-        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_REQ_ID;
-    }
-    opts->devId = CoapUtilsFindOption(req, COAP_OPTION_TYPE_DEV_ID, &seg);
-    if (opts->devId == NULL || seg != 1 || opts->devId->value.data == NULL || opts->devId->value.len == 0) {
-        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_DEV_ID;
-    }
-    opts->userId = CoapUtilsFindOption(req, COAP_OPTION_TYPE_USER_ID, &seg);
-    if (opts->userId == NULL || seg != 1 || opts->userId->value.data == NULL || opts->userId->value.len == 0) {
-        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_USER_ID;
-    }
-    opts->seqId = CoapUtilsFindOption(req, COAP_OPTION_TYPE_SEQ_NUM_ID, &seg);
-    if (opts->seqId == NULL || seg != 1 || opts->seqId->value.data == NULL || opts->seqId->value.len == 0) {
-        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_SEQ_NUM_ID;
-    }
-    return IOTC_OK;
-}
-
-static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket *req,
-    const SocketAddr *addr, const M2mCloudContext *ctx, IotcJson *respJson)
+static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
+                                       const M2mCloudContext *ctx, IotcJson *respJson)
 {
     CoapCtrlOptions ctrlOpts = {0};
     int32_t ret = ExtractCtrlOptions(req, &ctrlOpts);
@@ -91,67 +62,38 @@ static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket 
     return ret;
 }
 
-static int32_t M2mCloudJsonGetString(const IotcJson *json, const char *key, const char **outStr)
+static int32_t GetResponeDevMsgId(const IotcJson *msg, IotcJson **savedDevid, IotcJson **saveMsgId)
 {
-    CHECK_RETURN(json != NULL &&
-        key != NULL &&
-        outStr != NULL,
-        IOTC_ERR_PARAM_INVALID);
-
-    const char *src = IotcJsonGetStr(IotcJsonGetObj(json, key));
-    if (src == NULL) {
-        IOTC_LOGW("get json str error %s", key);
-        return IOTC_ADAPTER_JSON_ERR_GET_STRING;
+    if (msg == NULL || savedDevid == NULL || saveMsgId == NULL) {
+        return IOTC_ERR_INVALID_PARAM;
     }
 
-    if (*outStr != NULL && strcmp(*outStr, src) == 0) {
-        IOTC_LOGD("string content is the same, no need to reallocate");
-        return IOTC_OK;
+    uint32_t arraySize = 0;
+    IotcJsonGetArraySize(msg, &arraySize);
+
+    for (int32_t i = 0; i < arraySize; i++) {
+        IotcJson *item = IotcJsonGetArrayItem(msg, i);
+        if (item == NULL) {
+            continue;
+        }
+
+        // 提取并保存 devid
+        if (IotcJsonHasObj(item, STR_JSON_DEVID)) {
+            if (*savedDevid == NULL && (strcmp(IotcJsonGetObj(item, STR_JSON_DEVID), "0") != 0)) {
+                *savedDevid = IotcDuplicateJson(IotcJsonGetObj(item, STR_JSON_DEVID), true);
+            }
+            IotcJsonDeleteItem(item, STR_JSON_DEVID);
+        }
+
+        // 提取并保存 msg_id
+        if (IotcJsonHasObj(item, STR_JSON_MSG_ID)) {
+            if (*saveMsgId == NULL && (strcmp(IotcJsonGetObj(item, STR_JSON_MSG_ID), "0") != 0)) {
+                *saveMsgId = IotcDuplicateJson(IotcJsonGetObj(item, STR_JSON_MSG_ID), true);
+            }
+            IotcJsonDeleteItem(item, STR_JSON_MSG_ID);
+        }
     }
 
-    if (*outStr != NULL) {
-        IotcFree((char *)*outStr);
-        IOTC_LOGW("free old string %s", key);
-    }
-
-    char *dup = strdup(src);
-    if (dup == NULL) {
-        IOTC_LOGE("strdup(%s) failed", key);
-        *outStr = NULL;
-        return IOTC_ERROR;
-    }
-
-    *outStr = dup;
-    return IOTC_OK;
-}
-
-static int32_t FillNodeIdsFromOptions(CoapResponeNode *node, const CoapPacket *req_pkt)
-{
-    uint32_t seg = 0;
-    const CoapOption *reqIdOpt = CoapUtilsFindOption(req_pkt, COAP_OPTION_TYPE_REQ_ID, &seg);
-    if (reqIdOpt == NULL || seg != 1 || reqIdOpt->value.data == NULL || reqIdOpt->value.len == 0) {
-        return IOTC_ERROR;
-    }
-    const CoapOption *devIdOpt = CoapUtilsFindOption(req_pkt, COAP_OPTION_TYPE_DEV_ID, &seg);
-    if (devIdOpt == NULL || seg != 1 || devIdOpt->value.data == NULL || devIdOpt->value.len == 0) {
-        return IOTC_ERROR;
-    }
-
-    node->devId = IotcMalloc(devIdOpt->value.len + 1);
-    if (node->devId == NULL) {
-        IOTC_LOGE("%s: devId strdup failed", __func__);
-        return IOTC_ERROR;
-    }
-    (void)memcpy_s(node->devId, devIdOpt->value.len + 1, devIdOpt->value.data, devIdOpt->value.len);
-    ((char *)node->devId)[devIdOpt->value.len] = '\0';
-
-    node->msgId = IotcMalloc(reqIdOpt->value.len + 1);
-    if (node->msgId == NULL) {
-        IOTC_LOGE("%s: msgId strdup failed", __func__);
-        return IOTC_ERROR;
-    }
-    (void)memcpy_s(node->msgId, reqIdOpt->value.len + 1, reqIdOpt->value.data, reqIdOpt->value.len);
-    ((char *)node->msgId)[reqIdOpt->value.len] = '\0';
     return IOTC_OK;
 }
 
@@ -220,7 +162,8 @@ CoapResponeNode *M2mCloudFindNodeByMsgId(const char *msgId, const char *devId)
     }
 
     ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &g_m2mCloudResponseList) {
+    LIST_FOR_EACH_ITEM(item, &g_m2mCloudResponseList)
+    {
         CoapResponeNode *resp = CONTAINER_OF(item, CoapResponeNode, list);
         if ((strcmp(msgId, resp->msgId) == 0) && (strcmp(devId, resp->devId) == 0)) {
             return resp;
@@ -249,33 +192,29 @@ void M2mCloudRemoveNode(CoapResponeNode *node)
 int32_t M2mCloudResponseMessage(const IotcJson *dataArray)
 {
     CHECK_RETURN_LOGW(dataArray != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    IotcJson *respJson = IotcJsonGetObj(dataArray, STR_JSON_VENDOR);
-
-    const char *devId = "0";
-    const char *msgId = "0";
-    int32_t ret = M2mCloudJsonGetString(dataArray, STR_JSON_DEVID, &devId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("Failed to get device ID from JSON, error code: %d", ret);
-        return ret;
+    // 获取设备id 和msgId并且删除掉
+    IotcJson *devId = NULL;
+    IotcJson *msgId = NULL;
+    GetResponeDevMsgId(dataArray, &devId, &msgId);
+    if (devId == NULL || msgId == NULL) {
+        IOTC_LOGE("devId or msgId is null");
+        return IOTC_ERROR;
     }
-    ret = M2mCloudJsonGetString(dataArray, STR_JSON_MSG_ID, &msgId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("Failed to get message ID from JSON, error code: %d", ret);
-        return ret;
-    }
-    CoapResponeNode *coapResponse = M2mCloudFindNodeByMsgId(msgId, devId);
+    CoapResponeNode *coapResponse = M2mCloudFindNodeByMsgId(IotcJsonGetStr(msgId), IotcJsonGetStr(devId));
     if (coapResponse == NULL) {
         IOTC_LOGE("Failed to find the response node by message ID: %s", msgId);
         return IOTC_ERROR;
     }
 
+    IotcJson *dataArrayRespone = IotcDuplicateJson(dataArray, true);
     // send response
-    if (M2mCloudCtrlResponseMsg(coapResponse->endpoint, coapResponse->req,
-        coapResponse->addr, coapResponse->ctx, respJson) != IOTC_OK) {
+    if (M2mCloudCtrlResponseMsg(coapResponse->endpoint, coapResponse->req, coapResponse->addr, coapResponse->ctx,
+                                dataArrayRespone) != IOTC_OK) {
         IOTC_LOGE("Failed to send response message to the client");
     }
     // remove node
     M2mCloudRemoveNode(coapResponse);
+    IotcFree(dataArrayRespone);
 
     return IOTC_OK;
 }

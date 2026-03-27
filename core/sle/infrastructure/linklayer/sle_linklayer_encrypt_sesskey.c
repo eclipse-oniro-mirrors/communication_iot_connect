@@ -171,5 +171,11 @@ EXIT:
 bool SleLinkLayerSessKeyExist(void)
 {
     CHECK_RETURN(g_sessKeyCb.sleSessKeyCheckExist != NULL, false);
-    return g_sessKeyCb.sleSessKeyCheckExist();
+    return g_sessKeyCb.sleSessKeyCheckExist(connId);
+}
+
+int32_t SleLinkLayerSessDelete(uint16_t connId)
+{
+    CHECK_RETURN(g_sessKeyCb.sleSessDelNode != NULL, false);
+    return g_sessKeyCb.sleSessDelNode(connId);
 }

@@ -82,17 +82,6 @@ static void PrintSleSsapsCharList(IotcAdptSleSsapsChar *character, uint8_t num)
     }
 }
 
-void PrintSleSsapConnidAndAddr(void)
-{
-    ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &(g_SleSsapApp.peerDevInfo->node)) {
-        SlePeerDevInfo *node = CONTAINER_OF(item, SlePeerDevInfo, node);
-        char addrStr[SLE_ADDR_STR_LEN];
-        SleAddrToStr(node->devAddr.addr, addrStr, sizeof(addrStr));
-        IOTC_LOGI("[sle_ssap_mgt] connId:%u,addr: %s\r\n", node->connId, addrStr);
-    }
-}
-
 void PrintSleSsapServiceList(IotcAdptSleSsapService *svc, uint8_t num)
 {
     (void)svc;

@@ -127,13 +127,13 @@ static int32_t SleSessionNodeRegister(SpekeSession *sessNode, uint32_t connSessi
     SleSessionNode *sleSessionNode = (SleSessionNode *)IotcCalloc(1, sizeof(SleSessionNode));
     CHECK_RETURN_LOGE(sleSessionNode != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc sleSessionNode err");
     sleSessionNode->sleSpekeSess = sessNode;
+    sleSessionNode->connSessionId = connSessionId;
     (void)UtilsGlobalMutexLock();
     LIST_INSERT_BEFORE(&sleSessionNode->node, &g_sleSpekeSessList);
     UtilsGlobalMutexUnlock();
 
     return IOTC_OK;
 }
-
 
 static int32_t GetPinCode(SpekeSession *session, void *user, uint8_t *pinCode, uint32_t *len)
 {

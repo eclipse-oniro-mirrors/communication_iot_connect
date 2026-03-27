@@ -191,38 +191,76 @@ ERROR_EXIT:
     return NULL;
 }
 
-static int32_t SendCloudCtlMsg(CoapEndpoint *endpoint, const CoapPacket *req,
-    const SocketAddr *addr, const M2mCloudContext *ctx, IotcJson *respJson)
+// 验证必需的CoAP选项
+static int32_t ValidateRequiredCoapOptions(const CoapPacket *req, const CoapOption **uriOpt,
+                                           const CoapOption **reqIdOpt, const CoapOption **devIdOpt,
+                                           const CoapOption **userIdOpt)
+{
+    uint32_t seg = 0;
+
+    *uriOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_URI_PATH, &seg);
+    if (*uriOpt == NULL || seg != 1 || (*uriOpt)->value.data == NULL || (*uriOpt)->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_NO_AVAILABLE_URL;
+    }
+
+    *reqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_REQ_ID, &seg);
+    if (*reqIdOpt == NULL || seg != 1 || (*reqIdOpt)->value.data == NULL || (*reqIdOpt)->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_REQ_ID;
+    }
+
+    *devIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_DEV_ID, &seg);
+    if (*devIdOpt == NULL || seg != 1 || (*devIdOpt)->value.data == NULL || (*devIdOpt)->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_DEV_ID;
+    }
+
+    *userIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_USER_ID, &seg);
+    if (*userIdOpt == NULL || seg != 1 || (*userIdOpt)->value.data == NULL || (*userIdOpt)->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_USER_ID;
+    }
+
+    return IOTC_OK;
+}
+
+static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
+                                    const M2mCloudContext *ctx, IotcJson *respJson)
 {
     int32_t ret = IOTC_OK;
     do {
-        uint32_t seg = 0;
-        const CoapOption *reqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_REQ_ID, &seg);
-        if (reqIdOpt == NULL || seg != 1 || reqIdOpt->value.data == NULL || reqIdOpt->value.len == 0) {
-            ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_REQ_ID;
+        const CoapOption *uriOpt = NULL;
+        const CoapOption *reqIdOpt = NULL;
+        const CoapOption *devIdOpt = NULL;
+        const CoapOption *userIdOpt = NULL;
+
+        ret = ValidateRequiredCoapOptions(req, &uriOpt, &reqIdOpt, &devIdOpt, &userIdOpt);
+        if (ret != IOTC_OK) {
             break;
         }
-        const CoapOption *devIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_DEV_ID, &seg);
-        if (devIdOpt == NULL || seg != 1 || devIdOpt->value.data == NULL || devIdOpt->value.len == 0) {
-            ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_DEV_ID;
-            break;
-        }
-        const CoapOption *uerIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_USER_ID, &seg);
-        if (uerIdOpt == NULL || seg != 1 || uerIdOpt->value.data == NULL || uerIdOpt->value.len == 0) {
-            ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_USER_ID;
-            break;
-        }
-        const CoapOption *seqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_SEQ_NUM_ID, &seg);
-        if (uerIdOpt == NULL || seg != 1 || seqIdOpt->value.data == NULL || seqIdOpt->value.len == 0) {
-            ret = IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_SEQ_NUM_ID;
-            break;
-        }
+
+#define STR_URI_PATH_DEVCONTROL "devControl"
+        uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
         const CoapOption options[] = {
+            {COAP_OPTION_TYPE_URI_PATH,
+             {req->header.code == COAP_METHOD_TYPE_POST ? (const uint8_t *)STR_URI_PATH_DEVCONTROL :
+                                                          (const uint8_t *)uriOpt->value.data,
+              ((req->header.code == COAP_METHOD_TYPE_POST ? strlen(STR_URI_PATH_DEVCONTROL) : uriOpt->value.len))}},
             {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->tokenInfo.access, strlen(ctx->tokenInfo.access)}},
             {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)reqIdOpt->value.data, reqIdOpt->value.len}},
             {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)devIdOpt->value.data, devIdOpt->value.len}},
-            {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)uerIdOpt->value.data, uerIdOpt->value.len}},
-            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seqIdOpt->value.data, seqIdOpt->value.len}},
+            {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)userIdOpt->value.data, userIdOpt->value.len}},
+            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seq, sizeof(uint32_t)}},
+        };
+
+        (*seq)++;
+        CoapServerRespParam respParam = {
+            .req = req,
+            .type = COAP_MSG_TYPE_NCON,
+            .code = COAP_RESPONSE_CODE_CONTENT,
+            .opNum = ARRAY_SIZE(options),
+            .options = options,
+            .payload = NULL,
+            .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
+            .payloadUserData = respJson,
+            .preSize = 0,
         };
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
             options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
@@ -236,17 +274,16 @@ static int32_t SendCloudCtlMsg(CoapEndpoint *endpoint, const CoapPacket *req,
     return ret;
 }
 
-static int32_t SendCloudCtlMsgResp(CoapEndpoint *endpoint, const CoapPacket *req,
-    const SocketAddr *addr, const M2mCloudContext *ctx)
+static int32_t SendCloudCtlMsgResp(
+    CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, const M2mCloudContext *ctx)
 {
     IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
     if (dataJsonArray == NULL) {
         IOTC_LOGW("Parse Cloud Ctl Msg error");
         return IOTC_ERROR;
     }
-
-    //创建响应节点， 返回节点
-    CoapResponeNode* respInfo = M2mCloudCreateCoapNode(endpoint, req, addr, ctx);
+    // 创建响应节点， 返回节点
+    CoapResponeNode *respInfo = M2mCloudCreateCoapNode(endpoint, req, addr, ctx);
     if (respInfo == NULL) {
         IOTC_LOGW("create cloud resp node error");
         return IOTC_ERROR;
@@ -264,7 +301,7 @@ static int32_t SendCloudCtlMsgResp(CoapEndpoint *endpoint, const CoapPacket *req
         if (ret != IOTC_OK) {
             IOTC_LOGW("cloud get char error %d", ret);
         }
-    } else if (req->header.code == COAP_METHOD_TYPE_POST) {
+    } else if ((req->header.code == COAP_METHOD_TYPE_POST) || (req->header.code == COAP_METHOD_TYPE_PUT)) {
         ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
         if (ret != IOTC_OK) {
             IOTC_LOGE("ctrl error %d", ret);

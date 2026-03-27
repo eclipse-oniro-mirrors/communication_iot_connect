@@ -28,12 +28,18 @@
 #include "comm_def.h"
 #include "dev_info.h"
 
-#define GATEWAY_CONNID 64
 typedef struct DeviceInfoReport {
-    char      deviceId[DEVICE_ID_MAX_STR_LEN + 1];
-    uint8_t   online;
-    char     *lastChange;
+    char deviceId[DEVICE_ID_MAX_STR_LEN + 1];
+    uint8_t online;
+    char *lastChange;
 } DeviceInfoReport;
+
+typedef enum {
+    M2M_CLOUD_DEV_STATE_OFFLINE = 0,
+    M2M_CLOUD_DEV_STATE_ONLINE = 1,
+    M2M_CLOUD_DEV_STATE_PENDING = 2,
+    M2M_CLOUD_DEV_STATE_SYNC = 3,
+} M2MCloudDevState;
 
 static int32_t ConstCharCopy(const char *src, const char **outStr)
 {
@@ -49,51 +55,6 @@ static int32_t ConstCharCopy(const char *src, const char **outStr)
     }
 
     *outStr = dup;
-    return IOTC_OK;
-}
-
-static int32_t PopulateDeviceInfo(IotcConDeviceInfo *deviceInfo, const DevAuthInfo *authInfo)
-{
-    if (memcpy_s(deviceInfo->devId, DEVICE_ID_MAX_STR_LEN, authInfo->devId, DEVICE_ID_MAX_STR_LEN) != EOK) {
-        IOTC_LOGE("mencpy_s devId err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (memcpy_s(deviceInfo->uidHash, BLE_UID_HASH_LEN, authInfo->uidHash, BLE_UID_HASH_LEN) != EOK) {
-        IOTC_LOGE("mencpy_s uidHash err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevSn(), &deviceInfo->devInfo->sn) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy sn err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevModel(), &deviceInfo->devInfo->model) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy model err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevTypeId(), &deviceInfo->devInfo->devTypeId) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy devTypeId err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevManuId(), &deviceInfo->devInfo->manuId) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy manuId err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevProId(), &deviceInfo->devInfo->prodId) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy hwv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevFwv(), &deviceInfo->devInfo->fwv) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy fwv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevHwv(), &deviceInfo->devInfo->hwv) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy hwv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
-    if (ConstCharCopy(ModelGetDevSwv(), &deviceInfo->devInfo->swv) != IOTC_OK) {
-        IOTC_LOGE("ConstCharCopy swv err");
-        return IOTC_ERR_SECUREC_SPRINTF;
-    }
     return IOTC_OK;
 }
 
@@ -155,19 +116,24 @@ static int32_t SaveAuthSetupConfigInfo(uint16_t connId, IotcJson *root)
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
-    if (UtilsJsonGetString(root, STR_JSON_AUTHCODE_ID, deviceInfo->authCodeId, BLE_AUTHCODE_ID_LEN) != IOTC_OK) {
+    if (UtilsJsonGetString(root, STR_JSON_AUTHCODE_ID, deviceInfo->authCodeId, BLE_AUTHCODE_ID_LEN + 1) != IOTC_OK) {
         IOTC_LOGE("GetSleSvcAuthSetup %s proc reqPayload err", STR_JSON_AUTHCODE_ID);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
 
     DeviceInfoReport devIdReport = {0};
-    devIdReport.online = 1;
-    if (strncpy_s(devIdReport.deviceId, DEVICE_ID_MAX_STR_LEN + 1,
-        deviceInfo->devId, sizeof(deviceInfo->devId)) != EOK) {
+    devIdReport.online = M2M_CLOUD_DEV_STATE_PENDING;
+    if (strncpy_s(devIdReport.deviceId, DEVICE_ID_MAX_STR_LEN + 1, deviceInfo->devId, sizeof(deviceInfo->devId)) !=
+        EOK) {
         IOTC_LOGE("GetSleSvcAuthSetup strncpy_s %s proc deviceId err", devIdReport.deviceId);
         return IOTC_ADAPTER_JSON_ERR_PARSE;
     }
-    //通知云测该设备id上线，获取authcode再下一步
+    // 完成通知
+    NotifyFinishedStatus status = {0};
+    status.errorCode = IOTC_OK;
+    status.connSessionId = connId;
+    EventBusPublishSync(IOTC_CORE_SLE_EVENT_AUTH_SETUP_FINISHED, (void *)&status, sizeof(NotifyFinishedStatus));
+    // 通知云测该设备id上线，获取authcode再下一步
     EventBusPublishSync(IOTC_EVENT_INNER_CLOUD_SLE_SETUP, (void *)&devIdReport, sizeof(DeviceInfoReport));
 
     return IOTC_OK;

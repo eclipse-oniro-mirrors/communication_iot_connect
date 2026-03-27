@@ -28,6 +28,8 @@ int32_t SleLinkLayerSleSessKeyDecrypt(uint8_t *data, uint32_t *dataLen);
 
 bool SleLinkLayerSessKeyExist(void);
 
+int32_t SleLinkLayerSessDelete(uint16_t connId);
+
 #ifdef __cplusplus
 }
 #endif

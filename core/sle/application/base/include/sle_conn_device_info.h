@@ -19,11 +19,13 @@
 #include "iotc_sle_def.h"
 #include "utils_list.h"
 #include "utils_fsm.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define GATEWAY_CONNID 64
 
 typedef struct {
     IotcDeviceInfo *devInfo; // 下挂的生态设备信息（SLE连接后,从生态设备处获取）
@@ -38,6 +40,7 @@ typedef struct {
     uint16_t connID;
     uint8_t devAddr[IOTC_ADPT_SLE_ADDR_LEN];
     SpekeState isSecure;
+    IotcJson *services;
 } IotcConDeviceInfo;
 
 
@@ -62,11 +65,12 @@ int32_t SleAddConnDev(const SleConnRetDeviceInfo *retDev);
 void SleDeleteConnDev(uint16_t connID);
 bool SleFindConnDevByDevId(const char *devID, uint16_t *connID);
 void DestroySleConnDevList(void);
-void PrintSleConnDevList();
 bool IsExitSleConnDev(const uint16_t connID);
 
 // 根据devId获取返回的连接信息
 IotcDeviceInfo* SleGetDeviceInfoByDevId(const char *devId);
+
+IotcConDeviceInfo* SleGetDeviceInfoByDevTypeName(const char *name);
 
 // 根据devId获取连接信息
 IotcConDeviceInfo* SleGetConnectionInfoByDevId(const char *devId);

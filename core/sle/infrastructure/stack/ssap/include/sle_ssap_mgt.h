@@ -95,8 +95,7 @@ void SleSsapDisconnectAll(void);
 int32_t SetSleConnectParam(void);
 int32_t SleSsapReqRead(uint8_t serverId, uint16_t connId, uint16_t attrHandle, int16_t requestId);
 int32_t SleSsapReqWrite(const SleSsapWriteParam *param);
-int32_t SleSetServiceAtt(const uint32_t connId, const uint32_t startHdl, const uint32_t endHdl);
-void PrintSleSsapConnidAndAddr(void);
+int32_t SleSetServiceAtt(const uint16_t connId, const uint32_t startHdl, const uint32_t endHdl);
 int32_t SleSsapReqWriteNotification(const SleSsapReqWriteNotificationParam *param);
 #ifdef __cplusplus
 }

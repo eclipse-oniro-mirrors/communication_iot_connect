@@ -39,9 +39,22 @@ static int32_t M2mCloudIsRespMessageType(const IotcJson *msg)
         IOTC_LOGE("msg is null");
         return IOTC_ERROR;
     }
-    const char *src = IotcJsonGetStr(IotcJsonGetObj(msg, STR_JSON_MSG_ID));
-    if (strcmp(src, "0") != 0) {
-        return IOTC_OK;
+
+    uint32_t arraySize = 0;
+    if (IotcJsonGetArraySize(msg, &arraySize) != IOTC_OK) {
+        IOTC_LOGE("get array size failed");
+        return IOTC_ERROR;
+    }
+
+    for (int i = 0; i < arraySize; i++) {
+        IotcJson *item = IotcJsonGetArrayItem(msg, i);
+        if (!IotcJsonHasObj(item, STR_JSON_MSG_ID)) {
+            continue;
+        }
+        const char *src = IotcJsonGetStr(IotcJsonGetObj(item, STR_JSON_MSG_ID));
+        if (strcmp(src, "0") != 0) {
+            return IOTC_OK;
+        }
     }
     IOTC_LOGI("msg is not response message");
     return IOTC_ERROR;
@@ -54,7 +67,7 @@ static int32_t M2mCloudDeviceReportMessageHandler(const ServiceMessage *req, Ser
 
     int32_t ret = IOTC_OK;
 
-    //判断是否是响应消息
+    // 判断是否是响应消息
     if (M2mCloudIsRespMessageType(req->msg) == IOTC_OK) {
         ret = M2mCloudResponseMessage(req->msg);
     } else {

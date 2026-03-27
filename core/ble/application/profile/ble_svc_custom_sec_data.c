@@ -63,6 +63,35 @@ static bool IsAllServicesSid(IotcJson *vendorItem)
     return true;
 }
 
+static int32_t DelDevIdAndMsgId(IotcJson* msg)
+{
+    if (msg == NULL) {
+        return IOTC_ERR_INVALID_PARAM;
+    }
+
+    uint32_t arraySize = 0;
+    IotcJsonGetArraySize(msg, &arraySize);
+
+    for (int32_t i = 0; i < arraySize; i++) {
+        IotcJson *item = IotcJsonGetArrayItem(msg, i);
+        if (item == NULL) {
+            continue;
+        }
+
+        // 删除 devid
+        if (IotcJsonHasObj(item, STR_JSON_DEVID)) {
+            IotcJsonDeleteItem(item, STR_JSON_DEVID);
+        }
+
+        // 删除msg_id
+        if (IotcJsonHasObj(item, STR_JSON_MSG_ID)) {
+            IotcJsonDeleteItem(item, STR_JSON_MSG_ID);
+        }
+    }
+
+    return IOTC_OK;
+}
+
 static int32_t BuildBleCustomSecDataService(IotcJson *item, uint8_t **out, uint32_t *outLen)
 {
     IotcJson *root = IotcJsonCreate();
@@ -77,7 +106,15 @@ static int32_t BuildBleCustomSecDataService(IotcJson *item, uint8_t **out, uint3
         return ret;
     }
 
-    IotcJson *dupItem = NULL;
+    // 添加 errcode 字段，解决get指令手机侧解析报错问题
+    ret = IotcJsonAddNum2Obj(root, STR_JSON_ERR_CODE, 0);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add errcode error %d", ret);
+        IotcJsonDelete(root);
+        return ret;
+    }
+    DelDevIdAndMsgId(item);
+    IotcJson *dupItem = IotcDuplicateJson(item, true);
     if (IotcJsonGetObj(item, STR_JSON_VENDOR)) {
         dupItem = IotcDuplicateJson(IotcJsonGetObj(item, STR_JSON_VENDOR), true);
     } else {

@@ -36,8 +36,8 @@ void MdlCharStatesFree(IotcCharState **states, uint32_t size)
     UTILS_FREE_2_NULL(*states);
 }
 
-static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t size,
-    CharStateDataType type)
+static int32_t JsonArrayToCharStates(
+    const IotcJson *json, IotcCharState **states, uint32_t size, CharStateDataType type)
 {
     IotcCharState *statesTmp = (IotcCharState *)IotcCalloc(size, sizeof(IotcCharState));
     if (statesTmp == NULL) {
@@ -58,8 +58,10 @@ static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **state
             ret = IOTC_CORE_PROF_MDL_ERR_SVC_NO_SID;
             break;
         }
+#if IOTC_CONF_DEV_TYPE == 2
         statesTmp[i].devId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_DEV_ID)));
         statesTmp[i].msgId = (char *)UtilsStrDup(IotcJsonGetStr(IotcJsonGetObj(cur, STR_JSON_MSG_ID)));
+#endif
         statesTmp[i].data = (char *)UtilsJsonPrintByMalloc(IotcJsonGetObj(cur, STR_JSON_DATA));
         if (statesTmp[i].data != NULL) {
             statesTmp[i].len = strlen(statesTmp[i].data);
@@ -78,8 +80,8 @@ static int32_t JsonArrayToCharStates(const IotcJson *json, IotcCharState **state
     return ret;
 }
 
-static int32_t MdlJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size,
-    CharStateDataType type)
+static int32_t MdlJsonArrayToCharStates(
+    const IotcJson *json, IotcCharState **states, uint32_t *size, CharStateDataType type)
 {
     int32_t ret = IotcJsonGetArraySize(json, size);
     if (ret != IOTC_OK) {
@@ -101,16 +103,16 @@ static int32_t MdlJsonArrayToCharStates(const IotcJson *json, IotcCharState **st
 
 int32_t MdlPutJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size)
 {
-    CHECK_RETURN_LOGE(json != NULL && states != NULL && *states == NULL && size != NULL,
-        IOTC_ERR_PARAM_INVALID, "param invalid");
+    CHECK_RETURN_LOGE(
+        json != NULL && states != NULL && *states == NULL && size != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     return MdlJsonArrayToCharStates(json, states, size, CHAR_STATE_NEED_DATA);
 }
 
 int32_t MdlGetJsonArrayToCharStates(const IotcJson *json, IotcCharState **states, uint32_t *size)
 {
-    CHECK_RETURN_LOGE(json != NULL && states != NULL && *states == NULL && size != NULL,
-        IOTC_ERR_PARAM_INVALID, "param invalid");
+    CHECK_RETURN_LOGE(
+        json != NULL && states != NULL && *states == NULL && size != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
     return MdlJsonArrayToCharStates(json, states, size, CHAR_STATE_NOT_NEED_DATA);
 }
@@ -173,7 +175,19 @@ static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, Iot
             IotcJsonDelete(curJsonObj);
             return IOTC_ADAPTER_JSON_ERR_ADD;
         }
+#if IOTC_CONF_DEV_TYPE == 2
+        if (state[i].devId != NULL) {
+            IotcJsonAddStr2Obj(curJsonObj, STR_JSON_DEV_ID, state[i].devId);
+        } else {
+            IotcJsonAddStr2Obj(curJsonObj, STR_JSON_DEV_ID, "0");
+        }
 
+        if (state[i].msgId != NULL) {
+            IotcJsonAddStr2Obj(curJsonObj, STR_JSON_MSG_ID, state[i].msgId);
+        } else {
+            IotcJsonAddStr2Obj(curJsonObj, STR_JSON_MSG_ID, "0");
+        }
+#endif
         ret = IotcJsonAddStr2Obj(curJsonObj, STR_JSON_SID, state[i].svcId);
         CHECK_RETURN_LOGE(ret == IOTC_OK, IOTC_ADAPTER_JSON_ERR_ADD, "add sid error %d", ret);
 
@@ -214,8 +228,9 @@ int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, IotcJson 
 
 int32_t MdlUpdateCharStates(IotcCharState states[], const GetCharStatesData *charData, uint32_t num)
 {
-    CHECK_RETURN_LOGE(states != NULL && charData != NULL && charData->data != NULL &&
-        charData->len != NULL && num != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
+    CHECK_RETURN_LOGE(
+        states != NULL && charData != NULL && charData->data != NULL && charData->len != NULL && num != 0,
+        IOTC_ERR_PARAM_INVALID, "param invalid");
 
     for (uint32_t i = 0; i < num; ++i) {
         if (states[i].data != NULL) {

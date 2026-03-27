@@ -27,6 +27,7 @@
 #include "dev_info.h"
 #include "config_authinfo.h"
 #include "sle_print_data.h"
+#include "svc_info.h"
 
 static int32_t BuildDeviceInfo(IotcJson *root)
 {
@@ -60,14 +61,47 @@ static int32_t BuildDeviceInfo(IotcJson *root)
     return IOTC_OK;
 }
 
-static int32_t BuildVendor(IotcJson *root)
+static int32_t BuildServicesList(IotcJson *jsonArray)
 {
-    IotcJson *devInfo = IotcJsonCreate();
-    if (devInfo == NULL) {
-        IOTC_LOGE("create vendor err");
-        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    if (jsonArray == NULL) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
     }
 
+    uint32_t num = 0;
+    const IotcServiceInfo *svcInfo = ModelGetSvcInfo(&num);
+    if (svcInfo == NULL || num == 0) {
+        IOTC_LOGW("get svc invalid %u", num);
+        return IOTC_CORE_PROF_MDL_ERR_SVC_NUM_INVALID;
+    }
+
+    for (uint32_t index = 0; index < num; index++) {
+        IotcJson *svc = IotcJsonCreate();
+        if (svc == NULL) {
+            return IOTC_ADAPTER_JSON_ERR_ADD;
+        }
+        if (IotcJsonAddStr2Obj(svc, STR_JSON_SVC_ID, svcInfo[index].svcId) != IOTC_OK) {
+            IOTC_LOGE("add svc id err");
+            IotcJsonDelete(svc);
+            return IOTC_ADAPTER_JSON_ERR_ADD;
+        }
+
+        if (IotcJsonAddStr2Obj(svc, STR_JSON_SVC_TYPE, svcInfo[index].svcType) != IOTC_OK) {
+            IOTC_LOGE("add svc type err");
+            IotcJsonDelete(svc);
+            return IOTC_ADAPTER_JSON_ERR_ADD;
+        }
+
+        if (IotcJsonAddItem2Array(jsonArray, svc) != IOTC_OK) {
+            IotcJsonDelete(svc);
+            return IOTC_ADAPTER_JSON_ERR_ADD;
+        }
+    }
+    return IOTC_OK;
+}
+
+static int32_t BuildVendorCore(IotcJson *root, IotcJson *devInfo, IotcJson *servicesList)
+{
     DevAuthInfo authInfo = {0};
     bool isAuthInfoExist = false;
     if (DevSvcProxyGetAuthInfo(&isAuthInfoExist, &authInfo) != IOTC_OK) {
@@ -84,16 +118,52 @@ static int32_t BuildVendor(IotcJson *root)
     ret = BuildDeviceInfo(devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("build vendor err ret=%d", ret);
-        IotcJsonDelete(devInfo);
+        return ret;
+    }
+
+    ret = BuildServicesList(servicesList);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("build services list err ret=%d", ret);
         return ret;
     }
 
     ret = IotcJsonAddItem2Obj(root, STR_JSON_DEVICE_INFO, devInfo);
     if (ret != IOTC_OK) {
         IOTC_LOGE("add device info err ret=%d", ret);
+        return ret;
+    }
+
+    ret = IotcJsonAddItem2Obj(root, STR_JSON_SERVICES, servicesList);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("add services list err ret=%d", ret);
+        return ret;
+    }
+
+    return IOTC_OK;
+}
+
+static int32_t BuildVendor(IotcJson *root)
+{
+    IotcJson *devInfo = IotcJsonCreate();
+    if (devInfo == NULL) {
+        IOTC_LOGE("create vendor err");
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+
+    IotcJson *servicesList = IotcJsonCreateArray();
+    if (servicesList == NULL) {
+        IOTC_LOGE("create services list err");
+        IotcJsonDelete(devInfo);
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+
+    int32_t ret = BuildVendorCore(root, devInfo, servicesList);
+    if (ret != IOTC_OK) {
+        IotcJsonDelete(servicesList);
         IotcJsonDelete(devInfo);
         return ret;
     }
+
     return IOTC_OK;
 }
 
