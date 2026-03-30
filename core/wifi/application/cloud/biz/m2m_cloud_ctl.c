@@ -262,6 +262,7 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
             .payloadUserData = respJson,
             .preSize = 0,
         };
+        (*seq)++;
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
             options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
         CoapPacket packet;
@@ -312,7 +313,7 @@ static int32_t SendCloudCtlMsgResp(
             IotcJsonDelete(respJson);
         }
     }
-    SendCloudCtlMsg(endpoint, req, addr, ctx, respJson);
+    BuildCloudCtlRespMsg(endpoint, req, addr, ctx, respJson);
     IotcJsonDelete(dataJsonArray);
     dataJsonArray = NULL;
     IotcJsonDelete(respJson);

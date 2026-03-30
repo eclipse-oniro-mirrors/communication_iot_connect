@@ -16,11 +16,16 @@
 #define TRANS_SOCKET_TCP_H
 
 #include "trans_socket.h"
-#include "iotc_tcp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/** tcp host配置参数 */
+typedef struct {
+    const char *hostname; /**< 对端域名 */
+    uint16_t port;        /**< 对端端口 */
+} IotcTcpHost;
 
 typedef struct {
     /* name应为常量字符 */

@@ -39,7 +39,6 @@ static int32_t CloudTcpTransSocketInit(M2mCloudContext *ctx, CloudTcpUpdateRemai
     tcpParam.onUpdateRemainLen = remainUpdate;
     tcpParam.host.port = ctx->linkInfo.port == 0 ? STA_CLOUD_TCP_PORT : ctx->linkInfo.port;
     tcpParam.host.hostname = ctx->linkInfo.url[ctx->linkInfo.urlIndex];
-    IOTC_LOGI("%s url:%s port:%d", __func__, ctx->linkInfo.url[ctx->linkInfo.urlIndex], ctx->linkInfo.port);
 
     ctx->linkInfo.socket = TransSocketTcpNew(&tcpParam);
     if (ctx->linkInfo.socket == NULL) {

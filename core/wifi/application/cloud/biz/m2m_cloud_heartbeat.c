@@ -28,11 +28,11 @@ static const CloudOption *M2mCloudGetHeartbeatOption(void)
 {
     static const char *sysHb[] = {STR_URI_PATH_SYS, STR_URI_PATH_HB};
     static const CloudOption HB_OPTION = {
-        .uri = SYS_HB,
-        .num = ARRAY_SIZE(SYS_HB),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
+        .uri = sysHb,
+        .num = ARRAY_SIZE(sysHb),
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &HB_OPTION;

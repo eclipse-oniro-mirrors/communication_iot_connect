@@ -106,7 +106,6 @@ static int32_t TcpSocketConnect(TransSocket *socket)
 
     if (tcpSocket->initParam.host.hostname != NULL) {
         Domain2Ip(tcpSocket->initParam.host.hostname, (uint32_t*)&(saddr.sinAddr));
-        IOTC_LOGI("%s  hostname %s addr:0x%x", __func__, tcpSocket->initParam.host.hostname, saddr.sinAddr);
     }
 
     tcpSocket->fd = IotcSocket(IOTC_SOCKET_DOMAIN_AF_INET, IOTC_SOCKET_TYPE_STREAM,

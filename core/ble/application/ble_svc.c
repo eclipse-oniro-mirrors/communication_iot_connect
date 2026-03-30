@@ -41,11 +41,11 @@ static const char *BLE_SERVICE_NAME = "BLE";
 static void BleStackDeinit(void)
 {
     BleGattDisconnectAll();
+    BleGattMgtDestroy();
     int32_t ret = IotcBleDeInitStack();
     if (ret != IOTC_OK) {
         IOTC_LOGW("stack deinit error %d", ret);
     }
-    BleGattMgtDestroy();
 }
 
 static int32_t BleStackInit(void)
@@ -61,11 +61,6 @@ static int32_t BleStackInit(void)
         return ret;
     }
     return IOTC_OK;
-}
-
-static void BleGattDeinit(void)
-{
-    BleGattMgtDestroy();
 }
 
 static int32_t BleGattInit(void)
@@ -85,7 +80,6 @@ static int32_t BleGattInit(void)
 
 static void BleServiceStopInner(void)
 {
-    BleGattDeinit();
     BleSvcNetCfgDeinit();
     BleSvcReportDeinit();
     BleSessReset();

@@ -30,10 +30,10 @@ const CloudOption *M2mCloudGetRegisterOption(void)
 {
     static const char *sysActive[] = {STR_URI_PATH_SYS, STR_URI_PATH_ACTIVATE};
     static const CloudOption REG_OPTION = {
-        .uri = SYS_ACTIVATE,
-        .num = ARRAY_SIZE(SYS_ACTIVATE),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
+        .uri = sysActive,
+        .num = ARRAY_SIZE(sysActive),
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID),
     };
     return &REG_OPTION;
