@@ -33,6 +33,7 @@
 #include "iotc_aes.h"
 #include "config_authinfo.h"
 
+#define PSK_PASSWORD_LEN 16
 
 uint8_t sn1[SESS_SN_LEN] = {0};
 uint8_t sn2[SESS_SN_LEN] = {0};
@@ -170,8 +171,7 @@ int32_t StationSessKeyGen(M2mCloudContext *ctx, const uint8_t *sn1, uint32_t sn1
         .md = IOTC_MD_SHA256,
         .password = ((UTILS_IS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER)) ? 
             ctx->authInfo.regInfo.psk : ctx->authInfo.loginInfo.psk),
- 	    .passwordLen = sizeof(((UTILS_IS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER)) ? 
-            ctx->authInfo.regInfo.psk : ctx->authInfo.loginInfo.psk)),
+ 	    .passwordLen = PSK_PASSWORD_LEN, 
         .salt = ctx->pskInfo.salt,
         .saltLen = SALT_LEN,
         .iterCount = ITER_TIMES

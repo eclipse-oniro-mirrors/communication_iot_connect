@@ -31,6 +31,7 @@ iotc_core_infrastructure_inc = [
   "$iotc_core_path/infrastructure/schedule/include",
   "$iotc_core_path/infrastructure/model/include",
   "$iotc_core_path/infrastructure/product/include",
+  "$iotc_core_path/sle/application/base/include",
 ]
 
 iotc_core_infrastructure_src = [
