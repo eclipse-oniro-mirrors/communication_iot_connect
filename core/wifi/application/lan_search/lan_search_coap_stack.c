@@ -92,9 +92,9 @@ static int32_t LanSearchCoapStackCreate(LanSearchContext *ctx)
 
     SocketUdpInitParam udp = {
         .port = LAN_SEARCH_PORT,
-        .localAddr = local,
-        .multiAddr = LAN_SEARCH_COAP_UDP_MULTI_ADDR,
-        .broadAddr = LAN_SEARCH_COAP_UDP_BROAD_ADDR,
+        .localAddr = localIp,
+        .multicastAddr = LAN_SEARCH_COAP_UDP_MULTI_ADDR,
+        .broadcastAddr = LAN_SEARCH_COAP_UDP_BROAD_ADDR,
     };
     TransSocket *socket = TransSocketUdpNew(&udp);
     if (socket == NULL) {

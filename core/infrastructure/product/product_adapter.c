@@ -142,7 +142,7 @@ int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len)
 
 int32_t ProductMakeOsBleEnable(void)
 {
-    MakeOsBleEnableCallback cb;
+    MakeOsBleEnableCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onMakeOsBleEnable);
 
     int32_t ret = cb();
@@ -154,7 +154,7 @@ int32_t ProductMakeOsBleEnable(void)
 
 int32_t ProductMakeOsWifiEnable(void)
 {
-    MakeOsWifiEnableCallback cb;
+    MakeOsWifiEnableCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onMakeOsWifiEnable);
 
     int32_t ret = cb();
@@ -168,7 +168,7 @@ int32_t ProductSleRecvCustomSecData(const uint8_t *data, uint32_t len)
 {
     CHECK_RETURN_LOGW(data != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
 
-    RecvCustomSecDataCallback cb;
+    RecvCustomSecDataCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onSleRecvCustomSecData);
 
     int32_t ret = cb(data, len);
@@ -235,7 +235,7 @@ int32_t ProductProfReportAll(void)
 
 int32_t ProductProfReportByDevId(const char *devId)
 {
-    IotcSleProfReportByDevIdCallback cb;
+    IotcSleProfReportByDevIdCallback cb = NULL;
     GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfReportByDevId);
 
     int32_t ret = cb(devId);

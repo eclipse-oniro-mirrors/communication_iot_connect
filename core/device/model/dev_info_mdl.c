@@ -29,6 +29,7 @@ IotcJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
         {STR_JSON_DEV_TYPE, devInfo->devTypeId},
         {STR_JSON_MANU, devInfo->manuId},
         {STR_JSON_PROD_ID, devInfo->prodId},
+        {STR_JSON_DEV_NAME, devInfo->devName},
         {STR_JSON_FWV, devInfo->fwv},
         {STR_JSON_HWV, devInfo->hwv},
         {STR_JSON_SWV, devInfo->swv},
@@ -48,6 +49,6 @@ IotcJson *MdlBuildDevInfoJson(const IotcDeviceInfo *devInfo)
         IotcJsonDelete(devInfoObj);
         return NULL;
     }
-
+    
     return devInfoObj;
 }

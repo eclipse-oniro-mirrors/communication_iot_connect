@@ -32,9 +32,8 @@
 #include "local_ctl_coap_api.h"
 
 #define LOCAL_CTL_SESS_NAME "LOCAL_CTL"
-#define LOCAL_CTL_COAP_RETRANS_CNT 5
-#define LOCAL_CTL_COAP_RETRANS_INTERVAL UTILS_SEC_TO_MS(1)
 #define LOCAL_CTL__COAP_UDP_MULTI_ADDR "238.101.0.0"
+#define LOCAL_CTL_COAP_UDP_BROADCAST_ADDR "0.0.0.0"
 
 static int32_t LocalCtlCoapStackCreate(LocalControlContext *ctx)
 {
@@ -49,8 +48,8 @@ static int32_t LocalCtlCoapStackCreate(LocalControlContext *ctx)
     SocketUdpInitParam udp = {
         .port = LOCAL_CONTROL_PORT,
         .localAddr = local,
-        .multiAddr = LOCAL_CTL__COAP_UDP_MULTI_ADDR,
-        .broadAddr = NULL,
+        .multicastAddr = LOCAL_CTL_COAP_UDP_MULTI_ADDR,
+        .broadcastAddr = LOCAL_CTL_COAP_UDP_BROADCAST_ADDR,
     };
 
     TransSocket *socket = TransSocketUdpNew(&udp);
@@ -102,20 +101,36 @@ static int32_t LocalCtlSessionSetup(LocalControlContext *ctx)
 
 static int32_t LocalCtlCoapEndpointSetup(LocalControlContext *ctx)
 {
-    static const CoapResource LOCAL_CTL_COAP_RES[] = {
-        {UTILS_BIT(COAP_METHOD_TYPE_GET), STR_URI_LOCAL_CONTROL_SEARCH, NULL,
-            LocalCtlCoapSearchHandler},
+    static const CoapResource localCtlCoapRes[] = {
+        { UTILS_BIT(COAP_METHOD_TYPE_GET), STR_URI_LOCAL_CONTROL_SEARCH, NULL,
+            LocalCtlCoapSearchHandler },
         { UTILS_BIT(COAP_METHOD_TYPE_GET), "switch", NULL,
             LocalCtlSvcGetCoapHandler },
         { UTILS_BIT(COAP_METHOD_TYPE_POST), "switch", NULL,
             LocalCtlSvcCoapHandler },
-        {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_LOCAL_CONTROL_SESS_MNGR, NULL,
-            LocalCtlCoapSessMngrHandler},
-        {UTILS_BIT(COAP_METHOD_TYPE_POST), STR_E2E_CONTROL, NULL,
-            LocalCtlCoapControlHandler},
+        { UTILS_BIT(COAP_METHOD_TYPE_GET), "restart", NULL,
+            LocalCtlSvcGetCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), "resatrt", NULL,
+            LocalCtlSvcCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_GET), "snw", NULL,
+            LocalCtlSvcGetCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), "snw", NULL,
+            LocalCtlSvcCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_GET), "gps", NULL,
+            LocalCtlSvcGetCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), "gps", NULL,
+            LocalCtlSvcCoapHandler },
+ 	    { UTILS_BIT(COAP_METHOD_TYPE_GET), "devNetInfo", NULL,
+            LocalCtlSvcGetCoapHandler },
+ 	    { UTILS_BIT(COAP_METHOD_TYPE_POST), "devNetInfo", NULL,
+            LocalCtlSvcCoapHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), STR_URI_LOCAL_CONTROL_SESS_MNGR, NULL,
+            LocalCtlCoapSessMngrHandler },
+        { UTILS_BIT(COAP_METHOD_TYPE_POST), STR_E2E_CONTROL, NULL,
+            LocalCtlCoapControlHandler },
     };
 
-    int32_t ret = CoapServerAddResource(ctx->coapStack.endpoint, LOCAL_CTL_COAP_RES, ARRAY_SIZE(LOCAL_CTL_COAP_RES));
+    int32_t ret = CoapServerAddResource(ctx->coapStack.endpoint, localCtlCoapRes, ARRAY_SIZE(localCtlCoapRes));
     if (ret != IOTC_OK) {
         IOTC_LOGW("add coap res error %d", ret);
         return ret;

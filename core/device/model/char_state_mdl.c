@@ -160,11 +160,12 @@ static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, Iot
         IotcJsonDelete(array);
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
+#if IOTC_CONF_DEV_TYPE == 2
     if (num > 0) {
         IotcJsonAddStr2Obj(data, STR_JSON_DEV_ID, state[0].devId);
         IotcJsonAddStr2Obj(data, STR_JSON_MSG_ID, state[0].msgId);
     }
-
+#endif
     for (uint32_t i = 0; i < num; ++i) {
         IotcJson *curJsonObj = IotcJsonCreate();
         CHECK_RETURN(curJsonObj != NULL, IOTC_ADAPTER_JSON_ERR_CREATE);

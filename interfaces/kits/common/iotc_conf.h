@@ -165,4 +165,8 @@
     #define IOT_CONF_LOG_DEFAULT_LEVEL  IOTC_LOG_LEVEL_INFO
 #endif
 
+#ifndef IOTC_CONF_DEV_TYPE
+    #define IOTC_CONF_DEV_TYPE 1
+#endif
+
 #endif /* IOTC_CONFIG_H */

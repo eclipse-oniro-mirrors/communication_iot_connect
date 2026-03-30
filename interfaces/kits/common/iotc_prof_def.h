@@ -17,6 +17,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <iotc_conf.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,6 +50,7 @@ typedef struct {
     const char *devTypeName;
     const char *manuId;
     const char *manuName;
+    const char *devName;
     const char *fwv;
     const char *hwv;
     const char *swv;
@@ -64,8 +66,10 @@ typedef struct {
     const char *svcId;
     const char *data;
     uint32_t len;
+    #if IOTC_CONF_DEV_TYPE == 2
     const char *devId;
     const char *msgId;
+    #endif
 } IotcCharState;
 
 #ifdef __cplusplus

@@ -117,14 +117,14 @@ static IotcJson *BuildPayloadObj(const CoapPacket *req, const char *svcId,
         return NULL;
     }
 
-    ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_MSG_ID, msgId);
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_MSG_ID, msgId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add msgId error %d", ret);
         IotcJsonDelete(payloadObj);
         return NULL;
     }
 
-    ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DEV_ID, devId);
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_DEV_ID, devId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add devId error %d", ret);
         IotcJsonDelete(payloadObj);
@@ -250,19 +250,6 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
             {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seq, sizeof(uint32_t)}},
         };
 
-        (*seq)++;
-        CoapServerRespParam respParam = {
-            .req = req,
-            .type = COAP_MSG_TYPE_NCON,
-            .code = COAP_RESPONSE_CODE_CONTENT,
-            .opNum = ARRAY_SIZE(options),
-            .options = options,
-            .payload = NULL,
-            .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-            .payloadUserData = respJson,
-            .preSize = 0,
-        };
-        (*seq)++;
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
             options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
         CoapPacket packet;
@@ -306,6 +293,25 @@ static int32_t SendCloudCtlMsgResp(
         ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
         if (ret != IOTC_OK) {
             IOTC_LOGE("ctrl error %d", ret);
+        }
+        IotcJson *sid = NULL;
+        IotcJson *cur = NULL;
+        if (IotcJsonIsArray(dataJsonArray) == true) {
+            cur = IotcJsonGetArrayItem(dataJsonArray, 0);
+            if (cur == NULL) {
+                IOTC_LOGW("cur json error ");
+                return IOTC_ERROR;
+            }
+            if (IotcJsonHasObj(cur, STR_JSON_SID) == true) {
+                sid = IotcJsonGetObj(cur, STR_JSON_SID);
+                if (sid != NULL) {
+                    ret = IotcJsonAddStr2Obj(respJson, STR_JSON_SID, IotcJsonGetStr(sid));
+                    if (ret != IOTC_OK) {
+                        IOTC_LOGW("add sid to obj err %d", ret);
+                        IotcJsonDelete(respJson);
+                    }
+                }
+            }
         }
         ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, ret);
         if (ret != IOTC_OK) {
