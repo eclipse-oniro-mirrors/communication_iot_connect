@@ -29,6 +29,7 @@
 #include "m2m_cloud_dev_del.h"
 #include "m2m_cloud_revoke.h"
 #include "m2m_cloud_heartbeat.h"
+#include "m2m_cloud_token.h"
 #include "m2m_cloud_psk.h"
 #include "m2m_cloud_authcode.h"
 #include "m2m_cloud_dev_mgr.h"
@@ -129,6 +130,7 @@ static void CloudSessLinkErrorCallback(M2mCloudContext *ctx)
     CHECK_V_RETURN_LOGW(ctx != NULL, "param invalid");
     M2mCloudLinkClose(ctx);
     M2mCloudDisableHeartbeat(ctx);
+    M2mCloudDisableTokenInfo(ctx);
     CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
 }
 

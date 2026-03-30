@@ -349,7 +349,8 @@ int32_t CoapCommBuildOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapB
         }
     }
     pkt->opNum = build->opNum;
-
+    /* payload标志位0xFF */
+    buf->buffer[buf->len++] = 0xFF;
     return IOTC_OK;
 }
 
@@ -400,8 +401,6 @@ int32_t CoapCommBuildPayload(const CoapBuildPacket *build, CoapPacket *pkt, Coap
         IOTC_LOGW("no space for 0xff %u", buf->size);
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
     }
-    /* payload标志位0xFF */
-    buf->buffer[buf->len++] = 0xFF;
     pkt->payload.data = buf->buffer + buf->len;
 
     if (build->buildFunc != NULL) {

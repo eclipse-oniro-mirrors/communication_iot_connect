@@ -168,8 +168,10 @@ int32_t StationSessKeyGen(M2mCloudContext *ctx, const uint8_t *sn1, uint32_t sn1
     
     IotcPbkdf2HmacParam param = {
         .md = IOTC_MD_SHA256,
-        .password = ctx->authCodeInfo.authCode,
-        .passwordLen = sizeof(ctx->authCodeInfo.authCode),
+        .password = ((UTILS_IS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER)) ? 
+            ctx->authInfo.regInfo.psk : ctx->authInfo.loginInfo.psk),
+ 	    .passwordLen = sizeof(((UTILS_IS_BIT_SET(ctx->bitMap, M2M_CLOUD_CTX_BIT_REGISTER)) ? 
+            ctx->authInfo.regInfo.psk : ctx->authInfo.loginInfo.psk)),
         .salt = ctx->pskInfo.salt,
         .saltLen = SALT_LEN,
         .iterCount = ITER_TIMES

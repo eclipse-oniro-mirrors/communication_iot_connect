@@ -237,7 +237,7 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
         }
 
 #define STR_URI_PATH_DEVCONTROL "devControl"
-        uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
+        uint32_t seq = IotcHtonl(*(uint32_t *)(ctx->linkInfo.sessData));
         const CoapOption options[] = {
             {COAP_OPTION_TYPE_URI_PATH,
              {req->header.code == COAP_METHOD_TYPE_POST ? (const uint8_t *)STR_URI_PATH_DEVCONTROL :
@@ -247,7 +247,7 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
             {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)reqIdOpt->value.data, reqIdOpt->value.len}},
             {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)devIdOpt->value.data, devIdOpt->value.len}},
             {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)userIdOpt->value.data, userIdOpt->value.len}},
-            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seq, sizeof(uint32_t)}},
+            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)&seq, sizeof(uint32_t)}},
         };
 
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),

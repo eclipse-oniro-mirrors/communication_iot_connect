@@ -286,3 +286,15 @@ int32_t ParseTokenInfo(M2mCloudContext *ctx, IotcJson *jsonObj)
 
     return UpdateCloudTokenInfo(ctx, &token);
 }
+
+int32_t M2mCloudDisableTokenInfo(M2mCloudContext *ctx)
+{
+    CHECK_RETURN_LOGW(ctx != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    (void)memset_s(&ctx->tokenInfo, sizeof(ctx->tokenInfo), 0, sizeof(ctx->tokenInfo));
+    if (ctx->stateManager.tokenTimer >= 0) {
+        IOTC_LOGI("stop TokenInfo Timer[%u]", ctx->tokenInfo.updateTime);
+        SchedTimerRemove(ctx->stateManager.tokenTimer);
+        ctx->stateManager.tokenTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+    return IOTC_OK;
+}
