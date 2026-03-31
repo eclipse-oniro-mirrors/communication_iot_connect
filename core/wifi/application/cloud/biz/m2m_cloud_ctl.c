@@ -267,59 +267,49 @@ static int32_t SendCloudCtlMsgResp(
 {
     IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
     if (dataJsonArray == NULL) {
-        IOTC_LOGW("Parse Cloud Ctl Msg error");
         return IOTC_ERROR;
     }
-    // 创建响应节点， 返回节点
-    CoapResponeNode *respInfo = M2mCloudCreateCoapNode(endpoint, req, addr, ctx);
-    if (respInfo == NULL) {
-        IOTC_LOGW("create cloud resp node error");
+    if (M2mCloudCreateCoapNode(endpoint, req, addr, ctx) == NULL) {
+        IotcJsonDelete(dataJsonArray);
         return IOTC_ERROR;
     }
-
-    /* 创建JSON指针 */
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
-        IOTC_LOGW("create resp json error ");
+        IotcJsonDelete(dataJsonArray);
         return IOTC_ERROR;
     }
     int32_t ret = IOTC_OK;
     if (req->header.code == COAP_METHOD_TYPE_GET) {
         ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &respJson);
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("cloud get char error %d", ret);
-        }
     } else if ((req->header.code == COAP_METHOD_TYPE_POST) || (req->header.code == COAP_METHOD_TYPE_PUT)) {
         ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
-        if (ret != IOTC_OK) {
-            IOTC_LOGE("ctrl error %d", ret);
-        }
         IotcJson *sid = NULL;
         IotcJson *cur = NULL;
         if (IotcJsonIsArray(dataJsonArray) == true) {
             cur = IotcJsonGetArrayItem(dataJsonArray, 0);
             if (cur == NULL) {
-                IOTC_LOGW("cur json error ");
-                return IOTC_ERROR;
+                ret = IOTC_ERROR;
+                goto ERROR;
             }
             if (IotcJsonHasObj(cur, STR_JSON_SID) == true) {
                 sid = IotcJsonGetObj(cur, STR_JSON_SID);
-                if (sid != NULL) {
-                    ret = IotcJsonAddStr2Obj(respJson, STR_JSON_SID, IotcJsonGetStr(sid));
-                    if (ret != IOTC_OK) {
-                        IOTC_LOGW("add sid to obj err %d", ret);
-                        IotcJsonDelete(respJson);
-                    }
+                if (sid == NULL) {
+                    ret = IOTC_ERROR;
+                    goto ERROR;
+                }
+                ret = IotcJsonAddStr2Obj(respJson, STR_JSON_SID, IotcJsonGetStr(sid));
+                if (ret != IOTC_OK) {
+                    goto ERROR;
                 }
             }
         }
         ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, ret);
         if (ret != IOTC_OK) {
-            IOTC_LOGW("add num to obj err %d", ret);
-            IotcJsonDelete(respJson);
+            goto ERROR;
         }
     }
     BuildCloudCtlRespMsg(endpoint, req, addr, ctx, respJson);
+ERROR:
     IotcJsonDelete(dataJsonArray);
     dataJsonArray = NULL;
     IotcJsonDelete(respJson);

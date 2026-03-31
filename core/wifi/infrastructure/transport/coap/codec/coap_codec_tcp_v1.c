@@ -41,6 +41,10 @@
 #define COAP_TCP_HEADER_DELTA_UINT32 3
 #define COAP_TCP_HEADER_DELTA 5
 #define COAP_TCP_HEADER_OFFSET 4
+#define COAP_TCP_HEADER_EXLEN_OFFSET_1 8
+#define COAP_TCP_HEADER_EXLEN_OFFSET_2 16
+#define COAP_TCP_HEADER_EXLEN_OFFSET_3 24
+#define COAP_TCP_HEADER_MIN_LEN 32
 
 
 static int32_t CoapTcpDecrypt(CoapPacket *pkt, const CoapData *raw);
@@ -74,17 +78,20 @@ static int32_t CoapTcpV1ParseHeader(CoapPacket *pkt, const CoapData *raw, uint32
     if (pkt->tcpheader.len >= 0 && pkt->tcpheader.len <= COAP_EXTEND_DELTA_VALUE_UINT) {
         pkt->tcpheader.exlen = pkt->tcpheader.len;
     } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT8) {
-        pkt->tcpheader.exlen = raw->data[(*pos)++] + COAP_DELTA_UINT8_ADD_NUM + 1;
+        pkt->tcpheader.exlen = raw->data[(*pos)++] + COAP_DELTA_UINT8_ADD_NUM + COAP_TCP_DATA_HEADER_1;
     } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT16) {
-        pkt->tcpheader.exlen = (raw->data[(*pos)++] << 8) | (raw->data[(*pos)++]) + COAP_DELTA_UINT16_ADD_NUM + 2;
+        pkt->tcpheader.exlen = (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_1) | 
+            (raw->data[(*pos)++]) + COAP_DELTA_UINT16_ADD_NUM + COAP_TCP_DATA_HEADER_2;
     } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT32) {
-        pkt->tcpheader.exlen = (raw->data[(*pos)++] << 24) | (raw->data[(*pos)++] << 16) | 
-            (raw->data[(*pos)++] << 8) | (raw->data[(*pos)++]) + COAP_DELTA_UINT32_ADD_NUM + 4;
+        pkt->tcpheader.exlen = (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_3) | 
+            (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_2) | 
+            (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_1) | 
+            (raw->data[(*pos)++]) + COAP_DELTA_UINT32_ADD_NUM + COAP_TCP_DATA_HEADER_4;
     }
     //token 长度
     pkt->tcpheader.exlen += pkt->header.tkl;
     //code + 第一个字节
-    pkt->tcpheader.exlen += 2;
+    pkt->tcpheader.exlen += COAP_TCP_V1_COAP_HEADER_LEN;
     /* 1字节为操作码 */
     pkt->header.code = raw->data[*pos];
     IOTC_LOGD("%s pkt header len %u", __func__, pkt->tcpheader.len);
@@ -120,7 +127,7 @@ static int32_t CoapTcpDecrypt(CoapPacket *pkt, const CoapData *raw)
         uint32_t decLen = 0;
         uint8_t hmacRecv[SESS_HMAC_LEN] = { 0 };
         CoapTcpV1GetHeader(pkt);
-        if (pkt->tcpheader.exlen < 32)
+        if (pkt->tcpheader.exlen < COAP_TCP_HEADER_MIN_LEN)
             return IOTC_ERROR;
         memcpy_s(hmacRecv, SESS_HMAC_LEN, &raw->data[pkt->tcpheader.exlen - SESS_HMAC_LEN], SESS_HMAC_LEN);
         /* 报文完整性保护 */
@@ -228,11 +235,11 @@ static int32_t CoapTcpV1BuildHeader(const CoapBuildPacket *build, CoapPacket *pk
         len = COAP_EXTEND_DELTA_VALUE_UINT32;
         ext = pkt->tcpheader.exlen - COAP_DELTA_UINT32_ADD_NUM;
         /* 右移24bit获得高位 */
-        buf->buffer[COAP_TCP_DATA_HEADER_1] = (uint8_t)((ext >> 24) & 0xFF);
+        buf->buffer[COAP_TCP_DATA_HEADER_1] = (uint8_t)((ext >> COAP_TCP_HEADER_EXLEN_OFFSET_3) & 0xFF);
         /* 右移16bit获得次高位 */
-        buf->buffer[COAP_TCP_DATA_HEADER_2] = (uint8_t)((ext >> 16) & 0xFF);
+        buf->buffer[COAP_TCP_DATA_HEADER_2] = (uint8_t)((ext >> COAP_TCP_HEADER_EXLEN_OFFSET_2) & 0xFF);
         /* 右移8bit获得次低位 */
-        buf->buffer[COAP_TCP_DATA_HEADER_3] = (uint8_t)((ext >> 8) & 0xFF);
+        buf->buffer[COAP_TCP_DATA_HEADER_3] = (uint8_t)((ext >> COAP_TCP_HEADER_EXLEN_OFFSET_1) & 0xFF);
         buf->buffer[COAP_TCP_DATA_HEADER_4] = (uint8_t)(ext & 0xFF);
         buf->len = COAP_TCP_HEADER_DELTA;
     }

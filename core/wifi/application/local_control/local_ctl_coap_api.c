@@ -549,7 +549,7 @@ void LocalCtlSvcGetCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         if (ret != IOTC_OK) {
             IOTC_LOGE("get ctrl error %d", ret);
         }
-    } else if(req->header.code == COAP_METHOD_TYPE_POST) {
+    } else if (req->header.code == COAP_METHOD_TYPE_POST) {
         int32_t errcode;
         errcode = DevSvcProxyCtlPutCharStates(payloadJsonObj, NULL);
         if (errcode != IOTC_OK) {

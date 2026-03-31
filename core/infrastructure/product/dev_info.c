@@ -130,7 +130,7 @@ const char *ModelGetDevManuName(void)
 
 const char *ModelGetDevName(void)
 {
- 	return NON_NULL_EMPTY_STR(g_deviceInfo.devName);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.devName);
 }
 
 const char *ModelGetDevFwv(void)
