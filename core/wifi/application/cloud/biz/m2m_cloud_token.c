@@ -41,11 +41,11 @@ static const CloudOption *M2mCloudGetTokenRefreshOption(void)
 {
     static const char *sysToken[] = {STR_URI_PATH_SYS, STR_URI_PATH_TOKEN};
     static const CloudOption TOKEN_OPTION = {
-        .uri = SYS_TOKEN,
-        .num = ARRAY_SIZE(SYS_TOKEN),
-        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) | \
-                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) | \
+        .uri = sysToken,
+        .num = ARRAY_SIZE(sysToken),
+        .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
+                    UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_ACCESS_TOKEN_ID),
     };
     return &TOKEN_OPTION;
@@ -285,4 +285,16 @@ int32_t ParseTokenInfo(M2mCloudContext *ctx, IotcJson *jsonObj)
     }
 
     return UpdateCloudTokenInfo(ctx, &token);
+}
+
+int32_t M2mCloudDisableTokenInfo(M2mCloudContext *ctx)
+{
+    CHECK_RETURN_LOGW(ctx != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    (void)memset_s(&ctx->tokenInfo, sizeof(ctx->tokenInfo), 0, sizeof(ctx->tokenInfo));
+    if (ctx->stateManager.tokenTimer >= 0) {
+        IOTC_LOGI("stop TokenInfo Timer[%u]", ctx->tokenInfo.updateTime);
+        SchedTimerRemove(ctx->stateManager.tokenTimer);
+        ctx->stateManager.tokenTimer = EVENT_SOURCE_INVALID_TIMER_FD;
+    }
+    return IOTC_OK;
 }

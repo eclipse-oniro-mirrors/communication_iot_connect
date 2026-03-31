@@ -495,24 +495,24 @@ void LocalCtlSvcCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, const
     if (req->header.code == COAP_METHOD_TYPE_GET) {
         ret = DevSvcProxyCtlGetCharStates(payloadJsonObj, &respJson);
         if (ret != IOTC_OK) {
-            IOTC_LOGW("cloud get char error %d", ret);
+            IOTC_LOGW("get ctrl error %d", ret);
         }
     } else if (req->header.code == COAP_METHOD_TYPE_POST) {
         int32_t errcode;
         errcode = DevSvcProxyCtlPutCharStates(payloadJsonObj, NULL);
         if (errcode != IOTC_OK) {
-            IOTC_LOGE("ctrl error %d", errcode);
+            IOTC_LOGE("put ctrl error %d", errcode);
         }
         ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, errcode);
         if (ret != IOTC_OK) {
-            IOTC_LOGW("add num to obj err %d", ret);
+            IOTC_LOGW("add errcode to obj err %d", ret);
             IotcJsonDelete(respJson);
         }
     }
     IotcJsonDelete(payloadJsonObj);
     payloadJsonObj = NULL;
     if (ret != IOTC_OK) {
-        IOTC_LOGW("e2e ctl error %d", ret);
+        IOTC_LOGW("local ctl error %d", ret);
     }
     LocalCoapSessMsg respSessMsg;
     BuildLocalCoapSessMsg(&respSessMsg, 0, sessMsg->client);
@@ -538,26 +538,33 @@ void LocalCtlSvcGetCoapHandler(CoapEndpoint *endpoint, const CoapPacket *req, co
         return;
     }
     
-    ret = DevSvcProxyCtlPutCharStates(payloadJsonObj, NULL);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("ctrl error %d", ret);
-    }
-
+    //创建JSON指针
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
         IOTC_LOGW("create resp json error ");
         return;
     }
-
-    ret = DevSvcProxyCtlGetCharStates(payloadJsonObj, &respJson);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("cloud get char error %d", ret);
+    if (req->header.code == COAP_METHOD_TYPE_GET) {
+        ret = DevSvcProxyCtlGetCharStates(payloadJsonObj, &respJson);
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("get ctrl error %d", ret);
+        }
+    } else if (req->header.code == COAP_METHOD_TYPE_POST) {
+        int32_t errcode;
+        errcode = DevSvcProxyCtlPutCharStates(payloadJsonObj, NULL);
+        if (errcode != IOTC_OK) {
+            IOTC_LOGE("put ctrl error %d", ret);
+        }
+        ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, errcode);
+        if (errcode != IOTC_OK) {
+            IotcJsonDelete(respJson);
+            IOTC_LOGE("add errocde error %d", ret);
+        }
     }
-
     IotcJsonDelete(payloadJsonObj);
     payloadJsonObj = NULL;
     if (ret != IOTC_OK) {
-        IOTC_LOGW("e2e ctl error %d", ret);
+        IOTC_LOGW("local ctl error %d", ret);
     }
 
     LocalCoapSessMsg respSessMsg;

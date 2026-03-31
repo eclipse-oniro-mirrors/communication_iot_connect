@@ -43,6 +43,7 @@ int32_t ModelDevInfoInit(const IotcDeviceInfo *devInfo)
         {&g_deviceInfo.devTypeName, devInfo->devTypeName},
         {&g_deviceInfo.manuId, devInfo->manuId},
         {&g_deviceInfo.manuName, devInfo->manuName},
+        {&g_deviceInfo.devName, devInfo->devName},
         {&g_deviceInfo.fwv, devInfo->fwv},
         {&g_deviceInfo.hwv, devInfo->hwv},
         {&g_deviceInfo.swv, devInfo->swv},
@@ -75,6 +76,7 @@ void ModelDevInfoDeinit(void)
     UTILS_FREE_2_NULL(g_deviceInfo.devTypeName);
     UTILS_FREE_2_NULL(g_deviceInfo.manuId);
     UTILS_FREE_2_NULL(g_deviceInfo.manuName);
+    UTILS_FREE_2_NULL(g_deviceInfo.devName);
     UTILS_FREE_2_NULL(g_deviceInfo.fwv);
     UTILS_FREE_2_NULL(g_deviceInfo.hwv);
     UTILS_FREE_2_NULL(g_deviceInfo.swv);
@@ -124,6 +126,11 @@ const char *ModelGetDevManuId(void)
 const char *ModelGetDevManuName(void)
 {
     return NON_NULL_EMPTY_STR(g_deviceInfo.manuName);
+}
+
+const char *ModelGetDevName(void)
+{
+    return NON_NULL_EMPTY_STR(g_deviceInfo.devName);
 }
 
 const char *ModelGetDevFwv(void)

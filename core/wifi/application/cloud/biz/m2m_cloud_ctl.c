@@ -117,14 +117,14 @@ static IotcJson *BuildPayloadObj(const CoapPacket *req, const char *svcId,
         return NULL;
     }
 
-    ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_MSG_ID, msgId);
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_MSG_ID, msgId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add msgId error %d", ret);
         IotcJsonDelete(payloadObj);
         return NULL;
     }
 
-    ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DEV_ID, devId);
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_DEV_ID, devId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add devId error %d", ret);
         IotcJsonDelete(payloadObj);
@@ -237,7 +237,7 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
         }
 
 #define STR_URI_PATH_DEVCONTROL "devControl"
-        uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
+        uint32_t seq = IotcHtonl(*(uint32_t *)(ctx->linkInfo.sessData));
         const CoapOption options[] = {
             {COAP_OPTION_TYPE_URI_PATH,
              {req->header.code == COAP_METHOD_TYPE_POST ? (const uint8_t *)STR_URI_PATH_DEVCONTROL :
@@ -247,22 +247,9 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
             {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)reqIdOpt->value.data, reqIdOpt->value.len}},
             {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)devIdOpt->value.data, devIdOpt->value.len}},
             {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)userIdOpt->value.data, userIdOpt->value.len}},
-            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seq, sizeof(uint32_t)}},
+            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)&seq, sizeof(uint32_t)}},
         };
 
-        (*seq)++;
-        CoapServerRespParam respParam = {
-            .req = req,
-            .type = COAP_MSG_TYPE_NCON,
-            .code = COAP_RESPONSE_CODE_CONTENT,
-            .opNum = ARRAY_SIZE(options),
-            .options = options,
-            .payload = NULL,
-            .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-            .payloadUserData = respJson,
-            .preSize = 0,
-        };
-        (*seq)++;
         CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
             options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
         CoapPacket packet;
@@ -275,45 +262,63 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
     return ret;
 }
 
+static int32_t VaildCtlMsgVerify(IotcJson *array, IotcJson *resp)
+{
+    IotcJson *sid = NULL;
+    IotcJson *cur = NULL;
+    if (IotcJsonIsArray(array) != true) {
+        return IOTC_ERROR;
+    }
+    cur = IotcJsonGetArrayItem(array, 0);
+    if (cur == NULL) {
+        return IOTC_ERROR;
+    }
+    if (IotcJsonHasObj(cur, STR_JSON_SID) != true) {
+        return IOTC_ERROR;
+    }
+    sid = IotcJsonGetObj(cur, STR_JSON_SID);
+    if (sid == NULL) {
+        return IOTC_ERROR;
+    }
+    ret = IotcJsonAddStr2Obj(resp, STR_JSON_SID, IotcJsonGetStr(sid));
+    if (ret != IOTC_OK) {
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
 static int32_t SendCloudCtlMsgResp(
     CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, const M2mCloudContext *ctx)
 {
     IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
     if (dataJsonArray == NULL) {
-        IOTC_LOGW("Parse Cloud Ctl Msg error");
         return IOTC_ERROR;
     }
-    // 创建响应节点， 返回节点
-    CoapResponeNode *respInfo = M2mCloudCreateCoapNode(endpoint, req, addr, ctx);
-    if (respInfo == NULL) {
-        IOTC_LOGW("create cloud resp node error");
+    if (M2mCloudCreateCoapNode(endpoint, req, addr, ctx) == NULL) {
+        IotcJsonDelete(dataJsonArray);
         return IOTC_ERROR;
     }
-
-    /* 创建JSON指针 */
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
-        IOTC_LOGW("create resp json error ");
+        IotcJsonDelete(dataJsonArray);
         return IOTC_ERROR;
     }
     int32_t ret = IOTC_OK;
     if (req->header.code == COAP_METHOD_TYPE_GET) {
         ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &respJson);
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("cloud get char error %d", ret);
-        }
     } else if ((req->header.code == COAP_METHOD_TYPE_POST) || (req->header.code == COAP_METHOD_TYPE_PUT)) {
         ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
+        ret = VaildCtlMsgVerify(dataJsonArray, respJson);
         if (ret != IOTC_OK) {
-            IOTC_LOGE("ctrl error %d", ret);
+            goto ERROR;
         }
         ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, ret);
         if (ret != IOTC_OK) {
-            IOTC_LOGW("add num to obj err %d", ret);
-            IotcJsonDelete(respJson);
+            goto ERROR;
         }
     }
     BuildCloudCtlRespMsg(endpoint, req, addr, ctx, respJson);
+ERROR:
     IotcJsonDelete(dataJsonArray);
     dataJsonArray = NULL;
     IotcJsonDelete(respJson);

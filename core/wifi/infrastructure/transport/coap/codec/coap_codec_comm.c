@@ -324,11 +324,15 @@ int32_t CoapCommBuildOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapB
     CHECK_RETURN(build != NULL && pkt != NULL && buf != NULL && buf->size >= buf->len,
         IOTC_ERR_PARAM_INVALID);
     if (build->opNum == 0) {
+        /* payload标志位0xFF */
+        buf->buffer[buf->len++] = 0xFF;
         return IOTC_OK;
     }
 
     if (build->opNum > COAP_OPTION_MAX_NUM) {
         IOTC_LOGW("invalid op num %u", build->opNum);
+        /* payload标志位0xFF */
+        buf->buffer[buf->len++] = 0xFF;
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_INVALID_BUILD;
     }
 
@@ -336,6 +340,8 @@ int32_t CoapCommBuildOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapB
     /* option应为升序 */
     for (uint8_t i = 0; i < build->opNum; ++i) {
         if (build->options[i].option < option) {
+            /* payload标志位0xFF */
+            buf->buffer[buf->len++] = 0xFF;
             return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_OPTION_ORDER;
         }
         option = build->options[i].option;
@@ -345,11 +351,14 @@ int32_t CoapCommBuildOption(const CoapBuildPacket *build, CoapPacket *pkt, CoapB
         int32_t ret = CoapCommBuildSingleOption(build, pkt, buf, i);
         if (ret != IOTC_OK) {
             IOTC_LOGW("add option error %u", i);
+            /* payload标志位0xFF */
+            buf->buffer[buf->len++] = 0xFF;
             return ret;
         }
     }
     pkt->opNum = build->opNum;
-
+    /* payload标志位0xFF */
+    buf->buffer[buf->len++] = 0xFF;
     return IOTC_OK;
 }
 
@@ -400,8 +409,6 @@ int32_t CoapCommBuildPayload(const CoapBuildPacket *build, CoapPacket *pkt, Coap
         IOTC_LOGW("no space for 0xff %u", buf->size);
         return IOTC_CORE_WIFI_TRANS_ERR_COAP_CODEC_BUFFER_SHORT;
     }
-    /* payload标志位0xFF */
-    buf->buffer[buf->len++] = 0xFF;
     pkt->payload.data = buf->buffer + buf->len;
 
     if (build->buildFunc != NULL) {

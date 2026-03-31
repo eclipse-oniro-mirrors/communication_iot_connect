@@ -22,6 +22,8 @@
 #include "iotc_json.h"
 #include "security_random.h"
 #include "m2m_cloud_report.h"
+#include "iotc_socket.h"
+
 static int32_t GetResponeDevId(IotcJson *msg, IotcJson **savedDevid)
 {
     if (msg == NULL || savedDevid == NULL) {
@@ -134,7 +136,7 @@ int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
         UtilsHexify(Reqid, sizeof(Reqid), ctx->reqId, sizeof(ctx->reqId));
         ctx->reqId[HEXIFY_LEN(REQ_ID_LEN)] = '\0';
     }
-
+    uint32_t seq = IotcHtonl(*(uint32_t *)(ctx->linkInfo.sessData));
     const CoapOption options[] = {
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_URI_PATH_SYS, strlen(STR_URI_PATH_SYS)}},
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_JSON_DATA, strlen(STR_JSON_DATA)}},
@@ -142,7 +144,7 @@ int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
         {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)ctx->reqId, strlen(ctx->reqId)}},
         {COAP_OPTION_TYPE_DEV_ID,
             {(const uint8_t *)ctx->authInfo.loginInfo.devId, strlen(ctx->authInfo.loginInfo.devId)}},
-        {COAP_OPTION_TYPE_SEQ_NUM_ID, {NULL, sizeof(uint32_t)}},
+        {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)&seq, sizeof(uint32_t)}},
     };
     CoapClientReqParam param = {
         .type = COAP_MSG_TYPE_CON,

@@ -64,8 +64,8 @@ typedef enum {
 /* 消息方法类型 */
 typedef enum {
     COAP_METHOD_TYPE_GET    = 1,
-    COAP_METHOD_TYPE_PUT    = 2,
-    COAP_METHOD_TYPE_POST   = 3,
+    COAP_METHOD_TYPE_POST   = 2,
+    COAP_METHOD_TYPE_PUT    = 3,
     COAP_METHOD_TYPE_DELETE = 4,
 } CoapMethodType;
 

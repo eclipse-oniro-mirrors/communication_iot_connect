@@ -152,6 +152,7 @@ static bool CheckDevInfo(const IotcDeviceInfo *devInfo)
         {devInfo->devTypeName, UTILS_MIN_STR_LEN, IOTC_OH_DEV_TYPE_NAME_STR_MAX_LEN},
         {devInfo->manuId, IOTC_OH_MANU_ID_STR_LEN, IOTC_OH_MANU_ID_STR_LEN},
         {devInfo->manuName, UTILS_MIN_STR_LEN, IOTC_OH_MANU_NAME_STR_MAX_LEN},
+        {devInfo->devName, UTILS_MIN_STR_LEN, IOTC_OH_DEV_NAME_STR_MAX_LEN},
         {devInfo->fwv, UTILS_MIN_STR_LEN, IOTC_OH_FIRMWARE_VER_STR_MAX_LEN},
         {devInfo->hwv, UTILS_MIN_STR_LEN, IOTC_OH_FIRMWARE_VER_STR_MAX_LEN},
         {devInfo->swv, UTILS_MIN_STR_LEN, IOTC_OH_FIRMWARE_VER_STR_MAX_LEN},

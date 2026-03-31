@@ -55,7 +55,7 @@ static void AdvUpdateEventBusCallback(uint32_t event, void *param, uint32_t len)
 static bool AdvUpdateEventMatchFunc(uint32_t event)
 {
     /* 注册、在线状态变化时更新广播参数 */
-    const uint32_t updateEvent[] = {
+    static const uint32_t updateEvent[] = {
         IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_REGISTERED,
         IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_UNREGISTER,
         IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE,

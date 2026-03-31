@@ -98,7 +98,7 @@ static int32_t UdpSocketBindAddr(int32_t fd, const SocketUdpInitParam *param)
         }
         (void)DfxAnonymizeStrWithBuffer(param->broadcastAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
     } else if (param->localAddr != NULL) {
-        addr.sinAddr = IotcInetAddr("0.0.0.0");
+        addr.sinAddr = IotcInetAddr(param->localAddr);
         (void)DfxAnonymizeStrWithBuffer(param->localAddr, ANONYMIZE_IP, anonyIpBuf, ANONYMIZE_IP_MIN_BUF_LEN);
     } else {
         IOTC_LOGW("no addr to bind");

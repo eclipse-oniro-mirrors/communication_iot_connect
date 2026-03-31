@@ -97,6 +97,7 @@ UtilsBuffer *UtilsGetBuffer(UtilsBufferCtx *ctx)
     int32_t ret = IotcSemWait(ctx->sem, UTILS_BUFFER_MAX_WAIT_TIME_MS);
     if (ret != IOTC_OK) {
         IOTC_LOGW("wait sem error %d", ret);
+        (void)IotcSemPost(ctx->sem);
         return NULL;
     }
     if (ctx->buffer.size == 0 || ctx->buffer.buffer == NULL) {

@@ -126,9 +126,14 @@ int32_t LocalCtlReportToAllClient(const IotcJson *dataArray, LocalControlContext
         IOTC_LOGD("no client to report");
         return IOTC_OK;
     }
-    IotcJson* respJson = IotcJsonGetObj(dataArray, STR_JSON_VENDOR);
     IotcJson *reportJson = NULL;
-    int32_t ret = CreateLocalCtlReportJson(respJson, &reportJson);
+    int32_t ret = IOTC_OK;
+    if (IotcJsonHasObj(dataArray, STR_JSON_VENDOR) == true) {
+        IotcJson* respJson = IotcJsonGetObj(dataArray, STR_JSON_VENDOR);
+        ret = CreateLocalCtlReportJson(respJson, &reportJson);
+        } else {
+        ret = CreateLocalCtlReportJson(dataArray, &reportJson);
+    }
     if (ret != IOTC_OK) {
         IOTC_LOGW("create report all json error %d", ret);
         return ret;
