@@ -262,6 +262,31 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
     return ret;
 }
 
+static int32_t VaildCtlMsgVerify(IotcJson *array, IotcJson *resp)
+{
+    IotcJson *sid = NULL;
+    IotcJson *cur = NULL;
+    if (IotcJsonIsArray(array) != true) {
+        return IOTC_ERROR;
+    }
+    cur = IotcJsonGetArrayItem(array, 0);
+    if (cur == NULL) {
+        return IOTC_ERROR;
+    }
+    if (IotcJsonHasObj(cur, STR_JSON_SID) != true) {
+        return IOTC_ERROR;
+    }
+    sid = IotcJsonGetObj(cur, STR_JSON_SID);
+    if (sid == NULL) {
+        return IOTC_ERROR;
+    }
+    ret = IotcJsonAddStr2Obj(resp, STR_JSON_SID, IotcJsonGetStr(sid));
+    if (ret != IOTC_OK) {
+        return IOTC_ERROR;
+    }
+    return IOTC_OK;
+}
+
 static int32_t SendCloudCtlMsgResp(
     CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr, const M2mCloudContext *ctx)
 {
@@ -283,25 +308,9 @@ static int32_t SendCloudCtlMsgResp(
         ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &respJson);
     } else if ((req->header.code == COAP_METHOD_TYPE_POST) || (req->header.code == COAP_METHOD_TYPE_PUT)) {
         ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
-        IotcJson *sid = NULL;
-        IotcJson *cur = NULL;
-        if (IotcJsonIsArray(dataJsonArray) == true) {
-            cur = IotcJsonGetArrayItem(dataJsonArray, 0);
-            if (cur == NULL) {
-                ret = IOTC_ERROR;
-                goto ERROR;
-            }
-            if (IotcJsonHasObj(cur, STR_JSON_SID) == true) {
-                sid = IotcJsonGetObj(cur, STR_JSON_SID);
-                if (sid == NULL) {
-                    ret = IOTC_ERROR;
-                    goto ERROR;
-                }
-                ret = IotcJsonAddStr2Obj(respJson, STR_JSON_SID, IotcJsonGetStr(sid));
-                if (ret != IOTC_OK) {
-                    goto ERROR;
-                }
-            }
+        ret = VaildCtlMsgVerify(dataJsonArray, respJson);
+        if (ret != IOTC_OK) {
+            goto ERROR;
         }
         ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, ret);
         if (ret != IOTC_OK) {

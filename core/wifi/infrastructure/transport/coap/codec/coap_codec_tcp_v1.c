@@ -80,12 +80,12 @@ static int32_t CoapTcpV1ParseHeader(CoapPacket *pkt, const CoapData *raw, uint32
     } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT8) {
         pkt->tcpheader.exlen = raw->data[(*pos)++] + COAP_DELTA_UINT8_ADD_NUM + COAP_TCP_DATA_HEADER_1;
     } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT16) {
-        pkt->tcpheader.exlen = (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_1) | 
+        pkt->tcpheader.exlen = (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_1) |
             (raw->data[(*pos)++]) + COAP_DELTA_UINT16_ADD_NUM + COAP_TCP_DATA_HEADER_2;
     } else if (pkt->tcpheader.len == COAP_EXTEND_DELTA_VALUE_UINT32) {
-        pkt->tcpheader.exlen = (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_3) | 
-            (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_2) | 
-            (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_1) | 
+        pkt->tcpheader.exlen = (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_3) |
+            (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_2) |
+            (raw->data[(*pos)++] << COAP_TCP_HEADER_EXLEN_OFFSET_1) |
             (raw->data[(*pos)++]) + COAP_DELTA_UINT32_ADD_NUM + COAP_TCP_DATA_HEADER_4;
     }
     //token 长度
