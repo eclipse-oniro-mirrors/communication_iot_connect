@@ -91,7 +91,7 @@ static void SleServiceStopInner(void)
     SleSsapDeinit();
     SleSvcNetCfgDeinit();
     SleSvcReportDeinit();
-    SleSessReset();
+    DestroySleSess();
     SleProfileDeinit();
     SleStackDeinit();
     SleLinkLayerClearAllCachePkg();
@@ -212,6 +212,7 @@ int32_t SleConnectServiceInit(void)
         .onStartAdv = SleAdvServiceStart,
         .onStopAdv = SleAdvServiceStop,
         .onStartScan = SleScanServiceStart,
+        .onStopScan = SleScanServiceStop,
         .onSetAdvType = SleAdvSetType,
         .onSendCustomSecData = SleSendCustomSecDataService,
         .onSendIndicateData = IotcSleSendIndicateData,

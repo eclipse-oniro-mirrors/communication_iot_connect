@@ -29,6 +29,9 @@ extern "C" {
 #ifndef IOTC_FUNC_NAME
 #define IOTC_FUNC_NAME (NULL)
 #endif
+#ifndef IOTC_CONF_LITEOS_M_LOG_PRINTF
+#define IOTC_CONF_LITEOS_M_LOG_PRINTF 1
+#endif
 
 void IotcLogOutputImpl(uint8_t level, const char *fileName,
     const char *funcName, uint32_t line, const char *fmt, ...);

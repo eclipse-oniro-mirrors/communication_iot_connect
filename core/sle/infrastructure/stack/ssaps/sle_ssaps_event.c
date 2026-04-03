@@ -24,6 +24,8 @@
 #include "iotc_mem.h"
 #include "utils_assert.h"
 #include "utils_common.h"
+#include "event_bus.h"
+#include "iotc_event.h"
 
 typedef struct {
     IotcAdptSleSsapEvent ssapEvent;
@@ -132,6 +134,20 @@ static int32_t SleSsapEventHandler(IotcAdptSleSsapEvent ssapEvent, const IotcAdp
     return IOTC_CORE_SLE_INVALID_SSAP_EVENT;
 }
 
+static void connectStateChnage(uint32_t event, void *param, uint32_t len)
+{
+    CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
+    IotcAdptSleConnectionEventParam *eventParam =  (IotcAdptSleConnectionEventParam *)param;
+
+    if (eventParam->sleConnectStateChanged.conn_state == IOTC_ADPT_SLE_ACB_STATE_DISCONNECTED) {
+        int32_t ret = SleAdvCtrlResume();
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("start adv err %d", ret);
+            return;
+        }
+    }
+}
+
 int32_t SleSsapServiceEventInit(void)
 {
     IOTC_LOGI("sle ssap init start");
@@ -141,5 +157,7 @@ int32_t SleSsapServiceEventInit(void)
         return ret;
     }
 
+    ret = EventBusSubscribe(connectStateChnage, IOTC_CORE_SLE_EVENT_CONNECT_STATE_CHANGED);
+    CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "subscribe sle connect state change err:%d", ret);
     return IotcSleSsapsRegisterServer(SleSsapEventHandler);
 }

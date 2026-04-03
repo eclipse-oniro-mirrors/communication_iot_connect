@@ -174,12 +174,31 @@ static int32_t OptionSetBleGattProfileSvcList(va_list args)
     return IOTC_OK;
 }
 
+static int32_t OptionSetMakeOsBleEnableCallback(va_list args)
+{
+    IotcMakeOsBleEnableCallback cb = va_arg(args, IotcMakeOsBleEnableCallback);
+    CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+
+    ProductHooks hooks = {0};
+    hooks.onMakeOsBleEnable = cb;
+
+    int32_t ret = ProductRegisterHooks(&hooks, PROD_HOOK_REG_POLICY_COVER_NON_NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("set make os ble enable cb error %d", ret);
+        return ret;
+    }
+
+    IOTC_LOGN("set make os ble enable cb");
+    return IOTC_OK;
+}
+
 static const OptionItem BLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_BLE_EXIT_AFTER_NETCFG, NULL },
     { IOTC_OH_OPTION_BLE_RECV_NETCFG_CALLBACK, OptionSetBleRecvNetcfgCallback },
     { IOTC_OH_OPTION_BLE_RECV_CUSTOM_DATA_CALLBACK, OptionSetBleRecvCustomSecDataCallback },
     { IOTC_OH_OPTION_BLE_START_UP_ADV_TIMEOUT, OptionSetBleStartUpAdvTimeout },
     { IOTC_OH_OPTION_BLE_GATT_PROFILE_SVC_LIST, OptionSetBleGattProfileSvcList },
+    { IOTC_OH_OPTION_BLE_ENABLE_FUNC_CALLBACK, OptionSetMakeOsBleEnableCallback },
 };
 
 int32_t IotcOhBleEnable(void)

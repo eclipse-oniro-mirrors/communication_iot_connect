@@ -182,6 +182,38 @@ static int32_t BleCustomSecDataGetChar(IotcJson *vendorItem, uint8_t **out, uint
     return IOTC_OK;
 }
 
+static void PutCharReportExecutorCallback(void *userData)
+{
+    CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
+    IotcJson *vendor = (IotcJson *)userData;
+
+    IotcJson *respVendor = NULL;
+    int32_t ret = DevSvcProxyCtlGetCharStates(vendor, &respVendor);
+    IotcJsonDelete(vendor);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("get char control error %d", ret);
+        return;
+    }
+
+    uint8_t *data = NULL;
+    uint32_t len = 0;
+#if IOTC_CONF_AILIFE_SUPPORT
+    ret = BuildBleCustomSecDataSingleService(respVendor, &data, &len);
+#else
+    ret = BuildBleCustomSecDataService(respVendor, &data, &len);
+#endif
+    IotcJsonDelete(respVendor);
+    if (ret != IOTC_OK || data == NULL || len == 0) {
+        IOTC_LOGW("trans rpt json err:%d", ret);
+        return;
+    }
+    ret = LinkLayerReportSvcDataEnc(BLE_SVC_CUSTOM_SEC_DATA, data, len);
+    IotcFree(data);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("rpt custom sec data err:%d", ret);
+    }
+}
+
 static int32_t BleCustomSecDataProcess(IotcJson *vendorItem, uint8_t **out, uint32_t *outLen)
 {
     uint32_t size = 0;
@@ -207,11 +239,24 @@ static int32_t BleCustomSecDataProcess(IotcJson *vendorItem, uint8_t **out, uint
     }
 
     ret = DevSvcProxyCtlPutCharStates(vendorItem, NULL);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("put char control error %d", ret);
+        return ret;
+    }
     if (ret == IOTC_CORE_PROF_SVC_ERR_ASYNC_REPORT) {
         return IOTC_OK;
     }
+
+    IotcJson *vendorCopy = IotcDuplicateJson(vendorItem, true);
+    if (vendorCopy == NULL) {
+        return IOTC_ADAPTER_JSON_ERR_DUPLICATE;
+    }
+
+    /* 控制成功后异步执行查询并上报 */
+    ret = SchedAsyncExecutor(PutCharReportExecutorCallback, vendorCopy);
     if (ret != IOTC_OK) {
-        IOTC_LOGW("put char control error %d", ret);
+        IOTC_LOGW("add executor error %d", ret);
+        IotcJsonDelete(vendorCopy);
         return ret;
     }
 

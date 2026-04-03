@@ -38,6 +38,8 @@ IOTC_API_PUBLIC int32_t IotcOhSleEnable(void);
 
 IOTC_API_PUBLIC int32_t IotcOhSleStartSeek(void);
 
+IOTC_API_PUBLIC int32_t IotcOhSleStopSeek(void);
+
 IOTC_API_PUBLIC int32_t IotcOhSleDisable(void);
 
 IOTC_API_PUBLIC int32_t IotcOhSleRelease(void);

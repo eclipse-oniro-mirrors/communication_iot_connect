@@ -18,7 +18,7 @@
 #include "security_random.h"
 #include "iotc_aes.h"
 #include "event_bus_sub.h"
-#include "ble_linklayer.h"
+#include "sle_linklayer.h"
 #include "securec.h"
 #include "iotc_svc_dev.h"
 #include "iotc_errcode.h"
@@ -30,6 +30,7 @@
 #define SESS_HMAC_LEN   32
 #define SESS_IV_LEN     12
 #define SESS_TAG_LEN    16
+#define SLE_SESSION_MAX    64
 
 #define SEQ_MAX_INTERVAL    30  /* seq有效范围为已收到最大值的正负30内 */
 #define ITER_TIMES          1 /* 基于authcode派生，迭代一次表示依赖authcode安全强度 */

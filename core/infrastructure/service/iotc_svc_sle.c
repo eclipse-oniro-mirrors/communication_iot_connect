@@ -45,6 +45,16 @@ int32_t SleSvcProxyStartSeek(void)
     return sleApi->onStartScan();
 }
 
+int32_t SleSvcProxyStopSeek(void)
+{
+    const SleSvcApi *sleApi = GetSleSvcApi();
+    if (sleApi == NULL || sleApi->onStopScan == NULL) {
+        return IOTC_CORE_COMM_FWK_ERR_SERVICE_NO_API;
+    }
+
+    return sleApi->onStopScan();
+}
+
 int32_t SleSvcProxyStartAdv(uint32_t ms)
 {
     const SleSvcApi *sleApi = GetSleSvcApi();

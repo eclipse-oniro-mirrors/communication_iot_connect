@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef IOTC_SERVICE_SLE_H
 #define IOTC_SERVICE_SLE_H
 #include <stdint.h>
@@ -23,6 +22,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 typedef enum {
     SLE_SERVICE_MSG_ID_DEVICE_CONTROL = 0,
     SLE_SERVICE_MSG_ID_CLOUD_SETUP,
@@ -87,6 +87,7 @@ int32_t SleSvcProxySendIndicateData(const char *svcUuid, const char *charUuid,
 int32_t SleSvcProxyFindDeviceInfo(const char *devId, void **info);
 int32_t SleSvcProxyFindDeviceInfoByName(const char *name, IotcConDeviceInfo **info);
 int32_t SleSvcProxyStartSeek(void);
+int32_t SleSvcProxyStopSeek(void);
 
 #ifdef __cplusplus
 }
