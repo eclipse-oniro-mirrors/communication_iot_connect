@@ -1,4 +1,4 @@
-## L0设备添加编译子系统
+## 小型系统添加编译子系统
 **以社区开源产品(Hi3863)为例，其余产品可按实际位置自行修改**
 1. 使用git命令克隆[communication_iot_connect](https://gitcode.com/ohos-oneconnect/communication_iot_connect)复制到foundation/communication目录下，将文件夹名称修改为iot_connect。
 2. 在vendor/hihope/nearlink_dk_3863/config.json路径下添加如下配置
