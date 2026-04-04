@@ -35,4 +35,5 @@
 
 ## 添加编译子系统构建DEMO
 
--   [参考DEMO](docs/iot-connect-samples.md)
+-   [L0设备构建参考DEMO](docs/iot-connect-samples-l0.md)
+-   [L2设备构建参考DEMO](docs/iot-connect-samples-l2.md)
