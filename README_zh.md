@@ -32,8 +32,3 @@
 
 - [L0设备库编译](docs/iotc-build-l0.md)
 - [L2设备库编译](docs/iotc-build-l2.md)
-
-## 添加编译子系统构建DEMO
-
--   [L0设备DEMO构建参考](docs/iot-connect-samples-l0.md)
--   [L2设备DEMO构建参考](docs/iot-connect-samples-l2.md)
