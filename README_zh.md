@@ -30,5 +30,5 @@
 
 ## 添加编译子系统构建动态库
 
-- [小型系统动态库编译](docs/iotc-build-l0.md)
+- [小型系统动态库编译](docs/iotc-build-小型系统.md)
 - [标准系统动态库编译](docs/iotc-build-l2.md)
