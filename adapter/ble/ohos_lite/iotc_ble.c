@@ -21,11 +21,24 @@
 #include "iotc_errcode.h"
 #include "iotc_log.h"
 
+#define INVALID_ADV_ID (-1)
+#define UUID_STR_BUF_MAX_LEN 40
 enum {
     UUID_STR_4_BYTES = 4,
     UUID_STR_8_BYTES = 8,
     UUID_STR_32_BYTES = 32,
 };
+typedef struct {
+    bool has;
+    int32_t status;
+    int32_t serverId;
+    char uuid[UUID_STR_BUF_MAX_LEN];
+    uint8_t uuidLen;
+} RegGattAppResult;
+
+static int32_t g_advId = INVALID_ADV_ID;
+
+static RegGattAppResult g_regGattAppResult;
 
 static bool g_isBond = false;
 
@@ -234,6 +247,11 @@ static void ConnectServerCb(int32_t connId, int32_t serverId, const BdAddr *bdAd
         g_gattEventHandler(IOTC_ADPT_BLE_GATT_EVENT_CONNECT, &eventParam) != IOTC_OK) {
         IOTC_LOGE("doing gatt event");
     }
+    /* 蓝牙连接后系统不会自动关闭蓝牙广播 */
+    if (g_advId != INVALID_ADV_ID) {
+        (void)BleStopAdv(g_advId);
+        g_advId = INVALID_ADV_ID;
+    }
 }
 
 static void DisconnectServerCb(int32_t connId, int32_t serverId, const BdAddr *bdAddr)
@@ -319,6 +337,7 @@ void RegisterServerCb(int32_t status, int32_t serverId, BtUuid *appUuid)
 }
 
 static BtGattServerCallbacks g_bleGattsCb = {
+    .registerServerCb = RegisterServerCb,
     .connectServerCb = ConnectServerCb,
     .disconnectServerCb = DisconnectServerCb,
     .serviceStartCb = ServiceStartCb,
@@ -509,6 +528,7 @@ int32_t IotcBleRegisterGattCb(const IotcAdptBleGattCallback callback)
     }
     g_gattEventHandler = callback;
     IOTC_LOGD("gatts reg start");
+    (void)memset_s(&g_regGattAppResult, sizeof(g_regGattAppResult), 0, sizeof(g_regGattAppResult));
     int32_t ret = BleGattsRegisterCallbacks(&g_bleGattsCb);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("register gatt callback ret=%d", ret);
@@ -567,23 +587,33 @@ int32_t IotcBleStartAdv(const IotcAdptBleAdvParam *advParam, const IotcAdptBleAd
         ohosAdvParam.peerAddrType = AdapterAddrTypeToOhosAddrType(advParam->directAddrType);
     }
     /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
-    int32_t advId = 0;
-    int32_t ret = BleStartAdvEx(&advId, ohosAdvData, ohosAdvParam);
+    if (g_advId != INVALID_ADV_ID) {
+        (void)BleStopAdv(g_advId);
+        g_advId = INVALID_ADV_ID;
+    }
+    int32_t ret = BleStartAdvEx(&g_advId, ohosAdvData, ohosAdvParam);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("start adv ret=%d", ret);
         return IOTC_ERROR;
     }
+    IOTC_LOGD("start adv success advId=%d", g_advId);
     return IOTC_OK;
 }
 
 int32_t IotcBleStopAdv(void)
 {
-    /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
-    int32_t ret = BleStopAdv(0);
+   /* 由于当前设备仅有一个广播，暂时不涉及多路广播 */
+    if (g_advId == INVALID_ADV_ID) {
+        IOTC_LOGD("no start adv");
+        return IOTC_OK;
+    }
+    int32_t ret = BleStopAdv(g_advId);
+    g_advId = INVALID_ADV_ID;
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("stop adv ret=%d", ret);
         return IOTC_ERROR;
     }
+    IOTC_LOGD("stop adv success advId=%d", g_advId);
     return IOTC_OK;
 }
 
@@ -620,8 +650,7 @@ int32_t IotcBleStartGattsService(IotcAdptBleGattService *svc, uint32_t svcNum)
 
 int32_t IotcBleStopGattsService(int32_t serverId, uint32_t svcHandle)
 {
-    (void)serverId;
-    int32_t ret = BleGattsStopServiceEx(svcHandle);
+    int32_t ret = BleGattsDeleteService(serverId, svcHandle);
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("gatt stop service ret=%d", ret);
         return IOTC_ERROR;
@@ -693,7 +722,13 @@ int32_t IotcBleDisconnectGatt(const uint8_t *bdAddr, uint32_t addrLen)
 
 int32_t IotcBleDeInitStack(void)
 {
-    int32_t ret = DisableBtStack();
+    IotcBleStopAdv();
+    if (g_regGattAppResult.has && g_regGattAppResult.serverId >= 0) {
+        int ret =  BleGattsUnRegister(g_regGattAppResult.serverId);
+        IOTC_LOGE("BleGattsUnRegister ret=%d", ret);
+        g_regGattAppResult.has = false;
+    }
+    int ret = DisableBtStack();
     if (ret != OHOS_BT_STATUS_SUCCESS) {
         IOTC_LOGE("disable bt stack ret=%d", ret);
         return IOTC_ERROR;

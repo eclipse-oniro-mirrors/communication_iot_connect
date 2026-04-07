@@ -68,6 +68,7 @@ typedef struct {
 
 static uint32_t g_taskSize = IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE;
 static DfxWatchDogTimeoutHandler g_commHdl = NULL;
+
 static WatchdogContext *GetWatchDogCtx(void)
 {
     static WatchdogContext ctx;
@@ -76,7 +77,7 @@ static WatchdogContext *GetWatchDogCtx(void)
 
 #define WATCH_DOG_LOCK() (void)UtilsExMutexLock(GetWatchDogCtx()->mutex)
 #define WATCH_DOG_UNLOCK() UtilsExMutexUnlock(GetWatchDogCtx()->mutex)
-
+            
 static bool WatchDogProc(void)
 {
     bool isRunning = true;

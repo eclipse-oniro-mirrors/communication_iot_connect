@@ -232,9 +232,24 @@ int32_t IotcOhSleStartSeek(void)
         IOTC_LOGF("executor start adv error %d", ret);
         return ret;
     }
-    if (errcode != IOTC_OK) {
-        IOTC_LOGF("start adv error %d", errcode);
-        return errcode;
+    return IOTC_OK;
+}
+
+static int32_t SleStopSeekCallback(void *inData, void **outData)
+{
+    NOT_USED(outData);
+    NOT_USED(inData);
+    return SleSvcProxyStopSeek();
+}
+
+int32_t IotcOhSleStopSeek(void)
+{
+    int32_t errcode = IOTC_OK;
+    uint32_t time = 1000;
+    int32_t ret = SchedAsyncExecutorWait(SleStopSeekCallback, &time, NULL, &errcode, IOTC_CONF_API_WAIT_MAX_TIME);
+    if (ret != IOTC_OK) {
+        IOTC_LOGF("executor stop seek error %d!", ret);
+        return ret;
     }
     return IOTC_OK;
 }

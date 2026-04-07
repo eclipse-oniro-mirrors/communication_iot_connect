@@ -32,7 +32,7 @@
 #include "local_ctl_coap_api.h"
 
 #define LOCAL_CTL_SESS_NAME "LOCAL_CTL"
-#define LOCAL_CTL__COAP_UDP_MULTI_ADDR "238.101.0.0"
+#define LOCAL_CTL_COAP_UDP_MULTI_ADDR "238.101.0.0"
 #define LOCAL_CTL_COAP_UDP_BROADCAST_ADDR "0.0.0.0"
 
 static int32_t LocalCtlCoapStackCreate(LocalControlContext *ctx)
