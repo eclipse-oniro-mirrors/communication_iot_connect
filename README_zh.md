@@ -30,8 +30,5 @@
 
 ## 添加编译子系统构建动态库
 
--   [L2设备库编译](docs/iotc-build-l2.md)
-
-## 添加编译子系统构建APP demo
-
--   [构建参考DEMO](https://gitee.com/ohos-oneconnect/applications_sample_iot_connect_samples)
+- [小型系统动态库编译](docs/iotc-build-小型系统.md)
+- [标准系统动态库编译](docs/iotc-build-l2.md)
