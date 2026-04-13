@@ -112,11 +112,15 @@ static int WaitIotcInitivalized2(void)
 
 static int32_t GetRootCA(const char **ca[], uint32_t *num)
 {
+    (void)ca;
+    (void)num;
     return IOTC_OK;
 }
 
 static int32_t RecvNetCfgInfoCallback(const char *netInfo, uint32_t len)
 {
+    (void)netInfo;
+    (void)len;
     return 0;
 }
 
@@ -161,6 +165,10 @@ static int32_t PutCharState(const IotcCharState state[], uint32_t num)
 
 static int32_t GetCharState(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num)
 {
+    (void)state;
+    (void)out;
+    (void)len;
+    (void)num;
     return 0;
 }
 

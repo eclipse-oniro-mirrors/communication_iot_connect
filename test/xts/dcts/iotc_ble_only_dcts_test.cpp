@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cstring>
 #include "iotc_oh_wifi.h"
 #include "iotc_oh_ble.h"
 #include "iotc_oh_sdk.h"
@@ -197,18 +196,18 @@ static void CustomSecDataSendStatus(const char *sid, int status)
     const char *switch1 = "{\"vendor\":[{\"sid\":\"switch\",\"data\":{\"on\":1}}],\"seq\":0}";
     const char *report0 = "{\"vendor\":[{\"sid\":\"report\",\"data\":{\"on\":0}}],\"seq\":0}";
     const char *report1 = "{\"vendor\":[{\"sid\":\"report\",\"data\":{\"on\":1}}],\"seq\":0}";
-    char *send = NULL;
+    char *send = nullptr;
     if (strcmp(sid, "switch") == 0) {
         if (status == 0) {
-            send = (char *)switch0;
+            send = const_cast<char *>(switch0);
         } else if (status == 1) {
-            send = (char *)switch1;
+            send = const_cast<char *>(switch1);
         }
     } else if (strcmp(sid, "report") == 0) {
         if (status == 0) {
-            send = (char *)report0;
+            send = const_cast<char *>(report0);
         } else if (status == 1) {
-            send = (char *)report1;
+            send = const_cast<char *>(report1);
         }
     }
     IotcOhBleSendCustomSecData((uint8_t *)send, strlen(send));
@@ -344,7 +343,7 @@ static int32_t SwitchPutCharState(const IotcServiceInfo *svc, const char *data, 
 
 static int32_t SwitchGetCharState(const IotcServiceInfo *svc, char **data, uint32_t *len)
 {
-    if (data == NULL || *data != NULL) {
+    if (data == nullptr || *data != nullptr) {
         DEMO_LOG("param invalid");
         return -1;
     }
@@ -390,7 +389,7 @@ static int32_t ReportPutCharState(const IotcServiceInfo *svc, const char *data, 
 
 static int32_t ReportGetCharState(const IotcServiceInfo *svc, char **data, uint32_t *len)
 {
-    if (data == NULL || *data != NULL) {
+    if (data == nullptr || *data != nullptr) {
         DEMO_LOG("param invalid");
         return -1;
     }

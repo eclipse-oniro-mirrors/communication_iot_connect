@@ -47,6 +47,7 @@ typedef struct {
 
 static void ParsePkgHead(const uint8_t *buff, uint32_t len, PkgHead *pkgHead)
 {
+    (void)len;
     /* 第0字节的高4位 */
     pkgHead->version = buff[PKG_HEAD_TYPE_IDX] >> BIT_OFFSET_FOUR;
     /* 第0字节的低4位 */

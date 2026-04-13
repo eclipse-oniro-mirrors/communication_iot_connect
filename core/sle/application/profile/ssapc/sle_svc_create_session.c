@@ -290,7 +290,7 @@ static int32_t GenerateSessionKey(uint16_t connId, IotcJson *root, SleInitialSal
     return IOTC_OK;
 }
 
-int32_t GetSleSvcCreateSession(const SleCmdParam *param, uint8_t **out, uint32_t *outLen)
+int32_t GetSleSvcCreateSession(const SleCmdParam *param, uint8_t * const *out, const uint32_t *outLen)
 {
     (void)out;
     (void)outLen;

@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cstring>
 #include "iotc_oh_wifi.h"
 #include "iotc_oh_ble.h"
 #include "iotc_oh_sdk.h"
@@ -192,7 +191,7 @@ static int32_t SwitchPutCharState(const IotcServiceInfo *svc, const char *data, 
 
 static int32_t SwitchGetCharState(const IotcServiceInfo *svc, char **data, uint32_t *len)
 {
-    if (data == NULL || *data != NULL) {
+    if (data == nullptr || *data != nullptr) {
         DEMO_LOG("param invalid");
         return -1;
     }
@@ -209,7 +208,7 @@ static int32_t SwitchGetCharState(const IotcServiceInfo *svc, char **data, uint3
     }
     *data = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
-    if (*data == NULL) {
+    if (*data == nullptr) {
         DEMO_LOG("json print error");
         return -1;
     }
@@ -238,7 +237,7 @@ static int32_t ReportPutCharState(const IotcServiceInfo *svc, const char *data, 
 
 static int32_t ReportGetCharState(const IotcServiceInfo *svc, char **data, uint32_t *len)
 {
-    if (data == NULL || *data != NULL) {
+    if (data == nullptr || *data != nullptr) {
         DEMO_LOG("param invalid");
         return -1;
     }
@@ -255,7 +254,7 @@ static int32_t ReportGetCharState(const IotcServiceInfo *svc, char **data, uint3
     }
     *data = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
-    if (*data == NULL) {
+    if (*data == nullptr) {
         DEMO_LOG("json print error");
         return -1;
     }

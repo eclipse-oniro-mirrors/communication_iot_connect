@@ -52,6 +52,7 @@ static void M2mCloudFsmOnStateChange(UtilsFsm *fsm, int32_t before, int32_t next
 
 static void RegisterTimeoutTimerHandler(int32_t id, void *userData)
 {
+    (void)id;
     CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
     M2mCloudContext *ctx = (M2mCloudContext *)userData;
     IOTC_LOGW("register timeout");
@@ -220,6 +221,7 @@ static void M2mCloudPskRegRespHandler(const CoapPacket *resp,
 
 static int32_t CloudFsmPskHandler(void *param, int32_t cur)
 {
+    (void)cur;
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     M2mCloudContext *ctx = (M2mCloudContext *)param;
 
@@ -281,6 +283,7 @@ static void M2mCloudRegisterRegRespHandler(const CoapPacket *resp,
 
 static int32_t CloudFsmRegisterHandler(void *param, int32_t cur)
 {
+    (void)cur;
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     M2mCloudContext *ctx = (M2mCloudContext *)param;
 
@@ -435,6 +438,7 @@ static void M2mCloudAuthCodeRegRespHandler(const CoapPacket *resp,
 
 static int32_t CloudFsmAuthCodeHandler(void *param, int32_t cur)
 {
+    (void)cur;
     CHECK_RETURN_LOGW(param != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     M2mCloudContext *ctx = (M2mCloudContext *)param;
 

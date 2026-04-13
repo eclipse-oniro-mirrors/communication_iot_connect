@@ -108,7 +108,7 @@ EventLoop *EventLoopNew(const char *name)
 
 static void LoopSourceNodeInsert(EventLoop *loop, EventNode *addNode)
 {
-    /* Inserted at the front of the list for polling */
+    /* Inserted at the front of list for polling */
     if (UTILS_IS_BIT_SET(addNode->bitMap, EVENT_NODE_FLAG_POLL)) {
         LIST_INSERT(&addNode->node, &loop->sourceList);
         loop->pollSourceCnt++;

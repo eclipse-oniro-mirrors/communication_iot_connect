@@ -555,6 +555,10 @@ int32_t SleScanServiceStart(void)
 
 int32_t SleSendCustomSecDataService(const char *devId, uint8_t protType, const uint8_t *data, uint32_t len)
 {
+    (void)devId;
+    (void)protType;
+    (void)data;
+    (void)len;
     // 停止扫描
     if (SleSeekCtrlStop() != IOTC_OK) {
         IOTC_LOGE("%s: do SleStopSeek failed. Error.", __func__);

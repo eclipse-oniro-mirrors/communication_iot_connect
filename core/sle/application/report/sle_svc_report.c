@@ -27,6 +27,7 @@
 #include "iotc_svc.h"
 #include "iotc_errcode.h"
 #include "iotc_event.h"
+#include "iotc_conf.h"
 
 static int32_t SleReportCustomSecDataService(const IotcJson *item)
 {

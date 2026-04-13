@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "comm_def.h"
+#include "iotc_conf.h"
 
 #ifdef __cplusplus
 extern "C" {

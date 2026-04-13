@@ -31,7 +31,7 @@ typedef struct {
     void (*eventHandler)(int32_t event, void *param);
 } BleSchedMsgHandler;
 
-static void BleEventStartHandler(int32_t event, void *param)
+static void BleEventStartHandler(int32_t event, const void *param)
 {
     (void)event;
     (void)param;

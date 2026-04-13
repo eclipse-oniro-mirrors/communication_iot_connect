@@ -680,9 +680,9 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest019, TestSize.Level1)
     EXPECT_TRUE(ret == IOTC_OK);
     ret = WaitIotcInitivalized();
     EXPECT_TRUE(ret == IOTC_OK);
-    ret = IotcOhBleSendCustomSecData((unsigned char *)"1", 1);
+    ret = IotcOhBleSendCustomSecData(reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
-    ret = IotcOhBleSendCustomSecData((unsigned char *)"1", 1);
+    ret = IotcOhBleSendCustomSecData(reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
     ret = IotcOhStop();
     EXPECT_TRUE(ret == IOTC_OK);
@@ -701,7 +701,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest019, TestSize.Level1)
 HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest020, TestSize.Level1)
 {
     int ret = 0;
-    ret = IotcOhBleSendCustomSecData((unsigned char *)"1", 1);
+    ret = IotcOhBleSendCustomSecData(reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
 }
 
@@ -718,7 +718,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest021, TestSize.Level1)
     int ret = 0;
     ret = IotcOhBleEnable();
     EXPECT_TRUE(ret == IOTC_OK);
-    ret = IotcOhBleSendCustomSecData((unsigned char *)"1", 1);
+    ret = IotcOhBleSendCustomSecData(reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
     ret = IotcOhBleDisable();
     EXPECT_TRUE(ret == IOTC_OK);
@@ -742,7 +742,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest022, TestSize.Level1)
     EXPECT_TRUE(ret == IOTC_OK);
     ret = WaitIotcInitivalized();
     EXPECT_TRUE(ret == IOTC_OK);
-    ret = IotcOhBleSendCustomSecData((unsigned char *)"1", 1);
+    ret = IotcOhBleSendCustomSecData(reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
     ret = IotcOhStop();
     EXPECT_TRUE(ret == IOTC_OK);
@@ -774,7 +774,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest023, TestSize.Level1)
 HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest024, TestSize.Level1)
 {
     int ret = 0;
-    ret = IotcOhBleSendCustomSecData((unsigned char *)"1", 0);
+    ret = IotcOhBleSendCustomSecData(reinterpret_cast<unsigned char *>("1"), 0);
     EXPECT_FALSE(ret == IOTC_OK);
 }
 
@@ -798,9 +798,9 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest025, TestSize.Level1)
     EXPECT_TRUE(ret == IOTC_OK);
     ret = WaitIotcInitivalized();
     EXPECT_TRUE(ret == IOTC_OK);
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
     ret = IotcOhStop();
     EXPECT_TRUE(ret == IOTC_OK);
@@ -819,7 +819,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest025, TestSize.Level1)
 HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest026, TestSize.Level1)
 {
     int ret = 0;
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
 }
 
@@ -836,7 +836,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest027, TestSize.Level1)
     int ret = 0;
     ret = IotcOhBleEnable();
     EXPECT_TRUE(ret == IOTC_OK);
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
     ret = IotcOhBleDisable();
     EXPECT_TRUE(ret == IOTC_OK);
@@ -860,9 +860,9 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest028, TestSize.Level1)
     EXPECT_TRUE(ret == IOTC_OK);
     ret = WaitIotcInitivalized();
     EXPECT_TRUE(ret == IOTC_OK);
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
     ret = IotcOhStop();
     EXPECT_TRUE(ret == IOTC_OK);
@@ -879,7 +879,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest028, TestSize.Level1)
 HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest029, TestSize.Level1)
 {
     int ret = 0;
-    ret = IotcOhBleSendIndicateData(NULL, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(NULL, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
 }
 
@@ -894,7 +894,7 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest029, TestSize.Level1)
 HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest030, TestSize.Level1)
 {
     int ret = 0;
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, NULL, (unsigned char *)"1", 1);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, NULL, reinterpret_cast<unsigned char *>("1"), 1);
     EXPECT_FALSE(ret == IOTC_OK);
 }
 
@@ -924,6 +924,6 @@ HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest031, TestSize.Level1)
 HWTEST_F(IotcOhBleActsTest, IotcOhBleActsTest032, TestSize.Level1)
 {
     int ret = 0;
-    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, (unsigned char *)"1", 0);
+    ret = IotcOhBleSendIndicateData(TEST_SVC_UUID, TEST_SVC_INDICATE_UUID, reinterpret_cast<unsigned char *>("1"), 0);
     EXPECT_FALSE(ret == IOTC_OK);
 }
