@@ -30,7 +30,10 @@
 #include "utils_fsm.h"
 #include "utils_bit_map.h"
 
-#define MGR_CHANGE_FSM_TO(ctx, state) UtilsFsmSwitch((ctx)->stateManager.fsmCtx, (state));
+static inline void MgrChangeFsmTo(M2mCloudContext *ctx, int32_t state)
+{
+    UtilsFsmSwitch(ctx->stateManager.fsmCtx, state);
+}
 
 typedef enum {
     M2M_CLOUD_DEV_STATE_OFFLINE = 0,
@@ -409,7 +412,7 @@ static int32_t M2mCloudParseEcoDevInfoByResponse(M2mCloudContext *ctx, const Coa
 
     IotcJsonDelete(respJson);
 
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC);
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC);
     return IOTC_OK;
 }
 
@@ -474,7 +477,7 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
     }
 
     if (timeout) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -484,7 +487,7 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
 
     int32_t ret = M2mCloudParseAuthCodeByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -504,7 +507,7 @@ void M2mCloudEcoDevInfoRespHandler(const CoapPacket *resp, const SocketAddr *add
     }
 
     if (timeout) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -514,7 +517,7 @@ void M2mCloudEcoDevInfoRespHandler(const CoapPacket *resp, const SocketAddr *add
 
     int32_t ret = M2mCloudParseEcoDevInfoByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -534,7 +537,7 @@ void M2mCloudEcoDevStateRespHandler(const CoapPacket *resp, const SocketAddr *ad
     }
 
     if (timeout) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -544,7 +547,7 @@ void M2mCloudEcoDevStateRespHandler(const CoapPacket *resp, const SocketAddr *ad
 
     int32_t ret = M2mCloudParseEcoDevStateByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -657,7 +660,7 @@ static void CloudProcessSubData(uint32_t event, void *param, uint32_t len)
 
     // 把状态切换到获取认证码状态
     M2mCloudContext *ctx = GetM2mCloudCtx();
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_GET_AUTHCODE);
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_GET_AUTHCODE);
     return;
 }
 
@@ -675,7 +678,7 @@ static void CloudProcessDevInfoData(uint32_t event, IotcJson *param, uint32_t le
     }
     devInfo->info.devInfo = devInfoSync;
     M2mCloudContext *ctx = GetM2mCloudCtx();
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC);
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC);
 }
 
 int32_t SleDeviceCloudFsmInit()

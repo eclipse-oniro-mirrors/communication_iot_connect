@@ -39,10 +39,10 @@ static const uint8_t TOKEN_REQ_TIME_INTERVAL_RATIO_RIGHT_SHIFT = 5;
 
 static const CloudOption *M2mCloudGetTokenRefreshOption(void)
 {
-    static const char *sys_Token[] = {STR_URI_PATH_SYS, STR_URI_PATH_TOKEN};
+    static const char *sysToken[] = {STR_URI_PATH_SYS, STR_URI_PATH_TOKEN};
     static const CloudOption TOKEN_OPTION = {
-        .uri = sys_Token,
-        .num = ARRAY_SIZE(sys_Token),
+        .uri = sysToken,
+        .num = ARRAY_SIZE(sysToken),
         .opBitMap = UTILS_BIT(CLOUD_OPTION_BIT_SEQ_NUM_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_REQ_ID) |
                     UTILS_BIT(CLOUD_OPTION_BIT_DEV_ID) |

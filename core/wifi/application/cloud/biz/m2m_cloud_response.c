@@ -114,7 +114,8 @@ static int32_t GetResponeDevMsgId(const IotcJson *msg, IotcJson **savedDevid, Io
     return IOTC_OK;
 }
 
-CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_pkt,const SocketAddr *sock_addr, const M2mCloudContext *cloud_ctx)
+CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_pkt,
+     const SocketAddr *sock_addr, const M2mCloudContext *cloud_ctx)
 {
     CoapResponeNode *node = IotcMalloc(sizeof(CoapResponeNode));
     if (node == NULL) {
@@ -141,7 +142,7 @@ CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_
     node->endpoint = ep;
     node->ctx = cloud_ctx;
 
-    do{ // get msgId and devId
+    do { // get msgId and devId
         uint32_t seg = 0;
         const CoapOption *reqIdOpt = CoapUtilsFindOption(req_pkt, COAP_OPTION_TYPE_REQ_ID, &seg);
         if (reqIdOpt == NULL || seg != 1 || reqIdOpt->value.data == NULL || reqIdOpt->value.len == 0) {
@@ -168,7 +169,6 @@ CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_
         (void)memcpy_s(node->msgId, reqIdOpt->value.len + 1, reqIdOpt->value.data, reqIdOpt->value.len);
         ((char *)node->msgId)[reqIdOpt->value.len] = '\0';
     } while (0);
-
 
     LIST_INSERT_BEFORE(&node->list, &g_m2mCloudResponseList);
     return node;

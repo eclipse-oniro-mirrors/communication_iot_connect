@@ -157,7 +157,7 @@ int32_t M2mCloudParsePskResponse(M2mCloudContext *ctx, const CoapPacket *resp, i
     char pskStr[HEXIFY_LEN(SESSION_KEY_LEN) +1] = {0};
     
     if (UtilsHexify(ctx->pskInfo.key, SESSION_KEY_LEN, pskStr, sizeof(pskStr))) {
-        IOTC_LOGI("pskInfo:%s",pskStr);
+        IOTC_LOGI("pskInfo:%s", pskStr);
     }
 
     return IOTC_OK;
@@ -185,9 +185,9 @@ int32_t StationSessKeyGen(M2mCloudContext *ctx, const uint8_t *sn1, uint32_t sn1
     
     ret = IotcPkcs5Pbkdf2Hmac(&param, ctx->pskInfo.key, SESSION_KEY_LEN);
 
-    char pskStr[HEXIFY_LEN(PSK_PASSWORD_LEN) +1] = {0};
+    char pskStr[HEXIFY_LEN(PSK_PASSWORD_LEN) + 1] = {0};
     if (UtilsHexify(ctx->authInfo.loginInfo.psk, PSK_PASSWORD_LEN, pskStr, sizeof(pskStr))) {
-        IOTC_LOGI("%s pskStr:%s",__func__, pskStr);
+        IOTC_LOGI("%s pskStr:%s", __func__, pskStr);
     }
 
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "ble sess key gen err:%d", ret);
