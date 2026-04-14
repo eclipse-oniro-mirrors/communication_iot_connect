@@ -57,7 +57,7 @@ static bool FdSourcePrepare(EventSource *self, uint32_t *timeout)
     return true;
 }
 
-static void FdSourceEventSet(const EventSourceFd *fdSource, uint8_t *bitMap, uint8_t event)
+static void FdSourceEventSet(EventSourceFd *fdSource, uint8_t *bitMap, uint8_t event)
 {
     if (UTILS_IS_BIT_SET(*bitMap, event)) {
         return;
@@ -66,7 +66,7 @@ static void FdSourceEventSet(const EventSourceFd *fdSource, uint8_t *bitMap, uin
     fdSource->eventCnt++;
 }
 
-static void FdSourceEventUnset(const EventSourceFd *fdSource, uint8_t *bitMap, uint8_t event)
+static void FdSourceEventUnset(EventSourceFd *fdSource, uint8_t *bitMap, uint8_t event)
 {
     if (!UTILS_IS_BIT_SET(*bitMap, event)) {
         return;
