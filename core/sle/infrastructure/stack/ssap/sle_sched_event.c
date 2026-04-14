@@ -32,7 +32,7 @@ typedef struct {
     void (*eventHandler)(int32_t event, void *param);
 } SleSchedMsgHandler;
 
-static void SleEventStartHandler(int32_t event, void *param)
+static void SleEventStartHandler(int32_t event, const void *param)
 {
     (void)event;
     (void)param;

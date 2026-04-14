@@ -35,6 +35,7 @@
 // 获取设备信息响应 clent
 static int32_t GetSleSvcDeviceInfoRsp(const uint16_t connId, uint8_t **out, uint32_t *outLen)
 {
+    (void)connId;
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
     *out = NULL;
     *outLen = 0;

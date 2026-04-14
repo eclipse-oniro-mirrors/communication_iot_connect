@@ -28,7 +28,7 @@ static SleGetAdvInfoCallback g_sleAdvCtrlCb = NULL;
 static uint32_t g_advStartTime = 0;
 static uint32_t g_advDuration = 0;
 static uint8_t anounceId = 0;
-static void AdvCtrlTimerCb(int32_t id, void *userData)
+static void AdvCtrlTimerCb(int32_t id, const void *userData)
 {
     (void)id;
     (void)userData;

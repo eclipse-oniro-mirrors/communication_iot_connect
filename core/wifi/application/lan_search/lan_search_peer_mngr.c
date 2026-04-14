@@ -66,6 +66,7 @@ static HashMapTravCode PeerMapExpireCheckTraversal(const void *value, va_list ar
 
 static void PeerExpireCheckTimer(int32_t id, void *userData)
 {
+    (void)id;
     CHECK_V_RETURN_LOGW(userData != NULL, "param invalid");
     LanSearchContext *ctx = (LanSearchContext *)userData;
 

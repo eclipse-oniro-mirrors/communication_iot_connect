@@ -199,6 +199,7 @@ static int32_t BuildAll(IotcJson *root)
 
 static int32_t GetSleSvcDeviceInfoReq(const uint16_t connId, uint8_t **out, uint32_t *outLen)
 {
+    (void)connId;
     CHECK_RETURN_LOGW((out != NULL) && (outLen != NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
     *out = NULL;
     *outLen = 0;

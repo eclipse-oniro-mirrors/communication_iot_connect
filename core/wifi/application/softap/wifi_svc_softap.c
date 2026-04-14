@@ -239,6 +239,7 @@ static int32_t StartSoftapService(int32_t instanceId, ServiceFinishCallback onFi
 
 static int32_t StopSoftapService(int32_t instanceId, void *param)
 {
+    (void)param;
     IOTC_LOGN("softap service stop");
     SoftapServiceContext *ctx = GetSoftapServiceContext();
     if (ctx == NULL) {

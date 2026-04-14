@@ -84,6 +84,7 @@ static int32_t StopWifiConnectService(int32_t instanceId, void *param)
 
 static int32_t StartWifiConnectService(int32_t instanceId, ServiceFinishCallback onFinish, void *param)
 {
+    (void)param;
     CHECK_RETURN_LOGW(onFinish != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
     ConnectServiceContext *ctx = GetConnSvcCtx();
 
