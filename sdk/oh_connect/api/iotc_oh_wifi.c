@@ -198,7 +198,7 @@ static int32_t OptionSetMakeOsWifiEnableCallback(va_list args)
         return ret;
     }
 
-    IOTC_LOGN("set custom data cb");
+    IOTC_LOGN("set make os wifi enable cb");
     return IOTC_OK;
 }
 
@@ -215,13 +215,6 @@ int32_t IotcOhWifiEnable(void)
 {
     IOTC_LOGN("iotc oh wifi enable");
     CHECK_MAIN_RUNNING_RETURN();
-
-    if (IsWifiActive() != WIFI_STA_ACTIVE) {
-        if (EnableWifi() != WIFI_SUCCESS) {
-            IOTC_LOGE("enable wifi fail");
-            return IOTC_ADAPTER_WIFI_ERR_SET_INFO;
-        }
-    }
 
     int32_t ret = IotcOhOptionRegister(WIFI_OPTION_TABLE, ARRAY_SIZE(WIFI_OPTION_TABLE));
     if (ret != IOTC_OK) {

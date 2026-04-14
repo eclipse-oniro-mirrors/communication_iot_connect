@@ -30,10 +30,7 @@
 #include "utils_fsm.h"
 #include "utils_bit_map.h"
 
-static inline void MgrChangeFsmTo(M2mCloudContext *ctx, int32_t state)
-{
-    UtilsFsmSwitch(ctx->stateManager.fsmCtx, state);
-}
+#define MGR_CHANGE_FSM_TO(ctx, state) UtilsFsmSwitch((ctx)->stateManager.fsmCtx, (state));
 
 typedef enum {
     M2M_CLOUD_DEV_STATE_OFFLINE = 0,
@@ -367,6 +364,8 @@ int32_t M2mCloudParseAuthCodeByResponse(M2mCloudContext *ctx, const CoapPacket *
 
     ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE_ID, respAuthcode.authCodeId, sizeof(respAuthcode.authCodeId));
     if (ret != IOTC_OK) {
+        IOTC_LOGE("json get authcodeId error %d", ret);
+        IotcJsonDelete(respJson);
         return ret;
     }
     ret = UtilsJsonGetNum(respJson, STR_JSON_TIMEOUT, &respAuthcode.timeout);
@@ -475,7 +474,7 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
     }
 
     if (timeout) {
-        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -485,7 +484,7 @@ void M2mCloudDevIdRespHandler(const CoapPacket *resp,
 
     int32_t ret = M2mCloudParseAuthCodeByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -587,8 +586,7 @@ const CloudOption *M2mCloudEcoDevStateSyncOption(void)
     return &SYNC_OPTION;
 }
 
-int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp,
-    int32_t *errcode, char *devId, size_t devIdLen)
+int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode, char *devId)
 {
     CHECK_RETURN_LOGW(
         ctx != NULL && resp != NULL && errcode != NULL && resp->payload.data != NULL && resp->payload.len != 0,
@@ -607,9 +605,9 @@ int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacke
         return ret;
     }
 
-    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, devIdLen);
+    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, sizeof(devId));
     if (ret != IOTC_OK) {
-        IOTC_LOGE("json get devId error %d", ret);
+        IOTC_LOGE("json get errcode error %d", ret);
         IotcJsonDelete(respJson);
         return ret;
     }

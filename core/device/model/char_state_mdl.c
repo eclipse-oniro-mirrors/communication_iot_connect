@@ -152,20 +152,8 @@ void MdlFreeGetCharStatesData(GetCharStatesData *charData)
     UTILS_FREE_2_NULL(charData->len);
 }
 
-static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, IotcJson *data)
+static int32_t BuildCharStateJson(const IotcCharState state[], uint32_t num, IotcJson *array)
 {
-    IotcJson *array = IotcJsonCreateArray();
-    if (IotcJsonAddItem2Obj(data, STR_JSON_VENDOR, array) != IOTC_OK) {
-        IOTC_LOGE("add services error");
-        IotcJsonDelete(array);
-        return IOTC_ADAPTER_JSON_ERR_ADD;
-    }
-#if IOTC_CONF_DEV_TYPE == 2
-    if (num > 0) {
-        IotcJsonAddStr2Obj(data, STR_JSON_DEV_ID, state[0].devId);
-        IotcJsonAddStr2Obj(data, STR_JSON_MSG_ID, state[0].msgId);
-    }
-#endif
     for (uint32_t i = 0; i < num; ++i) {
         IotcJson *curJsonObj = IotcJsonCreate();
         CHECK_RETURN(curJsonObj != NULL, IOTC_ADAPTER_JSON_ERR_CREATE);
@@ -209,21 +197,20 @@ int32_t MdlCharStatesToJson(const IotcCharState state[], uint32_t num, IotcJson 
 {
     CHECK_RETURN_LOGE(state != NULL && num != 0 && num <= IOTC_CONF_PROF_MAX_SVC_NUM && array != NULL,
         IOTC_ERR_PARAM_INVALID, "param invalid");
-
-    IotcJson *dataJson = IotcJsonCreate();
-    if (dataJson == NULL) {
+    IotcJson *arrayTmp = IotcJsonCreateArray();
+    if (arrayTmp == NULL) {
         IOTC_LOGW("create array error");
         return IOTC_ADAPTER_JSON_ERR_CREATE;
     }
 
-    int32_t ret = BuildCharStateJson(state, num, dataJson);
+    int32_t ret = BuildCharStateJson(state, num, arrayTmp);
     if (ret != IOTC_OK) {
         IOTC_LOGW("build char states array error %d", ret);
-        IotcJsonDelete(dataJson);
+        IotcJsonDelete(arrayTmp);
         return ret;
     }
 
-    *array = dataJson;
+    *array = arrayTmp;
     return IOTC_OK;
 }
 

@@ -31,15 +31,6 @@
 
 #define DFX_WATCH_DOG_TASK_NAME "iotc_watchdog"
 #define DFX_WATCH_DOG_TASK_NAME_LEN 128
-#ifdef IOTC_CONF_DEVICE_LEVEL
-    #if (IOTC_CONF_DEVICE_LEVEL == 2)
-        #define DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (8 * 1024)
-    #else
-        #define DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (2 * 1024)
-    #endif
-#else
-    #define DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (2 * 1024)
-#endif
 
 typedef struct {
     bool flag;
