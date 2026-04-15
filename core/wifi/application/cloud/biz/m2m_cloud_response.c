@@ -32,6 +32,14 @@ typedef struct {
     const CoapOption *seqIdOpt;
 } ResponseOptions;
 
+typedef struct {
+    CoapEndpoint *endpoint;
+    const CoapPacket *req;
+    const SocketAddr *addr;
+    const M2mCloudContext *ctx;
+    IotcJson *respJson;
+} ResponseContext;
+
 static int32_t ExtractResponseOptions(const CoapPacket *req, ResponseOptions *opts)
 {
     uint32_t seg = 0;
@@ -54,29 +62,28 @@ static int32_t ExtractResponseOptions(const CoapPacket *req, ResponseOptions *op
     return IOTC_OK;
 }
 
-static int32_t BuildAndSendResponse(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
-                                    const M2mCloudContext *ctx, IotcJson *respJson, const ResponseOptions *opts)
+static int32_t BuildAndSendResponse(const ResponseContext *ctx, const ResponseOptions *opts)
 {
     const CoapOption options[] = {
-        {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->tokenInfo.access, strlen(ctx->tokenInfo.access)}},
+        {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->ctx->tokenInfo.access, strlen(ctx->ctx->tokenInfo.access)}},
         {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)opts->reqIdOpt->value.data, opts->reqIdOpt->value.len}},
         {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)opts->devIdOpt->value.data, opts->devIdOpt->value.len}},
         {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)opts->userIdOpt->value.data, opts->userIdOpt->value.len}},
         {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)opts->seqIdOpt->value.data, opts->seqIdOpt->value.len}},
     };
     CoapServerRespParam respParam = {
-        .req = req,
+        .req = ctx->req,
         .type = COAP_MSG_TYPE_NCON,
         .code = COAP_RESPONSE_CODE_CONTENT,
         .opNum = ARRAY_SIZE(options),
         .options = options,
         .payload = NULL,
         .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = respJson,
+        .payloadUserData = ctx->respJson,
         .preSize = 0,
     };
     CoapPacket packet;
-    int32_t ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
+    int32_t ret = CoapServerSendResp(ctx->endpoint, &respParam, ctx->addr, &packet);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send e2e ctrl resp msg error %d", ret);
     }
@@ -84,7 +91,7 @@ static int32_t BuildAndSendResponse(CoapEndpoint *endpoint, const CoapPacket *re
 }
 
 static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
-                                       const M2mCloudContext *ctx, IotcJson *respJson)
+                                        const M2mCloudContext *ctx, IotcJson *respJson)
 {
     ResponseOptions opts = {0};
     int32_t ret = ExtractResponseOptions(req, &opts);
@@ -93,7 +100,14 @@ static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket 
         return ret;
     }
 
-    ret = BuildAndSendResponse(endpoint, req, addr, ctx, respJson, &opts);
+    ResponseContext respCtx = {
+        .endpoint = endpoint,
+        .req = req,
+        .addr = addr,
+        .ctx = ctx,
+        .respJson = respJson,
+    };
+    ret = BuildAndSendResponse(&respCtx, &opts);
     IotcJsonDelete(respJson);
     return ret;
 }
