@@ -79,6 +79,85 @@ static int32_t GetStrFromOptionMsgIdAndDevId(const CoapPacket *req, char **msgId
     return IOTC_OK;
 }
 
+static int32_t ParsePayloadData(const CoapPacket *req, IotcJson *payloadObj)
+{
+    if (req->payload.data == NULL || req->payload.len <= 0) {
+        IOTC_LOGW("invalid payload data or length");
+        return IOTC_ERROR;
+    }
+
+    IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    if (dataObj == NULL) {
+        IOTC_LOGW("invalid ctl json");
+        return IOTC_ERROR;
+    }
+
+    int32_t ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add data error %d", ret);
+        IotcJsonDelete(dataObj);
+        return ret;
+    }
+    return IOTC_OK;
+}
+
+static IotcJson *BuildPayloadObject(const CoapPacket *req, const char *svcId, const char *msgId, const char *devId)
+{
+    IotcJson *payloadObj = IotcJsonCreate();
+    if (payloadObj == NULL) {
+        IOTC_LOGW("create payload object error");
+        return NULL;
+    }
+
+    int32_t ret = IOTC_OK;
+    if (req->header.code != COAP_METHOD_TYPE_GET) {
+        ret = ParsePayloadData(req, payloadObj);
+        if (ret != IOTC_OK) {
+            IotcJsonDelete(payloadObj);
+            return NULL;
+        }
+    }
+
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add sid error %d", ret);
+        IotcJsonDelete(payloadObj);
+        return NULL;
+    }
+
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_MSG_ID, msgId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add msgId error %d", ret);
+        IotcJsonDelete(payloadObj);
+        return NULL;
+    }
+
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_DEV_ID, devId);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add devId error %d", ret);
+        IotcJsonDelete(payloadObj);
+        return NULL;
+    }
+
+    return payloadObj;
+}
+
+static void CleanupParseResources(IotcJson *array, char *msgId, char *devId, IotcJson *payloadObj)
+{
+    if (payloadObj != NULL) {
+        IotcJsonDelete(payloadObj);
+    }
+    if (array != NULL) {
+        IotcJsonDelete(array);
+    }
+    if (msgId != NULL) {
+        free(msgId);
+    }
+    if (devId != NULL) {
+        free(devId);
+    }
+}
+
 static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
 {
     if (req == NULL) {
@@ -93,88 +172,37 @@ static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
     IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
         IOTC_LOGW("create array error");
-        goto ERROR_EXIT;
+        return NULL;
     }
 
     int32_t ret = GetStrFromOption(req, svcId, sizeof(svcId), COAP_OPTION_TYPE_URI_PATH);
     if (ret != IOTC_OK) {
         IOTC_LOGW("Get svcId error %d", ret);
+        IotcJsonDelete(array);
         return NULL;
     }
 
     if (GetStrFromOptionMsgIdAndDevId(req, &msgId, &devId) != IOTC_OK) {
         IOTC_LOGW("Get msgId and devId error");
-        goto ERROR_EXIT;
+        IotcJsonDelete(array);
+        return NULL;
     }
 
-    IotcJson *payloadObj = IotcJsonCreate();
+    IotcJson *payloadObj = BuildPayloadObject(req, svcId, msgId, devId);
     if (payloadObj == NULL) {
-        IOTC_LOGW("create payload object error");
-        goto ERROR_EXIT;
-    }
-
-    if (req->header.code != COAP_METHOD_TYPE_GET) {
-        if (req->payload.data == NULL || req->payload.len <= 0) {
-            IOTC_LOGW("invalid payload data or length");
-            goto ERROR_DELETE_PAYLOAD;
-        }
-
-        IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
-        if (dataObj == NULL) {
-            IOTC_LOGW("invalid ctl json");
-            goto ERROR_DELETE_PAYLOAD;
-        }
-
-        ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
-        if (ret != IOTC_OK) {
-            IOTC_LOGW("add data error %d", ret);
-            IotcJsonDelete(dataObj);
-            goto ERROR_DELETE_PAYLOAD;
-        }
-    }
-
-    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add sid error %d", ret);
-        goto ERROR_DELETE_PAYLOAD;
-    }
-
-    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_MSG_ID, msgId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add msgId error %d", ret);
-        goto ERROR_DELETE_PAYLOAD;
-    }
-
-    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_DEV_ID, devId);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add devId error %d", ret);
-        goto ERROR_DELETE_PAYLOAD;
+        CleanupParseResources(array, msgId, devId, NULL);
+        return NULL;
     }
 
     ret = IotcJsonAddItem2Array(array, payloadObj);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add payload to array error %d", ret);
-        goto ERROR_DELETE_PAYLOAD;
+        CleanupParseResources(array, msgId, devId, payloadObj);
+        return NULL;
     }
-
-    // Success path
     free(msgId);
     free(devId);
     return array;
-
-ERROR_DELETE_PAYLOAD:
-    IotcJsonDelete(payloadObj);
-ERROR_EXIT:
-    if (array != NULL) {
-        IotcJsonDelete(array);
-    }
-    if (msgId != NULL) {
-        free(msgId);
-    }
-    if (devId != NULL) {
-        free(devId);
-    }
-    return NULL;
 }
 
 // 验证必需的CoAP选项

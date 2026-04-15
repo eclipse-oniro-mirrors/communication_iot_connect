@@ -24,14 +24,75 @@
 #include "iotc_event.h"
 #include "fwk_main.h"
 
+static IotcJson *BuildRestartMessage(const char *devId)
+{
+    IotcJson *respJson = IotcJsonCreate();
+    if (respJson == NULL) {
+        IOTC_LOGE("Failed to create respJson JSON");
+        return NULL;
+    }
+    IotcJson *payload = IotcJsonCreate();
+    if (payload == NULL) {
+        IOTC_LOGE("Failed to create payload JSON");
+        IotcJsonDelete(respJson);
+        return NULL;
+    }
+    IotcJson *dataarray = IotcJsonCreateArray();
+    if (dataarray == NULL) {
+        IOTC_LOGE("Failed to create dataarray JSON");
+        IotcJsonDelete(respJson);
+        IotcJsonDelete(payload);
+        return NULL;
+    }
+    IotcJson *data = IotcJsonCreate();
+    if (data == NULL) {
+        IOTC_LOGE("Failed to create data JSON");
+        IotcJsonDelete(respJson);
+        IotcJsonDelete(payload);
+        IotcJsonDelete(dataarray);
+        return NULL;
+    }
+    IotcJsonAddNum2Obj(data, "restart", 1);
+    IotcJsonAddItem2Obj(payload, "data", data);
+    IotcJsonAddStr2Obj(payload, "st", "restart");
+    IotcJsonAddItem2Array(dataarray, payload);
+    IotcJsonAddItem2Obj(respJson, "data", dataarray);
+    IotcJsonAddStr2Obj(respJson, "sid", "restart");
+    IotcJsonAddStr2Obj(respJson, "msgId", "123456789");
+    IotcJsonAddStr2Obj(respJson, "devId", devId);
+    return respJson;
+}
+
 static int32_t SendData2SubDev(const CoapPacket *req)
 {
-    /* 获取Devid */
     IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
     if (dataObj == NULL) {
         IOTC_LOGW("invalid data json");
         return IOTC_ERROR;
     }
+    const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
+
+    IotcJson *respJson = BuildRestartMessage(devId);
+    if (respJson == NULL) {
+        IotcJsonDelete(dataObj);
+        return IOTC_ERROR;
+    }
+
+    IotcJson *array = IotcJsonCreateArray();
+    if (array == NULL) {
+        IOTC_LOGE("create array error");
+        IotcJsonDelete(respJson);
+        IotcJsonDelete(dataObj);
+        return IOTC_ERROR;
+    }
+    IotcJsonAddItem2Array(array, respJson);
+
+    int32_t ret = DevSvcProxyCtlPutCharStates(array, NULL);
+    IotcJsonDelete(array);
+    IotcJsonDelete(dataObj);
+
+    return ret;
+}
     const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
 
     /* 创建JSON指针 */
