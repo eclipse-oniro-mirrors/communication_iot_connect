@@ -447,7 +447,7 @@ static int32_t M2mCloudParseEcoDevStateByResponse(M2mCloudContext *ctx, const Co
             continue;
         }
         char devId[DEVICE_ID_MAX_STR_LEN + 1];
-        ret = UtilsJsonGetString(item, STR_JSON_DEVID, devId, sizeof(devId));
+        ret = UtilsJsonGetString(item, STR_JSON_DEVID, devId, DEVICE_ID_MAX_STR_LEN + 1);
         if (ret != IOTC_OK) {
             IOTC_LOGE("cloud devId error %d", ret);
             continue;
@@ -608,7 +608,7 @@ int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacke
         return ret;
     }
 
-    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, sizeof(devId));
+    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, DEVICE_ID_MAX_STR_LEN + 1);
     if (ret != IOTC_OK) {
         IOTC_LOGE("json get errcode error %d", ret);
         IotcJsonDelete(respJson);
