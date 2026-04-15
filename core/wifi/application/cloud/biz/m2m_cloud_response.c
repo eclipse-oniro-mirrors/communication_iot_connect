@@ -66,7 +66,7 @@ static int32_t BuildAndSendResponse(const ResponseContext *ctx, const ResponseOp
 {
     const CoapOption options[] = {
         {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->ctx->tokenInfo.access,
-                                             strlen(ctx->ctx->tokenInfo.access)}},
+                                            strlen(ctx->ctx->tokenInfo.access)}},
         {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)opts->reqIdOpt->value.data, opts->reqIdOpt->value.len}},
         {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)opts->devIdOpt->value.data, opts->devIdOpt->value.len}},
         {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)opts->userIdOpt->value.data, opts->userIdOpt->value.len}},
