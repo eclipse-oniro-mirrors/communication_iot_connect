@@ -24,7 +24,7 @@
 #include "iotc_event.h"
 #include "fwk_main.h"
 
-static IotcJson *BuildRestartMessage(const char *devId)
+static IotcJson *BuildRestartNotifyJson(const char *devId)
 {
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
@@ -72,65 +72,11 @@ static int32_t SendData2SubDev(const CoapPacket *req)
     }
     const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
 
-    IotcJson *respJson = BuildRestartMessage(devId);
-    if (respJson == NULL) {
-        IotcJsonDelete(dataObj);
-        return IOTC_ERROR;
-    }
-
-    IotcJson *array = IotcJsonCreateArray();
-    if (array == NULL) {
-        IOTC_LOGE("create array error");
-        IotcJsonDelete(respJson);
-        IotcJsonDelete(dataObj);
-        return IOTC_ERROR;
-    }
-    IotcJsonAddItem2Array(array, respJson);
-
-    int32_t ret = DevSvcProxyCtlPutCharStates(array, NULL);
-    IotcJsonDelete(array);
+    IotcJson *respJson = BuildRestartNotifyJson(devId);
     IotcJsonDelete(dataObj);
-
-    return ret;
-}
-    const char *devId = IotcJsonGetStr(IotcJsonGetObj(dataObj, STR_JSON_DEVID));
-
-    /* 创建JSON指针 */
-    /* {"data":[{"st":"restart","data":{"restart":1}}],"sid":"restart","msgId":"123456789","devId":"xxx"} */
-    IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
-        IOTC_LOGE("Failed to create respJson JSON");
         return IOTC_ERROR;
     }
-    IotcJson *payload = IotcJsonCreate();
-    if (payload == NULL) {
-        IOTC_LOGE("Failed to create payload JSON");
-        IotcJsonDelete(respJson);
-        return IOTC_ERROR;
-    }
-    IotcJson *dataarray = IotcJsonCreateArray();
-    if (dataarray == NULL) {
-        IOTC_LOGE("Failed to create dataarray JSON");
-        IotcJsonDelete(respJson);
-        IotcJsonDelete(payload);
-        return IOTC_ERROR;
-    }
-    IotcJson *data = IotcJsonCreate();
-    if (data == NULL) {
-        IOTC_LOGE("Failed to create data JSON");
-        IotcJsonDelete(respJson);
-        IotcJsonDelete(payload);
-        IotcJsonDelete(dataarray);
-        return IOTC_ERROR;
-    }
-    IotcJsonAddNum2Obj(data, "restart", 1);
-    IotcJsonAddItem2Obj(payload, "data", data);
-    IotcJsonAddStr2Obj(payload, "st", "restart");
-    IotcJsonAddItem2Array(dataarray, payload);
-    IotcJsonAddItem2Obj(respJson, "data", dataarray);
-    IotcJsonAddStr2Obj(respJson, "sid", "restart");
-    IotcJsonAddStr2Obj(respJson, "msgId", "123456789");
-    IotcJsonAddStr2Obj(respJson, "devId", devId);
 
     IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
@@ -142,7 +88,6 @@ static int32_t SendData2SubDev(const CoapPacket *req)
 
     int32_t ret = DevSvcProxyCtlPutCharStates(array, NULL);
     IotcJsonDelete(array);
-
     return ret;
 }
 
