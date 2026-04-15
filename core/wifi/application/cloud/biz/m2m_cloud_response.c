@@ -65,7 +65,8 @@ static int32_t ExtractResponseOptions(const CoapPacket *req, ResponseOptions *op
 static int32_t BuildAndSendResponse(const ResponseContext *ctx, const ResponseOptions *opts)
 {
     const CoapOption options[] = {
-        {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->ctx->tokenInfo.access, strlen(ctx->ctx->tokenInfo.access)}},
+        {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->ctx->tokenInfo.access,
+             strlen(ctx->ctx->tokenInfo.access)}},
         {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)opts->reqIdOpt->value.data, opts->reqIdOpt->value.len}},
         {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)opts->devIdOpt->value.data, opts->devIdOpt->value.len}},
         {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)opts->userIdOpt->value.data, opts->userIdOpt->value.len}},
@@ -91,7 +92,7 @@ static int32_t BuildAndSendResponse(const ResponseContext *ctx, const ResponseOp
 }
 
 static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
-                                        const M2mCloudContext *ctx, IotcJson *respJson)
+                                       const M2mCloudContext *ctx, IotcJson *respJson)
 {
     ResponseOptions opts = {0};
     int32_t ret = ExtractResponseOptions(req, &opts);
