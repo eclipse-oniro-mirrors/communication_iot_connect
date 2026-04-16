@@ -114,6 +114,7 @@ static const IotcDeviceInfo DEV_INFO = {
     .model = "MODEL",
     .devTypeId = "1234",
     .devTypeName = "Dev Type Name",
+    .devName = "One Connect Dev Name",
     .manuId = "123",
     .manuName = "Manu Name",
     .fwv = "1.0.0",

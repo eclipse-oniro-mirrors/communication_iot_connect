@@ -204,6 +204,7 @@ static IotcDeviceInfo g_devInfo = {
     .model = "DL-01W",
     .devTypeId = "0460",
     .devTypeName = "Table Lamp",
+    .devName = "One Connect Dev Name",
     .manuId = "17C",
     .manuName = "DALEN",
     .fwv = "1.0.0",
