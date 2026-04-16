@@ -21,7 +21,7 @@ iotc_interface_path = "${iotc_root_path}/interfaces"
 declare_args() {
   iot_connect_ble_support = true
   iot_connect_sle_support = false
-  iot_connect_wifi_support = false
+  iot_connect_wifi_support = true
   iot_connect_ailife_support = false
   iot_connect_mbedtls_v2_support = false
   iot_connect_mbedtls_psk_support = false
@@ -36,7 +36,7 @@ if (defined(ohos_lite)) {
       iotc_hilog_support = false
     }
     iot_connect_ble_support = true
-    iot_connect_sle_support = true
+    iot_connect_sle_support = false
   } else {
     declare_args() {
       iotc_device_level = "small"

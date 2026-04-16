@@ -29,6 +29,7 @@ typedef struct {
 
 int32_t ParseTokenInfo(M2mCloudContext *ctx, IotcJson *jsonObj);
 int32_t DealErrCodeRsp(int32_t errcode);
+int32_t M2mCloudDisableTokenInfo(M2mCloudContext *ctx);
 
 #ifdef __cplusplus
 }

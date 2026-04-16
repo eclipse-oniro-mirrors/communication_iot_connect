@@ -28,6 +28,8 @@ typedef int32_t (*IotcRecvNetCfgInfoCallback)(const char *netInfo, uint32_t len)
 
 typedef int32_t (*IotcRecvCustomSecDataCallback)(const uint8_t *data, uint32_t len);
 
+typedef int32_t (*IotcMakeOsBleEnableCallback)(void);
+
 IOTC_API_PUBLIC int32_t IotcOhBleEnable(void);
 
 IOTC_API_PUBLIC int32_t IotcOhBleDisable(void);

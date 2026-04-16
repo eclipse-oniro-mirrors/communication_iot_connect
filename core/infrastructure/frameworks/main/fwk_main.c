@@ -30,7 +30,7 @@ static IotcSemId *g_exitSem = NULL;
 static IotcTaskId *g_mainTaskId = NULL;
 static uint32_t g_stackSize = 0;
 #define API_MAX_BLOCK_SLEEP_TIME_SEC UTILS_SEC_TO_MS(30)
-#define TEST_VALUE_AFTER_RESET 101
+
 
 static void MainTaskBehaviorNotice(IotcSemId **sem)
 {
@@ -59,13 +59,9 @@ static void IotcFwkMainTaskBody(void *arg)
 {
     NOT_USED(arg);
     IOTC_LOGN("iotc main task entry");
-    uint32_t test_value = 100;
-    IOTC_LOGI("------- test_value:%d", test_value);
     do {
         /* 复位通知 */
         MainTaskBehaviorNotice(&g_resetSem);
-        test_value = TEST_VALUE_AFTER_RESET;
-        IOTC_LOGN("MainTaskBehaviorNotice finish ------- test_value:%d", test_value);
         /* 全局初始化 */
         if (FwkInitAll(FWK_INIT_FAILED_RETURN) != IOTC_OK) {
             IOTC_LOGN("FwkInitAll finish");

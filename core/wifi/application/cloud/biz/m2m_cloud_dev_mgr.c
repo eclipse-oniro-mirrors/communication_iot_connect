@@ -367,6 +367,8 @@ int32_t M2mCloudParseAuthCodeByResponse(M2mCloudContext *ctx, const CoapPacket *
 
     ret = UtilsJsonGetString(respJson, STR_JSON_AUTHCODE_ID, respAuthcode.authCodeId, sizeof(respAuthcode.authCodeId));
     if (ret != IOTC_OK) {
+        IOTC_LOGE("json get authcodeId error %d", ret);
+        IotcJsonDelete(respJson);
         return ret;
     }
     ret = UtilsJsonGetNum(respJson, STR_JSON_TIMEOUT, &respAuthcode.timeout);
@@ -410,7 +412,7 @@ static int32_t M2mCloudParseEcoDevInfoByResponse(M2mCloudContext *ctx, const Coa
 
     IotcJsonDelete(respJson);
 
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC);
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_ECO_STATE_SYNC);
     return IOTC_OK;
 }
 
@@ -445,7 +447,7 @@ static int32_t M2mCloudParseEcoDevStateByResponse(M2mCloudContext *ctx, const Co
             continue;
         }
         char devId[DEVICE_ID_MAX_STR_LEN + 1];
-        ret = UtilsJsonGetString(item, STR_JSON_DEVID, devId, sizeof(devId));
+        ret = UtilsJsonGetString(item, STR_JSON_DEVID, devId, DEVICE_ID_MAX_STR_LEN + 1);
         if (ret != IOTC_OK) {
             IOTC_LOGE("cloud devId error %d", ret);
             continue;
@@ -505,7 +507,7 @@ void M2mCloudEcoDevInfoRespHandler(const CoapPacket *resp, const SocketAddr *add
     }
 
     if (timeout) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -515,7 +517,7 @@ void M2mCloudEcoDevInfoRespHandler(const CoapPacket *resp, const SocketAddr *add
 
     int32_t ret = M2mCloudParseEcoDevInfoByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -535,7 +537,7 @@ void M2mCloudEcoDevStateRespHandler(const CoapPacket *resp, const SocketAddr *ad
     }
 
     if (timeout) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode wait resp timeout");
         return;
     }
@@ -545,7 +547,7 @@ void M2mCloudEcoDevStateRespHandler(const CoapPacket *resp, const SocketAddr *ad
 
     int32_t ret = M2mCloudParseEcoDevStateByResponse(ctx, resp, &errcode);
     if (ret != IOTC_OK) {
-        MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
+        MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_CONNECT);
         IOTC_LOGW("authcode resp parse error %d", ret);
         return;
     }
@@ -587,8 +589,7 @@ const CloudOption *M2mCloudEcoDevStateSyncOption(void)
     return &SYNC_OPTION;
 }
 
-int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp,
-    int32_t *errcode, char *devId, size_t devIdLen)
+int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacket *resp, int32_t *errcode, char *devId)
 {
     CHECK_RETURN_LOGW(
         ctx != NULL && resp != NULL && errcode != NULL && resp->payload.data != NULL && resp->payload.len != 0,
@@ -607,9 +608,9 @@ int32_t M2mCloudParseDevStatusSyncResponse(M2mCloudContext *ctx, const CoapPacke
         return ret;
     }
 
-    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, devIdLen);
+    ret = UtilsJsonGetString(respJson, STR_JSON_DEVID, devId, DEVICE_ID_MAX_STR_LEN + 1);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("json get devId error %d", ret);
+        IOTC_LOGE("json get errcode error %d", ret);
         IotcJsonDelete(respJson);
         return ret;
     }
@@ -659,7 +660,7 @@ static void CloudProcessSubData(uint32_t event, void *param, uint32_t len)
 
     // 把状态切换到获取认证码状态
     M2mCloudContext *ctx = GetM2mCloudCtx();
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_GET_AUTHCODE);
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_GET_AUTHCODE);
     return;
 }
 
@@ -677,7 +678,7 @@ static void CloudProcessDevInfoData(uint32_t event, IotcJson *param, uint32_t le
     }
     devInfo->info.devInfo = devInfoSync;
     M2mCloudContext *ctx = GetM2mCloudCtx();
-    MGR_CHANGE_FSM_TO(ctx, M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC);
+    MgrChangeFsmTo(ctx, M2M_CLOUD_FSM_STATE_ECO_DEV_INFO_SYNC);
 }
 
 int32_t SleDeviceCloudFsmInit()

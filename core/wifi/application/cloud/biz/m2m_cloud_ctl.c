@@ -22,6 +22,7 @@
 #include "coap_endpoint_server.h"
 #include "e2e_ctl_msg.h"
 #include "m2m_cloud_response.h"
+#include "iotc_socket.h"
 
 static int32_t GetStrFromOption(const CoapPacket *req, char *data, uint32_t dataLen, CoapOptionType type)
 {
@@ -62,7 +63,7 @@ static int32_t GetStrFromOptionMsgIdAndDevId(const CoapPacket *req, char **msgId
         IOTC_LOGE("%s: devId strdup failed", __func__);
         return IOTC_ERROR;
     }
-    (void)memcpy_s(*devId, devIdOpt->value.len + 1, devIdOpt->value.data, devIdOpt->value.len);
+    memcpy_s(*devId, devIdOpt->value.len + 1, devIdOpt->value.data, devIdOpt->value.len);
     (*devId)[devIdOpt->value.len] = '\0';
 
     // 提取 msgId
@@ -72,14 +73,35 @@ static int32_t GetStrFromOptionMsgIdAndDevId(const CoapPacket *req, char **msgId
         IotcFree(*devId);
         return IOTC_ERROR;
     }
-    (void)memcpy_s(*msgId, reqIdOpt->value.len + 1, reqIdOpt->value.data, reqIdOpt->value.len);
+    memcpy_s(*msgId, reqIdOpt->value.len, reqIdOpt->value.data, reqIdOpt->value.len);
     (*msgId)[reqIdOpt->value.len] = '\0';
 
     return IOTC_OK;
 }
 
-static IotcJson *BuildPayloadObj(const CoapPacket *req, const char *svcId,
-    char *msgId, char *devId)
+static int32_t ParsePayloadData(const CoapPacket *req, IotcJson *payloadObj)
+{
+    if (req->payload.data == NULL || req->payload.len <= 0) {
+        IOTC_LOGW("invalid payload data or length");
+        return IOTC_ERROR;
+    }
+
+    IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
+    if (dataObj == NULL) {
+        IOTC_LOGW("invalid ctl json");
+        return IOTC_ERROR;
+    }
+
+    int32_t ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add data error %d", ret);
+        IotcJsonDelete(dataObj);
+        return ret;
+    }
+    return IOTC_OK;
+}
+
+static IotcJson *BuildPayloadObject(const CoapPacket *req, const char *svcId, const char *msgId, const char *devId)
 {
     IotcJson *payloadObj = IotcJsonCreate();
     if (payloadObj == NULL) {
@@ -87,30 +109,16 @@ static IotcJson *BuildPayloadObj(const CoapPacket *req, const char *svcId,
         return NULL;
     }
 
+    int32_t ret = IOTC_OK;
     if (req->header.code != COAP_METHOD_TYPE_GET) {
-        if (req->payload.data == NULL || req->payload.len <= 0) {
-            IOTC_LOGW("invalid payload data or length");
-            IotcJsonDelete(payloadObj);
-            return NULL;
-        }
-
-        IotcJson *dataObj = IotcJsonParseWithLen((const char *)req->payload.data, req->payload.len);
-        if (dataObj == NULL) {
-            IOTC_LOGW("invalid ctl json");
-            IotcJsonDelete(payloadObj);
-            return NULL;
-        }
-
-        int32_t ret = IotcJsonAddItem2Obj(payloadObj, STR_JSON_DATA, dataObj);
+        ret = ParsePayloadData(req, payloadObj);
         if (ret != IOTC_OK) {
-            IOTC_LOGW("add data error %d", ret);
-            IotcJsonDelete(dataObj);
             IotcJsonDelete(payloadObj);
             return NULL;
         }
     }
 
-    int32_t ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
+    ret = IotcJsonAddStr2Obj(payloadObj, STR_JSON_SID, svcId);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add sid error %d", ret);
         IotcJsonDelete(payloadObj);
@@ -130,7 +138,24 @@ static IotcJson *BuildPayloadObj(const CoapPacket *req, const char *svcId,
         IotcJsonDelete(payloadObj);
         return NULL;
     }
+
     return payloadObj;
+}
+
+static void CleanupParseResources(IotcJson *array, char *msgId, char *devId, IotcJson *payloadObj)
+{
+    if (payloadObj != NULL) {
+        IotcJsonDelete(payloadObj);
+    }
+    if (array != NULL) {
+        IotcJsonDelete(array);
+    }
+    if (msgId != NULL) {
+        free(msgId);
+    }
+    if (devId != NULL) {
+        free(devId);
+    }
 }
 
 static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
@@ -147,48 +172,37 @@ static IotcJson *ParseCloudCtlMsg(const CoapPacket *req)
     IotcJson *array = IotcJsonCreateArray();
     if (array == NULL) {
         IOTC_LOGW("create array error");
-        goto ERROR_EXIT;
+        return NULL;
     }
 
     int32_t ret = GetStrFromOption(req, svcId, sizeof(svcId), COAP_OPTION_TYPE_URI_PATH);
     if (ret != IOTC_OK) {
         IOTC_LOGW("Get svcId error %d", ret);
+        IotcJsonDelete(array);
         return NULL;
     }
 
     if (GetStrFromOptionMsgIdAndDevId(req, &msgId, &devId) != IOTC_OK) {
         IOTC_LOGW("Get msgId and devId error");
-        goto ERROR_EXIT;
+        IotcJsonDelete(array);
+        return NULL;
     }
 
-    IotcJson *payloadObj = BuildPayloadObj(req, svcId, msgId, devId);
+    IotcJson *payloadObj = BuildPayloadObject(req, svcId, msgId, devId);
     if (payloadObj == NULL) {
-        goto ERROR_EXIT;
+        CleanupParseResources(array, msgId, devId, NULL);
+        return NULL;
     }
 
     ret = IotcJsonAddItem2Array(array, payloadObj);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add payload to array error %d", ret);
-        IotcJsonDelete(payloadObj);
-        goto ERROR_EXIT;
+        CleanupParseResources(array, msgId, devId, payloadObj);
+        return NULL;
     }
-
-    // Success path
     free(msgId);
     free(devId);
     return array;
-
-ERROR_EXIT:
-    if (array != NULL) {
-        IotcJsonDelete(array);
-    }
-    if (msgId != NULL) {
-        free(msgId);
-    }
-    if (devId != NULL) {
-        free(devId);
-    }
-    return NULL;
 }
 
 // 验证必需的CoAP选项
@@ -237,7 +251,7 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
         }
 
 #define STR_URI_PATH_DEVCONTROL "devControl"
-        uint32_t seq = IotcHtonl(*(uint32_t *)(ctx->linkInfo.sessData));
+        uint32_t *seq = (uint32_t *)ctx->linkInfo.sessData;
         const CoapOption options[] = {
             {COAP_OPTION_TYPE_URI_PATH,
              {req->header.code == COAP_METHOD_TYPE_POST ? (const uint8_t *)STR_URI_PATH_DEVCONTROL :
@@ -247,44 +261,28 @@ static int32_t BuildCloudCtlRespMsg(CoapEndpoint *endpoint, const CoapPacket *re
             {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)reqIdOpt->value.data, reqIdOpt->value.len}},
             {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)devIdOpt->value.data, devIdOpt->value.len}},
             {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)userIdOpt->value.data, userIdOpt->value.len}},
-            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)&seq, sizeof(uint32_t)}},
+            {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)seq, sizeof(uint32_t)}},
         };
 
-        CoapServerRespParam respParam = { req, COAP_MSG_TYPE_NCON, COAP_RESPONSE_CODE_CONTENT, ARRAY_SIZE(options),
-            options, NULL, CoapUtilsBuildJsonPayloadFunc, respJson, 0 };
+        (*seq)++;
+        CoapServerRespParam respParam = {
+            .req = req,
+            .type = COAP_MSG_TYPE_NCON,
+            .code = COAP_RESPONSE_CODE_CONTENT,
+            .opNum = ARRAY_SIZE(options),
+            .options = options,
+            .payload = NULL,
+            .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
+            .payloadUserData = respJson,
+            .preSize = 0,
+        };
         CoapPacket packet;
         ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
         if (ret != IOTC_OK) {
             IOTC_LOGW("send e2e ctrl resp msg error %d", ret);
         }
     } while (false);
-    IotcJsonDelete(respJson);
     return ret;
-}
-
-static int32_t VaildCtlMsgVerify(IotcJson *array, IotcJson *resp)
-{
-    IotcJson *sid = NULL;
-    IotcJson *cur = NULL;
-    if (IotcJsonIsArray(array) != true) {
-        return IOTC_ERROR;
-    }
-    cur = IotcJsonGetArrayItem(array, 0);
-    if (cur == NULL) {
-        return IOTC_ERROR;
-    }
-    if (IotcJsonHasObj(cur, STR_JSON_SID) != true) {
-        return IOTC_ERROR;
-    }
-    sid = IotcJsonGetObj(cur, STR_JSON_SID);
-    if (sid == NULL) {
-        return IOTC_ERROR;
-    }
-    ret = IotcJsonAddStr2Obj(resp, STR_JSON_SID, IotcJsonGetStr(sid));
-    if (ret != IOTC_OK) {
-        return IOTC_ERROR;
-    }
-    return IOTC_OK;
 }
 
 static int32_t SendCloudCtlMsgResp(
@@ -292,33 +290,38 @@ static int32_t SendCloudCtlMsgResp(
 {
     IotcJson *dataJsonArray = ParseCloudCtlMsg(req);
     if (dataJsonArray == NULL) {
+        IOTC_LOGW("Parse Cloud Ctl Msg error");
         return IOTC_ERROR;
     }
-    if (M2mCloudCreateCoapNode(endpoint, req, addr, ctx) == NULL) {
-        IotcJsonDelete(dataJsonArray);
+    // 创建响应节点， 返回节点
+    CoapResponeNode *respInfo = M2mCloudCreateCoapNode(endpoint, req, addr, ctx);
+    if (respInfo == NULL) {
+        IOTC_LOGW("create cloud resp node error");
         return IOTC_ERROR;
     }
+    /* 创建JSON指针 */
     IotcJson *respJson = IotcJsonCreate();
     if (respJson == NULL) {
-        IotcJsonDelete(dataJsonArray);
+        IOTC_LOGW("create resp json error ");
         return IOTC_ERROR;
     }
     int32_t ret = IOTC_OK;
     if (req->header.code == COAP_METHOD_TYPE_GET) {
         ret = DevSvcProxyCtlGetCharStates(dataJsonArray, &respJson);
+        if (ret != IOTC_OK) {
+            IOTC_LOGW("cloud get char error %d", ret);
+        }
     } else if ((req->header.code == COAP_METHOD_TYPE_POST) || (req->header.code == COAP_METHOD_TYPE_PUT)) {
         ret = DevSvcProxyCtlPutCharStates(dataJsonArray, NULL);
-        ret = VaildCtlMsgVerify(dataJsonArray, respJson);
         if (ret != IOTC_OK) {
-            goto ERROR;
+            IOTC_LOGE("ctrl error %d", ret);
         }
         ret = IotcJsonAddNum2Obj(respJson, STR_ERRCODE, ret);
         if (ret != IOTC_OK) {
-            goto ERROR;
+            IOTC_LOGW("add num to obj err %d", ret);
         }
     }
     BuildCloudCtlRespMsg(endpoint, req, addr, ctx, respJson);
-ERROR:
     IotcJsonDelete(dataJsonArray);
     dataJsonArray = NULL;
     IotcJsonDelete(respJson);

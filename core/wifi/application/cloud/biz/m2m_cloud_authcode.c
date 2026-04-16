@@ -65,7 +65,7 @@ int32_t M2mCloudParseAuthCodeResponse(M2mCloudContext *ctx, const CoapPacket *re
         resp->payload.len != 0, IOTC_ERR_PARAM_INVALID, "invalid param");
     char authcodeStr[HEXIFY_LEN(SESSION_AUTHCODE_LEN + 1) + 1] = {0};
     char authcodeIdStr[HEXIFY_LEN(SESSION_AUTHCODE_LEN + 1) + 1] = {0};
-
+    int32_t timeout = 0;
     IotcJson *respJson = IotcJsonParseWithLen((const char *)resp->payload.data, resp->payload.len);
     if (respJson == NULL) {
         IOTC_LOGW("create json error");

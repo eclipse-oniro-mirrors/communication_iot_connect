@@ -22,8 +22,6 @@
 #include "iotc_json.h"
 #include "security_random.h"
 #include "m2m_cloud_report.h"
-#include "iotc_socket.h"
-
 static int32_t GetResponeDevId(IotcJson *msg, IotcJson **savedDevid)
 {
     if (msg == NULL || savedDevid == NULL) {
@@ -55,31 +53,8 @@ static int32_t GetResponeDevId(IotcJson *msg, IotcJson **savedDevid)
     return IOTC_OK;
 }
 
-static IotcJson *WrapReportJsonInArray(IotcJson *reportJson)
+static IotcJson *GenReportJson(const IotcJson *dataArray, const M2mCloudContext *ctx)
 {
-    IotcJson *array = IotcJsonCreateArray();
-    if (array == NULL) {
-        IOTC_LOGW("json create error");
-        return NULL;
-    }
-    int32_t ret = IotcJsonAddItem2Array(array, reportJson);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("add to array error %d", ret);
-        IotcJsonDelete(reportJson);
-        IotcJsonDelete(array);
-        return NULL;
-    }
-    return array;
-}
-
-static IotcJson *GenReportJson(const IotcJson *reqJson, const M2mCloudContext *ctx)
-{
-    IotcJson *dataArray = IotcJsonGetObj(reqJson, STR_JSON_VENDOR);
-    if (dataArray == NULL) {
-        IOTC_LOGE("Get Vendor failed");
-        return NULL;
-    }
-
     IotcJson *reportJson = IotcJsonCreate();
     if (reportJson == NULL) {
         IOTC_LOGW("json create error");
@@ -119,7 +94,21 @@ static IotcJson *GenReportJson(const IotcJson *reqJson, const M2mCloudContext *c
         IOTC_LOGW("json add item error %d", ret);
         return NULL;
     }
-    return WrapReportJsonInArray(reportJson);
+    IotcJson *array = IotcJsonCreateArray();
+    if (array == NULL) {
+        IOTC_LOGW("json create error");
+        return NULL;
+    }
+
+    ret = IotcJsonAddItem2Array(array, reportJson);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add to array error %d", ret);
+        IotcJsonDelete(reportJson);
+        IotcJsonDelete(array);
+        return NULL;
+    }
+
+    return array;
 }
 
 int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
@@ -136,7 +125,7 @@ int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
         UtilsHexify(Reqid, sizeof(Reqid), ctx->reqId, sizeof(ctx->reqId));
         ctx->reqId[HEXIFY_LEN(REQ_ID_LEN)] = '\0';
     }
-    uint32_t seq = IotcHtonl(*(uint32_t *)(ctx->linkInfo.sessData));
+
     const CoapOption options[] = {
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_URI_PATH_SYS, strlen(STR_URI_PATH_SYS)}},
         {COAP_OPTION_TYPE_URI_PATH, {(const uint8_t *)STR_JSON_DATA, strlen(STR_JSON_DATA)}},
@@ -144,7 +133,7 @@ int32_t M2mCloudReportMessage(const IotcJson *dataArray, M2mCloudContext *ctx)
         {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)ctx->reqId, strlen(ctx->reqId)}},
         {COAP_OPTION_TYPE_DEV_ID,
             {(const uint8_t *)ctx->authInfo.loginInfo.devId, strlen(ctx->authInfo.loginInfo.devId)}},
-        {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)&seq, sizeof(uint32_t)}},
+        {COAP_OPTION_TYPE_SEQ_NUM_ID, {NULL, sizeof(uint32_t)}},
     };
     CoapClientReqParam param = {
         .type = COAP_MSG_TYPE_CON,

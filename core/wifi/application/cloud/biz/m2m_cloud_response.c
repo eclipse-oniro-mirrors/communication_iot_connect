@@ -25,39 +25,90 @@
 
 ListEntry g_m2mCloudResponseList = LIST_DECLARE_INIT(&g_m2mCloudResponseList);
 
-static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
-                                       const M2mCloudContext *ctx, IotcJson *respJson)
+typedef struct {
+    const CoapOption *reqIdOpt;
+    const CoapOption *devIdOpt;
+    const CoapOption *userIdOpt;
+    const CoapOption *seqIdOpt;
+} ResponseOptions;
+
+typedef struct {
+    CoapEndpoint *endpoint;
+    const CoapPacket *req;
+    const SocketAddr *addr;
+    const M2mCloudContext *ctx;
+    IotcJson *respJson;
+} ResponseContext;
+
+static int32_t ExtractResponseOptions(const CoapPacket *req, ResponseOptions *opts)
 {
-    CoapCtrlOptions ctrlOpts = {0};
-    int32_t ret = ExtractCtrlOptions(req, &ctrlOpts);
-    if (ret != IOTC_OK) {
-        IotcJsonDelete(respJson);
-        return ret;
+    uint32_t seg = 0;
+    opts->reqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_REQ_ID, &seg);
+    if (opts->reqIdOpt == NULL || seg != 1 || opts->reqIdOpt->value.data == NULL || opts->reqIdOpt->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_REQ_ID;
     }
+    opts->devIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_DEV_ID, &seg);
+    if (opts->devIdOpt == NULL || seg != 1 || opts->devIdOpt->value.data == NULL || opts->devIdOpt->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_DEV_ID;
+    }
+    opts->userIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_USER_ID, &seg);
+    if (opts->userIdOpt == NULL || seg != 1 || opts->userIdOpt->value.data == NULL || opts->userIdOpt->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_USER_ID;
+    }
+    opts->seqIdOpt = CoapUtilsFindOption(req, COAP_OPTION_TYPE_SEQ_NUM_ID, &seg);
+    if (opts->seqIdOpt == NULL || seg != 1 || opts->seqIdOpt->value.data == NULL || opts->seqIdOpt->value.len == 0) {
+        return IOTC_CORE_WIFI_M2M_ERR_CLOUD_GET_OPT_SEQ_NUM_ID;
+    }
+    return IOTC_OK;
+}
+
+static int32_t BuildAndSendResponse(const ResponseContext *ctx, const ResponseOptions *opts)
+{
     const CoapOption options[] = {
-        {COAP_OPTION_TYPE_ACCESS_TOKEN_ID,
-            {(const uint8_t *)ctx->tokenInfo.access, strlen(ctx->tokenInfo.access)}},
-        {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)ctrlOpts.reqId->value.data, ctrlOpts.reqId->value.len}},
-        {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)ctrlOpts.devId->value.data, ctrlOpts.devId->value.len}},
-        {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)ctrlOpts.userId->value.data, ctrlOpts.userId->value.len}},
-        {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)ctrlOpts.seqId->value.data, ctrlOpts.seqId->value.len}},
+        {COAP_OPTION_TYPE_ACCESS_TOKEN_ID, {(const uint8_t *)ctx->ctx->tokenInfo.access,
+                                            strlen(ctx->ctx->tokenInfo.access)}},
+        {COAP_OPTION_TYPE_REQ_ID, {(const uint8_t *)opts->reqIdOpt->value.data, opts->reqIdOpt->value.len}},
+        {COAP_OPTION_TYPE_DEV_ID, {(const uint8_t *)opts->devIdOpt->value.data, opts->devIdOpt->value.len}},
+        {COAP_OPTION_TYPE_USER_ID, {(const uint8_t *)opts->userIdOpt->value.data, opts->userIdOpt->value.len}},
+        {COAP_OPTION_TYPE_SEQ_NUM_ID, {(const uint8_t *)opts->seqIdOpt->value.data, opts->seqIdOpt->value.len}},
     };
     CoapServerRespParam respParam = {
-        .req = req,
+        .req = ctx->req,
         .type = COAP_MSG_TYPE_NCON,
         .code = COAP_RESPONSE_CODE_CONTENT,
         .opNum = ARRAY_SIZE(options),
         .options = options,
         .payload = NULL,
         .payloadBuilder = CoapUtilsBuildJsonPayloadFunc,
-        .payloadUserData = respJson,
+        .payloadUserData = ctx->respJson,
         .preSize = 0,
     };
     CoapPacket packet;
-    ret = CoapServerSendResp(endpoint, &respParam, addr, &packet);
+    int32_t ret = CoapServerSendResp(ctx->endpoint, &respParam, ctx->addr, &packet);
     if (ret != IOTC_OK) {
         IOTC_LOGW("send e2e ctrl resp msg error %d", ret);
     }
+    return ret;
+}
+
+static int32_t M2mCloudCtrlResponseMsg(CoapEndpoint *endpoint, const CoapPacket *req, const SocketAddr *addr,
+                                       const M2mCloudContext *ctx, IotcJson *respJson)
+{
+    ResponseOptions opts = {0};
+    int32_t ret = ExtractResponseOptions(req, &opts);
+    if (ret != IOTC_OK) {
+        IotcJsonDelete(respJson);
+        return ret;
+    }
+
+    ResponseContext respCtx = {
+        .endpoint = endpoint,
+        .req = req,
+        .addr = addr,
+        .ctx = ctx,
+        .respJson = respJson,
+    };
+    ret = BuildAndSendResponse(&respCtx, &opts);
     IotcJsonDelete(respJson);
     return ret;
 }
@@ -97,8 +148,61 @@ static int32_t GetResponeDevMsgId(const IotcJson *msg, IotcJson **savedDevid, Io
     return IOTC_OK;
 }
 
-CoapResponeNode *M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_pkt,
-    const SocketAddr *sock_addr, const M2mCloudContext *cloud_ctx)
+static void M2mCloudDestroyNode(CoapResponeNode *node)
+{
+    if (node == NULL) {
+        return;
+    }
+    if (node->req != NULL) {
+        IotcFree((void *)node->req);
+    }
+    if (node->addr != NULL) {
+        IotcFree((void *)node->addr);
+    }
+    if (node->devId != NULL) {
+        IotcFree((void *)node->devId);
+    }
+    if (node->msgId != NULL) {
+        IotcFree((void *)node->msgId);
+    }
+    IotcFree(node);
+}
+
+static int32_t M2mCloudExtractMsgIdAndDevId(const CoapPacket *req_pkt, char **msgId, char **devId)
+{
+    uint32_t seg = 0;
+    const CoapOption *reqIdOpt = CoapUtilsFindOption(req_pkt, COAP_OPTION_TYPE_REQ_ID, &seg);
+    if (reqIdOpt == NULL || seg != 1 || reqIdOpt->value.data == NULL || reqIdOpt->value.len == 0) {
+        return IOTC_ERR_INVALID_PARAM;
+    }
+    const CoapOption *devIdOpt = CoapUtilsFindOption(req_pkt, COAP_OPTION_TYPE_DEV_ID, &seg);
+    if (devIdOpt == NULL || seg != 1 || devIdOpt->value.data == NULL || devIdOpt->value.len == 0) {
+        return IOTC_ERR_INVALID_PARAM;
+    }
+
+    *devId = IotcMalloc(devIdOpt->value.len + 1);
+    if (*devId == NULL) {
+        IOTC_LOGE("%s: devId strdup failed", __func__);
+        return IOTC_ADAPTER_MEM_ERR_CALLOC;
+    }
+    (void)memcpy_s(*devId, devIdOpt->value.len + 1, devIdOpt->value.data, devIdOpt->value.len);
+    ((char *)*devId)[devIdOpt->value.len] = '\0';
+
+    *msgId = IotcMalloc(reqIdOpt->value.len + 1);
+    if (*msgId == NULL) {
+        IOTC_LOGE("%s: msgId strdup failed", __func__);
+        IotcFree(*devId);
+        *devId = NULL;
+        return IOTC_ADAPTER_MEM_ERR_CALLOC;
+    }
+    (void)memcpy_s(*msgId, reqIdOpt->value.len + 1, reqIdOpt->value.data, reqIdOpt->value.len);
+    ((char *)*msgId)[reqIdOpt->value.len] = '\0';
+
+    return IOTC_OK;
+}
+
+CoapResponeNode* M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_pkt,
+                                        const SocketAddr *sock_addr, const M2mCloudContext *cloud_ctx)
 {
     CoapResponeNode *node = IotcMalloc(sizeof(CoapResponeNode));
     if (node == NULL) {
@@ -111,48 +215,29 @@ CoapResponeNode *M2mCloudCreateCoapNode(CoapEndpoint *ep, const CoapPacket *req_
     node->req = IotcMalloc(sizeof(CoapPacket));
     if (node->req == NULL) {
         IOTC_LOGE("%s:req malloc failed", __func__);
-        goto ERROR;
+        M2mCloudDestroyNode(node);
+        return NULL;
     }
     (void)memcpy_s((void *)node->req, sizeof(CoapPacket), req_pkt, sizeof(CoapPacket));
 
     node->addr = IotcMalloc(sizeof(SocketAddr));
     if (node->addr == NULL) {
         IOTC_LOGE("%s:addr malloc failed", __func__);
-        goto ERROR;
+        M2mCloudDestroyNode(node);
+        return NULL;
     }
     (void)memcpy_s((void *)node->addr, sizeof(SocketAddr), sock_addr, sizeof(SocketAddr));
 
     node->endpoint = ep;
     node->ctx = cloud_ctx;
 
-    if (FillNodeIdsFromOptions(node, req_pkt) != IOTC_OK) {
-        goto ERROR;
+    if (M2mCloudExtractMsgIdAndDevId(req_pkt, (char **)&node->msgId, (char **)&node->devId) != IOTC_OK) {
+        M2mCloudDestroyNode(node);
+        return NULL;
     }
 
     LIST_INSERT_BEFORE(&node->list, &g_m2mCloudResponseList);
     return node;
-
-ERROR:
-    if (node != NULL) {
-        if (node->req != NULL) {
-            IotcFree((void *)node->req);
-            node->req = NULL;
-        }
-        if (node->addr != NULL) {
-            IotcFree((void *)node->addr);
-            node->addr = NULL;
-        }
-        if (node->devId != NULL) {
-            IotcFree((void *)node->devId);
-            node->devId = NULL;
-        }
-        if (node->msgId != NULL) {
-            IotcFree((void *)node->msgId);
-            node->msgId = NULL;
-        }
-        IotcFree(node);
-    }
-    return NULL;
 }
 
 CoapResponeNode *M2mCloudFindNodeByMsgId(const char *msgId, const char *devId)
@@ -212,7 +297,7 @@ int32_t M2mCloudResponseMessage(const IotcJson *dataArray)
                                 dataArrayRespone) != IOTC_OK) {
         IOTC_LOGE("Failed to send response message to the client");
     }
-    // remove node
+    //  remove node
     M2mCloudRemoveNode(coapResponse);
     IotcFree(dataArrayRespone);
 
