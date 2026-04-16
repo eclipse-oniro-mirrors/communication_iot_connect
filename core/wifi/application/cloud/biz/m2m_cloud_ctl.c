@@ -63,7 +63,7 @@ static int32_t GetStrFromOptionMsgIdAndDevId(const CoapPacket *req, char **msgId
         IOTC_LOGE("%s: devId strdup failed", __func__);
         return IOTC_ERROR;
     }
-    memcpy_s(*devId, devIdOpt->value.data, devIdOpt->value.len);
+    memcpy_s(*devId, devIdOpt->value.len + 1, devIdOpt->value.data, devIdOpt->value.len);
     (*devId)[devIdOpt->value.len] = '\0';
 
     // 提取 msgId

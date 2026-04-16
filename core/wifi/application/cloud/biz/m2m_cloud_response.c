@@ -183,7 +183,7 @@ static int32_t M2mCloudExtractMsgIdAndDevId(const CoapPacket *req_pkt, char **ms
     *devId = IotcMalloc(devIdOpt->value.len + 1);
     if (*devId == NULL) {
         IOTC_LOGE("%s: devId strdup failed", __func__);
-        return IOTC_ERR_NO_MEMORY;
+        return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
     (void)memcpy_s(*devId, devIdOpt->value.len + 1, devIdOpt->value.data, devIdOpt->value.len);
     ((char *)*devId)[devIdOpt->value.len] = '\0';
@@ -193,7 +193,7 @@ static int32_t M2mCloudExtractMsgIdAndDevId(const CoapPacket *req_pkt, char **ms
         IOTC_LOGE("%s: msgId strdup failed", __func__);
         IotcFree(*devId);
         *devId = NULL;
-        return IOTC_ERR_NO_MEMORY;
+        return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
     (void)memcpy_s(*msgId, reqIdOpt->value.len + 1, reqIdOpt->value.data, reqIdOpt->value.len);
     ((char *)*msgId)[reqIdOpt->value.len] = '\0';
