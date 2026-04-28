@@ -85,7 +85,7 @@ HWTEST_F(Base64CodecTest, GetBase64CodecDataTest005, TestSize.Level1)
 
 HWTEST_F(Base64CodecTest, GetBase64CodecDataTest006, TestSize.Level1)
 {
-    static uint8_t input[] = {'d', 'G', 'V', 'z', 'd', 'A', '=' , '='};
+    static uint8_t input[] = {'d', 'G', 'V', 'z', 'd', 'A', '='};
     uint32_t dataLen = 0;
     uint8_t *result = GetBase64CodecData(input, sizeof(input), &dataLen, BASE64_CODEC_TYPE_DECODE, 1024);
     EXPECT_NE(result, nullptr);
