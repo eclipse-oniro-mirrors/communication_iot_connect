@@ -58,9 +58,6 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 
 | 平台     | 套餐类型           | 开发指南                                                                                                                           |
 | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| RK3568 | WiFi only      | [wifi_only_rk3568.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/wifi_only_rk3568.md)           |
-| RK3568 | BLE only       | [ble_only_rk3568.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/ble_only_rk3568.md)             |
-| RK3568 | WiFi/BLE Combo | [wifi_ble_combo_rk3568.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/wifi_ble_combo_rk3568.md) |
 | Hi3863 | WiFi only      | [wifi_only_hi3863.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/wifi_only_hi3863.md)           |
 | Hi3863 | BLE only       | [ble_only_hi3863.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/ble_only_hi3863.md)             |
 | Hi3863 | WiFi/BLE Combo | [wifi_ble_combo_hi3863.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/wifi_ble_combo_hi3863.md) |
@@ -83,13 +80,11 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 
 ## 五、案例
 
-### 5.1 WiFi/BLE Combo设备端云控制（RK3568）
+### 5.1 WiFi/BLE Combo设备端云控制（Hi3863）
 
-**场景：** DAYU200开发板模拟WiFi/BLE Combo设备，实现屏幕控制、设备重启等功能
+**场景：** Hi3863开发板模拟WiFi/BLE Combo设备、设备远程开关控制等功能
 
-**开发指南：** [wifi_ble_combo_rk3568.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/wifi_ble_combo_rk3568.md)
-
-**示例代码：** [iotc_oh_demo_wifi_ble_combo.c](https://gitcode.com/ohos-oneconnect/applications_sample_iot_connect_samples/blob/OpenHarmony-5.0.0-Release/wifi_ble_combo/yarward_iotc/digital_signage/src/iotc_oh_demo_wifi_ble_combo.c)
+**开发指南：** [wifi_ble_combo_hi3863.md](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/demo构建/wifi_ble_combo_hi3863.md)
 
 ### 5.2 BLE设备点到点本地控制（Hi3863）
 
