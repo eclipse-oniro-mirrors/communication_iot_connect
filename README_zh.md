@@ -41,7 +41,7 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 
 | 项目                   | 说明                             | 仓库链接                                                                                              |
 | -------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
-| 通用互联APP              | 控制核心入口，运行在HarmonyOS NEXT手机 | [通用互联APP](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/通用互联APP/README.md) |
+| 通用互联APP              | 控制核心入口，运行在HOS手机上 | [通用互联APP](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/通用互联APP/README.md) |
 | IoTManagementService | OpenHarmony设备上的设备管理服务组件        | [IoTManagementService](https://gitcode.com/ohos-oneconnect/IoTManagementService)                |
 | 云平台                  | 互联互通云端服务，提供账号、设备、场景管理          | [云平台](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/云平台/README.md)         |
 ### 3.2 被控端开发
