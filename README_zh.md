@@ -39,16 +39,11 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 
 ### 3.1 控制端开发
 
-| 项目                   | 说明                             | 链接                                                                                              |
+| 项目                   | 说明                             | 仓库链接                                                                                              |
 | -------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
-| 通用互联APP              | 鸿蒙生态核心控制入口，运行在HarmonyOS NEXT手机 | [通用互联APP](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/通用互联APP/README.md) |
+| 通用互联APP              | 控制核心入口，运行在HarmonyOS NEXT手机 | [通用互联APP](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/通用互联APP/README.md) |
 | IoTManagementService | OpenHarmony设备上的设备管理服务组件        | [IoTManagementService](https://gitcode.com/ohos-oneconnect/IoTManagementService)                |
 | 云平台                  | 互联互通云端服务，提供账号、设备、场景管理          | [云平台](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/云平台/README.md)         |
-
-**通用互联APP仓库：** [ohos-connect-hap](https://gitcode.com/ohos-oneconnect/ohos-connect-hap)
-
-**APP代码讲解：** [通用互联APP代码讲解](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/通用互联APP/通用互联APP代码讲解.md)
-
 ### 3.2 被控端开发
 
 | 开发内容        | 文档链接                                                                                                                        |
@@ -75,10 +70,10 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 
 ### 4.1 技术标准
 
-| 标准          | 链接                                                                        |
-| ----------- | ------------------------------------------------------------------------- |
-| 物模型技术标准     | [《鸿蒙生态设备统一互联 物模型技术标准》](https://www.giiconsortium.org/2025/post/2502/)     |
-| 接入与控制接口技术标准 | [《鸿蒙生态设备统一互联 接入与控制接口技术标准》](https://www.giiconsortium.org/2025/post/2506/) |
+| 标准          | 
+| ----------- | 
+| [《物模型技术标准》](https://www.giiconsortium.org/2025/post/2502/)| 
+| [《接入与控制接口技术标准》](https://www.giiconsortium.org/2025/post/2506/)| 
 
 ### 4.2 Release版本说明
 
