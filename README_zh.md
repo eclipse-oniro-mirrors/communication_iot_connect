@@ -54,7 +54,7 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 | Combo设备DEMO | [iotc-demo-combo.md](https://gitcode.com/ohos-oneconnect/communication_iot_connect/blob/master/docs/iotc-demo-combo.md)     |
 | 示例代码仓库      | [applications_sample_iot_connect_samples](https://gitcode.com/ohos-oneconnect/applications_sample_iot_connect_samples)      |
 
-### 3.3 各平台开发指南
+### 3.3 各套餐类型开发指南
 
 | 平台     | 套餐类型           | 开发指南                                                                                                                           |
 | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
