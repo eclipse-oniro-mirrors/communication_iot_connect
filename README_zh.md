@@ -4,7 +4,7 @@
 
 IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（mini/small系统级别）构建的极简、高性能连接控制核心组件，提供设备发现配网、端云连接、设备控制等能力。
 
-**核心功能：** BLE/WiFi/Combo/SLE发现配网、点到点/局域网/云端控制、端云连接
+**核心功能：** BLE/WiFi/Combo发现配网、点到点/局域网/云端控制、端云连接
 
 **适配系统：** mini/small/standard系统
 
