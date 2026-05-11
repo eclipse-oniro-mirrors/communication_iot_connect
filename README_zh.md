@@ -43,8 +43,12 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 | -------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
 | 通用互联APP              | 控制核心入口，运行在HOS手机上 | [通用互联APP](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/通用互联APP/README.md) |
 | IoTManagementService | OpenHarmony设备上的设备管理服务组件        | [IoTManagementService](https://gitcode.com/ohos-oneconnect/IoTManagementService)                |
+
+### 3.2 云平台服务
+| 项目                   | 说明                             | 链接                                                                                              |
+| -------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
 | 云平台                  | 互联互通云端服务，提供账号、设备、场景管理          | [云平台](https://gitcode.com/ohos-oneconnect/docs/blob/master/zh-cn/设备联动与控制/云平台/README.md)         |
-### 3.2 被控端开发
+### 3.3 被控端开发
 
 | 开发内容        | 文档链接                                                                                                                        |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -54,7 +58,7 @@ IoT Connect SDK（iot_connect）是专为OpenHarmony资源受限的瘦设备（m
 | Combo设备DEMO | [iotc-demo-combo.md](https://gitcode.com/ohos-oneconnect/communication_iot_connect/blob/master/docs/iotc-demo-combo.md)     |
 | 示例代码仓库      | [applications_sample_iot_connect_samples](https://gitcode.com/ohos-oneconnect/applications_sample_iot_connect_samples)      |
 
-### 3.3 各套餐类型开发指南
+### 3.4 各套餐类型开发指南
 
 | 平台     | 套餐类型           | 开发指南                                                                                                                           |
 | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
