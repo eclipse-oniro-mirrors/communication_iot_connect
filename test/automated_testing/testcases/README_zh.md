@@ -10,7 +10,7 @@
 
 ## 下载工程软件
 
-一、python安装：需要安装3.10.5~3.10.10之间的版本，其他版本可能出现兼容性问题。
+一、python安装：需要安装3.10.5~3.10.10之间的版本。
 
 
 
@@ -24,11 +24,15 @@
 
 [global]
 
-index-url = https://mirrors.tools.huawei.com/pypi/simple
+index-url = https://mirrors.***.com(此处应为索引网址)
 
-trusted-host = mirrors.tools.huawei.com
+trusted-host = *******.com（此处应为可信主机名）
 
 timeout = 120
+
+
+
+一般此文件会自动生成
 
 
 
@@ -42,9 +46,11 @@ timeout = 120
 
 五、DevEco Testing Hypium安装包解压
 
-​      执行pip install命令安装hypium
+​      执行pip install命令安装hypium或者去华为官网下载最新的Hypium框架安装包。
 
-​      pip install --extra-index-url http://hypium.rnd.huawei.com/simple hypium --trusted-host hypium.rnd.huawei.com -i http://mirrors.tools.huawei.com/pypi/simple --trusted-host mirrors.tools.huawei.com -U
+​      [最新版本 - 下载中心 - 华为开发者联盟](https://developer.huawei.com/consumer/cn/download/)
+
+​     
 
 
 
@@ -183,7 +189,7 @@ CoAP Options:
 
 云端处理过程：
 1. 验证注册码有效性
-2. 检查设备证书认证结果
+2. 检查设备认证结果
 3. 创建设备记录（数据库操作）
    SQL插入参数：
    - devId: 0282bb7d-2458-491e-a90a-c77174a3102c
@@ -193,7 +199,7 @@ CoAP Options:
    - secret: 2lo4q0sv6sb9ta46v9kbd6nso2h6fwtl
    - projectId: 07912b92-e9bc-4ed9-b566-d8ac51b4e222
    - uid: 71815794283328698618827311787778
-   - 其他设备信息...
+
 
 4. 分配projectId
    - projectId: 2013583506982281218
