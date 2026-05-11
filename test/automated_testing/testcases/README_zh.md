@@ -46,7 +46,7 @@ timeout = 120
 
 五、DevEco Testing Hypium安装包解压
 
-​      执行pip install命令安装hypium或者去华为官网下载最新的Hypium框架安装包。（https://developer.huawei.com/consumer/cn/download/）
+​      执行pip install命令安装华为hypium或者去华为官网下载最新的Hypium框架安装包。
 
 
 
@@ -185,7 +185,7 @@ CoAP Options:
 
 云端处理过程：
 1. 验证注册码有效性
-2. 验证设备认证状态
+2. 验证设备认证状态是否正确
 3. 创建设备记录（数据库操作）
    SQL插入参数：
    - devId: 0282bb7d-2458-491e-a90a-c77174a3102c
