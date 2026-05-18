@@ -658,7 +658,7 @@ static_library("wifi_ble_combo") {
 
 ## 四、编译配置修改及编译指令
 
-WiFi/BLE Combo（Hi3863平台）的编译配置修改步骤请参考示例代码仓[README.md](https://gitcode.com/ohos-oneconnect/applications_sample_iot_connect_samples/blob/OpenHarmony-5.1.0-Release/wifi_ble_combo/README_zh.md);
+WiFi/BLE Combo（Hi3863平台）的编译配置修改步骤请参考示例代码仓[README.md](https://gitcode.com/ohos-oneconnect/applications_sample_iot_connect_samples/blob/OpenHarmony-5.1.0-Release/wifi_ble_combo/hi3863/README.md);
 
 ## 五、DEMO使用说明
 
