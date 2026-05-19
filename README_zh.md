@@ -10,11 +10,13 @@ IoT Connect SDK 是专为OpenHarmony资源受限的瘦设备（mini/small系统
 
 ![imagepng](https://raw.gitcode.com/user-images/assets/9584680/1c2c0fde-b28b-4d5f-a107-c97a51c1606d/image.png "image.png")
 
-图1 统一互联联动与控制架构图
+<center>图1 统一互联联动与控制架构图</center>
 
 ![](https://foruda.gitee.com/images/1779111176849795024/17a487c8_8030656.png)
 
-图2 IoT-Connect 组件架构图
+<center>图2 IoT-Connect 组件架构图</center>
+
+[联动与控制概述](./docs/联动与控制概述.md)
 
 ### 模块功能说明
 
