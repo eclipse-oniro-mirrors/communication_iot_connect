@@ -289,10 +289,10 @@ hb build -f #编译
 
 | 平台  | 套餐类型 | 开发指南 |
 | --- | --- | --- |
-| Hi3863 | WiFi only | [wifi_only_hi3863.md](https://gitcode.com/openharmony-sig/communication_iot_connect/tree/master/docs/wifi_only_hi3863.md) |
-| Hi3863 | BLE only | [ble_only_hi3863.md](https://gitcode.com/openharmony-sig/communication_iot_connect/tree/master/docs/ble_only_hi3863.md) |
-| Hi3863 | WiFi/BLE Combo | [wifi_ble_combo_hi3863.md](https://gitcode.com/openharmony-sig/communication_iot_connect/tree/master/docs/wifi_ble_combo_hi3863.md) |
-| Hi3863 | BLE/SLE Combo | [ble_sle_combo_hi3863.md](https://gitcode.com/openharmony-sig/communication_iot_connect/tree/master/docs/ble_sle_combo_hi3863.md) |
+| Hi3863 | WiFi only | [wifi_only_hi3863.md](./docs/wifi_only_hi3863.md) |
+| Hi3863 | BLE only | [ble_only_hi3863.md](./docs/ble_only_hi3863.md) |
+| Hi3863 | WiFi/BLE Combo | [wifi_ble_combo_hi3863.md](./docs/wifi_ble_combo_hi3863.md) |
+| Hi3863 | BLE/SLE Combo | [ble_sle_combo_hi3863.md](./docs/ble_sle_combo_hi3863.md) |
 
 #### 注意事项
 
