@@ -32,8 +32,8 @@
       "iot_connect_mbedtls_psk_support",
       "iot_connect_mbedtls_ccm_support"
     ],
-    "rom": "",
-    "ram": "",
+    "rom": "70KB",
+    "ram": "13KB",
     "deps": {
       "components": [
         "bounds_checking_function",
