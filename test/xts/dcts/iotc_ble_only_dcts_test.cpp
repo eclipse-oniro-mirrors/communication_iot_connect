@@ -361,7 +361,7 @@ static int32_t SwitchGetCharState(const IotcServiceInfo *svc, char **data, uint3
     }
     *data = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
-    if (*data == NULL) {
+    if (*data == nullprt) {
         DEMO_LOG("json print error");
         return -1;
     }
@@ -407,7 +407,7 @@ static int32_t ReportGetCharState(const IotcServiceInfo *svc, char **data, uint3
     }
     *data = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
-    if (*data == NULL) {
+    if (*data == nullptr) {
         DEMO_LOG("json print error");
         return -1;
     }

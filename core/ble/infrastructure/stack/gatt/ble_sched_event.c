@@ -257,7 +257,7 @@ int32_t BleScheduleEventInit(void)
     BleSchedMsg msg;
     msg.event = BLE_EVENT_START;
     msg.param = NULL;
-    msg.free = NULL;
+    msg.freeFunc = NULL;
     int32_t ret = BleSchedMsgQueueSend(&msg, 0);
     if (ret != IOTC_OK) {
         IOTC_LOGF("send start event error %d", ret);

@@ -149,7 +149,6 @@ static void PutCharStatePutReport(cJSON *json)
     if (on == 0) {
         g_step[STEP_3] = 1;
     } else if (on == 1) {
-        
     }
 }
 

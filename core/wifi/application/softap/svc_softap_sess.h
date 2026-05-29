@@ -30,7 +30,7 @@ SoftapPeerSess *SoftapGetPeerSessCreateIfNotExist(const SocketAddr *addrInfo, So
 
 SoftapPeerSess *SoftapGetPeerSess(const SocketAddr *addrInfo, SoftapSess *sess);
 
-int32_t SoftapPeerSessInitSpeke(SoftapPeerSess *spekeSess);
+int32_t SoftapPeerSessInitSpeke(SoftapPeerSess *peerSess);
 
 #ifdef __cplusplus
 }
