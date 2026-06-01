@@ -120,20 +120,20 @@ static void BleEventDisconnectHandler(int32_t event, void *param)
     }
 
     IotcOhCloudRegisterState state = IOTC_OH_CLOUD_UNREGISTER;
- 	int32_t ret = ProductProfGetCloudRegisterState(&state);
- 	if (ret != IOTC_OK) {
- 	    if (ret == IOTC_ERR_CALLBACK_NULL) {
- 	        IOTC_LOGW("The get cloud register state callback function is null, err %d", ret);
- 	    } else {
- 	        IOTC_LOGE("get cloud register state err %d", ret);
- 	    }
- 	}
- 	if (state == IOTC_OH_CLOUD_UNREGISTER) {
- 	    ret = BleAdvCtrlResume();
- 	    if (ret != IOTC_OK) {
- 	        IOTC_LOGE("start adv err %d", ret);
- 	        return;
- 	    }
+    int32_t ret = ProductProfGetCloudRegisterState(&state);
+    if (ret != IOTC_OK) {
+        if (ret == IOTC_ERR_CALLBACK_NULL) {
+            IOTC_LOGW("The get cloud register state callback function is null, err %d", ret);
+        } else {
+            IOTC_LOGE("get cloud register state err %d", ret);
+        }
+    }
+    if (state == IOTC_OH_CLOUD_UNREGISTER) {
+        ret = BleAdvCtrlResume();
+        if (ret != IOTC_OK) {
+            IOTC_LOGE("start adv err %d", ret);
+            return;
+        }
     }
     EventBusPublishSync(IOTC_CORE_BLE_EVENT_GATT_DISCONNECT, NULL, 0);
     IOTC_LOGN("disconnect success connNum=%u, connId=%u, reason=%d",

@@ -165,13 +165,13 @@ int32_t IotcOhGetBleAdvData(IotcAdptBleAdvData *advData)
     }
     advData->advDataLen += len;
 #if IOTC_CONF_OH_NEARLINK_SUPPORT
- 	len = CustomAdvCopyToBuf(&advData->advData[advData->advDataLen],
- 	    sizeof(advData->advData) - advData->advDataLen);
- 	if (len < 0) {
- 	    IOTC_LOGE("copy");
- 	    return IOTC_ERR_SECUREC_MEMCPY;
- 	}
- 	advData->advDataLen += len;
+    len = CustomAdvCopyToBuf(&advData->advData[advData->advDataLen],
+        sizeof(advData->advData) - advData->advDataLen);
+    if (len < 0) {
+        IOTC_LOGE("copy");
+        return IOTC_ERR_SECUREC_MEMCPY;
+    }
+    advData->advDataLen += len;
 #endif
 
     len = 0;

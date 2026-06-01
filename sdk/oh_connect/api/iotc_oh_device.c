@@ -83,7 +83,7 @@ static int32_t OptionSetDevGetPincodeCallback(va_list args)
 
 static int32_t OptionSetDevGetCloudRegisterState(va_list args)
 {
- 	IotcDevProfGetCloudRegisterState cb = va_arg(args, IotcDevProfGetCloudRegisterState);
+    IotcDevProfGetCloudRegisterState cb = va_arg(args, IotcDevProfGetCloudRegisterState);
  	CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
  	SET_PRODUCT_CALLBACK_RETURN(cb, onProfGetCloudRegisterState);
  	 

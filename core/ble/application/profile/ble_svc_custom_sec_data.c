@@ -160,21 +160,21 @@ static int32_t BuildBleCustomSecDataSingleService(IotcJson *array, uint8_t **out
 
 static bool IsDeviceInfoSid(IotcJson *vendorItem)
 {
- 	uint32_t size = 0;
- 	int32_t ret = IotcJsonGetArraySize(vendorItem, &size);
- 	if (ret != IOTC_OK) {
- 	    IOTC_LOGW("get size error %d", ret);
- 	    return false;
- 	}
- 	/* 查询所有服务时只会有1个sid */
- 	if (size != 1) {
- 	    return false;
- 	}
- 	const char *sid = IotcJsonGetStr(IotcJsonGetObj(IotcJsonGetArrayItem(vendorItem, 0), STR_JSON_SID));
- 	if ((sid == NULL) || (strcmp(sid, STR_JSON_DEVICE_INFO) != 0)) {
- 	    return false;
- 	}
- 	return true;
+    uint32_t size = 0;
+    int32_t ret = IotcJsonGetArraySize(vendorItem, &size);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("get size error %d", ret);
+        return false;
+    }
+    /* 查询所有服务时只会有1个sid */
+    if (size != 1) {
+        return false;
+    }
+    const char *sid = IotcJsonGetStr(IotcJsonGetObj(IotcJsonGetArrayItem(vendorItem, 0), STR_JSON_SID));
+    if ((sid == NULL) || (strcmp(sid, STR_JSON_DEVICE_INFO) != 0)) {
+        return false;
+    }
+    return true;
 }
 
 static int32_t BleCustomSecDataGetChar(IotcJson *vendorItem, uint8_t **out, uint32_t *outLen,
@@ -182,11 +182,11 @@ static int32_t BleCustomSecDataGetChar(IotcJson *vendorItem, uint8_t **out, uint
 {
     IotcJson *arrayObj = NULL;
     int32_t ret = IOTC_OK;
- 	if (IsDeviceInfoSid(vendorItem)) {
- 	    ret = GetBleCustomSecDeviceInfo(&arrayObj);
- 	} else {
- 	    ret = getChar(vendorItem, &arrayObj);
- 	}
+    if (IsDeviceInfoSid(vendorItem)) {
+    ret = GetBleCustomSecDeviceInfo(&arrayObj);
+    } else {
+        ret = getChar(vendorItem, &arrayObj);
+    }
     if (ret != IOTC_OK) {
         IOTC_LOGW("get char control error %d", ret);
         return ret;

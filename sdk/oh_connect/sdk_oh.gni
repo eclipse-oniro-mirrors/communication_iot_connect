@@ -52,13 +52,13 @@ if (iot_connect_wifi_support) {
 }
 
 if (iot_connect_ble_adv_update_support) {
- 	iotc_sdk_oh_def += ["IOTC_CONF_BLE_ADV_UPDATE_SUPPORT=1"]
+  iotc_sdk_oh_def += ["IOTC_CONF_BLE_ADV_UPDATE_SUPPORT=1"]
 }
  	 
 if (iot_connect_kv_support) {
- 	iotc_sdk_oh_def += ["IOTC_CONF_KV_SUPPORT=1"]
+  iotc_sdk_oh_def += ["IOTC_CONF_KV_SUPPORT=1"]
 }
  	 
 if (iot_connect_oh_nearlink_support) {
- 	iotc_sdk_oh_def += ["IOTC_CONF_OH_NEARLINK_SUPPORT=1"]
+  iotc_sdk_oh_def += ["IOTC_CONF_OH_NEARLINK_SUPPORT=1"]
 }

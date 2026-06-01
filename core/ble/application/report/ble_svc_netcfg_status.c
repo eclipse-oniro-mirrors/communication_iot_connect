@@ -39,31 +39,31 @@ enum {
 
 static int32_t GenNetCfgKeyValueJsonStr(char *data, char **out, uint32_t *outLen)
 {
- 	if ((data == NULL) || (out == NULL) || (outLen == NULL)) {
- 	    IOTC_LOGE("invalid param");
- 	    return IOTC_ERR_PARAM_INVALID;
- 	}
- 	char *key = "service";
- 	char *value = "netCfg";
- 	IotcJson *obj = IotcJsonParse((const char *)data);
- 	if (obj == NULL) {
- 	    IOTC_LOGE("json parse");
- 	    return IOTC_ADAPTER_JSON_ERR_PARSE;
- 	}
- 	int32_t ret = IotcJsonAddStr2Obj(obj, key, value);
- 	if (ret != IOTC_OK) {
- 	    IOTC_LOGW("add num to obj err %d", ret);
- 	    IotcJsonDelete(obj);
- 	    return IOTC_ADAPTER_JSON_ERR_ADD;
- 	}
- 	*out = UtilsJsonPrintByMalloc(obj);
- 	IotcJsonDelete(obj);
- 	if (*out == NULL) {
- 	    IOTC_LOGW("json print err");
- 	    return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
- 	}
- 	*outLen = strlen(*out);
- 	return IOTC_OK;
+    if ((data == NULL) || (out == NULL) || (outLen == NULL)) {
+        IOTC_LOGE("invalid param");
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    char *key = "service";
+    char *value = "netCfg";
+    IotcJson *obj = IotcJsonParse((const char *)data);
+    if (obj == NULL) {
+        IOTC_LOGE("json parse");
+        return IOTC_ADAPTER_JSON_ERR_PARSE;
+    }
+    int32_t ret = IotcJsonAddStr2Obj(obj, key, value);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("add num to obj err %d", ret);
+        IotcJsonDelete(obj);
+        return IOTC_ADAPTER_JSON_ERR_ADD;
+    }
+    *out = UtilsJsonPrintByMalloc(obj);
+    IotcJsonDelete(obj);
+    if (*out == NULL) {
+        IOTC_LOGW("json print err");
+        return IOTC_CORE_COMM_UTILS_ERR_JSON_MALLOC_PRINT;
+    }
+    *outLen = strlen(*out);
+    return IOTC_OK;
 }
 
 static void BleNetcfgRptStatus(uint32_t event, void *param, uint32_t len)
@@ -93,12 +93,12 @@ static void BleNetcfgRptStatus(uint32_t event, void *param, uint32_t len)
         return;
     }
     // WIFI连接状态（json格式），例：{"status":100, "service":"netCfg"}
- 	ret = GenNetCfgKeyValueJsonStr(out, &netCfgOut, &netCfgOutLen);
- 	if ((ret != IOTC_OK) || (netCfgOut == NULL) || (netCfgOutLen == 0)) {
- 	    IotcFree(out);
- 	    IOTC_LOGE("ret=%d", ret);
- 	    return;
- 	}
+    ret = GenNetCfgKeyValueJsonStr(out, &netCfgOut, &netCfgOutLen);
+    if ((ret != IOTC_OK) || (netCfgOut == NULL) || (netCfgOutLen == 0)) {
+        IotcFree(out);
+        IOTC_LOGE("ret=%d", ret);
+        return;
+    }
  	ret = LinkLayerReportSvcDataEnc(BLE_SVC_NETCFG, (const uint8_t *)netCfgOut, netCfgOutLen);
  	IOTC_LOGN("ret=%d, netCfgOut=%s", ret, netCfgOut);
     IotcFree(out);

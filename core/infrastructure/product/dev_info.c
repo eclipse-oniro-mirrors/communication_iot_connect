@@ -161,12 +161,12 @@ int32_t ModelGetDevProtType(void)
 
 const char *ModelGetDevUniqueId(void)
 {
- 	return NON_NULL_EMPTY_STR(g_deviceInfo.uniqueId);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.uniqueId);
 }
  	 
 const char *ModelGetDevCustomData(void)
 {
- 	return NON_NULL_EMPTY_STR(g_deviceInfo.customData);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.customData);
 }
 
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len)

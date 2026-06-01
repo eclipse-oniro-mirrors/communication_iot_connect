@@ -75,8 +75,8 @@ typedef struct {
 } IotcCharState;
 
 typedef enum {
- 	IOTC_OH_CLOUD_UNREGISTER,
- 	IOTC_OH_CLOUD_REGISTER
+    IOTC_OH_CLOUD_UNREGISTER,
+    IOTC_OH_CLOUD_REGISTER
 } IotcOhCloudRegisterState;
 
 #ifdef __cplusplus

@@ -263,14 +263,14 @@ int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen)
 
 int32_t ProductProfGetCloudRegisterState(IotcOhCloudRegisterState *state)
 {
- 	CHECK_RETURN_LOGW(state != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
- 	ProfGetCloudRegisterState cb;
- 	GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfGetCloudRegisterState);
- 	int32_t ret = cb(state);
- 	if (ret != IOTC_OK) {
- 	    IOTC_LOGW("get GetCloudRegisterState error %d", ret);
- 	}
- 	return ret;
+    CHECK_RETURN_LOGW(state != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    ProfGetCloudRegisterState cb;
+    GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfGetCloudRegisterState);
+    int32_t ret = cb(state);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("get GetCloudRegisterState error %d", ret);
+    }
+    return ret;
 }
 
 int32_t ProductProfGetAcKey(uint8_t *buf, uint32_t bufLen)
