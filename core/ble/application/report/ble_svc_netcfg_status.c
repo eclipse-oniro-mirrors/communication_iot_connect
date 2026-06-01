@@ -83,7 +83,7 @@ static void BleNetcfgRptStatus(uint32_t event, void *param, uint32_t len)
         status = NETCFG_STATUS_WIFI_CONNECT_FAIL;
     } else if (event == IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE) {
         status = NETCFG_STATUS_REG_IOT_OK;
-    }else if (event == IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_REGISTER_FAILED) {
+    } else if (event == IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_REGISTER_FAILED) {
         status = NETCFG_STATUS_REG_IOT_FAIL;
     }    
 
@@ -100,7 +100,7 @@ static void BleNetcfgRptStatus(uint32_t event, void *param, uint32_t len)
         return;
     }
  	ret = LinkLayerReportSvcDataEnc(BLE_SVC_NETCFG, (const uint8_t *)netCfgOut, netCfgOutLen);
- 	IOTC_LOGN("ret=%d, netCfgOut=%s", ret, netCfgOut);
+    IOTC_LOGN("ret=%d, netCfgOut=%s", ret, netCfgOut);
     IotcFree(out);
     IotcFree(netCfgOut);
 }

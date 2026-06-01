@@ -190,7 +190,7 @@ static int32_t BuildCustomSecDataDevInfoAll(IotcJson *array)
         return IOTC_ADAPTER_JSON_ERR_ADD;
     }
  	     
- 	return IOTC_OK;
+    return IOTC_OK;
 }
  	 
 int32_t GetBleCustomSecDeviceInfo(IotcJson **outArray)

@@ -50,7 +50,7 @@ int32_t ModelDevInfoInit(const IotcDeviceInfo *devInfo)
         {&g_deviceInfo.hwv, devInfo->hwv},
         {&g_deviceInfo.swv, devInfo->swv},
         {&g_deviceInfo.customData, UtilsIsEmptyStr(devInfo->customData) ? DEFAULT_CUSTOM_DATA : devInfo->customData},
- 	         {&g_deviceInfo.uniqueId, UtilsIsEmptyStr(devInfo->uniqueId) ? DEFAULT_UNIQUEID : devInfo->uniqueId},
+        {&g_deviceInfo.uniqueId, UtilsIsEmptyStr(devInfo->uniqueId) ? DEFAULT_UNIQUEID : devInfo->uniqueId},
     };
 
     uint32_t i = 0;

@@ -300,7 +300,7 @@ static uint32_t GenBusiness(BleCustomAdvValue *value)
     if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) ||
         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA) ||
             /* IOTC_BLE_ADV_TYPE_CUSTOM 这里用来标识oh靠近发现广播 下同 */
-            (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
+        (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
         value->business = BUSINESS_BLE_NEARBY;
     } else if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_HALF_MODAL) ||
                (BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_FA)) {
@@ -481,8 +481,7 @@ static uint32_t GetCustomAdvValue(BleCustomAdvValue *value)
     len += GenExtension(value);
     if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) ||
         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA) ||
- 	         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
- 	
+        (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
         len += GenExtendNearby(value);
     } else if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_HALF_MODAL) ||
                (BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_FA)) {
