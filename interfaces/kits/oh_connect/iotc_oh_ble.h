@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "iotc_ble_def.h"
+#include "iotc_event.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +45,10 @@ IOTC_API_PUBLIC int32_t IotcOhBleSendCustomSecData(const uint8_t *data, uint32_t
 
 IOTC_API_PUBLIC int32_t IotcOhBleSendIndicateData(const char *svcUuid, const char *charUuid,
     const uint8_t *value, uint32_t valueLen);
+
+IOTC_API_PUBLIC void IotcOhBleReportWifiEvent(IotcEvent event);
+
+IOTC_API_PUBLIC int32_t IotcOhBleReportReasonCode(IotcOhNetCfgReasonCode code);
 
 #ifdef __cplusplus
 }

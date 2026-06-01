@@ -41,6 +41,7 @@
 #include "iotc_svc_dev.h"
 #include "ohos_bt_gap.h"
 #include <unistd.h>
+#include "ble_svc_custom_sec_data.h"
 
 #define BLE_START_WAIT_SLEEP_S 2
 
@@ -155,6 +156,15 @@ static int32_t OptionSetBleStartUpAdvTimeout(va_list args)
     return IOTC_OK;
 }
 
+static int32_t OptionSetBleStartUpAdvPower(va_list args)
+{
+ 	int32_t power = va_arg(args, int32_t);
+ 	BleSetAdvTxPower((int8_t)power);
+ 	 
+ 	IOTC_LOGN("set start up adv power: 0x%hhx\n", power);
+ 	return IOTC_OK;
+}
+
 static int32_t OptionSetBleGattProfileSvcList(va_list args)
 {
     const IotcBleGattProfileSvcList *svcList = va_arg(args, const IotcBleGattProfileSvcList *);
@@ -198,14 +208,20 @@ static const OptionItem BLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_BLE_START_UP_ADV_TIMEOUT, OptionSetBleStartUpAdvTimeout },
     { IOTC_OH_OPTION_BLE_GATT_PROFILE_SVC_LIST, OptionSetBleGattProfileSvcList },
     { IOTC_OH_OPTION_BLE_ENABLE_FUNC_CALLBACK, OptionSetMakeOsBleEnableCallback },
+    { IOTC_OH_OPTION_BLE_START_UP_ADV_POWER, OptionSetBleStartUpAdvPower },
 };
 
 int32_t IotcOhBleEnable(void)
 {
     IOTC_LOGN("iotc oh ble enable");
     CHECK_MAIN_RUNNING_RETURN();
-
-    int32_t ret = IotcOhOptionRegister(BLE_OPTION_TABLE, ARRAY_SIZE(BLE_OPTION_TABLE));
+    
+    int32_t ret = ProductMakeOsBleEnable();
+ 	if (ret != IOTC_OK) {
+ 	    IOTC_LOGE("Failed to call system app enable ble function ret=%d", ret);
+ 	}
+ 	
+ 	ret = IotcOhOptionRegister(BLE_OPTION_TABLE, ARRAY_SIZE(BLE_OPTION_TABLE));
     if (ret != IOTC_OK) {
         IOTC_LOGE("reg ble option error %d", ret);
         return ret;
@@ -381,4 +397,106 @@ int32_t IotcOhBleSendCustomSecData(const uint8_t *data, uint32_t len)
         return errcode;
     }
     return IOTC_OK;
+}
+
+ void IotcOhBleReportWifiEvent(IotcEvent event)
+{
+ 	EventBusPublishSync(event, NULL, 0);
+ 	return;
+}
+ 	 
+static int32_t BuildReasonCode(IotcJson *array, IotcOhNetCfgReasonCode code)
+{
+ 	if (array == NULL) {
+ 	    return IOTC_ERR_INVALID_PARAM;
+ 	}
+ 	IotcJson *root = IotcJsonCreate();
+ 	if (root == NULL) {
+ 	    IOTC_LOGE("create err");
+ 	    return IOTC_ADAPTER_JSON_ERR_CREATE;
+ 	}
+ 	IotcJson *dataObj = IotcJsonCreate();
+ 	if (dataObj == NULL) {
+ 	    IotcJsonDelete(root);
+ 	    IOTC_LOGE("create err");
+ 	    return IOTC_ADAPTER_JSON_ERR_CREATE;
+ 	}
+ 	if (IotcJsonAddStr2Obj(root, STR_JSON_SID, "errCode") != 0) {
+ 	    IotcJsonDelete(root);
+ 	    IotcJsonDelete(dataObj);
+ 	    IOTC_LOGE("add obj err");
+ 	    return IOTC_ADAPTER_JSON_ERR_ADD;
+ 	}
+ 	if (IotcJsonAddNum2Obj(dataObj, "code", code) != 0) {
+ 	    IotcJsonDelete(root);
+ 	    IotcJsonDelete(dataObj);
+ 	    IOTC_LOGE("add obj err");
+ 	    return IOTC_ADAPTER_JSON_ERR_ADD;
+ 	}
+ 	if (IotcJsonAddItem2Obj(root, STR_JSON_DATA, dataObj) != 0) {
+ 	    IotcJsonDelete(root);
+ 	    IotcJsonDelete(dataObj);
+ 	    IOTC_LOGE("add item err");
+ 	    return IOTC_ADAPTER_JSON_ERR_ADD;
+ 	}
+ 	int32_t ret = IotcJsonAddItem2Array(array, root);
+ 	if (ret != 0) {
+ 	    IotcJsonDelete(root);
+ 	    IOTC_LOGE("add item err");
+ 	    return IOTC_ADAPTER_JSON_ERR_ADD;
+ 	}
+ 	return IOTC_OK;
+}
+ 	  	 
+static int32_t GetReasonCode(IotcJson **outArray, IotcOhNetCfgReasonCode code)
+{
+ 	if (outArray == NULL) {
+ 	    return IOTC_ERR_INVALID_PARAM;
+ 	}
+ 	IotcJson *arrayTemp = IotcJsonCreateArray();
+ 	if (arrayTemp == NULL) {
+ 	    IOTC_LOGE("create err");
+ 	    return IOTC_ADAPTER_JSON_ERR_CREATE;
+ 	}
+ 	int32_t ret = BuildReasonCode(arrayTemp, code);
+ 	if (ret != 0) {
+ 	    IotcJsonDelete(arrayTemp);
+ 	    IOTC_LOGE("build err %d", ret);
+ 	    return ret;
+ 	}
+ 	*outArray = arrayTemp;
+ 	return IOTC_OK;
+}
+ 	 
+int32_t IotcOhBleReportReasonCode(IotcOhNetCfgReasonCode code)
+{
+ 	if ((code < IOTC_OH_WIFI_ERRCODE_NONE) || (code > IOTC_OH_WIFI_ERRCODE_UNKNOWN)) {
+ 	    IOTC_LOGE("invalid param");
+ 	    return IOTC_ERR_PARAM_INVALID;
+ 	}
+ 	IotcJson *arrayObj = NULL;
+ 	int32_t ret = IOTC_OK;
+ 	uint8_t *out = NULL;
+ 	uint32_t outLen = 0;
+ 	ret = GetReasonCode(&arrayObj, code);
+ 	if (ret != 0) {
+ 	    IOTC_LOGE("get err %d", ret);
+ 	    return ret;
+ 	}
+ 	ret = BuildBleCustomSecDataService(arrayObj, &out, &outLen);
+ 	if ((ret != IOTC_OK) || (out == NULL) || (outLen == 0)) {
+ 	    IotcJsonDelete(arrayObj);
+ 	    IOTC_LOGE("build data err:%d", ret);
+ 	    return ret;
+ 	}
+ 	ret = IotcOhBleSendCustomSecData((const uint8_t *)out, outLen);
+ 	if (ret != 0) {
+ 	    IotcFree(out);
+ 	    IotcJsonDelete(arrayObj);
+ 	    IOTC_LOGE("send err %d", ret);
+ 	    return ret;
+ 	}
+ 	IotcJsonDelete(arrayObj);
+ 	IotcFree(out);
+ 	return IOTC_OK;
 }

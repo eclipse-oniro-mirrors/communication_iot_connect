@@ -23,6 +23,8 @@
 #include "iotc_md.h"
 
 #define DEFAULT_SUB_PRO_ID "00"
+#define DEFAULT_CUSTOM_DATA "00"
+#define DEFAULT_UNIQUEID "00"
 
 static IotcDeviceInfo g_deviceInfo;
 
@@ -47,6 +49,8 @@ int32_t ModelDevInfoInit(const IotcDeviceInfo *devInfo)
         {&g_deviceInfo.fwv, devInfo->fwv},
         {&g_deviceInfo.hwv, devInfo->hwv},
         {&g_deviceInfo.swv, devInfo->swv},
+        {&g_deviceInfo.customData, UtilsIsEmptyStr(devInfo->customData) ? DEFAULT_CUSTOM_DATA : devInfo->customData},
+ 	         {&g_deviceInfo.uniqueId, UtilsIsEmptyStr(devInfo->uniqueId) ? DEFAULT_UNIQUEID : devInfo->uniqueId},
     };
 
     uint32_t i = 0;
@@ -80,6 +84,8 @@ void ModelDevInfoDeinit(void)
     UTILS_FREE_2_NULL(g_deviceInfo.fwv);
     UTILS_FREE_2_NULL(g_deviceInfo.hwv);
     UTILS_FREE_2_NULL(g_deviceInfo.swv);
+    UTILS_FREE_2_NULL(g_deviceInfo.customData);
+    UTILS_FREE_2_NULL(g_deviceInfo.uniqueId);
     (void)memset_s(&g_deviceInfo, sizeof(IotcDeviceInfo), 0, sizeof(IotcDeviceInfo));
 }
 
@@ -151,6 +157,16 @@ const char *ModelGetDevSwv(void)
 int32_t ModelGetDevProtType(void)
 {
     return g_deviceInfo.protType;
+}
+
+const char *ModelGetDevUniqueId(void)
+{
+ 	return NON_NULL_EMPTY_STR(g_deviceInfo.uniqueId);
+}
+ 	 
+const char *ModelGetDevCustomData(void)
+{
+ 	return NON_NULL_EMPTY_STR(g_deviceInfo.customData);
 }
 
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len)

@@ -578,6 +578,7 @@ int32_t IotcBleStartAdv(const IotcAdptBleAdvParam *advParam, const IotcAdptBleAd
     ohosAdvParam.channelMap = advParam->channelMap;
     ohosAdvParam.advType = AdapterAdvTypeToOhosAdvType(advParam->advType);
     ohosAdvParam.ownAddrType = AdapterAddrTypeToOhosAddrType(advParam->ownerAddrType);
+    ohosAdvParam.txPower = advParam->txPower;
     if (advParam->directAddr != NULL) {
         if (memcpy_s(ohosAdvParam.peerAddr.addr, sizeof(ohosAdvParam.peerAddr.addr),
             advParam->directAddr, IOTC_ADPT_BLE_ADDR_LEN) != EOK) {

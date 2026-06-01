@@ -47,6 +47,7 @@ typedef int32_t (*IotcDevProfGetAcKey)(uint8_t *buf, uint32_t bufLen);
 typedef void (*IotcDevProfFree)(void *ptr);
 typedef int32_t (*IotcDevReboot)(int32_t res);
 typedef int32_t (*IotcDevTrng)(uint8_t *buf, uint32_t len);
+typedef int32_t (*IotcDevProfGetCloudRegisterState)(IotcOhCloudRegisterState *state);
 
 IOTC_API_PUBLIC int32_t IotcOhDevInit(void);
 

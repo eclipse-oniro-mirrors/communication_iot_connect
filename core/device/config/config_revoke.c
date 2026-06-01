@@ -29,13 +29,14 @@ static void RevokeEventConfigCallback(uint32_t event, void *param, uint32_t len)
     if (ret != IOTC_OK) {
         IOTC_LOGW("clear register info error %d", ret);
     }
-
+#if IOTC_CONF_KV_SUPPORT
     if (UtilsGetComboType() == COMBO_TYPE_BLE_ONLY) {
         ret = ConfigClearAuthInfo();
         if (ret != IOTC_OK) {
             IOTC_LOGW("clear auth info error %d", ret);
         }
     }
+#endif
 }
 
 int32_t ConfigRevokeInit(void)

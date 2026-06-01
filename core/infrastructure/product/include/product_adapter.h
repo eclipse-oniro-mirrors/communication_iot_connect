@@ -46,6 +46,7 @@ typedef struct {
     void (*onProfFree)(void *ptr);
     int32_t (*onDevReboot)(int32_t res);
     int32_t (*onDevTrng)(uint8_t *buf, uint32_t len);
+    int32_t (*onProfGetCloudRegisterState)(IotcOhCloudRegisterState *state);
 } ProductHooks;
 
 int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy);
@@ -62,6 +63,7 @@ int32_t ProductProfReportAll(void);
 int32_t ProductProfReportByDevId(const char *devId);
 int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen);
 int32_t ProductProfGetAcKey(uint8_t *buf, uint32_t bufLen);
+int32_t ProductProfGetCloudRegisterState(IotcOhCloudRegisterState *state);
 void ProductProfFree(void *ptr);
 int32_t ProductDevReboot(int8_t res);
 int32_t ProductDevTrng(uint8_t *buf, uint32_t len);

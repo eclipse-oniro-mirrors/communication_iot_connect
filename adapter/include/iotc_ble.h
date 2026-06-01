@@ -98,6 +98,7 @@ typedef struct {
     IotcAdptBleAdvAddr directAddrType; /* 采用定向地址 */
     uint8_t *directAddr; /* 定向地址 */
     uint8_t channelMap; /* 37,38,39 */
+    int8_t txPower; /* 广播功率 */
 } IotcAdptBleAdvParam;
 
 #define IOTC_ADPT_BLE_ADV_VALUE_MAX_LEN 31

@@ -25,6 +25,7 @@ iotc_core_ble_inc = [
   "$iotc_core_path/ble/application/base/include",
   "$iotc_core_path/ble/application/gatt/include",
   "$iotc_core_path/ble/application/profile/include",
+  "$iotc_core_path/ble/application/profile",
   "$iotc_core_path/ble/application/report/include",
   "$iotc_core_path/ble/application/include",
 ]

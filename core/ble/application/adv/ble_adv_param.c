@@ -35,5 +35,7 @@ int32_t GetBleAdvParam(IotcAdptBleAdvParam *advParam)
         IOTC_LOGE("copy");
         return IOTC_ERR_SECUREC_MEMCPY;
     }
+    // 蓝牙广播参数中的发射功率固定设置为0，若有需要按照靠近发现广播数据中的功率设置，请将0修改为BleGetAdvTxPower()
+ 	advParam->txPower = 0;
     return IOTC_OK;
 }

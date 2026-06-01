@@ -21,6 +21,9 @@
 #include "iotc_svc_dev.h"
 #include "dev_info.h"
 #include "utils_common.h"
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
+#include "ble_adv.h"
+#endif
 
 #define ADV_NAME_MOULD "OH-AAAAABBBBB-XYYYYYNNNNMPP"
 #define UNREG_ADV_NAME_HEAD "Oh"
@@ -161,6 +164,15 @@ int32_t IotcOhGetBleAdvData(IotcAdptBleAdvData *advData)
         return IOTC_ERR_SECUREC_MEMCPY;
     }
     advData->advDataLen += len;
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
+ 	len = CustomAdvCopyToBuf(&advData->advData[advData->advDataLen],
+ 	    sizeof(advData->advData) - advData->advDataLen);
+ 	if (len < 0) {
+ 	    IOTC_LOGE("copy");
+ 	    return IOTC_ERR_SECUREC_MEMCPY;
+ 	}
+ 	advData->advDataLen += len;
+#endif
 
     len = 0;
     len = RspAdvCopyToBuf(&advData->rspData[advData->rspDataLen], sizeof(advData->rspData) - advData->rspDataLen);

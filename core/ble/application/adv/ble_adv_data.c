@@ -45,7 +45,11 @@
 #define CUSTOM_COMPANY_UUID 0xFDEE
 #define CUSTOM_ADV_VERSION 1
 #define NEARBY_EXTENSION_DEFAULT_VALUE 1
+#if IOTC_CONF_AILIFE_SUPPORT
 #define CUSTOM_ADV_PROID_LEN 4
+#else
+#define CUSTOM_ADV_PROID_LEN 5
+#endif
 #define CUSTOM_ADV_SN_LEN 2
 #define ONEHOP_TYPELIST_LEN 2
 
@@ -60,7 +64,11 @@ enum {
 };
 
 enum {
+#if IOTC_CONF_AILIFE_SUPPORT
     BUSINESS_BLE_NEARBY = 0x01, /* 蓝牙靠近发现业务 */
+#else
+    BUSINESS_BLE_NEARBY = 0x17, /* 行业生态设备靠近发现 */
+#endif
     BUSINESS_BLE_ONEHOP = 0x06, /* 蓝牙碰一碰业务 */
     BUSINESS_NFC_ONEHOP = 0x07, /* NFC碰一碰业务 */
 };
@@ -78,7 +86,11 @@ enum {
 enum {
     NEARBY_TYPE_SUB_PROID = 0x04,
     NEARBY_TYPE_ADV_POWER = 0x11,
+#if IOTC_CONF_AILIFE_SUPPORT
     NEARBY_TYPE_PROID = 0x12,
+#else
+    NEARBY_TYPE_PROID = 0x15, /* 软总线广播消息 */
+#endif
     NEARBY_TYPE_TRANSMIT = 0xFF,
 };
 
@@ -233,6 +245,17 @@ typedef struct {
 
 static BleSvcAdvDataType g_bleAdvType = IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL;
 static CustomAdvDataCb g_customAdvDataCb = NULL;
+static int8_t g_advTxPower = DEFAULT_ADV_TX_POWER;
+
+void BleSetAdvTxPower(int8_t power)
+{
+    g_advTxPower = power;
+}
+
+int8_t BleGetAdvTxPower(void)
+{
+ 	return g_advTxPower;
+}
 
 static BleSvcAdvDataType BleGetAdvType(void)
 {
@@ -275,7 +298,9 @@ static uint32_t GenCustomVersion(BleCustomAdvValue *value)
 static uint32_t GenBusiness(BleCustomAdvValue *value)
 {
     if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) ||
-        (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA)) {
+        (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA) ||
+ 	         /* IOTC_BLE_ADV_TYPE_CUSTOM 这里用来标识oh靠近发现广播 下同 */
+ 	         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
         value->business = BUSINESS_BLE_NEARBY;
     } else if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_HALF_MODAL) ||
                (BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_FA)) {
@@ -286,7 +311,8 @@ static uint32_t GenBusiness(BleCustomAdvValue *value)
 
 static uint32_t GenExtension(BleCustomAdvValue *value)
 {
-    if (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) {
+    if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) ||
+ 	         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
         value->extension.nearby.defaultValue = NEARBY_EXTENSION_DEFAULT_VALUE;
         value->extension.nearby.mode = NEARBY_EXTENSION_HALF_MODAL;
     } else if (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA) {
@@ -312,7 +338,7 @@ static uint32_t GenExtendNearbyBase(BleCustomAdvValue *value)
     value->extend.nearby.base.advPowerType = NEARBY_TYPE_ADV_POWER;
     if (ProductGetSurfacePower(&value->extend.nearby.base.advPower) != IOTC_OK) {
         IOTC_LOGN("set default power");
-        value->extend.nearby.base.advPower = DEFAULT_ADV_TX_POWER;
+        value->extend.nearby.base.advPower = g_advTxPower;
     }
     value->extend.nearby.base.proIdType = NEARBY_TYPE_PROID;
     if (memcpy_s(value->extend.nearby.base.proId, CUSTOM_ADV_PROID_LEN,
@@ -345,7 +371,11 @@ static void GetAdvProtocol(AdvProtocol *protocol)
                 protocol->mode = PROTOCOL_WIFI_NETCFG;
             }
         } else if (UtilsGetComboType() == COMBO_TYPE_BLE_ONLY) {
-            protocol->mode = PROTOCOL_BLE_ONLY_REG;
+#if !IOTC_CONF_AILIFE_SUPPORT
+ 	  	        protocol->mode = PROTOCOL_WIFI_NETCFG;
+#else
+ 	  	        protocol->mode = PROTOCOL_BLE_ONLY_REG;
+#endif
         }
     }
 }
@@ -393,7 +423,8 @@ static uint32_t GenExtendNearbyTransmitFa(BleCustomAdvValue *value)
 static uint32_t GenExtendNearby(BleCustomAdvValue *value)
 {
     uint32_t len = 0;
-    if (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) {
+    if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) ||
+ 	         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
         len += GenExtendNearbyBase(value);
         len += GenExtendNearbyTransmitHalfModal(value);
     } else if (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA) {
@@ -449,7 +480,9 @@ static uint32_t GetCustomAdvValue(BleCustomAdvValue *value)
     len += GenBusiness(value);
     len += GenExtension(value);
     if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_HALF_MODAL) ||
-        (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA)) {
+        (BleGetAdvType() == IOTC_BLE_ADV_TYPE_NEARBY_FA) ||
+ 	         (BleGetAdvType() == IOTC_BLE_ADV_TYPE_CUSTOM)) {
+ 	
         len += GenExtendNearby(value);
     } else if ((BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_HALF_MODAL) ||
                (BleGetAdvType() == IOTC_BLE_ADV_TYPE_ONEHOP_FA)) {
@@ -459,12 +492,20 @@ static uint32_t GetCustomAdvValue(BleCustomAdvValue *value)
     return len;
 }
 
-static int32_t CustomAdvCopyToBuf(uint8_t *out, uint32_t outSize)
+int32_t CustomAdvCopyToBuf(uint8_t *out, uint32_t outSize)
 {
+    if (out == NULL) {
+ 	    IOTC_LOGE("out is NULL");
+ 	    return IOTC_ERROR;
+ 	}
     BleCustomAdvStruct adv = {0};
     adv.type = ADV_TYPE_CUSTOM;
     uint32_t len = GetCustomAdvValue(&adv.value);
     adv.len = len + 1;
+    if (adv.len + 1 > outSize) {
+ 	    IOTC_LOGE("outSize is insufficient");
+ 	    return IOTC_ERROR;
+ 	}
     if (memcpy_s(out, outSize, &adv, adv.len + 1) != EOK) {
         IOTC_LOGE("memcpy_s");
         return IOTC_ERROR;
