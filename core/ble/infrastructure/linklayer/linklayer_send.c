@@ -74,7 +74,7 @@ int32_t LinkLayerSendBtPkg(const uint8_t *buff, uint32_t len)
         (void)memset_s(sendBuff, SINGLE_PKG_MAX_SIZE, 0, SINGLE_PKG_MAX_SIZE);
         uint32_t sendBuffLen = UTILS_MIN(SINGLE_PKG_MAX_SIZE, leftLen + PKG_HEAD_LEN);
 
-        ret = memcpy_s(sendBuff, (sizeof)sendBuffLen, buff, PKG_HEAD_LEN);
+        ret = memcpy_s(sendBuff, SINGLE_PKG_MAX_SIZE, buff, PKG_HEAD_LEN);
         CHECK_RETURN(ret == EOK, IOTC_ERR_SECUREC_MEMCPY);
         sendBuff[PKG_HEAD_PKGNUM_IDX] = pkgNum;
         /* i < pkgNum <= g_pkgMaxNum, which is uint8_t */

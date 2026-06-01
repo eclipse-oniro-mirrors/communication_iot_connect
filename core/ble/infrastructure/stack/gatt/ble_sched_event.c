@@ -292,8 +292,8 @@ static void BleSchedEventSourceMsgHandler(const uint8_t *msg, uint32_t len)
             break;
         }
     } while (0);
-    if (schedMsg->param != NULL && schedMsg->free != NULL) {
-        schedMsg->free(schedMsg->param);
+    if (schedMsg->param != NULL && schedMsg->freeFunc != NULL) {
+        schedMsg->freeFunc(schedMsg->param);
     }
 }
 
