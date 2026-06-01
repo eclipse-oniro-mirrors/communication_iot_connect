@@ -81,6 +81,14 @@ static int32_t OptionSetDevGetPincodeCallback(va_list args)
     return IOTC_OK;
 }
 
+static int32_t OptionSetDevGetCloudRegisterState(va_list args)
+{
+    IotcDevProfGetCloudRegisterState cb = va_arg(args, IotcDevProfGetCloudRegisterState);
+    CHECK_RETURN_LOGE(cb != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    SET_PRODUCT_CALLBACK_RETURN(cb, onProfGetCloudRegisterState);
+    return IOTC_OK;
+}
+
 static int32_t OptionSetDevGetAcKeyCallback(va_list args)
 {
     IotcDevProfGetAcKey cb = va_arg(args, IotcDevProfGetAcKey);
@@ -223,6 +231,7 @@ static const OptionItem DEVICE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_DEVICE_TRNG_CALLBACK, OptionSetDevTrngCallback },
     { IOTC_OH_OPTION_DEVICE_DEV_INFO, OptionSetDevInfo },
     { IOTC_OH_OPTION_DEVICE_SVC_INFO, OptionSetSvcInfo },
+    { IOTC_OH_OPTION_DEVICE_GET_CLOUD_REGISTER_STATE_CALLBACK, OptionSetDevGetCloudRegisterState},
 };
 
 static void EventBusStartDevSvcCallback(uint32_t event, void *param, uint32_t len)

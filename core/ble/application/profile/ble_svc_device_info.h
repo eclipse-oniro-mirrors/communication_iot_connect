@@ -17,12 +17,14 @@
 
 #include <stdint.h>
 #include "ble_linklayer.h"
+#include "iotc_json.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int32_t GetBleSvcDeviceInfo(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
+int32_t GetBleCustomSecDeviceInfo(IotcJson **outArray);
 
 #ifdef __cplusplus
 }

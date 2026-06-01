@@ -147,6 +147,8 @@ typedef struct {
 #define STR_JSON_FWV "fwv"
 #define STR_JSON_SWV "swv"
 #define STR_JSON_HWV "hwv"
+#define STR_JSON_UNIQUEID_ID "uniqueId"
+#define STR_JSON_CUSTOM_DATA "customData"
 #define STR_JSON_SVC_TYPE "st"
 #define STR_JSON_SVC_ID "sid"
 #define STR_JSON_DEVICE_DELAY "devicedelay"

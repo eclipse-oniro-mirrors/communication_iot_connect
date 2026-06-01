@@ -127,6 +127,20 @@ const char *ModelGetDevSwv(void);
  */
 int32_t ModelGetDevProtType(void);
 
+/**
+ * @brief 获取设备唯一标识
+ *
+ * @return 设备唯一标识
+*/
+const char *ModelGetDevUniqueId(void);
+ 	  
+/**
+ * @brief 获取厂家自定义数据
+ *
+ * @return 厂家自定义数据
+*/
+const char *ModelGetDevCustomData(void);
+
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len);
 
 #ifdef __cplusplus

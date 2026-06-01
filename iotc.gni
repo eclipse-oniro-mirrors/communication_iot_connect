@@ -26,6 +26,12 @@ declare_args() {
   iot_connect_mbedtls_v2_support = false
   iot_connect_mbedtls_psk_support = false
   iot_connect_mbedtls_ccm_support = false
+  #是否支持OH靠近发现广播数据更新
+  iot_connect_ble_adv_update_support = false
+  #是否支持iotc数据保存
+  iot_connect_kv_support = true
+  #控制发OH靠近发现广播的发出             
+  iot_connect_oh_nearlink_support = false
 }
 
 if (defined(ohos_lite)) {

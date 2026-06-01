@@ -54,6 +54,8 @@ typedef struct {
     const char *fwv;
     const char *hwv;
     const char *swv;
+    const char *uniqueId;
+    const char *customData;
     int8_t protType;
 } IotcDeviceInfo;
 
@@ -71,6 +73,11 @@ typedef struct {
     const char *msgId;
     #endif
 } IotcCharState;
+
+typedef enum {
+    IOTC_OH_CLOUD_UNREGISTER,
+    IOTC_OH_CLOUD_REGISTER
+} IotcOhCloudRegisterState;
 
 #ifdef __cplusplus
 }

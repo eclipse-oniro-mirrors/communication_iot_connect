@@ -50,6 +50,8 @@ static int32_t BuildDeviceInfo(IotcJson *root)
         {STR_JSON_SWV, ModelGetDevSwv()},
         {STR_JSON_PROT_TYPE, protTypeBuf},
         {STR_JSON_SUB_PROD_ID, ModelGetDevSubProId()},
+        {STR_JSON_UNIQUEID_ID, ModelGetDevUniqueId()},
+        {STR_JSON_CUSTOM_DATA, ModelGetDevCustomData()},
     };
 
     ret = UtilsJsonAddStrTable(root, strItem, ARRAY_SIZE(strItem));
@@ -142,6 +144,75 @@ int32_t GetBleSvcDeviceInfo(const BtCmdParam *param, uint8_t **out, uint32_t *ou
         ret = IOTC_OK;
     } while (false);
     IotcJsonDelete(root);
+
+    return ret;
+}
+ 	 
+static int32_t BuildCustomSecDataDevInfoAll(IotcJson *array)
+{
+    if (array == NULL) {
+        return IOTC_ERR_INVALID_PARAM;
+    }
+    IotcJson *rootData = IotcJsonCreate();
+    if (rootData == NULL) {
+        IOTC_LOGE("create err");
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+    IotcJson *dataObj = IotcJsonCreate();
+    if (dataObj == NULL) {
+        IotcJsonDelete(rootData);
+        IOTC_LOGE("create err");
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+    if (IotcJsonAddItem2Array(array, rootData) != IOTC_OK) {
+        IOTC_LOGE("add Item err");
+        IotcJsonDelete(dataObj);
+        IotcJsonDelete(rootData);
+        return IOTC_ADAPTER_JSON_ERR_ADD;
+    }
+    if (IotcJsonAddStr2Obj(rootData, STR_JSON_SID, STR_JSON_DEVICE_INFO) != IOTC_OK) {
+        IOTC_LOGE("add str err");
+        IotcJsonDelete(dataObj);
+        IotcJsonDelete(rootData);
+        return IOTC_ADAPTER_JSON_ERR_ADD;
+    }
+    int32_t ret = BuildDeviceInfo(dataObj);
+    if (ret != 0) {
+        IotcJsonDelete(dataObj);
+        IotcJsonDelete(rootData);
+        IOTC_LOGE("build devinfo err, ret = %d", ret);
+        return ret;
+    }
+    if (IotcJsonAddItem2Obj(rootData, STR_JSON_DATA, dataObj) != IOTC_OK) {
+        IotcJsonDelete(dataObj);
+        IotcJsonDelete(rootData);
+        IOTC_LOGE("add Item err");
+        return IOTC_ADAPTER_JSON_ERR_ADD;
+    }
+ 	     
+    return IOTC_OK;
+}
+ 	 
+int32_t GetBleCustomSecDeviceInfo(IotcJson **outArray)
+{
+    CHECK_RETURN_LOGW((outArray != NULL) && (*outArray == NULL), IOTC_ERR_PARAM_INVALID, "invalid param");
+ 	 
+    IotcJson *root = IotcJsonCreateArray();
+    if (root == NULL) {
+        IOTC_LOGE("create err");
+        return IOTC_ADAPTER_JSON_ERR_CREATE;
+    }
+    int32_t ret;
+    do {
+        ret = BuildCustomSecDataDevInfoAll(root);
+        if (ret != IOTC_OK) {
+            IotcJsonDelete(root);
+            IOTC_LOGE("build err ret=%d", ret);
+            break;
+        }
+        *outArray = root;
+        ret = IOTC_OK;
+    } while (false);
 
     return ret;
 }

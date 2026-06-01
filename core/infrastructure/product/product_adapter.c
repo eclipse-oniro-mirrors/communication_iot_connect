@@ -29,6 +29,7 @@ typedef int32_t (*GetSurfacePowerCallback)(int8_t *power);
 typedef int32_t (*ProfGetCharStateCallback)(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num);
 typedef int32_t (*ProfReportAllCallback)(void);
 typedef int32_t (*ProfGetPincodeCallback)(uint8_t *buf, uint32_t bufLen);
+typedef int32_t (*ProfGetCloudRegisterState)(IotcOhCloudRegisterState *state);
 typedef int32_t (*ProfGetAcKeyCallback)(uint8_t *buf, uint32_t bufLen);
 typedef void (*ProfFreeCallback)(void *ptr);
 typedef int32_t (*DevRebootCallback)(int32_t res);
@@ -81,6 +82,7 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfFree);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onDevReboot);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onDevTrng);
+    HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetCloudRegisterState);
     UtilsGlobalMutexUnlock();
 
     return IOTC_OK;
@@ -255,6 +257,18 @@ int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen)
     int32_t ret = cb(buf, bufLen);
     if (ret != IOTC_OK) {
         IOTC_LOGW("get pin error %d", ret);
+    }
+    return ret;
+}
+
+int32_t ProductProfGetCloudRegisterState(IotcOhCloudRegisterState *state)
+{
+    CHECK_RETURN_LOGW(state != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    ProfGetCloudRegisterState cb;
+    GET_PRODUCT_CALLBACK_RETURN(cb, g_hooks, onProfGetCloudRegisterState);
+    int32_t ret = cb(state);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("get GetCloudRegisterState error %d", ret);
     }
     return ret;
 }
