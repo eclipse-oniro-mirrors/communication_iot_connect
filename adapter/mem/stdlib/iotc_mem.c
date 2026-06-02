@@ -16,9 +16,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define IOTC_MAX_MALLOC_SIZE  (2 * 1024 * 1024)
+
 void *IotcMalloc(uint32_t size)
 {
     if (size == 0) {
+        return NULL;
+    }
+    if (size > IOTC_MAX_MALLOC_SIZE) {
         return NULL;
     }
     return malloc(size);
@@ -30,6 +35,9 @@ void *IotcCalloc(uint32_t num, uint32_t size)
         return NULL;
     }
 
+    if (size > IOTC_MAX_MALLOC_SIZE || num > IOTC_MAX_MALLOC_SIZE / size) {
+        return NULL;
+    }
     return calloc(num, size);
 }
 

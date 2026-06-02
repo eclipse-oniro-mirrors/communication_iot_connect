@@ -599,7 +599,9 @@ static void FdIsSet(IotcFdSet *set, fd_set *fdSet)
 int32_t IotcSelect(IotcFdSet *readSet, IotcFdSet *writeSet, IotcFdSet *exceptSet, uint32_t ms)
 {
     int32_t maxFd = -1;
-    fd_set read, write, except;
+    fd_set read;
+    fd_set write;
+    fd_set except;
     GetFdSet(readSet, &read, &maxFd);
     GetFdSet(writeSet, &write, &maxFd);
     GetFdSet(exceptSet, &except, &maxFd);

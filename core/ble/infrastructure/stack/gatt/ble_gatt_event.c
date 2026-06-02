@@ -118,7 +118,7 @@ static int32_t BleGattEventHandler(IotcAdptBleGattEvent gattEvent, const IotcAdp
         BleSchedMsg msg;
         msg.event = EVENT_COVERT_MAP[i].scheduleEvent;
         msg.param = eventParam;
-        msg.free = EVENT_COVERT_MAP[i].msgFree;
+        msg.freeFunc = EVENT_COVERT_MAP[i].msgFree;
         int32_t ret = BleSchedMsgQueueSend(&msg, 0);
         if (ret != IOTC_OK) {
             IotcFree(eventParam);
@@ -166,7 +166,7 @@ int32_t IotcBleSendIndicateData(const char *svcUuid, const char *charUuid,
     BleSchedMsg msg;
     msg.event = BLE_EVENT_SEND_INDICATE;
     msg.param = param;
-    msg.free = BleSendIndicateDataFree;
+    msg.freeFunc = BleSendIndicateDataFree;
     int32_t ret = BleSchedMsgQueueSend(&msg, 0);
     if (ret != IOTC_OK) {
         IotcFree(param->value);

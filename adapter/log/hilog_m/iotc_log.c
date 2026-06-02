@@ -19,6 +19,7 @@ void IotcLogOutputImpl(uint8_t level, const char *fileName,
     const char *funcName, uint32_t line, const char *fmt, ...)
 {
     const char *tag[6] = {"IC_FATAL", "IC_ERROR", "IC_WARN", "IC_NOTICE", "IC_INFO", "IC_DEBUG"};
+    (void)fmt;
     if (funcName != NULL) {
         printf("%s:%s:%u, ", tag[level - 1], funcName, line);
     } else {

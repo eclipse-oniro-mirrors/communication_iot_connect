@@ -536,7 +536,7 @@ static int32_t GenNegoHmac(const uint8_t *hmacKey, const uint8_t challenge1[CHAL
     const uint8_t challenge2[CHALLENGE_LEN], uint8_t *output, uint32_t outputLen)
 {
     uint8_t challenge[CHALLENGE_LEN + CHALLENGE_LEN] = { 0 };
-    int32_t ret = memcpy_s(challenge, CHALLENGE_LEN, challenge1, CHALLENGE_LEN);
+    int32_t ret = memcpy_s(challenge, sizeof(challenge), challenge1, CHALLENGE_LEN);
     if (ret != EOK) {
         return IOTC_ERR_SECUREC_MEMCPY;
     }

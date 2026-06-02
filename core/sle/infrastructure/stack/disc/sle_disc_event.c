@@ -118,7 +118,7 @@ static int32_t SleAnnounceSeekEventHandler(
         SleSchedMsg msg;
         msg.event = EVENT_COVERT_MAP[i].scheduleEvent;
         msg.param = eventParam;
-        msg.free = EVENT_COVERT_MAP[i].msgFree;
+        msg.freeFunc = EVENT_COVERT_MAP[i].msgFree;
         int32_t ret = SleSchedMsgQueueSend(&msg, 0);
         if (ret != IOTC_OK) {
             IotcFree(eventParam);
