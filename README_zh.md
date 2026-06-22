@@ -301,14 +301,14 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 - BLE&WiFi Combo场景需要将iot_connect_ble_support和iot_connect_wifi_support两个宏配置为true。
 - release场景，IOTC_CONF_LOG_BUILD_LEVEL设为1。
 
-### 内存信息：
+### 内存信息
 
 | **场景**         | **ROM** | **RAM** |
 | -------------- | ------- | ------- |
 | BLE            | 70KB    | 13KB    |
 | BLE&WiFi Combo | 130KB   | 25KB    |
 
-<center>表2 内存信息</center>
+表2 内存信息
 
 ### 编译
 
