@@ -299,7 +299,7 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 根据场景分为BLE only和BLE&WiFi Combo两类。
 - BLE only场景只需要将iot_connect_ble_support宏的值配置为true。
 - BLE&WiFi Combo场景需要将iot_connect_ble_support和iot_connect_wifi_support两个宏配置为true。
-- 非bebug场景，IOTC_CONF_LOG_BUILD_LEVEL设为1。
+- release场景，IOTC_CONF_LOG_BUILD_LEVEL设为1。
 
 ### 内存信息：
 
