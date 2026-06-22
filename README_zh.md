@@ -28,7 +28,7 @@ IoT Connect组件是专为OpenHarmony资源受限的mini级设备所构建的一
 | -------- | -------------------------------- | ---------------------------------------------------------------------------------------- |
 | IF1.1    | BLE Adv 广播<br>JSON Over BLE GATT | 通用互联APP与BLE设备通信接口，用于设备发现、连接、配网、BLE直连控制。                                                  |
 | IF2.1    | Coap Over TLS <br>Coap Over TCP  | 资源不受限场景下WiFi设备与云端通信接口，用于设备注册、登录、控制，消息需要传输层加密。资源受限场景下WiFi设备与云端通信接口，用于设备注册、登录、控制，消息需要应用层加密 |
-| IF3.1    | HTTPS MQTT                       | 通用互联APP与云端通信接口。云端向通用互联APP推送消息接口                                                          |
+| IF3    | HTTPS MQTT                       | 通用互联APP与云端通信接口。云端向通用互联APP推送消息接口                                                          |
 
 <div align="center">
 表1 统一互联联动与控制组网图接口说明
@@ -297,17 +297,18 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 ### 裁剪指导
 
 根据场景分为BLE only和BLE&WiFi Combo两类。
-BLE only场景只需要将iot_connect_ble_support宏的值配置为true。
-BLE&WiFi Combo场景需要将iot_connect_ble_support和iot_connect_wifi_support两个宏配置为true
+- BLE only场景只需要将iot_connect_ble_support宏的值配置为true。
+- BLE&WiFi Combo场景需要将iot_connect_ble_support和iot_connect_wifi_support两个宏配置为true。
+- release场景，IOTC_CONF_LOG_BUILD_LEVEL设为1。
 
-### 内存信息：
+### 内存信息
 
 | **场景**         | **ROM** | **RAM** |
 | -------------- | ------- | ------- |
 | BLE            | 70KB    | 13KB    |
 | BLE&WiFi Combo | 130KB   | 25KB    |
 
-<center>表2 内存信息</center>
+表2 内存信息
 
 ### 编译
 
