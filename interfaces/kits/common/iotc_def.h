@@ -14,6 +14,8 @@
  */
 #ifndef IOTC_DEFINE_H
 #define IOTC_DEFINE_H
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
