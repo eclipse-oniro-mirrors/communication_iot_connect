@@ -318,20 +318,14 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 
 ### 裁剪指导
 
-根据场景分为BLE only和BLE&WiFi Combo两类。
+| 场景                        | 宏/gn 变量                                                                                                                                                                                | ROM   | RAM  |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---- |
+| BLE & WiFi Combo          | iot_connect_wifi_support设置为true，iot_connect_ble_support 设置为true，    IOTC_CONF_LOG_BUILD_LEVEL设置为 1                                                                                     | 130KB | 25KB |
+| BLE only                  | iot_connect_wifi_support设置为false，   iot_connect_ble_support 设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为1                                                                                    | 70KB  | 13KB |
+| BLE only +去除配网功能          | iot_connect_wifi_support设置为 false，  iot_connect_ble_support设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为1，  iotc_connect_ble_net_cfg_support设置为false                                          | 70KB  | 12KB |
+| BLE only + 去除配网功能 + 去除看门狗 | iot_connect_wifi_support设置为 false，  iot_connect_ble_support 设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为 1，  iotc_connect_ble_net_cfg_support设为false，  iotc_connect_device_watch_dog设置为false | 70KB  | 11KB |
 
-- BLE only场景只需要将iot_connect_ble_support宏的值配置为true。
-- BLE&WiFi Combo场景需要将iot_connect_ble_support和iot_connect_wifi_support两个宏配置为true。
-- release场景，IOTC_CONF_LOG_BUILD_LEVEL设为1。
-
-### 内存信息
-
-| **场景**         | **ROM** | **RAM** |
-| -------------- | ------- | ------- |
-| BLE            | 70KB    | 13KB    |
-| BLE&WiFi Combo | 130KB   | 25KB    |
-
-表2 内存信息
+<center>表2 内存信息</center>
 
 ### 编译
 
