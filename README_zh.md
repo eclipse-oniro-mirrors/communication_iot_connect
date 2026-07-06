@@ -318,6 +318,8 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 
 ### 裁剪指导
 
+目前可按照以下场景和特性进行裁剪，后续会持续细化特性（比如安全、消息上报等）提供可裁剪能力，用户按需组合能力。
+
 | 场景                        | 宏/gn 变量                                                                                                                                                                                                                          | ROM   | RAM    |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
 | BLE & WiFi Combo          | iot_connect_wifi_support设置为true，iot_connect_ble_support 设置为true，    IOTC_CONF_LOG_BUILD_LEVEL设置为 1                                                                                                                               | 130KB | 25KB   |
@@ -326,6 +328,8 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 | BLE only + 去除配网功能 + 去除看门狗 | iot_connect_wifi_support设置为 false，  iotc_connect_wifi_cloud_support设置为false，  iot_connect_ble_support 设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为 1，  iotc_connect_ble_net_cfg_support设为false，  iotc_connect_device_watch_dog设置为false | 70KB  | 11.5KB |
 
 <center>表2 内存信息</center>
+
+### 
 
 ### 编译
 
