@@ -87,11 +87,13 @@ int32_t PutBleSvcNetCfg(const BtCmdParam *param, uint8_t **out, uint32_t *outLen
     *out = NULL;
     *outLen = 0;
     int32_t ret = ProductRecvNetCfgInfo((const char *)param->request, param->requestLen);
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
     if (ret == IOTC_ERR_CALLBACK_NULL) {
         ret = NetCfgProcessFromString((const char *)param->request, param->requestLen);
         (void)SendBleNetCfgMsg((const char *)param->request, param->requestLen);
         IOTC_LOGN("net info process inside %d", ret);
     }
+#endif
     if (ret != IOTC_OK) {
         IOTC_LOGW("recv net info error %d", ret);
     }

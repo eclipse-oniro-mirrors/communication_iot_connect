@@ -27,8 +27,6 @@ int32_t ConfigSaveLoginInfo(const DevLoginInfo *info);
 
 int32_t ConfigGetLoginInfo(DevLoginInfo *info);
 
-bool IsDeviceBinded(void);
-
 int32_t ConfigClearLoginInfo(void);
 
 #ifdef __cplusplus

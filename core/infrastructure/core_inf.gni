@@ -36,9 +36,7 @@ iotc_core_infrastructure_inc = [
 
 iotc_core_infrastructure_src = [
   "$iotc_core_path/infrastructure/DFx/dfx_anonymize.c",
-  "$iotc_core_path/infrastructure/DFx/dfx_watch_dog.c",
   "$iotc_core_path/infrastructure/service/iotc_svc_dev.c",
-  "$iotc_core_path/infrastructure/service/iotc_svc_conn.c",
   "$iotc_core_path/infrastructure/service/iotc_svc_ble.c",
   "$iotc_core_path/infrastructure/frameworks/event_bus/event_bus.c",
   "$iotc_core_path/infrastructure/frameworks/event_bus/event_bus_public.c",
@@ -86,9 +84,21 @@ iotc_core_infrastructure_src = [
   "$iotc_core_path/infrastructure/product/product_adapter.c",
 ]
 
+if(iot_connect_wifi_support) {
+  iotc_core_infrastructure_src += [
+    "$iotc_core_path/infrastructure/service/iotc_svc_conn.c",
+  ]
+}
+
 if(iot_connect_sle_support) {
   iotc_core_infrastructure_src += [
     "$iotc_core_path/infrastructure/service/iotc_svc_sle.c",
+  ]
+}
+
+if(iotc_connect_device_watch_dog_support) {
+  iotc_core_infrastructure_src += [
+    "$iotc_core_path/infrastructure/DFx/dfx_watch_dog.c",
   ]
 }
 

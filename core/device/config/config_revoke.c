@@ -24,11 +24,14 @@
 
 static void RevokeEventConfigCallback(uint32_t event, void *param, uint32_t len)
 {
+    int32_t ret = IOTC_ERROR;
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
     /* After the cloud function is complete, add the factory reset flag */
-    int32_t ret = ConfigClearRegisterInfo();
+    ret = ConfigClearRegisterInfo();
     if (ret != IOTC_OK) {
         IOTC_LOGW("clear register info error %d", ret);
     }
+#endif
 #if IOTC_CONF_KV_SUPPORT
     if (UtilsGetComboType() == COMBO_TYPE_BLE_ONLY) {
         ret = ConfigClearAuthInfo();

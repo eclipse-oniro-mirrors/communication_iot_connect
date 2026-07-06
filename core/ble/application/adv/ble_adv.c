@@ -41,6 +41,7 @@ static int32_t AiLifeBleGetAdvInfoCallback(IotcAdptBleAdvParam *advPara, IotcAdp
     return IOTC_OK;
 }
 
+#if defined(IOTC_CONF_BLE_SUPPORT) && defined(IOTC_CONF_WIFI_SUPPORT)
 static void AdvUpdateEventBusCallback(uint32_t event, void *param, uint32_t len)
 {
     NOT_USED(event);
@@ -68,14 +69,17 @@ static bool AdvUpdateEventMatchFunc(uint32_t event)
     }
     return false;
 }
+#endif
 
 int32_t BleAdvInit(void)
 {
+#if defined(IOTC_CONF_BLE_SUPPORT) && defined(IOTC_CONF_WIFI_SUPPORT)
     int32_t ret = EventBusSubscribeMatch(AdvUpdateEventBusCallback, AdvUpdateEventMatchFunc);
     if (ret != IOTC_OK) {
         IOTC_LOGW("sub adv update event error %d", ret);
         return ret;
     }
+#endif
     return BleRegAdvAdvInfoCallback(AiLifeBleGetAdvInfoCallback);
 }
 

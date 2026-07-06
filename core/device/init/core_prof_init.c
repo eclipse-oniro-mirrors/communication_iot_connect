@@ -29,13 +29,20 @@
 #include "security_random.h"
 
 static int32_t RegkeyHook(void);
+
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
 static int32_t WatchDogRebootInit(void);
+#endif
 
 static const FwkInitUnit CORE_PROFILE[] = {
     {FWK_INIT_LVL_DEP, "report", ProfileReportInit, ProfileReportDeinit},
     {FWK_INIT_LVL_DEP, "key_hook", RegkeyHook, NULL},
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
     {FWK_INIT_LVL_DEP, "reboot_hook", WatchDogRebootInit, NULL},
+#endif
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
     {FWK_INIT_LVL_DEP, "reg_info", ConfigClearRegisterInfo, NULL},
+#endif
     {FWK_INIT_LVL_FWK, "config_revoke", ConfigRevokeInit, ConfigRevokeDeinit},
     {FWK_INIT_LVL_FWK, "device_service", DeviceServiceInit, DeviceServiceDeinit},
 };
@@ -51,6 +58,7 @@ static int32_t RegkeyHook(void)
     return IOTC_OK;
 }
 
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
 static void WatchDogTimeoutHandler(void)
 {
     int32_t ret = ProductDevReboot(IOTC_REBOOT_WATCH_DOG_TIMEOUT);
@@ -64,6 +72,7 @@ static int32_t WatchDogRebootInit(void)
     DfxWatchDogRegCommTimeoutHandler(WatchDogTimeoutHandler);
     return IOTC_OK;
 }
+#endif
 
 int32_t CoreDeviceRegisterInitUnit(void)
 {

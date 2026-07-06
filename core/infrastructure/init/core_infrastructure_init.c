@@ -38,7 +38,9 @@ static const FwkInitUnit CORE_COMM[] = {
     {FWK_INIT_LVL_DEP, "event_pub", IotcPublicEventListenerInit, IotcPublicEventListenerDeinit},
     {FWK_INIT_LVL_DEP, "random", SecurityRandomInit, SecurityRandomDeinit},
     {FWK_INIT_LVL_DEP, "service", ServiceManagerInit, ServiceManagerDeinit},
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
     {FWK_INIT_LVL_DEP, "watch_dog", DfxWatchDogInit, DfxWatchDogDeinit},
+#endif
     {FWK_INIT_LVL_DEP, "sched_executor", SchedAsyncExecutorInit, SchedAsyncExecutorDeinit},
     {FWK_INIT_LVL_DEP, "sched_event_loop", SchedEventLoopInit, SchedEventLoopDeinit},
     {FWK_INIT_LVL_DEP, "sched_timer", SchedTimerInit, SchedTimerDeinit},

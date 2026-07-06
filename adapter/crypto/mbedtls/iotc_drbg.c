@@ -25,7 +25,6 @@
 typedef struct {
     IotcTrngCallback trng;
     mbedtls_ctr_drbg_context drbg;
-    mbedtls_entropy_context entropy;
 } DrbgContext;
 
 /* 此函数为注册到mbedtls的熵源回调函数，按照mbedtls_entropy_f_source_ptr的定义进行实现 */
@@ -63,12 +62,14 @@ IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
     ctx->trng = trng;
     int32_t ret;
 
-    do {
-        mbedtls_entropy_init(&ctx->entropy);
-        mbedtls_ctr_drbg_init(&ctx->drbg);
+    // 熵池仅栈临时使用，有无TRNG都只在初始化阶段存在
+    mbedtls_entropy_context tmp_entropy;
+    mbedtls_entropy_init(&tmp_entropy);
+    mbedtls_ctr_drbg_init(&ctx->drbg);
 
+    do {
         if (trng != NULL) {
-            ret = mbedtls_entropy_add_source(&ctx->entropy, MbedtlsEntropySourceCallback,
+            ret = mbedtls_entropy_add_source(&tmp_entropy, MbedtlsEntropySourceCallback,
                 /* at least get 4 byte random epr invoke */
                 ctx, 4, MBEDTLS_ENTROPY_SOURCE_STRONG);
             if (ret != 0) {
@@ -77,17 +78,23 @@ IotcDrbgContext *IotcDrbgInit(const char *custom, IotcTrngCallback trng)
             }
         }
 
-        ret = mbedtls_ctr_drbg_seed(&ctx->drbg, mbedtls_entropy_func, &ctx->entropy,
+        ret = mbedtls_ctr_drbg_seed(&ctx->drbg, mbedtls_entropy_func, &tmp_entropy,
             (const unsigned char *)custom, custom == NULL ? 0 : strlen(custom));
         if (ret != 0) {
             IOTC_LOGW("seed error [-0x%04x]", -ret);
             break;
         }
 
+        // 销毁临时熵池，擦除敏感熵数据，栈内存自动回收
+        mbedtls_entropy_free(&tmp_entropy);
+        (void)memset_s(&tmp_entropy, sizeof(tmp_entropy), 0, sizeof(tmp_entropy));
+
         mbedtls_ctr_drbg_set_prediction_resistance(&ctx->drbg, MBEDTLS_CTR_DRBG_PR_OFF);
         return ctx;
     } while (0);
 
+    mbedtls_entropy_free(&tmp_entropy);
+    (void)memset_s(&tmp_entropy, sizeof(tmp_entropy), 0, sizeof(tmp_entropy));
     IotcDrbgDeinit(ctx);
     return NULL;
 }
@@ -98,7 +105,6 @@ void IotcDrbgDeinit(IotcDrbgContext *ctx)
         return;
     }
 
-    mbedtls_entropy_free(&((DrbgContext *)ctx)->entropy);
     mbedtls_ctr_drbg_free(&((DrbgContext *)ctx)->drbg);
     IotcFree(ctx);
 }

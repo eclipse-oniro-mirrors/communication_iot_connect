@@ -128,6 +128,19 @@ void SpekeFreeSession(SpekeSession *session)
     IotcFree(session);
 }
 
+void SpekeFreeNegoContext(SpekeSession *session)
+{
+    if (session == NULL) {
+        IOTC_LOGW("session double free");
+        return;
+    }
+
+    if (session->negoContext != NULL) {
+        NegoContextFree(session->negoContext);
+        session->negoContext = NULL;
+    }
+}
+
 int32_t SpekeStartSession(const SpekeSession *session, uint8_t **msg, uint32_t *len)
 {
     if ((session == NULL) || (msg == NULL) || (len == NULL)) {

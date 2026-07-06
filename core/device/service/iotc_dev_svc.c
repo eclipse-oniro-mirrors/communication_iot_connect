@@ -120,6 +120,7 @@ static DevBindStatus GetBindStatus(void)
     return DEV_BIND_STATUS_BIND;
 }
 
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
 static int32_t GetRegisterInfo(bool *isExist, DevRegInfo *info)
 {
     CHECK_RETURN_LOGW(isExist != NULL && info != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -141,6 +142,7 @@ static int32_t GetLoginInfo(bool *isExist, DevLoginInfo *info)
     *isExist = true;
     return ConfigGetLoginInfo(info);
 }
+#endif
 
 static int32_t GetAuthInfo(bool *isExist, DevAuthInfo *info)
 {
@@ -160,12 +162,10 @@ int32_t DeviceServiceInit(void)
         .onStop = DeviceServiceStop,
         .onReset = NULL,
     };
-
     int32_t msgs[DEVICE_SERVICE_MSG_ID_MAX] = {0};
     for (uint32_t i = 0 ; i < DEVICE_SERVICE_MSG_ID_MAX; ++i) {
         msgs[i] = i;
     }
-
     static const DevSvcApi DEVICE_SERVICE_API = {
         .onReportAll = DeviceControlReportAll,
         .onReportByDevId = DeviceControlReportByDevId,
@@ -173,18 +173,19 @@ int32_t DeviceServiceInit(void)
         .onPutChar = DeviceControlPutCharStates,
         .onReportChar = ProfileReportCharState,
         .onGetBindStatus = GetBindStatus,
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
         .onGetLoginInfo = GetLoginInfo,
         .onGetRegInfo = GetRegisterInfo,
-        .onGetAuthInfo = GetAuthInfo,
         .onRecvBindInfo = DeviceServiceRecvBindingInfo,
-        .onRecvAuthInfo = DeviceServiceRecvAuthInfo,
         .onRecvLoginInfo = DeviceServiceRecvLoginInfo,
         .onCleanLoginInfo = ConfigClearLoginInfo,
+#endif
+        .onGetAuthInfo = GetAuthInfo,
+        .onRecvAuthInfo = DeviceServiceRecvAuthInfo,
         .onCleanRevokeFlag = ClearRevokeFlag,
         .onGetOnlineStatus = ConfigGetOnlineStatus,
         .onSetOnlineStatus = ConfigSetOnlineStatus,
     };
-
     ServiceInstance instance = {
         .serviceId = IOTC_SERVICE_ID_DEVICE,
         .name = DEVICE_SERVICE_NAME,
@@ -193,7 +194,6 @@ int32_t DeviceServiceInit(void)
         .msgIds = msgs,
         .apiHandler = &DEVICE_SERVICE_API,
     };
-
     int32_t ret = ServiceManagerRegisterInstance(&instance);
     if (ret != IOTC_OK) {
         IOTC_LOGE("reg device service instance error %d", ret);
