@@ -80,18 +80,6 @@ int32_t ConfigGetLoginInfo(DevLoginInfo *info)
     return IOTC_OK;
 }
 
-bool IsDeviceBinded(void)
-{
-    char devId[DEVICE_ID_MAX_STR_LEN + 1];
-    uint32_t len = sizeof(devId);
-    int32_t ret = ConfigInfoGet(CONFIG_INFO_KEY_DEVICE_ID, (uint8_t *)devId, &len);
-    if (ret != IOTC_OK) {
-        IOTC_LOGW("get devid error %d", ret);
-        return false;
-    }
-    return !UtilsIsEmptyStr(devId);
-}
-
 int32_t ConfigClearLoginInfo(void)
 {
     ConfigInfoKey loginKeys[] = {

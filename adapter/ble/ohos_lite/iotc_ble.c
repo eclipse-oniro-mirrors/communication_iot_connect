@@ -32,8 +32,6 @@ typedef struct {
     bool has;
     int32_t status;
     int32_t serverId;
-    char uuid[UUID_STR_BUF_MAX_LEN];
-    uint8_t uuidLen;
 } RegGattAppResult;
 
 static int32_t g_advId = INVALID_ADV_ID;

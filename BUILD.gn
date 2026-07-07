@@ -22,6 +22,14 @@ iotc_src = iotc_adapter_src + iotc_core_src + iotc_sdk_src
 iotc_def = iotc_adapter_def + iotc_core_def + iotc_sdk_def
 iotc_dep = iotc_adapter_dep
 
+if (iotc_connect_ble_net_cfg_support) {
+  iotc_def += ["IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT=true"]
+}
+
+if (iotc_connect_wifi_cloud_support) {
+  iotc_def += ["IOTC_CONNECT_WIFI_CLOUD_SUPPORT=true"]
+}
+
 iotc_inc += [
   "$iotc_interface_path/kits/common",
   "$iotc_interface_path/kits/oh_connect",

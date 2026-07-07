@@ -94,6 +94,13 @@ int32_t SpekeProcessPacket(SpekeSession *session, const char *requestPayload, ui
 void SpekeFreeSession(SpekeSession *session);
 
 /**
+ * @brief 释放SPEKE的NegoContext
+ *
+ * @param session [IN] 会话
+ */
+void SpekeFreeNegoContext(SpekeSession *session);
+
+/**
  * @brief 解密收到的业务数据
  *
  * @param session [IN] 会话

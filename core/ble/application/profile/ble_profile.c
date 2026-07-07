@@ -38,8 +38,10 @@
 #define BLE_SVC_CUSTOM_SEC_DATA_IDX 79
 
 static const BtSvcInfo g_svcInfoTab[] = {
+#ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     {.svcIdx = BLE_SVC_NET_CFG_VER_IDX, .service = BLE_SVC_NET_CFG_VER, .suppEncType = ENC_SUPP_PLAIN,
         .getFunc = GetBleSvcNetCfgVer, .putFunc = NULL},
+#endif
     {.svcIdx = BLE_SVC_DEVICE_INFO_IDX, .service = BLE_SVC_DEVICE_INFO, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,
         .getFunc = GetBleSvcDeviceInfo, .putFunc = NULL},
     {.svcIdx = BLE_SVC_AUTH_SETUP_IDX, .service = BLE_SVC_AUTH_SETUP, .suppEncType = ENC_SUPP_SPEKE,
@@ -48,8 +50,10 @@ static const BtSvcInfo g_svcInfoTab[] = {
         .getFunc = NULL, .putFunc = PutBleSvcClearDevRegInfo},
     {.svcIdx = BLE_SVC_SPEKE_IDX, .service = BLE_SVC_SPEKE, .suppEncType = ENC_SUPP_PLAIN,
         .getFunc = NULL, .putFunc = PutBleSvcSpeke},
+#ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     {.svcIdx = BLE_SVC_NETCFG_IDX, .service = BLE_SVC_NETCFG, .suppEncType = ENC_SUPP_SPEKE,
         .getFunc = NULL, .putFunc = PutBleSvcNetCfg},
+#endif
     {.svcIdx = BLE_SVC_CREATE_SESSION_IDX, .service = BLE_SVC_CREATE_SESSION, .suppEncType = ENC_SUPP_PLAIN,
         .getFunc = GetBleSvcCreateSession, .putFunc = NULL},
     {.svcIdx = BLE_SVC_CUSTOM_SEC_DATA_IDX, .service = BLE_SVC_CUSTOM_SEC_DATA, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,

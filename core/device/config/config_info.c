@@ -23,8 +23,10 @@
 #include "iotc_store_key.h"
 
 #define STORE_DATA_VER 1
-#define STORE_DATA_INFO_V1_RSV_LEN 1703
-#define STORE_DATA_INFO_V1_LEN 2048
+
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
+#define STORE_DATA_INFO_V1_RSV_LEN 167
+#define STORE_DATA_INFO_V1_LEN 512
 
 typedef struct {
     uint8_t ver;
@@ -34,14 +36,28 @@ typedef struct {
     uint8_t psk[CLOUD_PSK_MAX_LEN];
     char url[CLOUD_MAX_URL_LEN + 1];
     char backupUrl[CLOUD_MAX_URL_LEN + 1];
-    /* ble */
     char uidHash[BLE_UID_HASH_LEN + 1];
     char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
     uint8_t authCode[BLE_AUTHCODE_LEN];
-    /* 预留空间，保证结构体大小为2048，新增成员只能从预留空间中分配 */
     uint8_t netInfoFlag;
     uint8_t rsv[STORE_DATA_INFO_V1_RSV_LEN];
 } StoreDataInfoV1;
+#else
+#define STORE_DATA_INFO_V1_RSV_LEN 98
+#define STORE_DATA_INFO_V1_LEN 256
+
+typedef struct {
+    uint8_t ver;
+    uint8_t revokeFlag;
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    char uidHash[BLE_UID_HASH_LEN + 1];
+    char authCodeId[BLE_AUTHCODE_ID_LEN + 1];
+    uint8_t authCode[BLE_AUTHCODE_LEN];
+    uint8_t netInfoFlag;
+    uint8_t rsv[STORE_DATA_INFO_V1_RSV_LEN];
+} StoreDataInfoV1;
+
+#endif
 
 CHECK_TYPE_SIZE(StoreDataInfoV1, STORE_DATA_INFO_V1_LEN);
 
@@ -68,10 +84,12 @@ static SecurityStoreItem g_storeItem[] = {
 static const ConfigInfoItem CONFIG_LIST[] = {
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_REVOKE_FLAG, g_storeInfo.revokeFlag),
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_DEVICE_ID, g_storeInfo.devId),
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_LOGIN_SECRET, g_storeInfo.secret),
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_LOGIN_PSK, g_storeInfo.psk),
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_LOGIN_URL, g_storeInfo.url),
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_LOGIN_BACKUP_URL, g_storeInfo.backupUrl),
+#endif
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_UID_HASH, g_storeInfo.uidHash),
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_AUTHCODE_ID, g_storeInfo.authCodeId),
     CONFIG_KEY_ITEM(CONFIG_INFO_KEY_AUTHCODE, g_storeInfo.authCode),
@@ -92,9 +110,11 @@ int32_t ConfigInfoInit(void)
     }
     /* 填充字符串结束符，避免非法的flash数据造成读越界 */
     g_storeInfo.devId[DEVICE_ID_MAX_STR_LEN] = '\0';
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
     g_storeInfo.secret[CLOUD_SECRET_MAX_STR_LEN] = '\0';
     g_storeInfo.url[CLOUD_MAX_URL_LEN] = '\0';
     g_storeInfo.backupUrl[CLOUD_MAX_URL_LEN] = '\0';
+#endif
     g_storeInfo.uidHash[BLE_UID_HASH_LEN] = '\0';
     g_storeInfo.authCodeId[BLE_AUTHCODE_ID_LEN] = '\0';
     return IOTC_OK;

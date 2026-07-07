@@ -31,18 +31,23 @@ iotc_core_device_src = [
   "$iotc_core_path/device/model/dev_info_mdl.c",
   "$iotc_core_path/device/report/profile_report.c",
   "$iotc_core_path/device/config/config_info.c",
-  "$iotc_core_path/device/config/config_login_info.c",
   "$iotc_core_path/device/config/config_online_status.c",
-  "$iotc_core_path/device/config/config_register_info.c",
   "$iotc_core_path/device/config/config_revoke_flag.c",
   "$iotc_core_path/device/config/config_authinfo.c",
   "$iotc_core_path/device/config/config_revoke.c",
   "$iotc_core_path/device/service/device_control.c",
-  "$iotc_core_path/device/service/svc_cloud_setup.c",
-  "$iotc_core_path/device/service/svc_cloud_login.c",
   "$iotc_core_path/device/service/iotc_dev_svc.c",
   "$iotc_core_path/device/service/dev_svc_auth_setup.c",
   "$iotc_core_path/device/service/dev_mngr_ctx.c",
 ]
+
+if(iotc_connect_wifi_cloud_support) {
+  iotc_core_device_src += [
+    "$iotc_core_path/device/config/config_register_info.c",
+    "$iotc_core_path/device/service/svc_cloud_setup.c",
+    "$iotc_core_path/device/service/svc_cloud_login.c",
+    "$iotc_core_path/device/config/config_login_info.c",
+  ]
+}
 
 iotc_core_device_def = []

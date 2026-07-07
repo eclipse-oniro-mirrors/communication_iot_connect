@@ -53,7 +53,11 @@
 /* 任务栈默认大小 */
 #ifndef IOTC_CONF_OH_DEFAULT_TASK_SIZE
     #if IOTC_CONF_DEVICE_LEVEL < IOTC_DEVICE_LEVEL_SMALL
-        #define IOTC_CONF_OH_DEFAULT_TASK_SIZE (8 * 1024)
+        #ifdef IOTC_CONF_WIFI_SUPPORT
+            #define IOTC_CONF_OH_DEFAULT_TASK_SIZE (6 * 1024)
+        #else
+            #define IOTC_CONF_OH_DEFAULT_TASK_SIZE (4 * 1024)
+        #endif
     #else
         #define IOTC_CONF_OH_DEFAULT_TASK_SIZE (32 * 1024)
     #endif
@@ -61,7 +65,11 @@
 
 #ifndef IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE
     #if IOTC_CONF_DEVICE_LEVEL < IOTC_DEVICE_LEVEL_SMALL
-        #define IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (2 * 1024)
+        #ifdef IOTC_CONF_WIFI_SUPPORT
+            #define IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (2 * 1024)
+        #else
+            #define IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (1 * 1024)
+        #endif
     #else
         #define IOTC_CONF_DFX_WATCH_DOG_DEFAULT_TASK_STACK_SIZE (32 * 1024)
     #endif

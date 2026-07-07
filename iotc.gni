@@ -21,7 +21,7 @@ iotc_interface_path = "${iotc_root_path}/interfaces"
 declare_args() {
   iot_connect_ble_support = true
   iot_connect_sle_support = false
-  iot_connect_wifi_support = true
+  iot_connect_wifi_support = false
   iot_connect_ailife_support = false
   iot_connect_mbedtls_v2_support = false
   iot_connect_mbedtls_psk_support = false
@@ -32,6 +32,9 @@ declare_args() {
   iot_connect_kv_support = true
   #控制发OH靠近发现广播的发出             
   iot_connect_oh_nearlink_support = false
+  iotc_connect_ble_net_cfg_support = false
+  iotc_connect_wifi_cloud_support = false
+  iotc_connect_device_watch_dog_support = false
 }
 
 if (defined(ohos_lite)) {

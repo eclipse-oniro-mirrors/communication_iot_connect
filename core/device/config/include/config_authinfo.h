@@ -26,6 +26,8 @@ int32_t ConfigSaveAuthInfo(const DevAuthInfo *info);
 
 int32_t ConfigGetAuthInfo(DevAuthInfo *info);
 
+bool IsDeviceBinded(void);
+
 int32_t ConfigClearAuthInfo(void);
 
 #ifdef __cplusplus

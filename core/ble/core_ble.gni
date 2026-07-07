@@ -56,13 +56,18 @@ iotc_core_ble_src = [
   "$iotc_core_path/ble/application/profile/ble_svc_create_session.c",
   "$iotc_core_path/ble/application/profile/ble_svc_custom_sec_data.c",
   "$iotc_core_path/ble/application/profile/ble_svc_device_info.c",
-  "$iotc_core_path/ble/application/profile/ble_svc_net_cfg_ver.c",
-  "$iotc_core_path/ble/application/profile/ble_svc_netcfg.c",
   "$iotc_core_path/ble/application/profile/ble_svc_speke.c",
   "$iotc_core_path/ble/application/profile/ble_svc_ctx.c",
   "$iotc_core_path/ble/application/report/ble_svc_netcfg_status.c",
   "$iotc_core_path/ble/application/report/ble_svc_report.c",
   "$iotc_core_path/ble/application/ble_svc.c",
 ]
+
+if(iotc_connect_ble_net_cfg_support) {
+  iotc_core_ble_src += [
+    "$iotc_core_path/ble/application/profile/ble_svc_net_cfg_ver.c",
+    "$iotc_core_path/ble/application/profile/ble_svc_netcfg.c",
+  ]
+}
 
 iotc_core_ble_def = []

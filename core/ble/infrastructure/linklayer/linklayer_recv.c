@@ -22,7 +22,7 @@
 #include "securec.h"
 #include "iotc_errcode.h"
 
-#define PKG_MAX_NUM     5
+#define PKG_MAX_NUM     1
 #define PKG_TIMEOUT (10 * 1000)
 
 typedef struct TagSubPkgList {

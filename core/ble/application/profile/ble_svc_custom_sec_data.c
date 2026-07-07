@@ -115,7 +115,7 @@ int32_t BuildBleCustomSecDataService(IotcJson *item, uint8_t **out, uint32_t *ou
         return ret;
     }
     DelDevIdAndMsgId(item);
-    IotcJson *dupItem = IotcDuplicateJson(item, true);
+    IotcJson *dupItem = NULL;
     if (IotcJsonGetObj(item, STR_JSON_VENDOR)) {
         dupItem = IotcDuplicateJson(IotcJsonGetObj(item, STR_JSON_VENDOR), true);
     } else {
@@ -284,7 +284,6 @@ static int32_t BleCustomSecDataProcess(IotcJson *vendorItem, uint8_t **out, uint
         IotcJsonDelete(vendorCopy);
         return ret;
     }
-
     return IOTC_OK;
 }
 

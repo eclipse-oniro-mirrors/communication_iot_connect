@@ -92,3 +92,15 @@ int32_t ConfigClearAuthInfo(void)
     CHECK_RETURN(ret == IOTC_OK, ret);
     return IOTC_OK;
 }
+
+bool IsDeviceBinded(void)
+{
+    char devId[DEVICE_ID_MAX_STR_LEN + 1];
+    uint32_t len = sizeof(devId);
+    int32_t ret = ConfigInfoGet(CONFIG_INFO_KEY_DEVICE_ID, (uint8_t *)devId, &len);
+    if (ret != IOTC_OK) {
+        IOTC_LOGW("get devid error %d", ret);
+        return false;
+    }
+    return !UtilsIsEmptyStr(devId);
+}

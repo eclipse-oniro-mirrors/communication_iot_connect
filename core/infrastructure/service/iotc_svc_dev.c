@@ -30,6 +30,7 @@ static const DevSvcApi *GetDevSvcApi(void)
     return devApi;
 }
 
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
 int32_t DevSvcProxyRecvBindInfo(const IotcJson *json)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
@@ -39,6 +40,7 @@ int32_t DevSvcProxyRecvBindInfo(const IotcJson *json)
 
     return devApi->onRecvBindInfo(json);
 }
+#endif
 
 int32_t DevSvcProxyCtlGetCharStates(const IotcJson *inArray, IotcJson **outArray)
 {
@@ -110,6 +112,7 @@ int32_t DevSvcProxyGetAuthInfo(bool *isExist, DevAuthInfo *info)
     return devApi->onGetAuthInfo(isExist, info);
 }
 
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
 int32_t DevSvcProxyGetRegisterInfo(bool *isExist, DevRegInfo *info)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
@@ -129,6 +132,7 @@ int32_t DevSvcProxyGetLoginInfo(bool *isExist, DevLoginInfo *info)
 
     return devApi->onGetLoginInfo(isExist, info);
 }
+#endif
 
 int32_t DevSvcProxyRecvAuthInfo(const IotcJson *json)
 {
@@ -150,6 +154,7 @@ int32_t DevSvcProxyRecvLoginInfo(const IotcJson *json)
     return devApi->onRecvLoginInfo(json);
 }
 
+#ifdef IOTC_CONNECT_WIFI_CLOUD_SUPPORT
 int32_t DevSvcProxyCleanLoginInfo(void)
 {
     const DevSvcApi *devApi = GetDevSvcApi();
@@ -159,6 +164,7 @@ int32_t DevSvcProxyCleanLoginInfo(void)
 
     return devApi->onCleanLoginInfo();
 }
+#endif
 
 int32_t DevSvcProxyCleanRevokeFlag(void)
 {

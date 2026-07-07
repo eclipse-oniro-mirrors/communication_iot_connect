@@ -24,6 +24,7 @@
 
 #define SCHED_MAIN_LOOP_TASK_NAME "SCHED_LOOP"
 
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
 static void EventLoopFeedWatchDogCallback(void)
 {
     int32_t ret = DfxFeedWatchDog();
@@ -31,18 +32,23 @@ static void EventLoopFeedWatchDogCallback(void)
         IOTC_LOGW("feed watch dog error %d", ret);
     }
 }
+#endif
 
 static int32_t SchedMainLoopEntry(void *userData)
 {
     NOT_USED(userData);
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
     int32_t ret = DfxAddWatchDog(IOTC_CONF_WATCH_DOG_TIMEOUT, NULL, SCHED_MAIN_LOOP_TASK_NAME);
     if (ret != IOTC_OK) {
         IOTC_LOGW("add watch dog error %d", ret);
     }
 
     EventLoopAddIdle(GetSchedEventLoop(), EventLoopFeedWatchDogCallback);
+#endif
     EventLoopRun(GetSchedEventLoop());
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
     DfxDelWatchDog();
+#endif
     return IOTC_OK;
 }
 

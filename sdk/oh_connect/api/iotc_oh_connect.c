@@ -60,6 +60,7 @@ static int32_t OptionSetMainTaskSize(va_list args)
     return IOTC_OK;
 }
 
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
 static int32_t OptionSetMonitorTaskSize(va_list args)
 {
     uint32_t taskSize = va_arg(args, uint32_t);
@@ -71,6 +72,7 @@ static int32_t OptionSetMonitorTaskSize(va_list args)
     IOTC_LOGN("set monitor task size %u", taskSize);
     return IOTC_OK;
 }
+#endif
 
 static int32_t OptionSetSetConfigPath(va_list args)
 {
@@ -97,7 +99,9 @@ static int32_t OptionSetUnregEventListener(va_list args)
 static const OptionItem COMM_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_SDK_LOG_LEVEL, OptionSetLogLevel },
     { IOTC_OH_OPTION_SDK_MAIN_TASK_SIZE, OptionSetMainTaskSize },
+#ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
     { IOTC_OH_OPTION_SDK_MONITOR_TASK_SIZE, OptionSetMonitorTaskSize },
+#endif
     { IOTC_OH_OPTION_SDK_CONFIG_PATH, OptionSetSetConfigPath },
     { IOTC_OH_OPTION_SDK_REG_EVENT_LISTENER, OptionSetRegEventListener },
     { IOTC_OH_OPTION_SDK_UNREG_EVENT_LISTENER, OptionSetUnregEventListener },
