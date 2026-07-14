@@ -18,7 +18,6 @@
 
 ​      1、在用户目录下的pip目录创建pip.ini:
 
-<!-- ![image-20260509111655003](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20260509111655003.png) -->
 <img src="../../../figures/创建pip.ini文件.png" alt="创建pip.ini文件" />
 
 2、pip.ini内容如下：
