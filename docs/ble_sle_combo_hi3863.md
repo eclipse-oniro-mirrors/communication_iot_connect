@@ -598,7 +598,7 @@ BLE/SLE Combo（Hi3863平台）的编译配置修改步骤请参考示例代码�
 - **BLE/SLE双模设备端云控制**
 1. 联系OpenHarmony统一互联PMC或在laval社区提单，完成APP白名单配置;
 
-2. 编译ohos-connect-hap源码，[安装编译](../通用互联App.md)的hap 至HarmonyOS Next 手机上；
+2. 编译ohos-connect-hap源码，安装编译的hap 至HarmonyOS Next 手机上；
 
 3. 使用[Hi3863开发板烧录](https://www.bearpi.cn/core_board/bearpi/pico/h3863/software/%E4%B8%8B%E8%BD%BD%E7%83%A7%E5%BD%95.html)BLE/SLE双模Combo镜像；
 

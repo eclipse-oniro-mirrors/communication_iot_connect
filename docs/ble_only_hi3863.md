@@ -474,7 +474,7 @@ BLE Only（Hi3863平台）的编译方法以及步骤请参考示例代码仓的
 - 5.1 蓝牙单模设备点对点本地控制
 1. 联系OpenHarmony统一互联PMC或在laval社区提单，完成APP白名单配置;
 
-2. 编译通用互联APP源码，生成HAP包并[安装](../通用互联App.md)至HarmonyOS Next手机。
+2. 编译通用互联APP源码，生成HAP包并安装至HarmonyOS Next手机。
 
 3. 通过USB数据线连接H3863开发板与电脑，使用[烧录工具](https://www.bearpi.cn/core_board/bearpi/pico/h3863/software/%E4%B8%8B%E8%BD%BD%E7%83%A7%E5%BD%95.html)将编译生成的镜像烧录至开发板。
 
