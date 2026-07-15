@@ -10,9 +10,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 设备服务、BLE服务、WiFi服务模块向部件注册声明，厂商应用的实现与设备服务模块的声明进行绑定映射关系
 
 <div align="center">
-  <img src="../figures/部件初始化.png" alt="部件初始化" />
+  图3 部件初始化
   <br>
-  <b></b> 图3 部件初始化
+  <img src="../figures/部件初始化.png" alt="部件初始化" />
 </div>
 
 - **设备服务模块初始化** :
@@ -31,9 +31,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 #### 部件启动
 
 <div align="center">
-  <img src="../figures/部件启动.png" alt="部件启动" />
+  图4 部件启动
   <br>
-  <b></b> 图4 部件启动
+  <img src="../figures/部件启动.png" alt="部件启动" />
 </div>
 
 - **设置运行参数** :
@@ -52,9 +52,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 通用互联APP通过BLE协议实现与被控设备的发现与连接，流程如下：
 
 <div align="center">
-  <img src="../figures/BLE设备发现.png" alt="BLE设备发现" />
+  图5 BLE设备发现
   <br>
-  <b></b> 图5 BLE设备发现
+  <img src="../figures/BLE设备发现.png" alt="BLE设备发现" />
 </div>
 
 - **发送广播** :
@@ -69,9 +69,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 通过BLE辅助设备接入WiFi网络。
 
 <div align="center">
-  <img src="../figures/BLE设备辅助配网.png" alt="BLE设备辅助配网" />
+  图6 BLE设备辅助配网
   <br>
-  <b></b> 图6 BLE设备辅助配网
+  <img src="../figures/BLE设备辅助配网.png" alt="BLE设备辅助配网" />
 </div>
 
 - **获取设备注册验证码和 psk 信息** :
@@ -89,9 +89,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 #### 设备注册
 
 <div align="center">
-  <img src="../figures/设备注册.png" alt="设备注册" />
+  图7 设备注册
   <br>
-  <b></b> 图7 设备注册
+  <img src="../figures/设备注册.png" alt="设备注册" />
 </div>
 
 设备注册流程实现设备与云端服务的安全通信，包括端云建连、PSK 协商、设备注册、设备登录。
@@ -122,9 +122,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 控制端和被控设备建立连接之后，控制端通过BLE GATT/云端方式发送指令控制被控设备。
 
 <div align="center">
-  <img src="../figures/设备控制.png" alt="设备控制" />
+  图8 设备控制
   <br>
-  <b></b> 图8 设备控制
+  <img src="../figures/设备控制.png" alt="设备控制" />
 </div>
 
 设备控制流程支持多通道控制能力，包括云端远程控制（WiFi+Coap）及 BLE 点对点控制，提供统一的设备服务状态管理。
@@ -152,9 +152,9 @@ IoT Connect组件采用先注册声明--->再绑定实现--->最后执行启动�
 `厂商应用`可通过`IotcOhDevReportCharState`主动向云端、通用互联APP上报消息，如设备状态变化、事件。
 
 <div align="center">
-  <img src="../figures/消息上报.png" alt="消息上报" />
+  图9 消息上报
   <br>
-  <b></b>图9 消息上报
+  <img src="../figures/消息上报.png" alt="消息上报" />
 </div>
 
 - 消息上报处理流程
