@@ -19,9 +19,9 @@ IoT Connect组件是专为OpenHarmony资源受限的mini级设备所构建的一
 在通用互联APP与设备、设备与云平台之间，定义并实现了一套完整的标准交互接口，如下图所示：
 
 <div align="center">
-  <img src="figures/统一互联联动与控制组网图.png" alt="统一互联联动与控制组网图" />
-  <br>
   图 1 统一互联联动与控制组网图
+  <br>
+  <img src="figures/统一互联联动与控制组网图.png" alt="统一互联联动与控制组网图" />
 </div>
 
 ### 统一互联联动与控制组网图接口说明
@@ -41,9 +41,9 @@ IoT Connect组件是专为OpenHarmony资源受限的mini级设备所构建的一
 IoT Connect组件是统一互联的一个关键组件，集成在L0设备上，为设备提供互联互通的能力。
 
 <div align="center">
-  <img src="figures/IoT Connect组件架构图.png" alt="IoT Connect组件架构图" />
+  图2 IoT Connect组件架构图
   <br>
-  <b></b> 图2 IoT Connect组件架构图
+  <img src="figures/IoT Connect组件架构图.png" alt="IoT Connect组件架构图" />
 </div>
 
 ### 模块功能说明
