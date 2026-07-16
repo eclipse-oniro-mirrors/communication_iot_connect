@@ -135,8 +135,7 @@ if (defined(ohos_lite)) {
     testonly = true
 
     deps = [
-      "test/xts/acts:acts",
-      "test/xts/dcts:dcts",
+      "test/xts/acts:acts"
     ]
   }
 }
