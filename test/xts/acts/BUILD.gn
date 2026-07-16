@@ -15,95 +15,13 @@
 import("../../../iotc.gni")
 
 if (defined(ohos_lite)) {
-  import("//build/lite/config/component/lite_component.gni")
-} else {
-  import("//build/test.gni")
-  module_output_path = "iotc/xts/acts"
-
-  ohos_unittest("IotcOhSdkActsTest") {
-    module_out_path = module_output_path
-    sources = [ "iotc_oh_sdk_acts_test.cpp" ]
-    include_dirs = [
-      "$iotc_interface_path/kits/common",
-      "$iotc_interface_path/kits/oh_connect",
-      "$iotc_core_path/core/infrastructure/utils/include",
-    ]
-    deps = [
-      "../../..:iotc_shared",
-    ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "cJSON:cjson",
-      "googletest:gtest_main",
-      "c_utils:utils",
-      "hilog:libhilog",
-    ]
-  }
-
-  ohos_unittest("IotcOhBleActsTest") {
-    module_out_path = module_output_path
-    sources = [ "iotc_oh_ble_acts_test.cpp" ]
-    include_dirs = [
-      "$iotc_interface_path/kits/common",
-      "$iotc_interface_path/kits/oh_connect",
-    ]
-    deps = [
-      "../../..:iotc_shared",
-    ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "cJSON:cjson",
-      "googletest:gtest_main",
-      "c_utils:utils",
-      "hilog:libhilog",
-    ]
-  }
-
-  ohos_unittest("IotcOhWifiActsTest") {
-    module_out_path = module_output_path
-    sources = [ "iotc_oh_wifi_acts_test.cpp" ]
-    include_dirs = [
-      "$iotc_interface_path/kits/common",
-      "$iotc_interface_path/kits/oh_connect",
-    ]
-    deps = [
-      "../../..:iotc_shared",
-    ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "cJSON:cjson",
-      "googletest:gtest_main",
-      "c_utils:utils",
-      "hilog:libhilog",
-    ]
-  }
-
-  ohos_unittest("IotcOhDeviceActsTest") {
-    module_out_path = module_output_path
-    sources = [ "iotc_oh_device_acts_test.cpp" ]
-    include_dirs = [
-      "$iotc_interface_path/kits/common",
-      "$iotc_interface_path/kits/oh_connect",
-    ]
-    deps = [
-      "../../..:iotc_shared",
-    ]
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "cJSON:cjson",
-      "googletest:gtest_main",
-      "c_utils:utils",
-      "hilog:libhilog",
-    ]
-  }
-
   group("acts") {
-    testonly = true
     deps = [
-      ":IotcOhSdkActsTest",
-      ":IotcOhBleActsTest",
-      ":IotcOhWifiActsTest",
-      ":IotcOhDeviceActsTest",
+      "lite:ActsIotConnectTest"
     ]
+  }
+} else {
+  group("acts") {
+    deps = []
   }
 }

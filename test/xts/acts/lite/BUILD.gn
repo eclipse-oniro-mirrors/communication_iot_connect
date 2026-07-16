@@ -1,0 +1,52 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//test/xts/tools/lite/build/suite_lite.gni")
+
+declare_args() {
+  enable_ohos_test_xts_acts_use_iotc_ble = true
+  enable_ohos_test_xts_acts_use_iotc_wifi = false
+}
+
+
+hctest_suite("ActsIotConnectTest") {
+  suite_name = "acts"
+  sources = [
+    "iotc_oh_device_acts_test.c",
+    "iotc_oh_connect_acts_test.c",
+  ]
+
+  if (enable_ohos_test_xts_acts_use_iotc_ble) {
+    sources += ["iotc_oh_ble_acts_test.c"]
+  }
+
+  if (enable_ohos_test_xts_acts_use_iotc_wifi) {
+    sources += ["iotc_oh_wifi_acts_test.c"]
+  }
+
+   include_dirs = [
+    "//commonlibrary/utils_lite/include",
+    "//foundation/communication/iot_connect/interfaces/kits/common",
+    "//foundation/communication/iot_connect/interfaces/kits/oh_connect",
+    "//foundation/communication/iot_connect/core/infrastructure/utils/include",
+    "//foundation/communication/iot_connect/adapter/include",
+    "//third_party/bounds_checking_function/include",
+  ]
+  deps = [
+    "//foundation/communication/iot_connect:iotc_static",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//build/lite/config/component/cJSON:cjson_static",
+  ]
+  
+  cflags = [ "-Wno-error" ]
+}
