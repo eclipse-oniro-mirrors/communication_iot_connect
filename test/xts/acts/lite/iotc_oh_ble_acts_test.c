@@ -42,7 +42,7 @@ static bool g_iotcInitalizedEvent = false;
 static bool g_iotcBleSvcStartEvent = false;
 
 static void TestIotcEventCallback(int32_t event)
-{   
+{
     if (event == IOTC_CORE_COMM_EVENT_MAIN_INITIALIZED) {
         g_iotcInitalizedEvent = true;
     }
@@ -151,7 +151,7 @@ LITE_TEST_SUIT(communication, iot_connect, IotcOhBleActsTest);
  * @return       : setup result, TRUE is success, FALSE is fail
  */
 static BOOL IotcOhBleActsTestSetUp(void)
-{   
+{
     printf("IotcOhBleActsTestSetUp \r\n");
     return TRUE;
 }
@@ -161,7 +161,7 @@ static BOOL IotcOhBleActsTestSetUp(void)
  * @return       : teardown result, TRUE is success, FALSE is fail
  */
 static BOOL IotcOhBleActsTestTearDown(void)
-{   
+{
     printf("IotcOhBleActsTestTearDown \r\n");
     return TRUE;
 }
@@ -215,7 +215,7 @@ LITE_TEST_CASE(IotcOhBleActsTest, IotcOhBleActsTest001, Function | MediumTest | 
  * @tc.level  LEVEL2
  */
 LITE_TEST_CASE(IotcOhBleActsTest, IotcOhBleActsTest002, Function | MediumTest | Level2)
-{   
+{
     int ret = 0;
     ret = IotcOhDevInit();
     TEST_ASSERT_EQUAL_INT(ret, IOTC_OK);

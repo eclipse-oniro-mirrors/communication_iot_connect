@@ -38,8 +38,7 @@ static bool g_iotcInitalizedEvent = false;
 
 static void TestIotcEventCallback(int32_t event)
 {
-    if (event == IOTC_CORE_COMM_EVENT_MAIN_INITIALIZED)
-    {
+    if (event == IOTC_CORE_COMM_EVENT_MAIN_INITIALIZED) {
         g_iotcInitalizedEvent = true;
     }
 }
@@ -52,10 +51,8 @@ static void ClearIotcInitivalized(void)
 static int WaitIotcInitivalized(void)
 {
     int cnt = ONE_THOUSAND;
-    while (cnt > 0)
-    {
-        if (g_iotcInitalizedEvent)
-        {
+    while (cnt > 0) {
+        if (g_iotcInitalizedEvent) {
             return IOTC_OK;
         }
         cnt--;
