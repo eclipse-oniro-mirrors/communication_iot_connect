@@ -33,7 +33,8 @@
       "iot_connect_mbedtls_ccm_support",
       "iot_connect_databus_support",
       "iot_connect_ble_adv_update_support",
-      "iot_connect_oh_nearlink_support"
+      "iot_connect_oh_nearlink_support",
+      "iot_connect_speke_not_support"
     ],
     "rom": "70KB",
     "ram": "13KB",

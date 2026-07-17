@@ -17,7 +17,9 @@
 #include "ble_svc_device_info.h"
 #include "ble_svc_auth_setup.h"
 #include "ble_svc_clear_dev_reg_info.h"
+#if !defined(IOTC_CONNECT_SPEKE_NOT_SUPPORT) || !IOTC_CONNECT_SPEKE_NOT_SUPPORT
 #include "ble_svc_speke.h"
+#endif
 #include "ble_svc_netcfg.h"
 #include "ble_svc_create_session.h"
 #include "ble_svc_custom_sec_data.h"
@@ -48,8 +50,10 @@ static const BtSvcInfo g_svcInfoTab[] = {
         .getFunc = GetBleSvcAuthSetup, .putFunc = NULL},
     {.svcIdx = BLE_SVC_CLEAR_REGINFO_IDX, .service = BLE_SVC_CLEAR_REGINFO, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,
         .getFunc = NULL, .putFunc = PutBleSvcClearDevRegInfo},
+#if !defined(IOTC_CONNECT_SPEKE_NOT_SUPPORT) || !IOTC_CONNECT_SPEKE_NOT_SUPPORT
     {.svcIdx = BLE_SVC_SPEKE_IDX, .service = BLE_SVC_SPEKE, .suppEncType = ENC_SUPP_PLAIN,
         .getFunc = NULL, .putFunc = PutBleSvcSpeke},
+#endif
 #ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     {.svcIdx = BLE_SVC_NETCFG_IDX, .service = BLE_SVC_NETCFG, .suppEncType = ENC_SUPP_SPEKE,
         .getFunc = NULL, .putFunc = PutBleSvcNetCfg},

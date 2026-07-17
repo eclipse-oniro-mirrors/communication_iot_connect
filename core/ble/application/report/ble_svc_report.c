@@ -106,8 +106,7 @@ static int32_t DeviceServiceReportMessageHandler(const ServiceMessage *req, Serv
 {
     NOT_USED(resp);
     CHECK_RETURN_LOGW(req != NULL && req->msg != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
-    IotcJson* vendorArr = IotcJsonGetObj(req->msg, STR_JSON_VENDOR);
-    int32_t ret = BleUplinkReportMethod(vendorArr);
+    int32_t ret = BleUplinkReportMethod(req->msg);
     if (ret != IOTC_OK) {
         IOTC_LOGW("ble report error %d", ret);
         return ret;
