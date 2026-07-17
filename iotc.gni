@@ -35,6 +35,7 @@ declare_args() {
   iotc_connect_ble_net_cfg_support = false
   iotc_connect_wifi_cloud_support = false
   iotc_connect_device_watch_dog_support = false
+  iot_connect_speke_not_support = false
 }
 
 if (defined(ohos_lite)) {
