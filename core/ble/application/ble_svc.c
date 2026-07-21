@@ -80,7 +80,9 @@ static int32_t BleGattInit(void)
 
 static void BleServiceStopInner(void)
 {
+#ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     BleSvcNetCfgDeinit();
+#endif
     BleSvcReportDeinit();
     BleSessReset();
     BleProfileDeinit();
@@ -162,11 +164,13 @@ static int32_t BleServiceInit(BleSvcCtx *ctx)
         return ret;
     }
 
+#ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     ret = BleSvcNetCfgInit();
     if (ret != IOTC_OK) {
         IOTC_LOGW("report status init error %d", ret);
         return ret;
     }
+#endif
     return IOTC_OK;
 }
 
