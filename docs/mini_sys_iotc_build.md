@@ -45,7 +45,7 @@ endif()
 ```json
     {
       "component": "iot_connect",
-      "description": "iot_connect based on liteos-a.",
+      "description": "iot_connect based on liteos-m.",
       "optional": "true",
       "dirs": [
         "foundation/communication/iot_connect"
@@ -56,7 +56,7 @@ endif()
       "rom": "",
       "ram": "",
       "output": [ ],
-      "adapted_kernel": [ "liteos_a" ],
+      "adapted_kernel": [ "liteos_m" ],
       "features": [],
       "deps": {
         "third_party": [
