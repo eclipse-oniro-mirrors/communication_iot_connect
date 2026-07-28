@@ -25,155 +25,148 @@
 #define DEFAULT_SUB_PRO_ID "00"
 #define DEFAULT_CUSTOM_DATA "00"
 #define DEFAULT_UNIQUEID "00"
-#define EMPTY_STR ""
 
-static IotcDeviceInfo *g_deviceInfo = NULL;
+static IotcDeviceInfo g_deviceInfo;
 
 int32_t ModelDevInfoInit(const IotcDeviceInfo *devInfo)
 {
     CHECK_RETURN_LOGW(devInfo != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
+    ModelDevInfoDeinit();
 
-    g_deviceInfo = (IotcDeviceInfo *)devInfo;
-    if (UtilsIsEmptyStr(devInfo->subProdId)) {
-        g_deviceInfo->subProdId = DEFAULT_SUB_PRO_ID;
+    struct CopyItem {
+        const char **dst;
+        const char *src;
+    } devInfoItem[] = {
+        {&g_deviceInfo.sn, devInfo->sn},
+        {&g_deviceInfo.prodId, devInfo->prodId},
+        {&g_deviceInfo.subProdId, UtilsIsEmptyStr(devInfo->subProdId) ? DEFAULT_SUB_PRO_ID : devInfo->subProdId},
+        {&g_deviceInfo.model, devInfo->model},
+        {&g_deviceInfo.devTypeId, devInfo->devTypeId},
+        {&g_deviceInfo.devTypeName, devInfo->devTypeName},
+        {&g_deviceInfo.manuId, devInfo->manuId},
+        {&g_deviceInfo.manuName, devInfo->manuName},
+        {&g_deviceInfo.devName, devInfo->devName},
+        {&g_deviceInfo.fwv, devInfo->fwv},
+        {&g_deviceInfo.hwv, devInfo->hwv},
+        {&g_deviceInfo.swv, devInfo->swv},
+        {&g_deviceInfo.customData, UtilsIsEmptyStr(devInfo->customData) ? DEFAULT_CUSTOM_DATA : devInfo->customData},
+        {&g_deviceInfo.uniqueId, UtilsIsEmptyStr(devInfo->uniqueId) ? DEFAULT_UNIQUEID : devInfo->uniqueId},
+    };
+
+    uint32_t i = 0;
+    for (; i < ARRAY_SIZE(devInfoItem); ++i) {
+        *devInfoItem[i].dst = UtilsStrDup(devInfoItem[i].src);
+        if (*devInfoItem[i].dst == NULL) {
+            break;
+        }
     }
-    if (UtilsIsEmptyStr(devInfo->uniqueId)) {
-        g_deviceInfo->uniqueId = DEFAULT_UNIQUEID;
+    if (i != ARRAY_SIZE(devInfoItem)) {
+        IOTC_LOGW("dev info copy error %u", i);
+        ModelDevInfoDeinit();
+        return IOTC_CORE_COMM_UTILS_ERR_STR_DUP;
     }
-    if (UtilsIsEmptyStr(devInfo->customData)) {
-        g_deviceInfo->customData = DEFAULT_CUSTOM_DATA;
-    }
+
+    g_deviceInfo.protType = devInfo->protType;
     return IOTC_OK;
 }
 
 void ModelDevInfoDeinit(void)
 {
-    g_deviceInfo = NULL;
+    UTILS_FREE_2_NULL(g_deviceInfo.sn);
+    UTILS_FREE_2_NULL(g_deviceInfo.prodId);
+    UTILS_FREE_2_NULL(g_deviceInfo.subProdId);
+    UTILS_FREE_2_NULL(g_deviceInfo.model);
+    UTILS_FREE_2_NULL(g_deviceInfo.devTypeId);
+    UTILS_FREE_2_NULL(g_deviceInfo.devTypeName);
+    UTILS_FREE_2_NULL(g_deviceInfo.manuId);
+    UTILS_FREE_2_NULL(g_deviceInfo.manuName);
+    UTILS_FREE_2_NULL(g_deviceInfo.devName);
+    UTILS_FREE_2_NULL(g_deviceInfo.fwv);
+    UTILS_FREE_2_NULL(g_deviceInfo.hwv);
+    UTILS_FREE_2_NULL(g_deviceInfo.swv);
+    UTILS_FREE_2_NULL(g_deviceInfo.customData);
+    UTILS_FREE_2_NULL(g_deviceInfo.uniqueId);
+    (void)memset_s(&g_deviceInfo, sizeof(IotcDeviceInfo), 0, sizeof(IotcDeviceInfo));
 }
 
 const IotcDeviceInfo *ModelGetDevInfo(void)
 {
-    return g_deviceInfo;
+    return &g_deviceInfo;
 }
 
 const char *ModelGetDevSn(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->sn);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.sn);
 }
 
 const char *ModelGetDevProId(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->prodId);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.prodId);
 }
 
 const char *ModelGetDevSubProId(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->subProdId);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.subProdId);
 }
 
 const char *ModelGetDevModel(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->model);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.model);
 }
 
 const char *ModelGetDevTypeId(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->devTypeId);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.devTypeId);
 }
 
 const char *ModelGetDevTypeName(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->devTypeName);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.devTypeName);
 }
 
 const char *ModelGetDevManuId(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->manuId);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.manuId);
 }
 
 const char *ModelGetDevManuName(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->manuName);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.manuName);
 }
 
 const char *ModelGetDevName(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->devName);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.devName);
 }
 
 const char *ModelGetDevFwv(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->fwv);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.fwv);
 }
 
 const char *ModelGetDevHwv(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->hwv);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.hwv);
 }
 
 const char *ModelGetDevSwv(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->swv);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.swv);
 }
 
 int32_t ModelGetDevProtType(void)
 {
-    if (g_deviceInfo == NULL) {
-        return IOTC_PROT_TYPE_INVALID;
-    }
-    return g_deviceInfo->protType;
+    return g_deviceInfo.protType;
 }
 
 const char *ModelGetDevUniqueId(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->uniqueId);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.uniqueId);
 }
  	 
 const char *ModelGetDevCustomData(void)
 {
-    if (g_deviceInfo == NULL) {
-        return EMPTY_STR;
-    }
-    return NON_NULL_EMPTY_STR(g_deviceInfo->customData);
+    return NON_NULL_EMPTY_STR(g_deviceInfo.customData);
 }
 
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len)
