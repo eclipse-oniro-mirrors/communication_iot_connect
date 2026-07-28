@@ -34,6 +34,10 @@ if (iotc_connect_wifi_cloud_support) {
   iotc_def += ["IOTC_CONNECT_WIFI_CLOUD_SUPPORT=true"]
 }
 
+if (iotc_connect_device_watch_dog_support) {
+  iotc_def += ["IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT=true"]
+}
+
 iotc_inc += [
   "$iotc_interface_path/kits/common",
   "$iotc_interface_path/kits/oh_connect",
