@@ -173,20 +173,15 @@ IoT Connect 组件不直接操作硬件，通过两层标准化隔离实现芯�
 
 | 配置项 | 默认值 | 含义说明 |
 | --- | --- | --- |
-| `iot_connect_ble_support` | `true` | BLE能力。 |
-| `iot_connect_sle_support` | `false` | SLE（星闪）能力。 |
-| `iot_connect_wifi_support` | `false` | WiFi能力。 |
-| `iot_connect_ailife_support` | `false` | AILife能力。|
-| `iot_connect_mbedtls_v2_support` | `false` |  mbedtls v2 版本适配层。 |
-| `iot_connect_mbedtls_psk_support` | `false` |  mbedtls TLS PSK（预共享密钥）密钥协商支持。 |
-| `iot_connect_mbedtls_ccm_support` | `false` |  mbedtls AES-CCM 加解密算法。 |
-| `iot_connect_ble_adv_update_support` | `false` | 发现广播数据的动态更新。 |
-| `iot_connect_kv_support` | `true` |KV 持久化存储。 |
-| `iot_connect_oh_nearlink_support` | `false` | OH 靠近发现广播控制。 |
-| `iotc_connect_ble_net_cfg_support` | `false` |  BLE 配网能力。 |
-| `iotc_connect_wifi_cloud_support` | `false` |  WiFi 端云能力。 |
-| `iotc_connect_device_watch_dog_support` | `false` | 看门狗。 |
-| `iot_connect_speke_not_support` | `false` |  关闭SPEKE安全协商。 |
+| `iot_connect_ble_support` | `true` | BLE能力 |
+| `iot_connect_sle_support` | `false` | SLE（星闪）能力 |
+| `iot_connect_wifi_support` | `false` | WiFi能力 |
+| `iot_connect_kv_support` | `true` |KV 持久化存储 |
+| `iotc_connect_ble_net_cfg_support` | `false` | BLE 配网能力 |
+| `iot_connect_oh_nearlink_support` | `false` | 在 BLE 配网基础上支持靠近弹窗配网功能 |
+| `iotc_connect_wifi_cloud_support` | `false` |  WiFi 端云能力 |
+| `iotc_connect_device_watch_dog_support` | `false` | 看门狗 |
+| `iot_connect_speke_not_support` | `false` |  关闭SPEKE安全协商 |
 
 ### 裁剪指导
 
