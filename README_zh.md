@@ -163,12 +163,32 @@ IoT Connect 组件不直接操作硬件，通过两层标准化隔离实现芯�
 
 ## 编译构建
 
+### 编译宏变量说明
+
+编译宏相关变量用于按需裁剪IoT Connect组件的功能与编译选项，开发者可根据产品实际场景，开启或关闭对应能力，在功能完整性与ROM/RAM资源占用之间取得平衡。
+
+<div align="center">
+表2 编译宏相关的变量说明
+</div>
+
+| 配置项 | 默认值 | 含义说明 |
+| --- | --- | --- |
+| `iot_connect_ble_support` | `true` | BLE能力 |
+| `iot_connect_sle_support` | `false` | SLE（星闪）能力 |
+| `iot_connect_wifi_support` | `false` | WiFi能力 |
+| `iot_connect_kv_support` | `true` |KV 持久化存储 |
+| `iotc_connect_ble_net_cfg_support` | `false` | BLE 配网能力 |
+| `iot_connect_oh_nearlink_support` | `false` | 在 BLE 配网基础上支持靠近弹窗配网功能 |
+| `iotc_connect_wifi_cloud_support` | `false` |  WiFi 端云能力 |
+| `iotc_connect_device_watch_dog_support` | `false` | 看门狗 |
+| `iot_connect_speke_not_support` | `false` |  关闭SPEKE安全协商 |
+
 ### 裁剪指导
 
 目前可按照以下场景和特性进行裁剪，后续会持续细化特性（比如安全、消息上报等）提供可裁剪能力，用户按需组合能力。
 
 <div align="center">
-表2 裁剪和内存信息
+表3 裁剪和内存信息
 </div>
 
 | 场景                  | 宏/gn 变量                                                                                                                                                                                                                          | ROM   | RAM    |
