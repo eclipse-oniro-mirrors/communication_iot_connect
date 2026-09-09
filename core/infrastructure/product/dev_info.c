@@ -49,8 +49,10 @@ int32_t ModelDevInfoInit(const IotcDeviceInfo *devInfo)
         {&g_deviceInfo.fwv, devInfo->fwv},
         {&g_deviceInfo.hwv, devInfo->hwv},
         {&g_deviceInfo.swv, devInfo->swv},
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
         {&g_deviceInfo.customData, UtilsIsEmptyStr(devInfo->customData) ? DEFAULT_CUSTOM_DATA : devInfo->customData},
         {&g_deviceInfo.uniqueId, UtilsIsEmptyStr(devInfo->uniqueId) ? DEFAULT_UNIQUEID : devInfo->uniqueId},
+#endif
     };
 
     uint32_t i = 0;
@@ -84,8 +86,10 @@ void ModelDevInfoDeinit(void)
     UTILS_FREE_2_NULL(g_deviceInfo.fwv);
     UTILS_FREE_2_NULL(g_deviceInfo.hwv);
     UTILS_FREE_2_NULL(g_deviceInfo.swv);
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
     UTILS_FREE_2_NULL(g_deviceInfo.customData);
     UTILS_FREE_2_NULL(g_deviceInfo.uniqueId);
+#endif
     (void)memset_s(&g_deviceInfo, sizeof(IotcDeviceInfo), 0, sizeof(IotcDeviceInfo));
 }
 
@@ -159,6 +163,7 @@ int32_t ModelGetDevProtType(void)
     return g_deviceInfo.protType;
 }
 
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
 const char *ModelGetDevUniqueId(void)
 {
     return NON_NULL_EMPTY_STR(g_deviceInfo.uniqueId);
@@ -168,6 +173,7 @@ const char *ModelGetDevCustomData(void)
 {
     return NON_NULL_EMPTY_STR(g_deviceInfo.customData);
 }
+#endif
 
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len)
 {

@@ -129,6 +129,10 @@
     #define IOTC_CONF_AILIFE_SUPPORT 0
 #endif
 
+#ifndef IOTC_CONF_OH_NEARLINK_SUPPORT
+    #define IOTC_CONF_OH_NEARLINK_SUPPORT 0
+#endif
+
 #ifndef IOTC_CONF_TCP_SUPPORT
     #define IOTC_CONF_TCP_SUPPORT 1
 #endif
