@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 #include "linklayer_encrypt.h"
+#ifndef IOTC_CONNECT_SPEKE_NOT_SUPPORT
 #include "linklayer_encrypt_speke.h"
+#endif
 #include "linklayer_encrypt_sesskey.h"
 #include "linklayer_service.h"
 #include "ble_linklayer.h"
@@ -32,9 +34,11 @@ typedef struct {
 static int32_t UnencryptedBuffEnc(const uint8_t *data, uint32_t dataLen, uint8_t **outData, uint32_t *outDataLen);
 static int32_t UnencryptedBuffDec(uint8_t *data, uint32_t *dataLen);
 
-static EncryptHandler g_encryptHandler[] = {
+static const EncryptHandler ENCRYPT_HANDLER[] = {
     { ENC_TYPE_UNENCRYPTED, UnencryptedBuffEnc, UnencryptedBuffDec },
+#ifndef IOTC_CONNECT_SPEKE_NOT_SUPPORT
     { ENC_TYPE_SPEKE, LinkLayerSpekeEncrypt, LinkLayerSpekeDecrypt },
+#endif
     { ENC_TYPE_SESSKEY, LinkLayerSessKeyEncrypt, LinkLayerSessKeyDecrypt },
 };
 
@@ -57,8 +61,8 @@ static int32_t UnencryptedBuffDec(uint8_t *data, uint32_t *dataLen)
 
 int32_t LinkLayerSetEncryptType(LinkLayerEncryptType encryptType)
 {
-    for (uint8_t i = 0; i < sizeof(g_encryptHandler) / sizeof(g_encryptHandler[0]); i++) {
-        if (g_encryptHandler[i].type != encryptType) {
+    for (uint8_t i = 0; i < sizeof(ENCRYPT_HANDLER) / sizeof(ENCRYPT_HANDLER[0]); i++) {
+        if (ENCRYPT_HANDLER[i].type != encryptType) {
             continue;
         }
         g_encryptType = encryptType;
@@ -81,12 +85,12 @@ int32_t LinkLayerDecryptData(uint8_t *data, uint32_t *dataLen, LinkLayerEncryptT
 {
     CHECK_RETURN((data != NULL) && (dataLen != NULL), IOTC_ERR_PARAM_INVALID);
 
-    for (uint8_t i = 0; i < sizeof(g_encryptHandler) / sizeof(g_encryptHandler[0]); i++) {
-        if (g_encryptHandler[i].type != encryptType) {
+    for (uint8_t i = 0; i < sizeof(ENCRYPT_HANDLER) / sizeof(ENCRYPT_HANDLER[0]); i++) {
+        if (ENCRYPT_HANDLER[i].type != encryptType) {
             continue;
         }
         IOTC_LOGI("dec ll data[%u] with type:%d", *dataLen, encryptType);
-        return g_encryptHandler[i].decryptCb(data, dataLen);
+        return ENCRYPT_HANDLER[i].decryptCb(data, dataLen);
     }
 
     IOTC_LOGE("ble link layer decrypt type:%d err", encryptType);
@@ -99,14 +103,59 @@ int32_t LinkLayerEncryptData(const uint8_t *data, uint32_t dataLen, LinkLayerEnc
     CHECK_RETURN((data != NULL) && (dataLen > 0), IOTC_ERR_PARAM_INVALID);
     CHECK_RETURN((encData != NULL) && (encDataLen != NULL), IOTC_ERR_PARAM_INVALID);
 
-    for (uint8_t i = 0; i < sizeof(g_encryptHandler) / sizeof(g_encryptHandler[0]); i++) {
-        if (g_encryptHandler[i].type != encryptType) {
+    for (uint8_t i = 0; i < sizeof(ENCRYPT_HANDLER) / sizeof(ENCRYPT_HANDLER[0]); i++) {
+        if (ENCRYPT_HANDLER[i].type != encryptType) {
             continue;
         }
         IOTC_LOGI("enc ll data[%u] with type:%d", dataLen, encryptType);
-        return g_encryptHandler[i].encryptCb(data, dataLen, encData, encDataLen);
+        return ENCRYPT_HANDLER[i].encryptCb(data, dataLen, encData, encDataLen);
     }
 
     IOTC_LOGE("ble link layer encrypt type:%d err", encryptType);
+    return IOTC_CORE_BLE_LL_ERR_ENCRYPT_TYPE;
+}
+
+/* encrypt directly into outBuf, no intermediate encBuff */
+int32_t LinkLayerEncryptDataInto(const uint8_t *data, uint32_t dataLen, LinkLayerEncryptType encryptType,
+    const LinkLayerEncryptOut *out)
+{
+    CHECK_RETURN((data != NULL) && (dataLen > 0) && (out != NULL) && (out->buff != NULL) &&
+        (out->buffLen != NULL), IOTC_ERR_PARAM_INVALID);
+
+    if (encryptType == ENC_TYPE_UNENCRYPTED) {
+        CHECK_RETURN(out->buffCap >= dataLen, IOTC_ERR_PARAM_INVALID);
+        if (memcpy_s(out->buff, out->buffCap, data, dataLen) != EOK) {
+            return IOTC_ERR_SECUREC_MEMCPY;
+        }
+        *out->buffLen = dataLen;
+        return IOTC_OK;
+    }
+#ifndef IOTC_CONNECT_SPEKE_NOT_SUPPORT
+    if (encryptType == ENC_TYPE_SPEKE) {
+        /* SPEKE hook keeps baseline encrypt API: stage-encrypt then copy into outBuf */
+        uint8_t *encData = NULL;
+        uint32_t encDataLen = 0;
+        int32_t ret = LinkLayerSpekeEncrypt(data, dataLen, &encData, &encDataLen);
+        if (ret != IOTC_OK) {
+            return ret;
+        }
+        if (out->buffCap < encDataLen) {
+            IotcFree(encData);
+            return IOTC_ERR_PARAM_INVALID;
+        }
+        if (memcpy_s(out->buff, out->buffCap, encData, encDataLen) != EOK) {
+            IotcFree(encData);
+            return IOTC_ERR_SECUREC_MEMCPY;
+        }
+        *out->buffLen = encDataLen;
+        IotcFree(encData);
+        return IOTC_OK;
+    }
+#endif
+    if (encryptType == ENC_TYPE_SESSKEY) {
+        return LinkLayerSessKeyEncryptInto(data, dataLen, out);
+    }
+
+    IOTC_LOGE("ble link layer encrypt into type:%d err", encryptType);
     return IOTC_CORE_BLE_LL_ERR_ENCRYPT_TYPE;
 }

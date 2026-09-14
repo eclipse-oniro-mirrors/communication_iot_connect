@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@ typedef struct {
     const char *name;
     const FwkInitUnit *units;
     uint32_t num;
-    BitMap *initMap;
+    BitMap initMap;  /* flexible array at end, accessed via &node->initMap */
 } InitUnitNode;
 
 static ListEntry g_initList = LIST_DECLARE_INIT(&g_initList);
@@ -43,7 +43,7 @@ static int32_t DoInitTargetLevelUnitNode(InitUnitNode *node, int32_t level)
     for (uint32_t i = 0; i < node->num; ++i) {
         const FwkInitUnit *cur = &node->units[i];
         IOTC_LOGI("for FwkInitUnit i:%lu/%d cur name:%s", i, node->num, cur->name);
-        if (cur->level != level || UtilsIsBitSet(node->initMap, i)) {
+        if (cur->level != level || UtilsIsBitSet(&node->initMap, i)) {
             continue;
         }
         if (cur->initFunc != NULL) {
@@ -55,7 +55,7 @@ static int32_t DoInitTargetLevelUnitNode(InitUnitNode *node, int32_t level)
             }
             IOTC_LOGI("init ok [%s/%s/%d]", NON_NULL_STR(node->name), NON_NULL_STR(cur->name), level);
         }
-        UtilsBitMapSet(node->initMap, i);
+        UtilsBitMapSet(&node->initMap, i);
     }
     IOTC_LOGI("DoInitTargetLevelUnitNode end");
     return IOTC_OK;
@@ -102,10 +102,10 @@ static void DoDeinitTargetLevelUnitNode(InitUnitNode *node, int32_t level)
     /* 初始化正序则去初始化逆序，保证依赖顺序 */
     for (int32_t i = node->num - 1; i >= 0; --i) {
         const FwkInitUnit *cur = &node->units[i];
-        if (cur->level != level || !UtilsIsBitSet(node->initMap, i)) {
+        if (cur->level != level || !UtilsIsBitSet(&node->initMap, i)) {
             continue;
         }
-        UtilsBitMapReset(node->initMap, i);
+        UtilsBitMapReset(&node->initMap, i);
         if (cur->deinitFunc != NULL) {
             cur->deinitFunc();
             IOTC_LOGI("deinit ok [%s/%s/%d]", NON_NULL_STR(node->name), NON_NULL_STR(cur->name), level);
@@ -142,17 +142,15 @@ int32_t FwkRegInitUnits(const FwkInitUnit *units, uint32_t num, const char *mdlN
         }
     }
 
-    InitUnitNode *node = (InitUnitNode *)IotcMalloc(sizeof(InitUnitNode));
+    uint32_t bitmapBytes = (num / 8 + 1) * sizeof(uint8_t);
+    uint32_t allocSize = sizeof(InitUnitNode) + bitmapBytes;
+    InitUnitNode *node = (InitUnitNode *)IotcMalloc(allocSize);
     if (node == NULL) {
         return IOTC_ADAPTER_MEM_ERR_MALLOC;
     }
-    (void)memset_s(node, sizeof(InitUnitNode), 0, sizeof(InitUnitNode));
+    (void)memset_s(node, allocSize, 0, allocSize);
 
-    node->initMap = UtilsCreateBitMap(num);
-    if (node->initMap == NULL) {
-        IotcFree(node);
-        return IOTC_CORE_COMM_UTILS_ERR_BIT_MAP_CREATE;
-    }
+    node->initMap.size = num;
     node->name = mdlName;
     node->num = num;
     node->units = units;
@@ -162,7 +160,7 @@ int32_t FwkRegInitUnits(const FwkInitUnit *units, uint32_t num, const char *mdlN
 
 static void FreeInitUnitNode(InitUnitNode *node)
 {
-    UtilsFreeBitMap(node->initMap);
+    /* BitMap is embedded in InitUnitNode allocation, single free */
     IotcFree(node);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,9 +30,25 @@
 
 #define IOTC_OH_RESTORE_TIMEOUT UTILS_SEC_TO_MS(10)
 
+#ifdef IOTC_CONF_KV_SUPPORT
 static const FwkInitUnit OH_COMM[] = {
     {FWK_INIT_LVL_BIZ, "config", IotcOhStoreDataInit, IotcOhStoreDataDeinit},
 };
+#else
+/* no persistent storage: keep the init slot so the unit array is never empty */
+static int32_t OhStoreDataInitNull(void)
+{
+    return IOTC_OK;
+}
+
+static void OhStoreDataDeinitNull(void)
+{
+}
+
+static const FwkInitUnit OH_COMM[] = {
+    {FWK_INIT_LVL_BIZ, "config", OhStoreDataInitNull, OhStoreDataDeinitNull},
+};
+#endif
 static uint32_t g_taskSize = IOTC_CONF_OH_DEFAULT_TASK_SIZE;
 static bool g_isCommOptionReg = false;
 
@@ -79,7 +95,12 @@ static int32_t OptionSetSetConfigPath(va_list args)
     const char *path = va_arg(args, const char *);
     CHECK_RETURN_LOGE(path != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
 
+#ifdef IOTC_CONF_KV_SUPPORT
     return IotcOhStorePathSet(path);
+#else
+    IOTC_LOGW("kv not supported, ignore store path set");
+    return IOTC_OK; /* Store path is meaningless without KV; ignore it. */
+#endif
 }
 
 static int32_t OptionSetRegEventListener(va_list args)

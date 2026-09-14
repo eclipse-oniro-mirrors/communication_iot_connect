@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,10 +58,30 @@ int32_t LinkLayerDecryptData(uint8_t *data, uint32_t *dataLen, LinkLayerEncryptT
  * @param encData [OUT] 加密数据
  * @param encDataLen [OUT] 加密数据长度
  * @return 0成功，非0失败
- * @attention 调用方需要释放encData
+ * @attention caller frees encData
  */
 int32_t LinkLayerEncryptData(const uint8_t *data, uint32_t dataLen, LinkLayerEncryptType encryptType,
     uint8_t **encData, uint32_t *encDataLen);
+
+/**
+ * @brief encrypt into caller-provided buffer, no intermediate encBuff
+ */
+/* Extra bytes added by encryption, used to size the send buffer before encrypting */
+#define SPEKE_ENC_DATA_MAX_OVERHEAD 29  /* SPEKE frame: ver 1 + iv 12 + tag 16 */
+#define SESS_ENC_DATA_MAX_OVERHEAD  92  /* sesskey frame: iv 12 + tag 16 + sessId 32 + hmac 32 */
+#define ENC_DATA_MAX_OVERHEAD       (SESS_ENC_DATA_MAX_OVERHEAD > SPEKE_ENC_DATA_MAX_OVERHEAD ? \
+                                     SESS_ENC_DATA_MAX_OVERHEAD : SPEKE_ENC_DATA_MAX_OVERHEAD)
+
+/* Destination buffer for the *Into encrypt APIs: the API writes ciphertext into
+ * buff and reports the actual length through *buffLen */
+typedef struct {
+    uint8_t *buff;       /* ciphertext destination */
+    uint32_t buffCap;    /* capacity of buff */
+    uint32_t *buffLen;   /* [OUT] actual encrypted length */
+} LinkLayerEncryptOut;
+
+int32_t LinkLayerEncryptDataInto(const uint8_t *data, uint32_t dataLen,
+    LinkLayerEncryptType encryptType, const LinkLayerEncryptOut *out);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@
 static int32_t BleDataCharWrite(uint8_t *buff, uint32_t len);
 static int32_t BleDataCharRead(uint8_t *buff, uint32_t *len);
 
-static IotcBleGattProfileChar g_dataChar[] = {
+static const IotcBleGattProfileChar g_dataChar[] = {
     {
         .uuid = DATA_SVC_WRITE_UUID,
         .permission = IOTC_BLE_GATT_PERMISSION_READ_ENCRYPTED | IOTC_BLE_GATT_PERMISSION_WRITE_ENCRYPTED,

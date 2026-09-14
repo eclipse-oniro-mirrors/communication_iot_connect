@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,9 @@
 #include "ble_svc_speke.h"
 #endif
 #include "ble_svc_netcfg.h"
+#ifndef IOTC_CONF_BLE_PLAIN_ONLY
 #include "ble_svc_create_session.h"
+#endif
 #include "ble_svc_custom_sec_data.h"
 #include "securec.h"
 #include "utils_assert.h"
@@ -58,8 +60,10 @@ static const BtSvcInfo g_svcInfoTab[] = {
     {.svcIdx = BLE_SVC_NETCFG_IDX, .service = BLE_SVC_NETCFG, .suppEncType = ENC_SUPP_SPEKE,
         .getFunc = NULL, .putFunc = PutBleSvcNetCfg},
 #endif
+#ifndef IOTC_CONF_BLE_PLAIN_ONLY
     {.svcIdx = BLE_SVC_CREATE_SESSION_IDX, .service = BLE_SVC_CREATE_SESSION, .suppEncType = ENC_SUPP_PLAIN,
         .getFunc = GetBleSvcCreateSession, .putFunc = NULL},
+#endif
     {.svcIdx = BLE_SVC_CUSTOM_SEC_DATA_IDX, .service = BLE_SVC_CUSTOM_SEC_DATA, .suppEncType = ENC_SUPP_SPEKE_SESSKEY,
         .getFunc = NULL, .putFunc = PutBleSvcCustomSecData},
 };

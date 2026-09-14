@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@ static int32_t SaveAuthSetupInfo(char *in)
         return ret;
     }
 
-    #ifdef HI3863_SDK_CONFIG_JSON_PATH
+    #if defined(HI3863_SDK_CONFIG_JSON_PATH) && defined(IOTC_CONF_KV_SUPPORT)
     const char *path = HI3863_SDK_CONFIG_JSON_PATH;
     IOTC_LOGI("SaveAuthSetupInfo IotcKvSetValue path:%s  strLen:%d", path, strlen(in));
     IotcKvSetValue(path, (const uint8_t *)in, strlen(in));

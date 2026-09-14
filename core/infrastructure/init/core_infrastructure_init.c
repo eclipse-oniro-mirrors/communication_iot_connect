@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,9 @@
 #include "core_infrastructure_init.h"
 #include "fwk_init.h"
 #include "utils_mutex_global.h"
+#ifndef IOTC_CONF_BLE_PLAIN_ONLY
 #include "security_random.h"
+#endif
 #include "iotc_log.h"
 #include "dfx_watch_dog.h"
 #include "main_loop.h"
@@ -36,7 +38,9 @@ static const FwkInitUnit CORE_COMM[] = {
     {FWK_INIT_LVL_DEP, "fwk_loop", FwkMainLoopInit, FwkMainLoopDeinit},
     {FWK_INIT_LVL_DEP, "fwk_event", EventBusInit, EventBusDeinit},
     {FWK_INIT_LVL_DEP, "event_pub", IotcPublicEventListenerInit, IotcPublicEventListenerDeinit},
+#ifndef IOTC_CONF_BLE_PLAIN_ONLY
     {FWK_INIT_LVL_DEP, "random", SecurityRandomInit, SecurityRandomDeinit},
+#endif
     {FWK_INIT_LVL_DEP, "service", ServiceManagerInit, ServiceManagerDeinit},
 #ifdef IOTC_CONNECT_DEVICE_WATCH_DOG_SUPPORT
     {FWK_INIT_LVL_DEP, "watch_dog", DfxWatchDogInit, DfxWatchDogDeinit},

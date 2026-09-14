@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -97,11 +97,18 @@ if (iot_connect_wifi_support) {
   }
 }
 
+# pure BLE mode (no WiFi/SLE): BLE-only steady-state opts (DRBG/SpekeSession release, thin store)
+if (iot_connect_ble_support && !iot_connect_wifi_support && !iot_connect_sle_support) {
+  iotc_adapter_def += ["IOTC_CONF_BLE_ONLY=1"]
+}
+
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     iotc_adapter_inc += ["//kernel/liteos_m/kal/cmsis"]
     iotc_adapter_src += ["$iotc_adapter_path/os/cmsis2/iotc_os.c"]
-    iotc_adapter_src += ["$iotc_adapter_path/kv/oh_lite/iotc_kv.c"]
+    if (iot_connect_kv_support) {
+      iotc_adapter_src += ["$iotc_adapter_path/kv/oh_lite/iotc_kv.c"]
+    }
     if (board_hi3863) {
       iotc_adapter_src += ["$iotc_adapter_path/log/hilog_m/iotc_log.c"]
       iotc_adapter_inc += ["//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite"]
@@ -137,7 +144,9 @@ if (defined(ohos_lite)) {
 
   } else {
     iotc_adapter_src += ["$iotc_adapter_path/os/posix/iotc_os.c"]
-    iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]
+    if (iot_connect_kv_support) {
+      iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]
+    }
     iotc_adapter_dep += [
       "//third_party/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
@@ -147,7 +156,9 @@ if (defined(ohos_lite)) {
   }
 } else {
   iotc_adapter_src += ["$iotc_adapter_path/os/posix/iotc_os.c"]
-  iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]
+  if (iot_connect_kv_support) {
+    iotc_adapter_src += ["$iotc_adapter_path/kv/posix/iotc_kv.c"]
+  }
   if (iotc_hilog_support) {
     iotc_adapter_src += ["$iotc_adapter_path/log/hilog/iotc_log.c"]
   } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,17 +30,25 @@ typedef enum {
 } ProdHookRegPolicy;
 
 typedef struct {
+#ifndef IOTC_CONF_BLE_ONLY
     int32_t (*onGetRootCaCert)(const char **ca[], uint32_t *num);
+#endif
+#if defined(IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT) || defined(IOTC_CONF_SLE_SUPPORT)
     int32_t (*onRecvNetCfgInfo)(const char *netInfo, uint32_t len);
+#endif
     int32_t (*onRecvCustomSecData)(const uint8_t *data, uint32_t len);
     int32_t (*onMakeOsBleEnable)(void);
+#ifndef IOTC_CONF_BLE_ONLY
     int32_t (*onMakeOsWifiEnable)(void);
     int32_t (*onSleRecvCustomSecData)(const uint8_t *data, uint32_t len);
+#endif
     int32_t (*onGetSurfacePower)(int8_t *power);
     int32_t (*onProfPutCharState)(const IotcCharState state[], uint32_t num);
     int32_t (*onProfGetCharState)(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num);
     int32_t (*onProfReportAll)(void);
+#ifndef IOTC_CONF_BLE_ONLY
     int32_t (*onProfReportByDevId)(const char *devId);
+#endif
     int32_t (*onProfGetPincode)(uint8_t *buf, uint32_t bufLen);
     int32_t (*onProfGetAcKey)(uint8_t *buf, uint32_t bufLen);
     void (*onProfFree)(void *ptr);
@@ -50,17 +58,25 @@ typedef struct {
 } ProductHooks;
 
 int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy);
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductGetRootCaCert(const char **ca[], uint32_t *num);
+#endif
+#if defined(IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT) || defined(IOTC_CONF_SLE_SUPPORT)
 int32_t ProductRecvNetCfgInfo(const char *netInfo, uint32_t len);
+#endif
 int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len);
 int32_t ProductMakeOsBleEnable(void);
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductMakeOsWifiEnable(void);
 int32_t ProductSleRecvCustomSecData(const uint8_t *data, uint32_t len);
+#endif
 int32_t ProductGetSurfacePower(int8_t *power);
 int32_t ProductProfPutCharState(const IotcCharState state[], uint32_t num);
 int32_t ProductProfGetCharState(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num);
 int32_t ProductProfReportAll(void);
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductProfReportByDevId(const char *devId);
+#endif
 int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen);
 int32_t ProductProfGetAcKey(uint8_t *buf, uint32_t bufLen);
 int32_t ProductProfGetCloudRegisterState(IotcOhCloudRegisterState *state);
