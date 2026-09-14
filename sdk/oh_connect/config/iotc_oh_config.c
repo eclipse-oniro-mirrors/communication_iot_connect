@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ int32_t IotcOhStoreDataInit(void)
     int32_t ret;
     if (g_storePath != NULL) {
         UtilsGlobalMutexLock();
-        int32_t ret = strcpy_s(storePath, sizeof(storePath), g_storePath);
+        ret = strcpy_s(storePath, sizeof(storePath), g_storePath);
         UtilsGlobalMutexUnlock();
         if (ret != IOTC_OK) {
             IOTC_LOGW("copy path error");

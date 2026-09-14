@@ -293,9 +293,14 @@ The device control process supports multi-channel control capabilities, includin
 
 ###裁剪指导
 
-Depending on the scenario, there are two types: BLE only and BLE&WiFi Combo.
+Currently, the component can be trimmed per the scenarios and features below; more trimmable features will
+be continuously provided, and you can combine them as needed.
 For BLE only scenario, just configure the `iot_connect_ble_support` macro to true.
 For BLE&WiFi Combo scenario, configure both `iot_connect_ble_support` and `iot_connect_wifi_support` macros to true.
+The plain-only scenario builds on the BLE only scenario: for no-SPEKE boards without a file system, additionally
+set `iot_connect_kv_support` to false to trim persistence. This combination automatically derives
+`iotc_ble_plain_only_support = true` and enters a minimal form where the session setup service and the random
+module init are removed.
 
 ### Memory Information:
 
@@ -303,6 +308,7 @@ For BLE&WiFi Combo scenario, configure both `iot_connect_ble_support` and `iot_c
 | -------------- | ------- | ------- |
 | BLE            | 70KB    | 13KB    |
 | BLE&WiFi Combo | 130KB   | 25KB    |
+| BLE (persistence trimmed, no file system) | 60KB    | 9KB     |
 
 <center>Table 2 Memory Information</center>
 

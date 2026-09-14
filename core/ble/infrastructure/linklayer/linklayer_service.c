@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,32 +26,32 @@
 #define BITS_PER_BYTE 8
 
 typedef struct {
-    BtSvcInfo svcInfo;
+    const BtSvcInfo *svcInfo;
     ListEntry node;
 } BtSvcInfoNode;
 
 static ListEntry g_serviceList = LIST_DECLARE_INIT(&g_serviceList);
 static int32_t g_serviceNum = 0;
 
-static BtSvcInfo *GetBtSvcInfoBySvcIdx(uint8_t svcIdx)
+static const BtSvcInfo *GetBtSvcInfoBySvcIdx(uint8_t svcIdx)
 {
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_serviceList) {
         BtSvcInfoNode *svcInfoNode = CONTAINER_OF(item, BtSvcInfoNode, node);
-        if (svcInfoNode->svcInfo.svcIdx == svcIdx) {
-            return &svcInfoNode->svcInfo;
+        if (svcInfoNode->svcInfo->svcIdx == svcIdx) {
+            return svcInfoNode->svcInfo;
         }
     }
     return NULL;
 }
 
-static BtSvcInfo *GetBtSvcInfoByService(const char *service)
+static const BtSvcInfo *GetBtSvcInfoByService(const char *service)
 {
     ListEntry *item = NULL;
     LIST_FOR_EACH_ITEM(item, &g_serviceList) {
         BtSvcInfoNode *svcInfoNode = CONTAINER_OF(item, BtSvcInfoNode, node);
-        if (strcmp(svcInfoNode->svcInfo.service, service) == 0) {
-            return &svcInfoNode->svcInfo;
+        if (strcmp(svcInfoNode->svcInfo->service, service) == 0) {
+            return svcInfoNode->svcInfo;
         }
     }
     return NULL;
@@ -90,11 +90,7 @@ int32_t LinkLayerServiceRegister(const BtSvcInfo *svcInfo, uint32_t svcNum)
         BtSvcInfoNode *svcInfoNode = (BtSvcInfoNode *)IotcCalloc(1, sizeof(BtSvcInfoNode));
         CHECK_RETURN_LOGE(svcInfoNode != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc btSvcInfoNode err");
 
-        int32_t ret = memcpy_s(&svcInfoNode->svcInfo, sizeof(BtSvcInfo), &(svcInfo[i]), sizeof(BtSvcInfo));
-        if (ret != EOK) {
-            IotcFree(svcInfoNode);
-            return IOTC_ERR_SECUREC_MEMCPY;
-        }
+        svcInfoNode->svcInfo = &svcInfo[i];
         LIST_INSERT_BEFORE(&svcInfoNode->node, &g_serviceList);
         g_serviceNum++;
     }
@@ -193,7 +189,7 @@ int32_t LinkLayerProcessData(const uint8_t *buff, uint32_t len, LinkLayerEncrypt
     int32_t ret = DecodeCmdData(buff, len, &cmdParam);
     CHECK_RETURN(ret == IOTC_OK, ret);
 
-    BtSvcInfo *svcInfo = GetBtSvcInfoByService(cmdParam.service);
+    const BtSvcInfo *svcInfo = GetBtSvcInfoByService(cmdParam.service);
     CHECK_RETURN_LOGE(svcInfo != NULL, IOTC_CORE_BLE_LL_ERR_SVC_NOT_FOUND, "svc:%s not found", cmdParam.service);
     ret = SvcCheckEncType(svcInfo, encryptType);
     CHECK_RETURN(ret == IOTC_OK, ret);
@@ -224,7 +220,7 @@ int32_t LinkLayerProcessData(const uint8_t *buff, uint32_t len, LinkLayerEncrypt
 
 static int32_t CreateAndSendRptCmdData(const char *service, const uint8_t *data, uint32_t len, bool encrypt)
 {
-    BtSvcInfo *svcInfo = GetBtSvcInfoByService(service);
+    const BtSvcInfo *svcInfo = GetBtSvcInfoByService(service);
     CHECK_RETURN_LOGE(svcInfo != NULL, IOTC_CORE_BLE_LL_ERR_SVC_NOT_FOUND, "svc:%s not found", service);
     int32_t ret = SvcCheckEncType(svcInfo, encrypt ? LinkLayerGetEncryptType() : ENC_TYPE_UNENCRYPTED);
     CHECK_RETURN(ret == IOTC_OK, ret);

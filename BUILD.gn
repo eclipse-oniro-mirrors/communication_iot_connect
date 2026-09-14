@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,6 +24,10 @@ iotc_dep = iotc_adapter_dep
 
 if (iot_connect_speke_not_support) {
   iotc_def += ["IOTC_CONNECT_SPEKE_NOT_SUPPORT=true"]
+}
+
+if (iotc_ble_plain_only_support) {
+  iotc_def += ["IOTC_CONF_BLE_PLAIN_ONLY=1"]
 }
 
 if (iotc_connect_ble_net_cfg_support) {

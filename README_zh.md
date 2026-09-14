@@ -177,6 +177,7 @@ IoT Connect 组件不直接操作硬件，通过两层标准化隔离实现芯�
 | BLE only            | iot_connect_wifi_support设置为false，   iot_connect_ble_support 设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为1，  iot_connect_speke_not_support设置为true                                                                                                                              | 70KB  | 13KB   |
 | BLE only 裁剪配网功能     | iot_connect_wifi_support设置为 false，  iotc_connect_wifi_cloud_support设置为false，  iot_connect_ble_support设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为1，  iotc_connect_ble_net_cfg_support设置为false，  iot_connect_speke_not_support设置为true                                                     | 70KB  | 12.5KB |
 | BLE only 裁剪配网功能和看门狗 | iot_connect_wifi_support设置为 false，  iotc_connect_wifi_cloud_support设置为false，  iot_connect_ble_support 设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为 1，  iotc_connect_ble_net_cfg_support设为false，  iotc_connect_device_watch_dog设置为false，  iot_connect_speke_not_support设置为true| 70KB  | 11.5KB |
+| BLE only 裁剪持久化（无文件系统板子；该组合自动置 iotc_ble_plain_only_support=true 进入极简形态，裁剪会话建立服务与随机数模块初始化） | iot_connect_wifi_support设置为 false，  iotc_connect_wifi_cloud_support设置为false，  iot_connect_ble_support 设置为true，  IOTC_CONF_LOG_BUILD_LEVEL设置为 1，  iotc_connect_ble_net_cfg_support设置为false，  iotc_connect_device_watch_dog设置为false，  iotc_connect_speke_not_support设置为true，  iot_connect_kv_support设置为false| 60KB  | 9KB    |
 
 ### 编译
 

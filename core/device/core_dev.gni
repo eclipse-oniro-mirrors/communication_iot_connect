@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -30,16 +30,28 @@ iotc_core_device_src = [
   "$iotc_core_path/device/model/char_state_mdl.c",
   "$iotc_core_path/device/model/dev_info_mdl.c",
   "$iotc_core_path/device/report/profile_report.c",
-  "$iotc_core_path/device/config/config_info.c",
   "$iotc_core_path/device/config/config_online_status.c",
-  "$iotc_core_path/device/config/config_revoke_flag.c",
-  "$iotc_core_path/device/config/config_authinfo.c",
-  "$iotc_core_path/device/config/config_revoke.c",
   "$iotc_core_path/device/service/device_control.c",
   "$iotc_core_path/device/service/iotc_dev_svc.c",
   "$iotc_core_path/device/service/dev_svc_auth_setup.c",
   "$iotc_core_path/device/service/dev_mngr_ctx.c",
 ]
+
+# KV persistence (utils_file backed): config blobs.
+# Boards without a filesystem set iot_connect_kv_support = false and get the
+# RAM-only config_stub.c instead (session state only, nothing survives reboot).
+if (iot_connect_kv_support) {
+  iotc_core_device_src += [
+    "$iotc_core_path/device/config/config_info.c",
+    "$iotc_core_path/device/config/config_revoke_flag.c",
+    "$iotc_core_path/device/config/config_authinfo.c",
+    "$iotc_core_path/device/config/config_revoke.c",
+  ]
+} else {
+  iotc_core_device_src += [
+    "$iotc_core_path/device/config/config_stub.c",
+  ]
+}
 
 if(iotc_connect_wifi_cloud_support) {
   iotc_core_device_src += [
