@@ -127,6 +127,7 @@ const char *ModelGetDevSwv(void);
  */
 int32_t ModelGetDevProtType(void);
 
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
 /**
  * @brief 获取设备唯一标识
  *
@@ -140,6 +141,7 @@ const char *ModelGetDevUniqueId(void);
  * @return 厂家自定义数据
 */
 const char *ModelGetDevCustomData(void);
+#endif
 
 int32_t ModelGetUdid(uint8_t *buf, uint32_t len);
 

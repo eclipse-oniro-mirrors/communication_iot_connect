@@ -50,8 +50,10 @@ static int32_t BuildDeviceInfo(IotcJson *root)
         {STR_JSON_SWV, ModelGetDevSwv()},
         {STR_JSON_PROT_TYPE, protTypeBuf},
         {STR_JSON_SUB_PROD_ID, ModelGetDevSubProId()},
+#if IOTC_CONF_OH_NEARLINK_SUPPORT
         {STR_JSON_UNIQUEID_ID, ModelGetDevUniqueId()},
         {STR_JSON_CUSTOM_DATA, ModelGetDevCustomData()},
+#endif
     };
 
     ret = UtilsJsonAddStrTable(root, strItem, ARRAY_SIZE(strItem));
