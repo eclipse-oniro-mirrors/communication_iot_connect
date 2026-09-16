@@ -178,10 +178,10 @@ IoT Connect 组件不直接操作硬件，通过两层标准化隔离实现芯�
 | `iot_connect_wifi_support` | `false` | WiFi能力 |
 | `iot_connect_kv_support` | `true` |KV 持久化存储 |
 | `iotc_connect_ble_net_cfg_support` | `false` | BLE 配网能力 |
-| `iot_connect_oh_nearlink_support` | `false` | 在 BLE 配网基础上支持靠近弹窗配网功能 |
+| `iot_connect_oh_nearlink_support` | `true` | 在 BLE 配网基础上支持靠近弹窗配网功能 |
 | `iotc_connect_wifi_cloud_support` | `false` |  WiFi 端云能力 |
 | `iotc_connect_device_watch_dog_support` | `false` | 看门狗 |
-| `iot_connect_speke_not_support` | `false` |  关闭SPEKE安全协商 |
+| `iot_connect_speke_not_support` | `false` |  为false时开启SPEKE安全协商 |
 
 ### 裁剪指导
 
