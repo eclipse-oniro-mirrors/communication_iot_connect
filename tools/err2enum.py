@@ -18,10 +18,10 @@ def find_errcode_by_module(module):
     begin_line = -1
     end_line = -1
     lines = f.readlines()
-    for i in range(len(lines)):
-        if lines[i].find("typedef enum") != -1:
+    for i, line in enumerate(lines):
+        if line.find("typedef enum") != -1:
             begin_line = i
-        elif lines[i].find("IotcSubModule") != -1:
+        elif line.find("IotcSubModule") != -1:
             end_line = i
             break
     if begin_line == -1 or end_line == -1:
@@ -29,13 +29,13 @@ def find_errcode_by_module(module):
         return 1
 
     module_index = -1
-    for i in range(begin_line + 1, end_line):
-        if lines[i].find("=") == -1:
+    for line in lines[begin_line + 1:end_line]:
+        if line.find("=") == -1:
             module_index += 1
         else:
-            module_index = int(lines[i].split("=")[1].split(",")[0])
+            module_index = int(line.split("=")[1].split(",")[0])
 
-        if lines[i].find(module) != -1:
+        if line.find(module) != -1:
             f.close()
             return - module_index * (2 ** 16)
     
