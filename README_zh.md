@@ -2,13 +2,13 @@
 
 ## 简介
 
-IoT Connect组件是专为OpenHarmony资源受限的mini级设备所构建的一款极简、高性能的连接控制核心组件。其核心目标是为计算、存储和功耗均极为敏感的设备，提供稳定、安全且低功耗的设备接入、网络通信与远程控制能力。
+IoT Connect组件是专为OpenHarmony资源受限的轻量级设备所构建的一款极简、高性能的连接控制核心组件。其核心目标是为计算、存储和功耗均极为敏感的设备，提供稳定、安全且低功耗的设备接入、网络通信与远程控制能力。
 
 通过抽象底层复杂的网络差异，IoT Connect组件极大地简化了物联网设备的开发流程，为构建轻量级智能硬件与实现万物互联的广泛接入提供了关键的技术基础支撑，是实现设备间智能协同与无缝连接的重要桥梁。
 
 **核心功能：** 
 
-- 多形态设备支持：面向 OpenHarmony mini级资源受限瘦设备，支持**BLE Only、BLE&WiFi Combo**等网络形态。
+- 多形态设备支持：面向 OpenHarmony 轻量级资源受限瘦设备，支持**BLE Only、BLE&WiFi Combo**等网络形态。
 - 邻近发现与安全配网：提供设备邻近发现、安全配网及网络接入能力。
 - 多模式控制：支持**BLE直连控制、端云控制**方式实现设备间端侧协同。
 
@@ -38,7 +38,7 @@ IoT Connect组件是专为OpenHarmony资源受限的mini级设备所构建的一
 
 ### IoT Connect组件架构
 
-IoT Connect组件是统一互联的一个关键组件，集成在L0设备上，为设备提供互联互通的能力。
+IoT Connect组件是统一互联的一个关键组件，集成在轻量级设备上，为设备提供互联互通的能力。
 
 <div align="center">
   图2 IoT Connect组件架构图
@@ -96,7 +96,7 @@ IoT Connect组件是统一互联的一个关键组件，集成在L0设备上，�
 - **设备发现连接**
 
 通过BLE服务发送无线广播，使得待配网的被控端设备能够被通用互联APP扫描发现。
-用户操作通用互联 APP 连接被控设备，双方通过 PIN 码认证和 SPEKE 协商生成加密密钥，完成数据加密传输。
+用户操作通用互联 APP 连接被控设备，双方通过 PIN 码校验和 SPEKE 协商生成加密密钥，完成数据加密传输。
 
 - **设备配网**
 
@@ -104,7 +104,7 @@ IoT Connect组件是统一互联的一个关键组件，集成在L0设备上，�
 
 - **设备注册**
 
-设备连接 WiFi 后，通过 CoAP 协议与云端建立连接，完成 PSK 协商认证、设备信息注册及设备登录。
+设备连接 WiFi 后，通过 CoAP 协议与云端建立连接，完成 PSK 协商校验、设备信息注册及设备登录。
 
 - **设备控制**
 
@@ -260,7 +260,7 @@ IoT Connect调用Openharmony轻量级Bluetooth和WiFi子系统的标准接口，
 | int BleGattsSetEncryption(BdAddr bdAddr, BleSecAct secAct)                          | 设置连接加密类型       |
 | int BleStartAdvEx(int *advId, const StartAdvRawData rawData, BleAdvParams advParam) | 启动BLE广播        |
 | int BleStopAdv(int advId)                                                           | 停止BLE广播        |
-| int BleSetSecurityAuthReq(BleAuthReqMode mode)                                      | 蓝牙安全认证设置       |
+| int BleSetSecurityAuthReq(BleAuthReqMode mode)                                      | 蓝牙安全校验设置       |
 | int BleGattSecurityRsp(BdAddr bdAddr, bool accept)                                  | 安全响应           |
 
 #### WiFi接口
@@ -310,7 +310,7 @@ IoT Connect调用Openharmony轻量级Bluetooth和WiFi子系统的标准接口，
 
 #### 被控端
 
-被控端需集成 IoT Connect 组件，实现设备信息配置、控制回调处理、认证回调注册等功能。
+被控端需集成 IoT Connect 组件，实现设备信息配置、控制回调处理、校验回调注册等功能。
 
 | 平台     | 套餐类型           | 开发指南                                                        |
 | ------ | -------------- | ----------------------------------------------------------- |
@@ -331,7 +331,7 @@ IoT Connect调用Openharmony轻量级Bluetooth和WiFi子系统的标准接口，
 
 3. **实现控制回调**：如控制指令接收、状态查询等；
 
-4. **实现认证回调方法**：配网鉴权处理；
+4. **实现校验回调方法**：配网校验处理；
 
 5. **启动组件**：使能各模块能力，启动组件；
 
@@ -458,10 +458,10 @@ int32_t ReportAll(void)
 }
 ```
 
-**步骤4：实现认证回调方法**
+**步骤4：实现校验回调方法**
 
 ```c
-// PIN码获取（配网鉴权）
+// PIN码获取（配网校验）
 int32_t GetPincode(uint8_t *buf, uint32_t bufLen)
 {
     if (buf == NULL || bufLen < IOTC_PINCODE_LEN) { return -1; }

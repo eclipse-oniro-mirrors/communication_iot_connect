@@ -7,7 +7,7 @@
 | 设备类型 | 配置要求                                                          |
 | ---- | ------------------------------------------------------------- |
 | 开发板  | BearPi-pico H3863（Hi3863芯片），需配备USB数据线（用于烧录、调试及供电），以下简称为Hi3863 |
-| 控制设备 | 可连接WiFi的HarmonyOS Next手机（用于运行通用互联APP，完成WiFi配网及设备控制）           |
+| 控制设备 | 可连接WiFi的OpenHarmony系统的设备（用于运行通用互联APP，完成WiFi配网及设备控制）           |
 
 ### 1.2 软件要求
 
@@ -15,7 +15,7 @@
 | ------------- | ----------------------- | ------------------------------------------ |
 | OpenHarmony源码 | 5.1.0 release           | 基础系统源码，为Hi3863平台提供编译底座及WiFi驱动支持            |
 | IoTConnect组件  | 最新master分支              | 提供WiFi单模通信核心能力，支撑设备WiFi配网、与APP/云侧数据交互      |
-| 通用互联APP       | 最新master分支              | 鸿蒙生态控制入口，运行在HarmonyOS手机，用于WiFi配网、设备控制及状态查看 |
+| 通用互联APP       | 最新master分支              | OpenHarmony生态控制入口，运行在OpenHarmony系统的设备，用于WiFi配网、设备控制及状态查看 |
 | 编译工具链         | arm-none-eabi-gcc 9.3.1 | Hi3863芯片的ARM架构编译工具链，用于生成可执行镜像              |
 | hb构建工具        | 0.4.6及以上                | OpenHarmony轻量级设备编译构建工具                     |
 | Python        | 3.8~3.9                 | 运行hb工具及编译脚本                                |
@@ -299,10 +299,10 @@ static int GpsPutCharState(const IotcServiceInfo *svc, const char *data, uint32_
   /**
    * @brief  通用的字符状态PUT操作调度函数
    * @note   遍历状态数组和服务映射表，根据svcId匹配对应的服务，并调用该服务的putCharState函数更新状态
-   *         支持批量处理多个服务的状态更新，匹配失败/函数指针为空时跳过，记录首个（最后一个）错误码
+   *         支持批量处理多个服务的状态更新，匹配失败/函数指针为空时跳过，记录第一个（最后一个）错误码
    * @param  state: 待更新的状态数组（包含svcId、data、len等信息）
    * @param  num: 状态数组的元素个数
-   * @retval 0: 所有服务PUT操作成功, -1: 参数无效, 其他值: 对应服务PUT操作返回的错误码
+   * @retval 0: 所有服务PUT操作成功, -1: 参数无效, 其余值: 对应服务PUT操作返回的错误码
    */
   static int32_t PutCharState(const IotcCharState state[], uint32_t num)
   {
@@ -346,12 +346,12 @@ static int GpsPutCharState(const IotcServiceInfo *svc, const char *data, uint32_
   /**
    * @brief  通用的字符状态GET操作调度函数
    * @note   遍历状态数组和服务映射表，根据svcId匹配对应的服务，调用getCharState函数获取状态
-   *         结果通过out和len输出参数返回，匹配失败/函数指针为空时跳过，记录首个（最后一个）错误码
+   *         结果通过out和len输出参数返回，匹配失败/函数指针为空时跳过，记录第一个（最后一个）错误码
    * @param  state: 待获取状态的数组（仅使用svcId字段匹配服务）
    * @param  out: 输出参数数组，存储各服务返回的JSON字符串（内存由对应服务分配，需外部释放）
    * @param  len: 输出参数数组，存储各服务返回字符串的长度
    * @param  num: 状态数组/输出数组的元素个数（三者长度需一致）
-   * @retval 0: 所有服务GET操作成功, -1: 参数无效, 其他值: 对应服务GET操作返回的错误码
+   * @retval 0: 所有服务查询操作成功, -1: 参数无效, 其余值: 对应服务查询操作返回的错误码
    */
   static int32_t GetCharState(const IotcCharState state[], char *out[], uint32_t len[], uint32_t num)
   {
@@ -455,7 +455,7 @@ static int GpsPutCharState(const IotcServiceInfo *svc, const char *data, uint32_
 
 ##### 3.2.4.1 核心回调注册
 
-通过宏定义简化组件参数设置，向IoTConnect组件注册指令处理、安全认证、全量上报等回调函数，组件收到WiFi数据或触发事件时自动调用。
+通过宏定义简化组件参数设置，向IoTConnect组件注册指令处理、安全校验、全量上报等回调函数，组件收到WiFi数据或触发事件时自动调用。
 
 ```c
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_PUT_CHAR_STATE_CALLBACK, PutCharState);
@@ -480,7 +480,7 @@ int32_t IotcOhDemoEntry(void)
     ret = IotcOhWifiEnable(); // 关键操作：启用WiFi模块（WiFi单模核心）
     if (ret != 0) { return ret; }
 
-    // 注册核心回调（指令处理、安全认证、状态上报等）
+    // 注册核心回调（指令处理、安全校验、状态上报等）
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_PUT_CHAR_STATE_CALLBACK, PutCharState);
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_CHAR_STATE_CALLBACK, GetCharState);
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_REPORT_ALL_CALLBACK, ReportAll);
@@ -608,7 +608,7 @@ WiFi Only（Hi3863平台）的编译方法以及步骤请参考示例代码仓�
 
 1. 联系OpenHarmony统一互联PMC或在laval社区提单，完成APP白名单配置;
 
-2. 编译通用互联APP源码，生成HAP包并安装至HarmonyOS Next手机。
+2. 编译通用互联APP源码，生成HAP包并安装至OpenHarmony系统的设备。
 
 3. 通过USB数据线连接Hi3863开发板与电脑，使用烧录工具将编译生成的镜像烧录至开发板。
 

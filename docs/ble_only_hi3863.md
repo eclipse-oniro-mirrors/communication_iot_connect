@@ -14,7 +14,7 @@
 | ------------- | ----------------------- | ---------------------------------------- |
 | OpenHarmony源码 | 5.1.0 release           | 基础系统源码，为 Hi3863 平台提供编译底座                 |
 | IoTConnect组件  | 最新master分支              | 提供蓝牙单模通信核心能力，支撑设备与APP/云侧数据交互             |
-| 通用互联APP       | 最新master分支              | 鸿蒙生态控制入口，运行在HarmonyOS手机，用于蓝牙配网、设备控制及状态查看 |
+| 通用互联APP       | 最新master分支              | OpenHarmony生态控制入口，运行在OpenHarmony系统的设备，用于蓝牙配网、设备控制及状态查看 |
 | 编译工具链         | arm-none-eabi-gcc 9.3.1 | Hi3863 芯片的 ARM 架构编译工具链                   |
 | hb构建工具        | 0.4.6及以上                | OpenHarmony轻量级设备编译构建工具，简化编译流程            |
 | Python        | 3.8~3.9                 | 运行hb工具及编译脚本，支撑自动化构建流程                    |
@@ -260,7 +260,7 @@ static int32_t GpsGetCharState(const IotcServiceInfo *svc, char **data, uint32_t
 
 ##### 3.2.5.1 核心回调注册
 
-向IoTConnect组件注册指令处理、安全认证、全量上报等回调函数，组件收到APP指令或触发对应事件时自动调用。
+向IoTConnect组件注册指令处理、安全校验、全量上报等回调函数，组件收到APP指令或触发对应事件时自动调用。
 
 ```c
 // 注册指令接收回调（APP下发控制指令时触发）
@@ -269,7 +269,7 @@ SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_PUT_CHAR_STATE_CALLBACK, PutCharSta
 SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_CHAR_STATE_CALLBACK, GetCharState);
 // 注册全量状态上报回调（设备上线时触发）
 SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_REPORT_ALL_CALLBACK, ReportAll);
-// 注册PIN码获取回调（配网鉴权时触发）
+// 注册PIN码获取回调（配网校验时触发）
 SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_PINCODE_CALLBACK, GetPincode);
 // 注册AC KEY获取回调（端云加密时触发）
 SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_AC_KEY_CALLBACK, GetAcKey);
@@ -474,7 +474,7 @@ BLE Only（Hi3863平台）的编译方法以及步骤请参考示例代码仓的
 - 5.1 蓝牙单模设备点对点本地控制
 1. 联系OpenHarmony统一互联PMC或在laval社区提单，完成APP白名单配置;
 
-2. 编译通用互联APP源码，生成HAP包并安装至HarmonyOS Next手机。
+2. 编译通用互联APP源码，生成HAP包并安装至OpenHarmony系统的设备。
 
 3. 通过USB数据线连接H3863开发板与电脑，使用[烧录工具](https://www.bearpi.cn/core_board/bearpi/pico/h3863/software/%E4%B8%8B%E8%BD%BD%E7%83%A7%E5%BD%95.html)将编译生成的镜像烧录至开发板。
 
