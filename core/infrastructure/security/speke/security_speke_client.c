@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <stdbool.h>
+#include <string.h>
 #include "security_speke_client.h"
 #include "security_speke_defs.h"
 #include "security_speke_common.h"
@@ -20,6 +21,7 @@
 #include "iotc_log.h"
 #include "iotc_mem.h"
 #include "securec.h"
+#include "security_speke_flat.h"
 #include "utils_common.h"
 #include "security_random.h"
 #include "iotc_errcode.h"
@@ -101,76 +103,108 @@ static PrimeType GetSpekePrimeType(uint32_t pubKeyLen)
     }
 }
 
-static int32_t ClientInitNegoCtx(const uint8_t *pinCode, uint32_t pinCodeLen,
-    const IotcJson *payload, uint32_t remotePubKeyLen, NegoContext **negoContext)
+/* 提取对端 challenge 并写入协商上下文；任一步失败释放 negoCtx 并返回错误 */
+static int32_t ClientSetChallenge(NegoContext *negoCtx, const SpekeStrView *payload)
 {
-    /* 作为客户端需要根据服务端返回的公钥长度来决定是否使用256模式 */
+    SpekeStrView challengeView;
+    int32_t ret = SpekeFlatGetStr(payload->start, payload->len, SPEKE_SEC_DATA_CHALLENGE_JSON, &challengeView);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("Speke client get remote challenge flat err:%d", ret);
+        NegoContextFree(negoCtx);
+        return ret;
+    }
+    uint8_t challengeBuf[UNHEXIFY_LEN(SPEKE_FLAT_CHALLENGE_MAX_LEN)];
+    uint32_t cLen = UNHEXIFY_LEN(challengeView.len);
+    if (!UtilsUnhexify(challengeView.start, challengeView.len, challengeBuf, sizeof(challengeBuf))) {
+        IOTC_LOGE("Speke client unhexify challenge err");
+        NegoContextFree(negoCtx);
+        return IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY;
+    }
+    ret = NegoContextSetRemoteChallenge(negoCtx, challengeBuf, cLen);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("Speke client set remote challenge err:%d", ret);
+        NegoContextFree(negoCtx);
+    }
+    return ret;
+}
+
+static int32_t ClientInitNegoCtx(const uint8_t *pinCode, uint32_t pinCodeLen,
+    const SpekeStrView *payload, uint32_t remotePubKeyLen, NegoContext **negoContext)
+{
+    /* flat extraction */
     PrimeType primeType = GetSpekePrimeType(remotePubKeyLen);
     if (primeType == PRIME_INVALID) {
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_PUBKEY;
     }
 
-    uint8_t *salt = NULL;
-    uint32_t saltLen = 0;
-    int32_t ret = SpekeCommonParseDataFromJson(payload, SPEKE_SEC_DATA_SALT_JSON, &salt, &saltLen);
+    SpekeStrView saltView;
+    int32_t ret = SpekeFlatGetStr(payload->start, payload->len, SPEKE_SEC_DATA_SALT_JSON, &saltView);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("Speke client get remote salt err:%d", ret);
+        IOTC_LOGE("Speke client get remote salt flat err:%d", ret);
         return ret;
+    }
+    uint8_t saltBuf[MAX_SALT_LEN];
+    uint32_t saltLen = UNHEXIFY_LEN(saltView.len);
+    if (!UtilsUnhexify(saltView.start, saltView.len, saltBuf, sizeof(saltBuf))) {
+        IOTC_LOGE("Speke client unhexify salt err");
+        return IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY;
     }
 
     /* 客户端使用对端 salt 初始化协商上下文句柄 */
-    NegoContext *negoCtx = NegoContextInit(pinCode, pinCodeLen, salt, saltLen, primeType);
+    NegoContext *negoCtx = NegoContextInit(pinCode, pinCodeLen, saltBuf, saltLen, primeType);
     if (negoCtx == NULL) {
-        IotcFree(salt);
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_NEGOCTX_INIT;
     }
-    IotcFree(salt);
 
-    uint8_t *remoteChallenge = NULL;
-    uint32_t remoteChallengeLen = 0;
-    ret = SpekeCommonParseDataFromJson(payload, SPEKE_SEC_DATA_CHALLENGE_JSON, &remoteChallenge, &remoteChallengeLen);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("Speke client get remote challenge err:%d", ret);
-        NegoContextFree(negoCtx);
-        return ret;
-    }
-    ret = NegoContextSetRemoteChallenge(negoCtx, remoteChallenge, remoteChallengeLen);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("Speke client set remote challenge err:%d", ret);
-        NegoContextFree(negoCtx);
-    } else {
+    ret = ClientSetChallenge(negoCtx, payload);
+    if (ret == IOTC_OK) {
         *negoContext = negoCtx;
     }
-
-    IotcFree(remoteChallenge);
     return ret;
 }
 
-static int32_t InitNegoCtxFromPayload(const SpekeSession *session, const IotcJson *payload,
-    NegoContext **negoContext)
+static int32_t InitNegoCtxFromPayload(const SpekeSession *session, const char *payload,
+    uint32_t payloadLen, NegoContext **negoContext)
 {
-    uint8_t *remotePubKey = NULL;
-    uint32_t remotePubKeyLen = 0;
-    int32_t ret = SpekeCommonParseDataFromJson(payload, SPEKE_SEC_DATA_EPK_JSON, &remotePubKey, &remotePubKeyLen);
+    /* flat extraction + hex direct read */
+    SpekeStrView epkView;
+    int32_t ret = SpekeFlatGetStr(payload, payloadLen, SPEKE_SEC_DATA_EPK_JSON, &epkView);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("Speke client get remote pubKey err:%d", ret);
+        IOTC_LOGE("Speke client get remote pubKey flat err:%d", ret);
         return ret;
+    }
+    /* flat extraction; the remote pubKey hex is unhexified into a short-lived
+     * binary buffer and imported with IotcMpiReadBinary (no NUL dependency) */
+    uint32_t remotePubKeyLen = UNHEXIFY_LEN(epkView.len);
+    if (remotePubKeyLen == 0) {
+        IOTC_LOGE("Speke client remote pubKey empty");
+        return IOTC_ADAPTER_JSON_ERR_PARSE;
+    }
+    uint8_t *remotePubKey = (uint8_t *)IotcMalloc(remotePubKeyLen);
+    if (remotePubKey == NULL) {
+        return IOTC_ADAPTER_MEM_ERR_MALLOC;
+    }
+    if (!UtilsUnhexify(epkView.start, epkView.len, remotePubKey, remotePubKeyLen)) {
+        IOTC_LOGE("Speke client remote pubKey unhexify err");
+        IotcFree(remotePubKey);
+        return IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY;
     }
 
     NegoContext *negoCtx = NULL;
-    ret = ClientInitNegoCtx(session->pinCode, session->pinCodeLen, payload, remotePubKeyLen, &negoCtx);
+    SpekeStrView payloadView = { payload, payloadLen };
+    ret = ClientInitNegoCtx(session->pinCode, session->pinCodeLen, &payloadView,
+        remotePubKeyLen, &negoCtx);
     if (ret != IOTC_OK) {
         IotcFree(remotePubKey);
         return ret;
     }
     ret = NegoContextGenSessionKey(negoCtx, remotePubKey, remotePubKeyLen);
+    IotcFree(remotePubKey);
     if (ret != IOTC_OK) {
-        IotcFree(remotePubKey);
         NegoContextFree(negoCtx);
         return ret;
     }
 
-    IotcFree(remotePubKey);
     *negoContext = negoCtx;
     return IOTC_OK;
 }
@@ -218,7 +252,7 @@ static int32_t CreateSpekeClientCfmSecPayload(const NegoContext *negoCtx, IotcJs
 int32_t SpekeClientProcessRsp(SpekeProcessParam param, uint8_t **msg, uint32_t *len)
 {
     if ((msg == NULL) || (len == NULL) || (param.session == NULL) ||
-        (param.sessionId == NULL) || (param.secDataPayload == NULL)) {
+        (param.sessionId == NULL) || (param.payload == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
     SpekeSession *session = param.session;
@@ -226,14 +260,14 @@ int32_t SpekeClientProcessRsp(SpekeProcessParam param, uint8_t **msg, uint32_t *
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_TYPE;
     }
 
-    int32_t ret = SpekeCommonVerifyVersion(param.secDataPayload);
+    int32_t ret = SpekeCommonVerifyVersion(param.payload, param.payloadLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("Speke client proc rsp verify ver err:%d", ret);
         return ret;
     }
 
     NegoContext *negoCtx = NULL;
-    ret = InitNegoCtxFromPayload(session, param.secDataPayload, &negoCtx);
+    ret = InitNegoCtxFromPayload(session, param.payload, param.payloadLen, &negoCtx);
     if (ret != IOTC_OK) {
         return ret;
     }
@@ -263,7 +297,7 @@ int32_t SpekeClientProcessRsp(SpekeProcessParam param, uint8_t **msg, uint32_t *
 int32_t SpekeClientProcessCfm(SpekeProcessParam param, uint8_t **msg, uint32_t *len)
 {
     if ((msg == NULL) || (len == NULL) || (param.session == NULL) ||
-        (param.sessionId == NULL) || (param.secDataPayload == NULL)) {
+        (param.sessionId == NULL) || (param.payload == NULL)) {
         return IOTC_ERR_PARAM_INVALID;
     }
     SpekeSession *session = param.session;
@@ -277,20 +311,23 @@ int32_t SpekeClientProcessCfm(SpekeProcessParam param, uint8_t **msg, uint32_t *
     *msg = NULL;
     *len = 0;
 
-    uint8_t *remoteHmac = NULL;
-    uint32_t remoteHmacLen = 0;
-    int32_t ret = SpekeCommonParseDataFromJson(param.secDataPayload, SPEKE_SEC_DATA_KCF_JSON,
-        &remoteHmac, &remoteHmacLen);
+    /* flat extraction */
+    SpekeStrView kcfView;
+    int32_t ret = SpekeFlatGetStr(param.payload, param.payloadLen, SPEKE_SEC_DATA_KCF_JSON, &kcfView);
     if (ret != IOTC_OK) {
-        IOTC_LOGE("Speke client get remote hmac err:%d", ret);
+        IOTC_LOGE("Speke client get remote hmac flat err:%d", ret);
         return ret;
     }
-    ret = NegoContextVerifyHmac(session->negoContext, remoteHmac, remoteHmacLen);
+    uint8_t hmacBuf[HMAC_LEN];
+    uint32_t hLen = UNHEXIFY_LEN(kcfView.len);
+    if (!UtilsUnhexify(kcfView.start, kcfView.len, hmacBuf, sizeof(hmacBuf))) {
+        IOTC_LOGE("Speke client unhexify hmac err");
+        return IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY;
+    }
+    ret = NegoContextVerifyHmac(session->negoContext, hmacBuf, hLen);
     if (ret != IOTC_OK) {
-        IotcFree(remoteHmac);
         return ret;
     }
-    IotcFree(remoteHmac);
 
     return NegoContextGenDataEncKey(session->negoContext, session->dataEncKey, sizeof(session->dataEncKey));
 }

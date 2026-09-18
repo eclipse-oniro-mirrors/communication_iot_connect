@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,10 @@ extern "C" {
 #endif
 
 int32_t PutBleSvcSpeke(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
+
+/* 帧化回调——响应直接在 [PKG_HEAD_LEN 预留 + svc 帧] 内构造，
+   SERVER_RSP 手写序列化直写帧内偏移（零中转拷贝），*outLen 为 svc 帧长度 */
+int32_t PutBleSvcSpekeFramed(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
 
 #ifdef __cplusplus
 }

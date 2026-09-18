@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -184,10 +184,12 @@ int32_t ClientSleSpekeStartSession(uint16_t connId)
     ret = SpekeStartSession(GetSleSpekeSess(connId), &msg, &len);
     if (ret != IOTC_OK || len == 0) {
         IOTC_LOGE("[uuid client] start speke failed!");
+        IotcFree(msg);
         return ret;
     }
 
     ret = SleLinkLayerReportSvcData(connId, SLE_SVC_SPEKE, msg, len, SLE_OPTYPE_PUT);
+    IotcFree(msg);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
@@ -206,6 +208,7 @@ int32_t ClientGetIotcConDeviceInfo(uint16_t connId)
     }
 
     ret = SleLinkLayerReportSvcDataEnc(connId, SLE_SVC_DEVICE_INFO, msg, len, SLE_OPTYPE_GET);
+    IotcFree(msg);
     if (ret != IOTC_OK) {
         IOTC_LOGE("[uuid client] report msg failed!");
         return ret;
@@ -453,6 +456,7 @@ static void SleClientSpekeFinishedCallback(uint32_t event, void *param, uint32_t
         if (SleLinkLayerReportSvcDataEnc(spekeStatus->connSessionId, SLE_SVC_AUTH_SETUP, msg, len, SLE_OPTYPE_GET) !=
             IOTC_OK) {
             IOTC_LOGE("[uuid client] report msg failed!");
+            IotcFree(msg);
             return;
         }
 
