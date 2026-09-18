@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,10 @@ extern "C" {
 #define UTILS_BIT_RESET(data, n)  ((data) &= (~UTILS_BIT(n)))
 #define UTILS_IS_BIT_SET(data, n) (((data) & UTILS_BIT(n)) != 0)
 
-typedef struct BitMap BitMap;
+typedef struct BitMap {
+    uint32_t size;
+    uint8_t map[];
+} BitMap;
 
 BitMap *UtilsCreateBitMap(uint32_t size);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,14 +17,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "utils_list.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define MAX_QUEUE_VALUE_LEN 1024
-
-typedef struct UtilsQueue UtilsQueue;
 
 /**
  * @brief 队列值释放回调函数
@@ -33,6 +32,30 @@ typedef struct UtilsQueue UtilsQueue;
  * @attention 不释放value本身
  */
 typedef void (*QueueFreeValue)(void *value);
+
+typedef struct {
+    ListEntry head;
+    uint32_t count;
+    uint32_t capacity;
+    QueueFreeValue freeValue;
+} UtilsQueue;
+
+/**
+ * @brief Initialize a queue on caller-provided memory
+ *
+ * @param queue [IN] queue to initialize
+ * @param capacity [IN] max buffered values
+ * @param freeValue [IN] value free callback; NULL if no extra free needed
+ * @return true success, false failure
+ */
+bool UtilsQueueInit(UtilsQueue *queue, uint32_t capacity, QueueFreeValue freeValue);
+
+/**
+ * @brief Deinitialize a queue (frees internal nodes, not the queue itself)
+ *
+ * @param queue [IN] queue to deinitialize
+ */
+void UtilsQueueDeinit(UtilsQueue *queue);
 
 /**
  * @brief 创建队列

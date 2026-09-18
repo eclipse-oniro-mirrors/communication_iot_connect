@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ typedef struct {
 
 typedef struct {
     EventSource base;
-    UtilsMsgQueue *msgQueue;
+    UtilsMsgQueue msgQueue;   /* embedded value (was pointer) */
     uint32_t maxMsgLen;
     uint32_t msgInfoLen;
     EventSourceMsg *msgInfo;
@@ -74,7 +74,7 @@ static bool MsgQueueSourcePoll(EventSource *self, uint32_t timeout)
     /* make sure msg has already process */
     MsgInfoHandler(&mqSource->msgInfo, &mqSource->msgInfoLen);
 
-    int32_t ret = UtilsMsgQueuePopMem(mqSource->msgQueue, (void **)&mqSource->msgInfo, &mqSource->msgInfoLen, timeout);
+    int32_t ret = UtilsMsgQueuePopMem(&mqSource->msgQueue, (void **)&mqSource->msgInfo, &mqSource->msgInfoLen, timeout);
     if (ret == IOTC_OK) {
         /* resv queue msg */
         return true;
@@ -108,22 +108,20 @@ static void MsgQueueSourceFinalize(EventSource *self)
     EventSourceMsgQueue *mqSource = (EventSourceMsgQueue *)self;
 
     MsgInfoHandler(&mqSource->msgInfo, &mqSource->msgInfoLen);
-    if (mqSource->msgQueue != NULL) {
-        (void)UtilsMsgQueueSuspend(mqSource->msgQueue);
-        /* 清空消息 */
-        while (UtilsMsgQueuePopMem(mqSource->msgQueue, (void **)&mqSource->msgInfo,
-            &mqSource->msgInfoLen, 0) == IOTC_OK) {
-            MsgInfoHandler(&mqSource->msgInfo, &mqSource->msgInfoLen);
-        }
-        UtilsMsgQueueDestroy(&mqSource->msgQueue);
+    (void)UtilsMsgQueueSuspend(&mqSource->msgQueue);
+    /* drain messages */
+    while (UtilsMsgQueuePopMem(&mqSource->msgQueue, (void **)&mqSource->msgInfo,
+        &mqSource->msgInfoLen, 0) == IOTC_OK) {
+        MsgInfoHandler(&mqSource->msgInfo, &mqSource->msgInfoLen);
     }
+    UtilsMsgQueueDeinit(&mqSource->msgQueue);
 }
 
 EventSource *EventSourceMsgQueueNew(uint32_t cap, uint32_t maxMsgLen, const char *name)
 {
     CHECK_RETURN_LOGE(maxMsgLen > 0 && cap > 0, NULL, "param invalid");
 
-    static EventSourceOps msgQueueSourceOps = {
+    static const EventSourceOps msgQueueSourceOps = {
         .prepare = MsgQueueSourcePrepare,
         .poll = MsgQueueSourcePoll,
         .check = MsgQueueSourceCheck,
@@ -139,9 +137,8 @@ EventSource *EventSourceMsgQueueNew(uint32_t cap, uint32_t maxMsgLen, const char
 
     EventSourceMsgQueue *mqSource = (EventSourceMsgQueue *)source;
     do {
-        mqSource->msgQueue = UtilsMsgQueueCreate(cap, NULL);
-        if (mqSource->msgQueue == NULL) {
-            IOTC_LOGW("create msg queue error");
+        if (!UtilsMsgQueueInit(&mqSource->msgQueue, cap, NULL)) {
+            IOTC_LOGW("init msg queue error");
             break;
         }
 
@@ -181,7 +178,7 @@ int32_t EventSourceMsgQueueSend(EventSource *source, const uint8_t *msg, uint32_
         return IOTC_ERR_SECUREC_MEMCPY;
     }
 
-    ret = UtilsMsgQueuePushMem(mqSource->msgQueue, (void **)&msgInfo, msgInfoLen, timeout);
+    ret = UtilsMsgQueuePushMem(&mqSource->msgQueue, (void **)&msgInfo, msgInfoLen, timeout);
     if (ret != IOTC_OK) {
         IotcFree(msgInfo);
         IOTC_LOGW("msg push queue error %d/%u", ret, timeout);

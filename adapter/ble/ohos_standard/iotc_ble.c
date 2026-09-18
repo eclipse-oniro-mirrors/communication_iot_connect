@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -247,7 +247,7 @@ static void SecurityRespondCb(const BdAddr *bdAddr)
     }
 }
 
-static BtGattCallbacks g_bleGattCb = {
+static const BtGattCallbacks g_bleGattCb = {
     .advEnableCb = AdvStartCompleteCb,
     .advDisableCb = AdvStopCompleteCb,
     .securityRespondCb = SecurityRespondCb,
@@ -463,7 +463,7 @@ static void RequestWriteCb(BtReqWriteCbPara writeCbPara)
     }
 }
 
-static BtGattServerCallbacks g_bleGattsCb = {
+static const BtGattServerCallbacks g_bleGattsCb = {
     .registerServerCb = RegisterServerCb,
     .serviceAddCb = ServiceAddCb,
     .characteristicAddCb = CharacteristicAddCb,

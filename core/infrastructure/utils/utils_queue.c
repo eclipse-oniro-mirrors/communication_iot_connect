@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,12 +25,42 @@ typedef struct {
     uint32_t valueLen;
 } QueueNode;
 
-struct UtilsQueue {
-    ListEntry head;
-    uint32_t count;
-    uint32_t capacity;
-    QueueFreeValue freeValue;
-};
+bool UtilsQueueInit(UtilsQueue *queue, uint32_t capacity, QueueFreeValue freeValue)
+{
+    if (queue == NULL || capacity == 0) {
+        IOTC_LOGW("invalid param");
+        return false;
+    }
+    (void)memset_s(queue, sizeof(UtilsQueue), 0, sizeof(UtilsQueue));
+    queue->capacity = capacity;
+    queue->freeValue = freeValue;
+    queue->count = 0;
+    LIST_INIT(&queue->head);
+    IOTC_LOGI("queue init success count=%u,capacity=%u",
+        queue->count, queue->capacity);
+    return true;
+}
+
+void UtilsQueueDeinit(UtilsQueue *queue)
+{
+    if (queue == NULL) {
+        IOTC_LOGW("invalid param");
+        return;
+    }
+
+    ListEntry *item = NULL;
+    ListEntry *next = NULL;
+    LIST_FOR_EACH_ITEM_SAFE(item, next, &queue->head) {
+        QueueNode *node = CONTAINER_OF(item, QueueNode, list);
+        LIST_REMOVE(item);
+        if (queue->freeValue != NULL) {
+            queue->freeValue(node->value);
+        }
+        IotcFree(node->value);
+        IotcFree(node);
+    }
+    IOTC_LOGI("queue deinit success");
+}
 
 UtilsQueue *UtilsQueueCreate(uint32_t capacity, QueueFreeValue freeValue)
 {
@@ -44,13 +74,10 @@ UtilsQueue *UtilsQueueCreate(uint32_t capacity, QueueFreeValue freeValue)
         IOTC_LOGW("malloc");
         return NULL;
     }
-    (void)memset_s(queue, sizeof(UtilsQueue), 0, sizeof(UtilsQueue));
-    queue->capacity = capacity;
-    queue->freeValue = freeValue;
-    queue->count = 0;
-    LIST_INIT(&queue->head);
-    IOTC_LOGI("queue create success count=%u,capacity=%u",
-        queue->count, queue->capacity);
+    if (!UtilsQueueInit(queue, capacity, freeValue)) {
+        IotcFree(queue);
+        return NULL;
+    }
     return queue;
 }
 
@@ -199,17 +226,7 @@ void UtilsQueueDestroy(UtilsQueue **queueAddr)
     }
 
     UtilsQueue *queue = *queueAddr;
-    ListEntry *item = NULL;
-    ListEntry *next = NULL;
-    LIST_FOR_EACH_ITEM_SAFE(item, next, &queue->head) {
-        QueueNode *node = CONTAINER_OF(item, QueueNode, list);
-        LIST_REMOVE(item);
-        if (queue->freeValue != NULL) {
-            queue->freeValue(node->value);
-        }
-        IotcFree(node->value);
-        IotcFree(node);
-    }
+    UtilsQueueDeinit(queue);
     IotcFree(queue);
     *queueAddr = NULL;
     IOTC_LOGI("queue destroy success");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -174,4 +174,50 @@ bool LinkLayerSessKeyExist(void)
 {
     CHECK_RETURN(g_sessKeyCb.sessKeyCheckExist != NULL, false);
     return g_sessKeyCb.sessKeyCheckExist();
+}
+
+/* sesskey encrypt directly into outBuf, no intermediate encBuff */
+int32_t LinkLayerSessKeyEncryptInto(const uint8_t *data, uint32_t dataLen, const LinkLayerEncryptOut *out)
+{
+    CHECK_RETURN((data != NULL) && (dataLen > 0) && (out != NULL) && (out->buff != NULL) &&
+        (out->buffLen != NULL), IOTC_ERR_PARAM_INVALID);
+
+    BtCmdParam cmdParam = { 0 };
+    int32_t ret = DecodeCmdData(data, dataLen, &cmdParam);
+    CHECK_RETURN(ret == IOTC_OK, ret);
+    CHECK_RETURN_LOGE((cmdParam.request != NULL) && (cmdParam.requestLen > 0) && (cmdParam.requestLen < dataLen),
+        IOTC_CORE_BLE_LL_ERR_BODY, "body err, len:%u", cmdParam.requestLen);
+
+    uint32_t svcHeaderLen = dataLen - cmdParam.requestLen;
+    uint32_t encBodyLen = cmdParam.requestLen + SESS_TAG_LEN;
+    uint32_t totalBodyLen = SESS_IV_LEN + encBodyLen + SESS_ID_LEN;
+    uint32_t needed = svcHeaderLen + totalBodyLen + SESS_HMAC_LEN;
+    CHECK_RETURN_LOGE(out->buffCap >= needed, IOTC_ERR_PARAM_INVALID,
+        "buffCap:%u < needed:%u", out->buffCap, needed);
+
+    (void)memset_s(out->buff, needed, 0, needed);
+
+    ret = memcpy_s(out->buff, needed, data, svcHeaderLen);
+    if (ret != EOK) {
+        return IOTC_ERR_SECUREC_MEMCPY;
+    }
+
+    CHECK_RETURN(svcHeaderLen >= SVC_PAYLOAD_LEN_LEN, IOTC_CORE_BLE_LL_ERR_BODY);
+    uint32_t pos = svcHeaderLen - SVC_PAYLOAD_LEN_LEN;
+    out->buff[pos++] = totalBodyLen & 0xFF;
+    out->buff[pos++] = (totalBodyLen >> BITS_PER_BYTE) & 0xFF;
+
+    ret = SessKeyEncrypt(cmdParam.request, cmdParam.requestLen,
+        out->buff + svcHeaderLen, needed - svcHeaderLen - SESS_HMAC_LEN);
+    if (ret != IOTC_OK) {
+        return ret;
+    }
+
+    ret = SessKeyCalHmac(out->buff, needed - SESS_HMAC_LEN, out->buff + needed - SESS_HMAC_LEN, SESS_HMAC_LEN);
+    if (ret != IOTC_OK) {
+        return ret;
+    }
+
+    *out->buffLen = needed;
+    return IOTC_OK;
 }

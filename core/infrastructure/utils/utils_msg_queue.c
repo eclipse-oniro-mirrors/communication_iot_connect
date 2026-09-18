@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,20 +23,56 @@
 #include "utils_mutex_ex.h"
 #include "utils_assert.h"
 
-struct UtilsMsgQueue {
-    UtilsQueue *queue;
-    UtilsExMutex *lock;
-    IotcSemId *sendSem;
-    IotcSemId *recvSem;
-    bool pushOnOff;
-};
+static int32_t MsgQueueDataInit(UtilsMsgQueue *msgQueue, uint32_t capacity, QueueFreeValue freeValue);
+
+bool UtilsMsgQueueInit(UtilsMsgQueue *msgQueue, uint32_t capacity, QueueFreeValue freeValue)
+{
+    if (msgQueue == NULL || capacity == 0) {
+        IOTC_LOGW("invalid param");
+        return false;
+    }
+    (void)memset_s(msgQueue, sizeof(UtilsMsgQueue), 0, sizeof(UtilsMsgQueue));
+    if (MsgQueueDataInit(msgQueue, capacity, freeValue) != IOTC_OK) {
+        IOTC_LOGW("init msg queue err");
+        UtilsMsgQueueDeinit(msgQueue);
+        return false;
+    }
+    return true;
+}
+
+void UtilsMsgQueueDeinit(UtilsMsgQueue *msgQueue)
+{
+    if (msgQueue == NULL) {
+        IOTC_LOGW("invalid param");
+        return;
+    }
+    bool lock = false;
+    if (msgQueue->lock != NULL) {
+        lock = UtilsExMutexLock(msgQueue->lock);
+    }
+    UtilsQueueDeinit(&msgQueue->queue);
+    if (msgQueue->sendSem != NULL) {
+        IotcSemDestroy(msgQueue->sendSem);
+        msgQueue->sendSem = NULL;
+    }
+    if (msgQueue->recvSem != NULL) {
+        IotcSemDestroy(msgQueue->recvSem);
+        msgQueue->recvSem = NULL;
+    }
+    if (msgQueue->lock != NULL) {
+        if (lock) {
+            UtilsExMutexUnlock(msgQueue->lock);
+        }
+        UtilsDestroyExMutex(&msgQueue->lock);
+        msgQueue->lock = NULL;
+    }
+}
 
 static int32_t MsgQueueDataInit(UtilsMsgQueue *msgQueue, uint32_t capacity, QueueFreeValue freeValue)
 {
     /* 资源外部统一释放 */
-    msgQueue->queue = UtilsQueueCreate(capacity, freeValue);
-    if (msgQueue->queue == NULL) {
-        IOTC_LOGW("create queue err");
+    if (!UtilsQueueInit(&msgQueue->queue, capacity, freeValue)) {
+        IOTC_LOGW("init queue err");
         return IOTC_ERROR;
     }
     msgQueue->lock = UtilsCreateExMutex();
@@ -65,7 +101,7 @@ static void MsgQueueDestroy(UtilsMsgQueue **msgQueueAddr)
     if (msgQueue->lock != NULL) {
         lock = UtilsExMutexLock(msgQueue->lock);
     }
-    UtilsQueueDestroy(&msgQueue->queue);
+    UtilsQueueDeinit(&msgQueue->queue);
     if (msgQueue->sendSem != NULL) {
         IotcSemDestroy(msgQueue->sendSem);
         msgQueue->sendSem = NULL;
@@ -103,7 +139,7 @@ static int32_t PushWait(UtilsMsgQueue *msgQueue, uint32_t timeout)
         IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
-    if (UtilsQueueIsFull(msgQueue->queue)) {
+    if (UtilsQueueIsFull(&msgQueue->queue)) {
         if (timeout == 0) {
             IOTC_LOGW("full");
             UtilsExMutexUnlock(msgQueue->lock);
@@ -130,7 +166,7 @@ static int32_t PopWait(UtilsMsgQueue *msgQueue, uint32_t timeout)
         IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
-    if (UtilsQueueGetCount(msgQueue->queue) == 0) {
+    if (UtilsQueueGetCount(&msgQueue->queue) == 0) {
         if (timeout == 0) {
             UtilsExMutexUnlock(msgQueue->lock);
             return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_EMPTY;
@@ -183,12 +219,12 @@ int32_t UtilsMsgQueuePush(UtilsMsgQueue *msgQueue, const void *value, uint32_t v
         IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
-    if (UtilsQueueIsFull(msgQueue->queue)) {
+    if (UtilsQueueIsFull(&msgQueue->queue)) {
         IOTC_LOGW("full");
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_FULL;
     }
-    if (UtilsQueuePush(msgQueue->queue, value, valueLen) != IOTC_OK) {
+    if (UtilsQueuePush(&msgQueue->queue, value, valueLen) != IOTC_OK) {
         IOTC_LOGW("push");
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_PUSH;
@@ -219,12 +255,12 @@ int32_t UtilsMsgQueuePushMem(UtilsMsgQueue *msgQueue, void **value, uint32_t val
         IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
-    if (UtilsQueueIsFull(msgQueue->queue)) {
+    if (UtilsQueueIsFull(&msgQueue->queue)) {
         IOTC_LOGW("full");
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_FULL;
     }
-    if (UtilsQueuePushMem(msgQueue->queue, value, valueLen) != IOTC_OK) {
+    if (UtilsQueuePushMem(&msgQueue->queue, value, valueLen) != IOTC_OK) {
         IOTC_LOGW("push");
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_PUSH;
@@ -253,11 +289,11 @@ int32_t UtilsMsgQueuePop(UtilsMsgQueue *msgQueue, void *value, uint32_t valueSiz
         IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
-    if (UtilsQueueGetCount(msgQueue->queue) == 0) {
+    if (UtilsQueueGetCount(&msgQueue->queue) == 0) {
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_EMPTY;
     }
-    if (UtilsQueuePop(msgQueue->queue, value, valueSize, valueLen) != IOTC_OK) {
+    if (UtilsQueuePop(&msgQueue->queue, value, valueSize, valueLen) != IOTC_OK) {
         IOTC_LOGW("pop");
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_POP;
@@ -286,11 +322,11 @@ int32_t UtilsMsgQueuePopMem(UtilsMsgQueue *msgQueue, void **value, uint32_t *val
         IOTC_LOGW("lock");
         return IOTC_ERR_TIMEOUT;
     }
-    if (UtilsQueueGetCount(msgQueue->queue) == 0) {
+    if (UtilsQueueGetCount(&msgQueue->queue) == 0) {
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_EMPTY;
     }
-    if (UtilsQueuePopMem(msgQueue->queue, value, valueLen) != IOTC_OK) {
+    if (UtilsQueuePopMem(&msgQueue->queue, value, valueLen) != IOTC_OK) {
         IOTC_LOGW("pop");
         UtilsExMutexUnlock(msgQueue->lock);
         return IOTC_CORE_COMM_UTILS_ERR_MSG_QUEUE_POP;
@@ -315,7 +351,7 @@ uint32_t UtilsMsgQueueGetCount(UtilsMsgQueue *msgQueue)
         IOTC_LOGW("lock");
         return 0;
     }
-    count = UtilsQueueGetCount(msgQueue->queue);
+    count = UtilsQueueGetCount(&msgQueue->queue);
     UtilsExMutexUnlock(msgQueue->lock);
     return count;
 }
