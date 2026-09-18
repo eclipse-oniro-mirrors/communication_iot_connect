@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@
 #include "ble_gatt_event.h"
 
 static BleGattMgtApp g_bleGattApp = {
-    .peerDevInfo = NULL,
     .connNum = 0,
     .svcNum = 0,
     .svc = NULL,
@@ -314,14 +313,8 @@ static int32_t BleGattProfileSvcInit(void)
 
 static int32_t BleGattPeerDevInfoInit(void)
 {
-    uint32_t mallocSize = BLE_DEFAULT_MAX_CONN_NUM * sizeof(BlePeerDevInfo);
-    BlePeerDevInfo *peerDevInfo = (BlePeerDevInfo *)IotcMalloc(mallocSize);
-    if (peerDevInfo == NULL) {
-        IOTC_LOGE("malloc");
-        return IOTC_ADAPTER_MEM_ERR_MALLOC;
-    }
-    (void)memset_s(peerDevInfo, mallocSize, 0, mallocSize);
-    GetBleGattMgtApp()->peerDevInfo = peerDevInfo;
+    uint32_t size = BLE_DEFAULT_MAX_CONN_NUM * sizeof(BlePeerDevInfo);
+    (void)memset_s(GetBleGattMgtApp()->peerDevInfo, size, 0, size);
     return IOTC_OK;
 }
 
@@ -358,10 +351,8 @@ void BleGattMgtDestroy(void)
     GattStopStaredService();
     GattServiceDestroy(&g_bleGattApp.svc, g_bleGattApp.svcNum);
     g_bleGattApp.svcNum = 0;
-    if (GetBleGattMgtApp()->peerDevInfo != NULL) {
-        IotcFree(GetBleGattMgtApp()->peerDevInfo);
-        GetBleGattMgtApp()->peerDevInfo = NULL;
-    }
+    (void)memset_s(GetBleGattMgtApp()->peerDevInfo,
+        sizeof(GetBleGattMgtApp()->peerDevInfo), 0, sizeof(GetBleGattMgtApp()->peerDevInfo));
     DestroyBleGattSvcList();
 }
 
@@ -508,7 +499,7 @@ int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
 {
     CHECK_RETURN_LOGW((svcUuid != NULL) && (charUuid != NULL) &&  (value != NULL) && (valueLen != 0),
         IOTC_ERR_PARAM_INVALID, "invalid param");
-    if ((GetBleGattMgtApp()->connNum == 0) || (GetBleGattMgtApp()->peerDevInfo == NULL)) {
+    if ((GetBleGattMgtApp()->connNum == 0)) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_BLE_NO_CONNECT;
     }
@@ -547,7 +538,7 @@ int32_t BleSendIndicateDataInner(const char *svcUuid, const char *charUuid, cons
 
 void BleGattDisconnectAll(void)
 {
-    if (GetBleGattMgtApp()->peerDevInfo == NULL) {
+    if (GetBleGattMgtApp()->connNum == 0) {
         return ;
     }
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
@@ -571,7 +562,7 @@ int32_t SetBleConnectParam(void)
 
 int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
 {
-    if ((GetBleGattMgtApp()->connNum == 0) || (GetBleGattMgtApp()->peerDevInfo == NULL)) {
+    if ((GetBleGattMgtApp()->connNum == 0)) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_BLE_NO_CONNECT;
     }
@@ -621,7 +612,7 @@ int32_t BleGattReqRead(int32_t connId, int32_t attrHandle, int32_t transId)
 
 int32_t BleGattReqWrite(int32_t connId, int32_t attrHandle, int32_t transId, uint8_t *value, int32_t valueLen)
 {
-    if ((GetBleGattMgtApp()->connNum == 0) || (GetBleGattMgtApp()->peerDevInfo == NULL)) {
+    if ((GetBleGattMgtApp()->connNum == 0)) {
         IOTC_LOGE("no connect");
         return IOTC_CORE_BLE_NO_CONNECT;
     }

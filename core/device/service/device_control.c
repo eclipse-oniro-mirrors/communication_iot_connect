@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,7 @@ int32_t DeviceControlReportAll(DevReportType type)
     return ret;
 }
 
+#ifndef IOTC_CONF_BLE_ONLY
 static void ReportByDevIdServiceExecutorCallback(void *userData)
 {
     int32_t ret = ProductProfReportByDevId((const char *)userData);
@@ -54,9 +55,16 @@ static void ReportByDevIdServiceExecutorCallback(void *userData)
         IOTC_LOGW("report by devid [%s] error %d", (const char *)userData, ret);
     }
 }
+#endif
 
 int32_t DeviceControlReportByDevId(DevReportType type, const char *devId)
 {
+#ifdef IOTC_CONF_BLE_ONLY
+    /* hook trimmed, runtime cb==NULL always returns IOTC_ERR_CALLBACK_NULL; return it directly */
+    (void)type;
+    (void)devId;
+    return IOTC_ERR_CALLBACK_NULL;
+#else
     int32_t ret;
     if (type == DEV_REPORT_TYPE_ASYNC) {
         ret = SchedAsyncExecutor(ReportByDevIdServiceExecutorCallback, (void *)devId);
@@ -67,6 +75,7 @@ int32_t DeviceControlReportByDevId(DevReportType type, const char *devId)
         IOTC_LOGW("report by devid [%s] error %d", (const char *)devId, ret);
     }
     return ret;
+#endif
 }
 
 static void ProductCharStateFree(char *data[], uint32_t num)

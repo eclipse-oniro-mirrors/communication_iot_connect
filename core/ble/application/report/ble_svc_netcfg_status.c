@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -115,6 +115,7 @@ int32_t BleSvcNetCfgInit(void)
         IOTC_SDK_AILIFE_EVENT_WIFI_UPLINK_ONLINE,
     };
     int32_t ret;
+#ifdef IOTC_CONF_WIFI_SUPPORT
     for (uint32_t i = 0 ; i < ARRAY_SIZE(EVENT_SUBS); ++i) {
         ret = EventBusSubscribe(BleNetcfgRptStatus, EVENT_SUBS[i]);
         if (ret != IOTC_OK) {
@@ -122,7 +123,10 @@ int32_t BleSvcNetCfgInit(void)
             return ret;
         }
     }
-
+#else
+    (void)EVENT_SUBS;
+#endif
+    (void)ret;
     return IOTC_OK;
 }
 

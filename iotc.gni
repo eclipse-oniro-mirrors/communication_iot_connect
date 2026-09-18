@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -62,3 +62,11 @@ if (defined(ohos_lite)) {
     iotc_hilog_support = true
   }
 }
+
+# Plain-only BLE form: pure BLE + no SPEKE + no KV persistence.
+# Strict subset of IOTC_CONF_BLE_ONLY (adapter.gni): additionally requires
+# speke_not_support and !kv_support, so every SecurityRandom consumer
+# (thin-store salt / SPEKE / wifi & sle sessions) is compiled out and the
+# random init unit + createSession service can be trimmed.
+iotc_ble_plain_only_support = (iot_connect_ble_support && !iot_connect_wifi_support &&
+    !iot_connect_sle_support && iot_connect_speke_not_support && !iot_connect_kv_support)

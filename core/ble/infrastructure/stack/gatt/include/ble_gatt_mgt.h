@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ typedef struct {
 } BlePeerDevInfo;
 
 typedef struct {
-    BlePeerDevInfo *peerDevInfo;
+    BlePeerDevInfo peerDevInfo[BLE_DEFAULT_MAX_CONN_NUM];
     uint8_t connNum;
     uint32_t svcNum;
     IotcAdptBleGattService *svc;

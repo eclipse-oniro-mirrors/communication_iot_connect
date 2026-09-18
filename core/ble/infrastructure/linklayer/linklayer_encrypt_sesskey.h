@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "linklayer_encrypt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +26,9 @@ extern "C" {
 int32_t LinkLayerSessKeyEncrypt(const uint8_t *data, uint32_t dataLen, uint8_t **outData, uint32_t *outDataLen);
 
 int32_t LinkLayerSessKeyDecrypt(uint8_t *data, uint32_t *dataLen);
+
+/* sesskey encrypt into caller-provided buffer */
+int32_t LinkLayerSessKeyEncryptInto(const uint8_t *data, uint32_t dataLen, const LinkLayerEncryptOut *out);
 
 bool LinkLayerSessKeyExist(void);
 

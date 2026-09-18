@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -128,29 +128,22 @@ static int32_t GetCompleteData(const uint8_t *reqBuff, uint8_t token, uint8_t en
 static int32_t SendRspData(const uint8_t *reqBuff, uint8_t encryptType,
     uint8_t *rspData, uint32_t rspDataLen)
 {
-    uint8_t *encBuff = NULL;
-    uint32_t encBuffLen = 0;
-    int32_t ret = LinkLayerEncryptData(rspData, rspDataLen, encryptType, &encBuff, &encBuffLen);
-    if ((ret != IOTC_OK) || (encBuff == NULL) || (encBuffLen == 0)) {
-        LinkLayerRspExceptionData(reqBuff, LL_RET_ERR);
-        return ret;
-    }
-
-    uint32_t sendBuffLen = PKG_HEAD_LEN + encBuffLen;
+    /* alloc sendBuff with worst-case cipher size, encrypt directly at sendBuff+head */
+    uint32_t sendBuffLen = PKG_HEAD_LEN + rspDataLen + ENC_DATA_MAX_OVERHEAD;
     uint8_t *sendBuff = (uint8_t *)IotcCalloc(sendBuffLen, sizeof(uint8_t));
     if (sendBuff == NULL) {
         IOTC_LOGE("ll rsp data Calloc:%u err", sendBuffLen);
-        IotcFree(encBuff);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
 
-    ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, encBuff, encBuffLen);
-    if (ret != EOK) {
-        IotcFree(encBuff);
+    uint32_t encBuffLen = 0;
+    LinkLayerEncryptOut encOut = { sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, &encBuffLen };
+    int32_t ret = LinkLayerEncryptDataInto(rspData, rspDataLen, encryptType, &encOut);
+    if ((ret != IOTC_OK) || (encBuffLen == 0)) {
+        LinkLayerRspExceptionData(reqBuff, LL_RET_ERR);
         IotcFree(sendBuff);
-        return IOTC_ERR_SECUREC_MEMCPY;
+        return ret;
     }
-    IotcFree(encBuff);
 
     ret = memcpy_s(sendBuff, sendBuffLen, reqBuff, PKG_HEAD_LEN);
     if (ret != EOK) {
@@ -160,7 +153,8 @@ static int32_t SendRspData(const uint8_t *reqBuff, uint8_t encryptType,
     SetPkgHeadCmdType(sendBuff, CMD_TYPE_RESPONSE);
     sendBuff[PKG_HEAD_RET_IDX] = IOTC_OK;
 
-    ret = LinkLayerSendBtPkg(sendBuff, sendBuffLen);
+    uint32_t actualLen = PKG_HEAD_LEN + encBuffLen;
+    ret = LinkLayerSendBtPkg(sendBuff, actualLen);
     IotcFree(sendBuff);
     return ret;
 }
@@ -211,26 +205,21 @@ int32_t LinkLayerReportEncryptCmdData(const uint8_t *buff, uint32_t len)
 
     LinkLayerEncryptType encType = LinkLayerGetEncryptType();
 
-    uint8_t *encBuff = NULL;
-    uint32_t encBuffLen = 0;
-    int32_t ret = LinkLayerEncryptData(buff, len, encType, &encBuff, &encBuffLen);
-    CHECK_RETURN((ret == IOTC_OK) && (encBuff != NULL) && (encBuffLen > 0), ret);
-
-    uint32_t sendBuffLen = PKG_HEAD_LEN + encBuffLen;
+    /* alloc sendBuff with worst-case cipher size, encrypt directly at sendBuff+head */
+    uint32_t sendBuffLen = PKG_HEAD_LEN + len + ENC_DATA_MAX_OVERHEAD;
     uint8_t *sendBuff = (uint8_t *)IotcCalloc(sendBuffLen, sizeof(uint8_t));
     if (sendBuff == NULL) {
         IOTC_LOGE("ll rpt data calloc:%u err", sendBuffLen);
-        IotcFree(encBuff);
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
 
-    ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, encBuff, encBuffLen);
-    if (ret != EOK) {
-        IotcFree(encBuff);
+    uint32_t encBuffLen = 0;
+    LinkLayerEncryptOut encOut = { sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, &encBuffLen };
+    int32_t ret = LinkLayerEncryptDataInto(buff, len, encType, &encOut);
+    if ((ret != IOTC_OK) || (encBuffLen == 0)) {
         IotcFree(sendBuff);
-        return IOTC_ERR_SECUREC_MEMCPY;
+        return ret;
     }
-    IotcFree(encBuff);
 
     SetPkgHeadVersion(sendBuff, PKG_HEAD_VERSION);
     SetPkgHeadCmdType(sendBuff, CMD_TYPE_REPORT);
@@ -239,7 +228,8 @@ int32_t LinkLayerReportEncryptCmdData(const uint8_t *buff, uint32_t len)
     sendBuff[PKG_HEAD_RESERVED_IDX] = 0;
     sendBuff[PKG_HEAD_RET_IDX] = IOTC_OK;
 
-    ret = LinkLayerSendBtPkg(sendBuff, sendBuffLen);
+    uint32_t actualLen = PKG_HEAD_LEN + encBuffLen;
+    ret = LinkLayerSendBtPkg(sendBuff, actualLen);
     IotcFree(sendBuff);
     return ret;
 }

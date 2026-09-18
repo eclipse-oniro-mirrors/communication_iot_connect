@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,9 @@
 #include "utils_assert.h"
 #include "iotc_errcode.h"
 
+#ifdef IOTC_CONF_WIFI_SUPPORT
 static SecurityGetPskCallback g_pskCb = NULL;
+#endif
 static SecurityGetAcKey g_acCb = NULL;
 static SecurityGetUdid g_udidCb = NULL;
 
@@ -35,6 +37,7 @@ void SecurityRegUdidCallback(SecurityGetUdid udidCb)
     return;
 }
 
+#ifdef IOTC_CONF_WIFI_SUPPORT
 void SecurityRegPskCallback(SecurityGetPskCallback pskCb)
 {
     if (pskCb != NULL) {
@@ -43,6 +46,7 @@ void SecurityRegPskCallback(SecurityGetPskCallback pskCb)
     }
     return;
 }
+#endif
 
 void SecurityRegAcKeyCallback(SecurityGetAcKey acCb)
 {
@@ -53,6 +57,7 @@ void SecurityRegAcKeyCallback(SecurityGetAcKey acCb)
     return;
 }
 
+#ifdef IOTC_CONF_WIFI_SUPPORT
 int32_t SecurityGetPsk(uint8_t *buf, uint32_t len)
 {
     if (buf == NULL || len < SECURITY_PSK_LEN) {
@@ -74,6 +79,7 @@ int32_t SecurityGetPsk(uint8_t *buf, uint32_t len)
 
     return IOTC_OK;
 }
+#endif
 
 int32_t SecurityGenHkdfLocalKey(const uint8_t *salt, uint32_t saltLen, uint8_t out[SECURITY_HKDF_LOCAL_KEY_LEN])
 {

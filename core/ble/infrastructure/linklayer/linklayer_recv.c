@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,25 +24,21 @@
 
 #define PKG_MAX_NUM     1
 #define PKG_TIMEOUT (10 * 1000)
+/* per-frag data max, matches linklayer_send.c (SINGLE_PKG_MAX_SIZE - PKG_HEAD_LEN) */
+#define RECV_SINGLE_PKG_DATA_MAX_SIZE   153
+/* frag count limit, matches PKG_MAX_NUM in linklayer_send.c; <= 16 fits recvMask */
+#define PKG_MAX_NUM_LIMIT   16
 
-typedef struct TagSubPkgList {
-    uint8_t index;          /* 分包序列号 */
-    uint8_t *buff;          /* 分包数据内容 */
-    uint32_t buffLen;       /* 分包数据内容长度 */
-    ListEntry node;
-} SubPkg;
-
+/* single pre-allocated buffer, frag written at pkgIdx offset; SubPkg list removed */
 typedef struct {
-    uint8_t curSize;        /* 当前已缓存分包数 */
-    uint32_t curDataLen;    /* 当前已缓存数据长度 */
-    ListEntry subPkgs;      /* SubPkg 的 head */
-} SubPkgList;
-
-typedef struct {
-    uint8_t token;          /* 用于唯一标识该报文 */
-    uint8_t pkgNum;         /* 分包总数量 */
-    uint64_t savedTime;     /* 首次保存时间 */
-    SubPkgList subPkgList;  /* 分包链表 */
+    uint64_t savedTime;
+    uint8_t *mergeBuff;        /* pre-alloc pkgNum*RECV_SINGLE_PKG_DATA_MAX_SIZE, +1 terminator */
+    uint32_t mergeBuffCap;     /* = pkgNum * RECV_SINGLE_PKG_DATA_MAX_SIZE */
+    uint32_t curDataLen;       /* total data bytes written (tail frag may be shorter) */
+    uint16_t recvMask;         /* arrival bitmask for dedup: bit i set = frag i received */
+    uint8_t token;
+    uint8_t pkgNum;
+    uint8_t curSize;           /* frags received for completion check */
     ListEntry node;
 } CachePkgData;
 
@@ -56,18 +52,9 @@ static PkgList g_pkgList = { 0, LIST_DECLARE_INIT(&g_pkgList.pkgs) };
 static void CachePkgDataFree(CachePkgData *pkgData)
 {
     CHECK_V_RETURN_LOGE(pkgData != NULL, "pkgData double free");
-
-    ListEntry *item = NULL;
-    ListEntry *next = NULL;
-    LIST_FOR_EACH_ITEM_SAFE(item, next, &pkgData->subPkgList.subPkgs) {
-        SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
-        if (subPkg->buff != NULL) {
-            IotcFree(subPkg->buff);
-        }
-        LIST_REMOVE(&subPkg->node);
-        IotcFree(subPkg);
+    if (pkgData->mergeBuff != NULL) {
+        IotcFree(pkgData->mergeBuff);   /* single buffer, one free */
     }
-
     IotcFree(pkgData);
 }
 
@@ -112,86 +99,58 @@ static CachePkgData* FindPkgByToken(uint8_t token)
     return NULL;
 }
 
-static int32_t InsertSubPkg(SubPkgList *subPkgList, uint8_t pkgIdx, const uint8_t *data, uint32_t dataLen)
-{
-    ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &subPkgList->subPkgs) {
-        SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
-        if (subPkg->index == pkgIdx) {
-            return IOTC_OK;
-        } else if (subPkg->index > pkgIdx) {
-            break;
-        }
-    }
-
-    SubPkg *newSubPkg = (SubPkg *)IotcCalloc(1, sizeof(SubPkg));
-    CHECK_RETURN(newSubPkg != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC);
-
-    newSubPkg->buff = (uint8_t *)IotcCalloc(dataLen, sizeof(uint8_t));
-    if (newSubPkg->buff == NULL) {
-        IotcFree(newSubPkg);
-        return IOTC_ADAPTER_MEM_ERR_CALLOC;
-    }
-    if (memcpy_s(newSubPkg->buff, dataLen, data, dataLen) != EOK) {
-        IotcFree(newSubPkg->buff);
-        IotcFree(newSubPkg);
-        return IOTC_ERR_SECUREC_MEMCPY;
-    }
-    newSubPkg->buffLen = dataLen;
-    newSubPkg->index = pkgIdx;
-
-    subPkgList->curSize++;
-    subPkgList->curDataLen += dataLen;
-    /* 按idx顺序插入 */
-    LIST_INSERT_BEFORE(&newSubPkg->node, item);
-    return IOTC_OK;
-}
-
-static int32_t InsertPkg(uint8_t token, uint8_t pkgNum, CachePkgData **cachePkgData)
-{
-    CHECK_RETURN(g_pkgList.size < PKG_MAX_NUM, IOTC_CORE_BLE_LL_ERR_POOL_FULL);
-
-    CachePkgData *pkgData = (CachePkgData *)IotcCalloc(1, sizeof(CachePkgData));
-    CHECK_RETURN(pkgData != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC);
-
-    pkgData->savedTime = IotcGetSysTimeMs();
-    pkgData->token = token;
-    pkgData->pkgNum = pkgNum;
-
-    LIST_INIT(&pkgData->subPkgList.subPkgs);
-    LIST_INIT(&pkgData->node);
-
-    g_pkgList.size++;
-    LIST_INSERT_BEFORE(&pkgData->node, &g_pkgList.pkgs);
-    *cachePkgData = pkgData;
-    return IOTC_OK;
-}
-
 int32_t LinkLayerRecvPkgInsert(uint8_t token, uint8_t pkgNum, uint8_t pkgIdx, const uint8_t *data, uint32_t dataLen)
 {
     CHECK_RETURN((data != NULL) && (dataLen > 0), IOTC_ERR_PARAM_INVALID);
+    CHECK_RETURN_LOGE(pkgNum > 0 && pkgNum <= PKG_MAX_NUM_LIMIT, IOTC_CORE_BLE_LL_ERR_PKGNUM,
+        "pkgNum:%u err", pkgNum);
+    CHECK_RETURN_LOGE(pkgIdx < pkgNum, IOTC_CORE_BLE_LL_ERR_PKGNUM, "pkgIdx:%u >= pkgNum:%u", pkgIdx, pkgNum);
+    CHECK_RETURN_LOGE(dataLen <= RECV_SINGLE_PKG_DATA_MAX_SIZE, IOTC_CORE_BLE_LL_ERR_PKGLEN,
+        "sub pkg dataLen:%u > %u", dataLen, RECV_SINGLE_PKG_DATA_MAX_SIZE);
+    /* only the tail frag may be short; middle frags must fill a full slot (offset layout) */
+    CHECK_RETURN_LOGE(dataLen == RECV_SINGLE_PKG_DATA_MAX_SIZE || pkgIdx + 1 == pkgNum,
+        IOTC_CORE_BLE_LL_ERR_PKGLEN, "non-tail frag pkgIdx:%u dataLen:%u", pkgIdx, dataLen);
 
     ClearTimeoutPkg();
 
-    int32_t ret = IOTC_OK;
-    CachePkgData* pkgData = FindPkgByToken(token);
+    CachePkgData *pkgData = FindPkgByToken(token);
     if (pkgData == NULL) {
-        ret = InsertPkg(token, pkgNum, &pkgData);
-        CHECK_RETURN_LOGE((ret == IOTC_OK) && (pkgData != NULL), ret, "ll create pkg err:%d", ret);
+        CHECK_RETURN(g_pkgList.size < PKG_MAX_NUM, IOTC_CORE_BLE_LL_ERR_POOL_FULL);
+        /* first frag arrived, pre-alloc one buffer of pkgNum slots */
+        uint32_t cap = (uint32_t)pkgNum * RECV_SINGLE_PKG_DATA_MAX_SIZE;
+        pkgData = (CachePkgData *)IotcCalloc(1, sizeof(CachePkgData));
+        CHECK_RETURN_LOGE(pkgData != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc pkgData err");
+        pkgData->mergeBuff = (uint8_t *)IotcCalloc(cap + 1, sizeof(uint8_t));  /* +1 terminator */
+        if (pkgData->mergeBuff == NULL) {
+            IotcFree(pkgData);
+            return IOTC_ADAPTER_MEM_ERR_CALLOC;
+        }
+        pkgData->mergeBuffCap = cap;
+        pkgData->token = token;
+        pkgData->pkgNum = pkgNum;
+        pkgData->savedTime = IotcGetSysTimeMs();
+        LIST_INIT(&pkgData->node);
+        g_pkgList.size++;
+        LIST_INSERT_BEFORE(&pkgData->node, &g_pkgList.pkgs);
     }
 
-    ret = InsertSubPkg(&pkgData->subPkgList, pkgIdx, data, dataLen);
-    if (ret == IOTC_OK) {
+    /* dedup: same semantics as old InsertSubPkg (index==pkgIdx returns OK) */
+    if ((pkgData->recvMask & (1U << pkgIdx)) != 0) {
         return IOTC_OK;
     }
 
-    IOTC_LOGE("ll insert sub pkg err:%d", ret);
-    if (pkgData->subPkgList.curSize == 0) {
-        LIST_REMOVE(&pkgData->node);
-        CachePkgDataFree(pkgData);
-        g_pkgList.size--;
+    /* write directly at pkgIdx offset, out-of-order arrival supported */
+    uint32_t offset = (uint32_t)pkgIdx * RECV_SINGLE_PKG_DATA_MAX_SIZE;
+    CHECK_RETURN_LOGE(offset + dataLen <= pkgData->mergeBuffCap, IOTC_CORE_BLE_LL_ERR_PKGLEN,
+        "pkgIdx:%u offset+%u > cap:%u", pkgIdx, dataLen, pkgData->mergeBuffCap);
+    if (memcpy_s(pkgData->mergeBuff + offset, pkgData->mergeBuffCap - offset, data, dataLen) != EOK) {
+        IOTC_LOGE("ll merge pkg memcpy err");
+        return IOTC_ERR_SECUREC_MEMCPY;
     }
-    return ret;
+    pkgData->recvMask |= (uint16_t)(1U << pkgIdx);
+    pkgData->curSize++;
+    pkgData->curDataLen += dataLen;
+    return IOTC_OK;
 }
 
 int32_t LinkLayerRecvCompleteCheck(uint8_t token, bool *isComplete)
@@ -202,14 +161,14 @@ int32_t LinkLayerRecvCompleteCheck(uint8_t token, bool *isComplete)
     CHECK_RETURN_LOGE(pkgData != NULL, IOTC_CORE_BLE_LL_ERR_TOKEN,
         "ll check pkg with token:%u not found", token);
 
-    if (pkgData->subPkgList.curSize == pkgData->pkgNum) {
+    if (pkgData->curSize == pkgData->pkgNum) {
         *isComplete = true;
         return IOTC_OK;
-    } else if (pkgData->subPkgList.curSize < pkgData->pkgNum) {
+    } else if (pkgData->curSize < pkgData->pkgNum) {
         *isComplete = false;
         return IOTC_OK;
     } else {
-        IOTC_LOGE("ll sub pkg cnts:%u over pkgNum:%u", pkgData->subPkgList.curSize, pkgData->pkgNum);
+        IOTC_LOGE("ll sub pkg cnts:%u over pkgNum:%u", pkgData->curSize, pkgData->pkgNum);
         return IOTC_CORE_BLE_LL_ERR_PKGNUM;
     }
 }
@@ -222,42 +181,17 @@ int32_t LinkLayerRecvMergePkgs(uint8_t token, uint8_t **outData, uint32_t *outDa
     int32_t ret = LinkLayerRecvCompleteCheck(token, &isComplete);
     CHECK_RETURN((ret == IOTC_OK) && isComplete, ret);
 
-    CachePkgData* pkgData = FindPkgByToken(token);
-    CHECK_RETURN_LOGE(pkgData != NULL, IOTC_CORE_BLE_LL_ERR_TOKEN,
-        "ll merge pkg with token:%u not found", token);
+    CachePkgData *pkgData = FindPkgByToken(token);
+    CHECK_RETURN_LOGE(pkgData != NULL, IOTC_CORE_BLE_LL_ERR_TOKEN, "token:%u not found", token);
+    CHECK_RETURN_LOGE(pkgData->curDataLen != 0, IOTC_CORE_BLE_LL_ERR_PKGLEN, "ll merge pkg with 0 len err");
 
-    uint32_t dataLen = pkgData->subPkgList.curDataLen;
-    CHECK_RETURN_LOGE(dataLen != 0, IOTC_CORE_BLE_LL_ERR_PKGLEN, "ll merge pkg with 0 len err");
+    /* mergeBuff IS the merged result: no extra alloc+memcpy, ownership moves to caller */
+    *outData = pkgData->mergeBuff;
+    *outDataLen = pkgData->curDataLen;
+    pkgData->mergeBuff = NULL;   /* so CachePkgDataFree will not free it */
 
-    /* 合包补充结束符, 防止报文不带结束符 */
-    uint8_t *data = (uint8_t *)IotcCalloc(dataLen + 1, sizeof(uint8_t));
-    CHECK_RETURN(data != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC);
-
-    uint8_t *curPtr = data;
-    uint32_t curLen = 0;
-    ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &pkgData->subPkgList.subPkgs) {
-        SubPkg *subPkg = CONTAINER_OF(item, SubPkg, node);
-        if (subPkg->buff == NULL) {
-            IOTC_LOGE("ll merge sub pkg null err");
-            IotcFree(data);
-            LIST_REMOVE(&pkgData->node);
-            CachePkgDataFree(pkgData);
-            g_pkgList.size--;
-            return IOTC_CORE_BLE_LL_ERR_SUBPKG_NULL;
-        }
-        if (memcpy_s(curPtr, dataLen - curLen, subPkg->buff, subPkg->buffLen) != EOK) {
-            IotcFree(data);
-            return IOTC_ERR_SECUREC_MEMCPY;
-        }
-        curPtr += subPkg->buffLen;
-        curLen += subPkg->buffLen;
-    }
-
-    *outData = data;
-    *outDataLen = dataLen;
     LIST_REMOVE(&pkgData->node);
-    CachePkgDataFree(pkgData);
+    CachePkgDataFree(pkgData);   /* frees the struct itself only */
     g_pkgList.size--;
     return IOTC_OK;
 }

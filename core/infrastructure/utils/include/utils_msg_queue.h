@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,12 +18,37 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "utils_queue.h"
+#include "iotc_os.h"
+#include "utils_mutex_ex.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct UtilsMsgQueue UtilsMsgQueue;
+typedef struct {
+    UtilsQueue queue;      /* embedded value (was pointer) */
+    UtilsExMutex *lock;
+    IotcSemId *sendSem;
+    IotcSemId *recvSem;
+    bool pushOnOff;
+} UtilsMsgQueue;
+
+/**
+ * @brief Initialize a message queue on caller-provided memory
+ *
+ * @param msgQueue [IN] message queue to initialize
+ * @param capacity [IN] max buffered messages
+ * @param freeValue [IN] value free callback; NULL if no extra free needed
+ * @return true success, false failure
+ */
+bool UtilsMsgQueueInit(UtilsMsgQueue *msgQueue, uint32_t capacity, QueueFreeValue freeValue);
+
+/**
+ * @brief Deinitialize a message queue (frees internal resources, not the queue itself)
+ *
+ * @param msgQueue [IN] message queue to deinitialize
+ */
+void UtilsMsgQueueDeinit(UtilsMsgQueue *msgQueue);
 
 /**
  * @brief 创建消息队列

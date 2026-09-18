@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,9 @@ extern "C" {
 #define SECURITY_HKDF_LOCAL_KEY_LEN IOTC_MD_SHA256_BYTE_LEN
 #define SECURITY_UDID_LEN (IOTC_MD_SHA256_BYTE_LEN * 2)
 
+#ifdef IOTC_CONF_WIFI_SUPPORT
 typedef int32_t (*SecurityGetPskCallback)(uint8_t *buf, uint32_t len);
+#endif
 
 typedef int32_t (*SecurityGetAcKey)(uint8_t *buf, uint32_t len);
 
@@ -35,11 +37,15 @@ typedef int32_t (*SecurityGetUdid)(uint8_t *buf, uint32_t len);
 
 void SecurityRegUdidCallback(SecurityGetUdid udidCb);
 
+#ifdef IOTC_CONF_WIFI_SUPPORT
 void SecurityRegPskCallback(SecurityGetPskCallback pskCb);
+#endif
 
 void SecurityRegAcKeyCallback(SecurityGetAcKey acCb);
 
+#ifdef IOTC_CONF_WIFI_SUPPORT
 int32_t SecurityGetPsk(uint8_t *buf, uint32_t len);
+#endif
 
 int32_t SecurityGenHkdfLocalKey(const uint8_t *salt, uint32_t saltLen, uint8_t out[SECURITY_HKDF_LOCAL_KEY_LEN]);
 

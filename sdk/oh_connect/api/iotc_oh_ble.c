@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -115,6 +115,7 @@ static const FwkInitUnit OH_BLE[] = {
     { FWK_INIT_LVL_BIZ, "ble_main", IotcOhBleMainInit, IotcOhBleMainDeinit },
 };
 
+#ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
 static int32_t OptionSetBleRecvNetcfgCallback(va_list args)
 {
     IotcRecvNetCfgInfoCallback cb = va_arg(args, IotcRecvNetCfgInfoCallback);
@@ -130,6 +131,7 @@ static int32_t OptionSetBleRecvNetcfgCallback(va_list args)
     IOTC_LOGN("set recv net info cb");
     return IOTC_OK;
 }
+#endif
 
 static int32_t OptionSetBleRecvCustomSecDataCallback(va_list args)
 {
@@ -203,7 +205,9 @@ static int32_t OptionSetMakeOsBleEnableCallback(va_list args)
 
 static const OptionItem BLE_OPTION_TABLE[] = {
     { IOTC_OH_OPTION_BLE_EXIT_AFTER_NETCFG, NULL },
+#ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     { IOTC_OH_OPTION_BLE_RECV_NETCFG_CALLBACK, OptionSetBleRecvNetcfgCallback },
+#endif
     { IOTC_OH_OPTION_BLE_RECV_CUSTOM_DATA_CALLBACK, OptionSetBleRecvCustomSecDataCallback },
     { IOTC_OH_OPTION_BLE_START_UP_ADV_TIMEOUT, OptionSetBleStartUpAdvTimeout },
     { IOTC_OH_OPTION_BLE_GATT_PROFILE_SVC_LIST, OptionSetBleGattProfileSvcList },

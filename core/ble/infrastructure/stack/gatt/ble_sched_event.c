@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,10 +49,6 @@ static void BleEventConnectHandler(int32_t event, void *param)
         IOTC_LOGE("connect num overflow=%u", GetBleGattMgtApp()->connNum);
         return;
     }
-    if (GetBleGattMgtApp()->peerDevInfo == NULL) {
-        IOTC_LOGE("no init peer dev info");
-        return;
-    }
     BlePeerDevInfo *peerDevInfoList = GetBleGattMgtApp()->peerDevInfo;
     IotcAdptBleGattEventParam *eventParam = (IotcAdptBleGattEventParam *)param;
     peerDevInfoList[GetBleGattMgtApp()->connNum].connId = eventParam->connSvc.connId;
@@ -91,10 +87,6 @@ static void BleEventDisconnectHandler(int32_t event, void *param)
 {
     (void)event;
     CHECK_V_RETURN_LOGW(param != NULL, "invalid param");
-    if (GetBleGattMgtApp()->peerDevInfo == NULL) {
-        IOTC_LOGE("no init peer dev info");
-        return;
-    }
 
     if (GetBleGattMgtApp()->connNum == 0) {
         IOTC_LOGE("connect num=%u", GetBleGattMgtApp()->connNum);
@@ -251,7 +243,7 @@ static void BleEventStopAdvResultHandler(int32_t event, void *param)
     IOTC_LOGN("stop adv success");
 }
 
-static BleSchedMsgHandler g_bleSchedEvent[] = {
+static const BleSchedMsgHandler BLE_SCHED_EVENT[] = {
     {.event = BLE_EVENT_START, .eventHandler = BleEventStartHandler},
     {.event = BLE_EVENT_CONNECT, .eventHandler = BleEventConnectHandler},
     {.event = BLE_EVENT_SEND_INDICATE, .eventHandler = BleEventSendIndicatetHandler},
@@ -286,8 +278,8 @@ static void BleSchedEventSourceMsgHandler(const uint8_t *msg, uint32_t len)
     const BleSchedMsg *schedMsg = (const BleSchedMsg *)msg;
 
     do {
-        const BleSchedMsgHandler *hdlTbl = g_bleSchedEvent;
-        uint32_t hdlNum = ARRAY_SIZE(g_bleSchedEvent);
+        const BleSchedMsgHandler *hdlTbl = BLE_SCHED_EVENT;
+        uint32_t hdlNum = ARRAY_SIZE(BLE_SCHED_EVENT);
         if (hdlTbl == NULL || hdlNum == 0) {
             IOTC_LOGF("no msg handler tbl");
             break;

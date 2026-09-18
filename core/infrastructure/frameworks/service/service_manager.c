@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,9 @@
 #include "utils_common.h"
 #include "utils_bit_map.h"
 #include "utils_mutex_ex.h"
+#ifndef IOTC_CONF_BLE_PLAIN_ONLY
 #include "security_random.h"
+#endif
 
 typedef enum {
     SERVICE_ID = 0,
@@ -58,7 +60,7 @@ typedef struct {
     int32_t *depends;
     uint32_t depNum;
     uint32_t msgNum;
-    ListEntry msgList;
+    MessageNode msgs[];
 } ServiceNode;
 
 typedef struct {
@@ -109,13 +111,11 @@ static ServiceManagerContext *GetSvcMngrCtx(void)
 
 static MessageNode *GetMessageNode(ServiceNode *svcNode, int32_t mid)
 {
-    ListEntry *item = NULL;
-    LIST_FOR_EACH_ITEM(item, &svcNode->msgList) {
-        MessageNode *node = CONTAINER_OF(item, MessageNode, node);
-        if (node->messageId != mid) {
+    for (uint32_t i = 0; i < svcNode->msgNum; ++i) {
+        if (svcNode->msgs[i].messageId != mid) {
             continue;
         }
-        return node;
+        return &svcNode->msgs[i];
     }
     return  NULL;
 }
@@ -138,9 +138,8 @@ static ServiceNode *GetServiceNode(ServiceManagerContext *ctx, int32_t id, Servi
 
 static void ClearServiceMsgSub(ServiceNode *svcNode, int32_t serviceId)
 {
-    ListEntry *msgItem = NULL;
-    LIST_FOR_EACH_ITEM(msgItem, &svcNode->msgList) {
-        MessageNode *msgNode = CONTAINER_OF(msgItem, MessageNode, node);
+    for (uint32_t i = 0; i < svcNode->msgNum; ++i) {
+        MessageNode *msgNode = &svcNode->msgs[i];
         if (msgNode->subNum == 0) {
             continue;
         }
@@ -657,7 +656,7 @@ void ServiceProxyFreeResponseMessage(ServiceMessage *resp, uint32_t respNum)
     IotcFree(resp);
 }
 
-static void MessageNodeFree(MessageNode *node)
+static void MessageNodeSubListClear(MessageNode *node)
 {
     ListEntry *item = NULL;
     ListEntry *next = NULL;
@@ -666,45 +665,26 @@ static void MessageNodeFree(MessageNode *node)
         LIST_REMOVE(item);
         IotcFree(subNode);
     }
-    IotcFree(node);
 }
 
 static void ServiceNodeFree(ServiceNode *node)
 {
-    ListEntry *item = NULL;
-    ListEntry *next = NULL;
-    LIST_FOR_EACH_ITEM_SAFE(item, next, &node->msgList) {
-        MessageNode *msgNode = CONTAINER_OF(item, MessageNode, node);
-        LIST_REMOVE(item);
-        MessageNodeFree(msgNode);
+    for (uint32_t i = 0; i < node->msgNum; ++i) {
+        MessageNodeSubListClear(&node->msgs[i]);
     }
     UTILS_FREE_2_NULL(node->depends);
     IotcFree(node);
 }
 
-static MessageNode *MessageNodeNew(int32_t messageId)
-{
-    MessageNode *newNode = (MessageNode *)IotcMalloc(sizeof(MessageNode));
-    if (newNode == NULL) {
-        IOTC_LOGW("malloc error");
-        return NULL;
-    }
-    (void)memset_s(newNode, sizeof(MessageNode), 0, sizeof(MessageNode));
-    LIST_INIT(&newNode->subList);
-    newNode->messageId = messageId;
-    return newNode;
-}
-
 static ServiceNode *ServiceNodeNew(const ServiceInstance *ins, uint32_t instanceId)
 {
-    ServiceNode *newNode = (ServiceNode *)IotcMalloc(sizeof(ServiceNode));
+    uint32_t allocSize = sizeof(ServiceNode) + ins->msgNum * sizeof(MessageNode);
+    ServiceNode *newNode = (ServiceNode *)IotcCalloc(allocSize, 1);
     if (newNode == NULL) {
         IOTC_LOGW("malloc error");
         return NULL;
     }
-    (void)memset_s(newNode, sizeof(ServiceNode), 0, sizeof(ServiceNode));
 
-    LIST_INIT(&newNode->msgList);
     newNode->serviceId = ins->serviceId;
     newNode->instanceId = instanceId;
     newNode->name = ins->name;
@@ -712,17 +692,9 @@ static ServiceNode *ServiceNodeNew(const ServiceInstance *ins, uint32_t instance
     newNode->msgNum = ins->msgNum;
     newNode->apiHandler = ins->apiHandler;
 
-    uint32_t i = 0;
-    for (; i < ins->msgNum && ins->msgIds != NULL; ++i) {
-        MessageNode *msgNode = MessageNodeNew(ins->msgIds[i]);
-        if (msgNode == NULL) {
-            break;
-        }
-        LIST_INSERT_BEFORE(&msgNode->node, &newNode->msgList);
-    }
-    if (i != ins->msgNum) {
-        ServiceNodeFree(newNode);
-        return NULL;
+    for (uint32_t i = 0; i < ins->msgNum && ins->msgIds != NULL; ++i) {
+        newNode->msgs[i].messageId = ins->msgIds[i];
+        LIST_INIT(&newNode->msgs[i].subList);
     }
 
     return newNode;
@@ -803,7 +775,11 @@ int32_t ServiceManagerInit(void)
         return IOTC_CORE_COMM_UTILS_ERR_EX_MUTEX_CREATE;
     }
     IOTC_LOGI("ServiceManagerInit mutex ------");
+#ifdef IOTC_CONF_BLE_PLAIN_ONLY
+    ctx->instanceIdBase = 0;
+#else
     ctx->instanceIdBase = SecurityRandomUint32() % UINT16_MAX;
+#endif
     IOTC_LOGI("ServiceManagerInit end");
     return IOTC_OK;
 }

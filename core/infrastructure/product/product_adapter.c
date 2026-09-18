@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,17 +66,25 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
     }
 
     (void)UtilsGlobalMutexLock();
+#ifndef IOTC_CONF_BLE_ONLY
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetRootCaCert);
+#endif
+#if defined(IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT) || defined(IOTC_CONF_SLE_SUPPORT)
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvNetCfgInfo);
+#endif
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onRecvCustomSecData);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsBleEnable);
+#ifndef IOTC_CONF_BLE_ONLY
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onMakeOsWifiEnable);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onSleRecvCustomSecData);
+#endif
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onGetSurfacePower);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfPutCharState);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetCharState);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfReportAll);
+#ifndef IOTC_CONF_BLE_ONLY
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfReportByDevId);
+#endif
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetPincode);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfGetAcKey);
     HOOK_CHECK_ASSIGN(hooks, &g_hooks, onProfFree);
@@ -99,6 +107,7 @@ int32_t ProductRegisterHooks(const ProductHooks *hooks, ProdHookRegPolicy policy
         } \
     } while (0)
 
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductGetRootCaCert(const char **ca[], uint32_t *num)
 {
     CHECK_RETURN_LOGW(ca != NULL && num != NULL, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -113,7 +122,9 @@ int32_t ProductGetRootCaCert(const char **ca[], uint32_t *num)
     }
     return IOTC_OK;
 }
+#endif
 
+#if defined(IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT) || defined(IOTC_CONF_SLE_SUPPORT)
 int32_t ProductRecvNetCfgInfo(const char *netInfo, uint32_t len)
 {
     CHECK_RETURN_LOGW(netInfo != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -127,6 +138,7 @@ int32_t ProductRecvNetCfgInfo(const char *netInfo, uint32_t len)
     }
     return ret;
 }
+#endif
 
 int32_t ProductRecvCustomSecData(const uint8_t *data, uint32_t len)
 {
@@ -154,6 +166,7 @@ int32_t ProductMakeOsBleEnable(void)
     return ret;
 }
 
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductMakeOsWifiEnable(void)
 {
     MakeOsWifiEnableCallback cb = NULL;
@@ -165,7 +178,9 @@ int32_t ProductMakeOsWifiEnable(void)
     }
     return ret;
 }
+#endif
 
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductSleRecvCustomSecData(const uint8_t *data, uint32_t len)
 {
     CHECK_RETURN_LOGW(data != NULL && len != 0, IOTC_ERR_PARAM_INVALID, "param invalid");
@@ -179,6 +194,7 @@ int32_t ProductSleRecvCustomSecData(const uint8_t *data, uint32_t len)
     }
     return ret;
 }
+#endif
 
 int32_t ProductGetSurfacePower(int8_t *power)
 {
@@ -235,6 +251,7 @@ int32_t ProductProfReportAll(void)
     return ret;
 }
 
+#ifndef IOTC_CONF_BLE_ONLY
 int32_t ProductProfReportByDevId(const char *devId)
 {
     IotcSleProfReportByDevIdCallback cb = NULL;
@@ -246,6 +263,7 @@ int32_t ProductProfReportByDevId(const char *devId)
     }
     return ret;
 }
+#endif
 
 int32_t ProductProfGetPincode(uint8_t *buf, uint32_t bufLen)
 {
