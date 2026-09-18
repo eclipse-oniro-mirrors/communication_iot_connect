@@ -18,6 +18,7 @@ import("../../iotc.gni")
 iotc_core_ble_inc = [
   "$iotc_core_path/ble/interfaces/include",
   "$iotc_core_path/ble/infrastructure/linklayer/include",
+  "$iotc_core_path/ble/infrastructure/linklayer",
   "$iotc_core_path/ble/infrastructure/stack/adv/include",
   "$iotc_core_path/ble/infrastructure/stack/gatt/include",
   "$iotc_core_path/ble/infrastructure/utils/include",

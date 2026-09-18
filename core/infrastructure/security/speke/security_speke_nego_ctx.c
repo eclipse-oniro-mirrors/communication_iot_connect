@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -286,6 +286,19 @@ static int32_t InitNegoCtxPubKey(NegoContext *context, const uint8_t *pinCode, u
     return IOTC_OK;
 }
 
+/* pubKey 在 CFM 入口被释放后（SLE/WiFi 的 negoContext 跨协商存活），
+   重协商 REQ 到达时按需重算。CalNegoGenerator 与 ExpMod 全确定性，
+   同 pinCode/salt/random/prime 输入下重生成值与初次生成逐字节相同，
+   SLE/WiFi 的"同公钥重放"语义与基线完全等价。仅允许 pubKey==NULL 时调用。 */
+int32_t NegoContextRegenPubKey(NegoContext *context, const uint8_t *pinCode, uint32_t pinCodeLen)
+{
+    if ((context == NULL) || (context->random == NULL) || (context->prime == NULL) ||
+        (context->pubKey != NULL) || (pinCode == NULL) || (pinCodeLen == 0)) {
+        return IOTC_ERR_PARAM_INVALID;
+    }
+    return InitNegoCtxPubKey(context, pinCode, pinCodeLen);
+}
+
 static bool CheckInitParamValid(const uint8_t *pinCode, uint32_t pinCodeLen,
     const uint8_t *salt, uint32_t saltLen, PrimeType primeType)
 {
@@ -423,24 +436,62 @@ static int32_t VerifyRemotePubKey(IotcMpi *prime, IotcMpi *pubKey)
     return IOTC_OK;
 }
 
-static int32_t CalSharedKey(const NegoContext *context, const uint8_t *pubKey, uint32_t pubKeyLen,
-    uint8_t **sharedKey, uint32_t *sharedKeyLen)
+/* export the shared key mpi into a fresh zero-padded PRIME_KEY_LEN buffer */
+static int32_t NegoCtxExportSharedKey(IotcMpi *sharedKeyMpi, uint8_t **sharedKey, uint32_t *sharedKeyLen)
+{
+    uint32_t keyLen = PRIME_KEY_LEN;
+    uint8_t *key = (uint8_t *)IotcCalloc(keyLen, sizeof(uint8_t));
+    if (key == NULL) {
+        IOTC_LOGE("NegoCtx sharedKey calloc err");
+        IotcMpiFree(sharedKeyMpi);
+        return IOTC_ADAPTER_MEM_ERR_MALLOC;
+    }
+    int32_t ret = IotcMpiWriteBinary(sharedKeyMpi, key, keyLen);
+    if (ret != IOTC_OK) {
+        IOTC_LOGE("NegoCtx sharedKey write err:%d", ret);
+        (void)memset_s(key, keyLen, 0, keyLen);
+        IotcFree(key);
+        IotcMpiFree(sharedKeyMpi);
+        return ret;
+    }
+    IotcMpiFree(sharedKeyMpi);
+    *sharedKey = key;
+    *sharedKeyLen = keyLen;
+    return IOTC_OK;
+}
+
+static IotcMpi *NegoCtxImportRemotePubKey(const NegoContext *context, const uint8_t *pubKey,
+    uint32_t pubKeyLen, int32_t *err)
 {
     IotcMpi *remotePubKey = IotcMpiInit();
     if (remotePubKey == NULL) {
         IOTC_LOGE("NegoCtx remote pubKey mpi init err");
-        return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
+        *err = IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
+        return NULL;
     }
     int32_t ret = IotcMpiReadBinary(remotePubKey, pubKey, pubKeyLen);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx remote pubKey mpi read err:%d", ret);
         IotcMpiFree(remotePubKey);
-        return ret;
+        *err = ret;
+        return NULL;
     }
     ret = VerifyRemotePubKey(context->prime, remotePubKey);
     if (ret != IOTC_OK) {
         IotcMpiFree(remotePubKey);
-        return ret;
+        *err = ret;
+        return NULL;
+    }
+    return remotePubKey;
+}
+
+static int32_t CalSharedKey(const NegoContext *context, const uint8_t *pubKey,
+    uint32_t pubKeyLen, uint8_t **sharedKey, uint32_t *sharedKeyLen)
+{
+    int32_t err = IOTC_OK;
+    IotcMpi *remotePubKey = NegoCtxImportRemotePubKey(context, pubKey, pubKeyLen, &err);
+    if (remotePubKey == NULL) {
+        return err;
     }
 
     IotcMpi *sharedKeyMpi = IotcMpiInit();
@@ -449,8 +500,8 @@ static int32_t CalSharedKey(const NegoContext *context, const uint8_t *pubKey, u
         IotcMpiFree(remotePubKey);
         return IOTC_ADAPTER_CRYPTO_ERR_MPI_INIT;
     }
-    /* 共享密钥计算: sharedKey = remotePubKey ^ random mod prime */
-    ret = IotcMpiExpMod(sharedKeyMpi, remotePubKey, context->random, context->prime);
+    /* sharedKey = remotePubKey ^ random mod prime */
+    int32_t ret = IotcMpiExpMod(sharedKeyMpi, remotePubKey, context->random, context->prime);
     if (ret != IOTC_OK) {
         IOTC_LOGE("NegoCtx sharedKey cal err:%d", ret);
         IotcMpiFree(remotePubKey);
@@ -459,25 +510,7 @@ static int32_t CalSharedKey(const NegoContext *context, const uint8_t *pubKey, u
     }
     IotcMpiFree(remotePubKey);
 
-    uint32_t keyLen = PRIME_KEY_LEN;
-    uint8_t *key = (uint8_t *)IotcCalloc(keyLen, sizeof(uint8_t));
-    if (key == NULL) {
-        IOTC_LOGE("NegoCtx sharedKey calloc err");
-        IotcMpiFree(sharedKeyMpi);
-        return IOTC_ADAPTER_MEM_ERR_MALLOC;
-    }
-    ret = IotcMpiWriteBinary(sharedKeyMpi, key, keyLen);
-    IotcMpiFree(sharedKeyMpi);
-    if (ret != IOTC_OK) {
-        IOTC_LOGE("NegoCtx sharedKey write err:%d", ret);
-        (void)memset_s(key, keyLen, 0, keyLen);
-        IotcFree(key);
-        return ret;
-    }
-
-    *sharedKey = key;
-    *sharedKeyLen = keyLen;
-    return IOTC_OK;
+    return NegoCtxExportSharedKey(sharedKeyMpi, sharedKey, sharedKeyLen);
 }
 
 static int32_t GenSessionKey(NegoContext *context, uint8_t *sharedKey, uint32_t sharedKeyLen)

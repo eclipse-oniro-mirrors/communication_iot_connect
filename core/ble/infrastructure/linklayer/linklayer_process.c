@@ -128,7 +128,22 @@ static int32_t GetCompleteData(const uint8_t *reqBuff, uint8_t token, uint8_t en
 static int32_t SendRspData(const uint8_t *reqBuff, uint8_t encryptType,
     uint8_t *rspData, uint32_t rspDataLen)
 {
-    /* alloc sendBuff with worst-case cipher size, encrypt directly at sendBuff+head */
+    /* rspData 由 EncodeCmdData 前置预留了 PKG_HEAD_LEN —— 明文帧已就位，
+       直接写包头后原缓冲发送，免独立 sendBuff（协商期响应全部 encType:0）。
+       wire 字节不变：[0,PKG_HEAD_LEN) 包头 + [PKG_HEAD_LEN, +rspDataLen) svc 帧。
+       rspData 仍由调用方（LinkLayerProcessBtData）统一释放。 */
+    if (encryptType == ENC_TYPE_UNENCRYPTED) {
+        int32_t ret = memcpy_s(rspData, PKG_HEAD_LEN, reqBuff, PKG_HEAD_LEN);
+        if (ret != EOK) {
+            return IOTC_ERR_SECUREC_MEMCPY;
+        }
+        SetPkgHeadCmdType(rspData, CMD_TYPE_RESPONSE);
+        rspData[PKG_HEAD_RET_IDX] = IOTC_OK;
+        return LinkLayerSendBtPkg(rspData, PKG_HEAD_LEN + rspDataLen);
+    }
+
+    /* 加密分支维持现状：密文比明文长（最多 ENC_DATA_MAX_OVERHEAD）需独立 sendBuff；
+       明文位于 rspData + PKG_HEAD_LEN（EncodeCmdData 前缀之后） */
     uint32_t sendBuffLen = PKG_HEAD_LEN + rspDataLen + ENC_DATA_MAX_OVERHEAD;
     uint8_t *sendBuff = (uint8_t *)IotcCalloc(sendBuffLen, sizeof(uint8_t));
     if (sendBuff == NULL) {
@@ -138,7 +153,7 @@ static int32_t SendRspData(const uint8_t *reqBuff, uint8_t encryptType,
 
     uint32_t encBuffLen = 0;
     LinkLayerEncryptOut encOut = { sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, &encBuffLen };
-    int32_t ret = LinkLayerEncryptDataInto(rspData, rspDataLen, encryptType, &encOut);
+    int32_t ret = LinkLayerEncryptDataInto(rspData + PKG_HEAD_LEN, rspDataLen, encryptType, &encOut);
     if ((ret != IOTC_OK) || (encBuffLen == 0)) {
         LinkLayerRspExceptionData(reqBuff, LL_RET_ERR);
         IotcFree(sendBuff);
@@ -215,7 +230,9 @@ int32_t LinkLayerReportEncryptCmdData(const uint8_t *buff, uint32_t len)
 
     uint32_t encBuffLen = 0;
     LinkLayerEncryptOut encOut = { sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, &encBuffLen };
-    int32_t ret = LinkLayerEncryptDataInto(buff, len, encType, &encOut);
+    /* 修复buff 由 EncodeCmdData 前缀预留 PKG_HEAD_LEN，svc 帧在
+       buff+PKG_HEAD_LEN 处；加密输入从帧头取，否则密文含前导零且截断 */
+    int32_t ret = LinkLayerEncryptDataInto(buff + PKG_HEAD_LEN, len, encType, &encOut);
     if ((ret != IOTC_OK) || (encBuffLen == 0)) {
         IotcFree(sendBuff);
         return ret;
@@ -246,7 +263,8 @@ int32_t LinkLayerReportCmdData(const uint8_t *buff, uint32_t len)
         return IOTC_ADAPTER_MEM_ERR_CALLOC;
     }
 
-    int32_t ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, buff, len);
+    /* 修复同上，svc 帧位于 buff+PKG_HEAD_LEN */
+    int32_t ret  = memcpy_s(sendBuff + PKG_HEAD_LEN, sendBuffLen - PKG_HEAD_LEN, buff + PKG_HEAD_LEN, len);
     if (ret != EOK) {
         IotcFree(sendBuff);
         return IOTC_ERR_SECUREC_MEMCPY;

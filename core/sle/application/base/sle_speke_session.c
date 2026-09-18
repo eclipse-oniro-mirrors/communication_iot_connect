@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,10 +98,12 @@ static void SleSessionNodeRelease(void)
         SleSessionNode *spekeNode = CONTAINER_OF(item, SleSessionNode, node);
         if (spekeNode == NULL) {
             IOTC_LOGE("spekeNode is null");
+            UtilsGlobalMutexUnlock();
             return;
         }
         LIST_REMOVE(&spekeNode->node);
         SpekeFreeSession(spekeNode->sleSpekeSess);
+        IotcFree(spekeNode);
     }
     UtilsGlobalMutexUnlock();
 }

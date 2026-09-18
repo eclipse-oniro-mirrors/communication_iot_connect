@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,6 +107,10 @@ typedef struct {
     uint32_t suppEncType;
     int32_t (*putFunc)(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
     int32_t (*getFunc)(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
+    /* 可选帧化回调——直接产出 [PKG_HEAD_LEN 预留(置零) + svc 帧] 的响应，
+       *outLen 为 svc 帧长度（与 EncodeCmdData 输出约定一致）；
+       非空时 PUT 路径跳过 putFunc 与 EncodeCmdData，消响应的整帧二次分配与拷贝 */
+    int32_t (*putFuncFramed)(const BtCmdParam *param, uint8_t **out, uint32_t *outLen);
 } BtSvcInfo;
 
 int32_t LinkLayerServiceRegister(const BtSvcInfo *svcInfo, uint32_t svcNum);
