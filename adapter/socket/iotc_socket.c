@@ -254,6 +254,33 @@ void IotcClose(int32_t fd)
     return;
 }
 
+int32_t IotcGetSocketErrno(int32_t fd)
+{
+#if defined(errno)
+    if (fd < 0) {
+        return errno;
+    }
+#endif
+    int32_t socketErr;
+    uint32_t len = sizeof(socklen_t);
+    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &socketErr, (socklen_t *)&len) != 0) {
+        IOTC_LOGE("get socket errno error");
+        return IOTC_ADAPTER_SOCKET_ERR_GET_OPT;
+    }
+
+    switch (socketErr) {
+        case EINTR:
+            return IOTC_SOCKET_ERRNO_EINTR;
+        case EAGAIN:
+            return IOTC_SOCKET_ERRNO_EAGAIN;
+        case EINPROGRESS:
+            return IOTC_SOCKET_ERRNO_EINPROGRESS;
+        default:
+            break;
+    }
+    return socketErr;
+}
+
 static int32_t SetFcntl(int32_t fd, bool isBlock)
 {
     int32_t flags = fcntl(fd, F_GETFL, 0);
@@ -619,33 +646,6 @@ int32_t IotcSelect(IotcFdSet *readSet, IotcFdSet *writeSet, IotcFdSet *exceptSet
     FdIsSet(writeSet, &write);
     FdIsSet(exceptSet, &except);
     return ret;
-}
-
-int32_t IotcGetSocketErrno(int32_t fd)
-{
-#if defined(errno)
-    if (fd < 0) {
-        return errno;
-    }
-#endif
-    int32_t socketErr;
-    uint32_t len = sizeof(socklen_t);
-    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &socketErr, (socklen_t *)&len) != 0) {
-        IOTC_LOGE("get socket errno error");
-        return IOTC_ADAPTER_SOCKET_ERR_GET_OPT;
-    }
-
-    switch (socketErr) {
-        case EINTR:
-            return IOTC_SOCKET_ERRNO_EINTR;
-        case EAGAIN:
-            return IOTC_SOCKET_ERRNO_EAGAIN;
-        case EINPROGRESS:
-            return IOTC_SOCKET_ERRNO_EINPROGRESS;
-        default:
-            break;
-    }
-    return socketErr;
 }
 
 uint32_t IotcHtonl(uint32_t hl)

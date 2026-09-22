@@ -46,7 +46,6 @@ class BleOnlyTest(TestCase):
         Step("步骤3、点到点本地控")
         hi_3863  = self.driver.find_component(BY.image("hi_3863.jpeg"))
         center = self.driver.find_component(BY.image("Center.jpeg"))
-        # self.driver.capture_screen("Center.jpeg", True,area=Rect(980. 1127, 1429, 1580))
         self.driver.wait(3)
 
         if hi_3863:
