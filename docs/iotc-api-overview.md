@@ -85,7 +85,7 @@ IoT connect组件独立开放给设备厂商使用的接口，适配OpenHarmony 
 
 **返回值：**
 类型：`int32_t`
-值：`0`成功，其他失败，详见`iotc_errcode.h`
+值：`0`成功，其余失败，详见`iotc_errcode.h`
 
 **参数列表：**
 
@@ -324,7 +324,7 @@ BLE 资源释放，用于释放调用`IotcOhBleEnable`时申请的资源，该�
 
 **返回值：**
 类型：`int32_t`
-值：`0`成功，其他失败，详见`iotc_errcode.h`
+值：`0`成功，其余失败，详见`iotc_errcode.h`
 
 ### 3. Wi-Fi Connect 能力
 

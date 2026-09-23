@@ -14,7 +14,7 @@
 | ------------- | ----------------------- | -------------------------- |
 | OpenHarmony源码 | 5.1.0 release           | 基础系统源码，为 Hi3863 平台提供编译底座   |
 | IoTConnect 组件 | 最新 master 分支            | 设备互联核心能力依赖                 |
-| 通用互联APP       | 最新 master 分支            | 鸿蒙生态核心控制入口，运行在HarmonyOS手机上 |
+| 通用互联APP       | 最新 master 分支            | OpenHarmony生态核心控制入口，运行在OpenHarmony系统的设备 |
 | 编译工具链         | arm-none-eabi-gcc 9.3.1 | Hi3863 芯片的 ARM 架构编译工具链     |
 | hb 构建工具       | 0.4.6 及以上               | OpenHarmony 轻量级设备编译构建工具    |
 | Python        | 3.8~3.9                 | 运行 hb 工具及编译脚本              |
@@ -54,7 +54,7 @@ bash build/prebuilts_download.sh  (如执行不成功，可加上sudo权限）
 
 - 配置设备基础信息
   
-  在demo文件中配置自己产品的信息，产品需要和云平台注册产品信息进行对应，开发测试阶段用户可以使用统一互联sample仓中demo的产品信息进行配置调试。其中，pid需要与云端注册的pid保持一致，其他根据用户要求以及满足字段定义规则即可。
+  在demo文件中配置自己产品的信息，产品需要和云平台注册产品信息进行对应，开发测试阶段用户可以使用统一互联sample仓中demo的产品信息进行配置调试。其中，pid需要与云端注册的pid保持一致，其余根据用户要求以及满足字段定义规则即可。
   
   ```c
   // 设备基础信息配置（必须与APP/云侧一致）
@@ -73,7 +73,7 @@ bash build/prebuilts_download.sh  (如执行不成功，可加上sudo权限）
       .swv = "1.0.0",                 // 软件版本
       .protType = IOTC_PROT_TYPE_BLE_AND_WIFI, // 通信协议类型（WiFi+BLE双模）
   };
-  // 配网PIN码（APP配网时的鉴权码，需与APP侧一致）
+  // 配网PIN码（APP配网时的校验码，需与APP侧一致）
   static const char *PIN_CODE = "01234567";
   
   // 厂商AC KEY（端云通信的加密密钥，需与云侧一致）
@@ -315,7 +315,7 @@ bash build/prebuilts_download.sh  (如执行不成功，可加上sudo权限）
     }
     ```
   
-  - 其他服务简要解析
+  - 其余服务简要解析
     
     服务功能如下，具体写法可参考示例代码编写
     
@@ -339,7 +339,7 @@ bash build/prebuilts_download.sh  (如执行不成功，可加上sudo权限）
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_CHAR_STATE_CALLBACK, GetCharState);
     // 注册全量状态上报回调（设备上线时触发）
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_REPORT_ALL_CALLBACK, ReportAll);
-    // 注册PIN码获取回调（配网鉴权时触发）
+    // 注册PIN码获取回调（配网校验时触发）
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_PINCODE_CALLBACK, GetPincode);
     // 注册AC KEY获取回调（端云加密时触发）
     SET_OH_SDK_OPTION(ret, IOTC_OH_OPTION_DEVICE_GET_AC_KEY_CALLBACK, GetAcKey);
@@ -535,7 +535,7 @@ import("//build/lite/config/component/lite_component.gni")
 import("//build/ohos.gni")
 ```
 
-  **作用**：导入其他 GN 配置文件中的变量 / 宏定义，避免重复配置；
+  **作用**：导入其余 GN 配置文件中的变量 / 宏定义，避免重复配置；
 
 - 定义编译目标（静态库）
 
@@ -665,11 +665,11 @@ WiFi/BLE Combo（Hi3863平台）的编译配置修改步骤请参考示例代码
 - **WiFi/BLE Combo设备端云控制**
 1. 联系OpenHarmony统一互联PMC或在laval社区提单，完成APP白名单配置;
 
-2. 编译ohos-connect-hap源码，安装编译的hap 至HarmonyOS Next 手机上；
+2. 编译ohos-connect-hap源码，安装编译的hap 至OpenHarmony系统的设备；
 
 3. 使用[Hi3863开发板烧录](https://www.bearpi.cn/core_board/bearpi/pico/h3863/software/%E4%B8%8B%E8%BD%BD%E7%83%A7%E5%BD%95.html)WiFi/BLE Combo镜像；
 
-4. 打开通用互联APP，在我的页面点击设备库同步将设备库更新到最新版本；
+4. 打开通用互联APP，进入个人主页，点击设备库同步将设备库更新到最新版本；
 
 5. 点击通用互联APP底部设备tab，点击设备tab右上角“+”号按钮扫描，可发现对应设备；
 

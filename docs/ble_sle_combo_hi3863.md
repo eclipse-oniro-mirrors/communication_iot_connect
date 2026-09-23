@@ -14,7 +14,7 @@
 | ------------- | ----------------------- | -------------------------- |
 | OpenHarmony源码 | 5.1.0 release           | 基础系统源码，为 Hi3863 平台提供编译底座   |
 | IoTConnect 组件 | 最新 master 分支            | 设备互联核心能力依赖                 |
-| 通用互联APP       | 最新 master 分支            | 鸿蒙生态核心控制入口，运行在HarmonyOS手机上 |
+| 通用互联APP       | 最新 master 分支            | OpenHarmony生态核心控制入口，运行在OpenHarmony系统的设备 |
 | 编译工具链         | arm-none-eabi-gcc 9.3.1 | Hi3863 芯片的 ARM 架构编译工具链     |
 | hb 构建工具       | 0.4.6 及以上               | OpenHarmony 轻量级设备编译构建工具    |
 | Python        | 3.8~3.9                 | 运行 hb 工具及编译脚本              |
@@ -76,7 +76,7 @@ nearlink_dk3863e/
 
 #### 3.3.2 设备基础信息配置
 
-在demo文件中配置自己产品的信息，产品需要和云平台注册产品信息进行对应，开发测试阶段用户可以使用统一互联sample仓中demo的产品信息进行配置调试。其中，pid需要与云端注册的pid保持一致，其他根据用户要求以及满足字段定义规则即可。
+在demo文件中配置自己产品的信息，产品需要和云平台注册产品信息进行对应，开发测试阶段用户可以使用统一互联sample仓中demo的产品信息进行配置调试。其中，pid需要与云端注册的pid保持一致，其余根据用户要求以及满足字段定义规则即可。
 
 ```c
 // 设备基础信息配置（必须与APP/云侧一致）
@@ -96,7 +96,7 @@ static IotcDeviceInfo DEV_INFO = {
     .protType = IOTC_PROT_TYPE_BLE,       // 通信协议类型（BLE配网模式）
 };
 
-// 配网PIN码（APP配网时的鉴权码，需与APP侧一致）
+// 配网PIN码（APP配网时的校验码，需与APP侧一致）
 static const char *PIN_CODE = "01234567";
 
 // 厂商AC KEY（端云通信的加密密钥，需与云侧一致）
@@ -300,7 +300,7 @@ static void gas_control_valves_print(const char *arg)
     init_led();
     button_init();
 
-    // 检查是否存在认证文件
+    // 检查是否存在校验文件
     if (check_iotc_file(IOTC_AUTHCODE_PATH)) {
         // 已配网，直接启动SLE连接
         app_iotc_sle_start();
@@ -313,7 +313,7 @@ static void gas_control_valves_print(const char *arg)
 
     while (1) {
         if (g_connect_status <= 2) {
-            // 定期检查认证文件
+            // 定期检查校验文件
             if (runCounter % 5 == 0) {
                 ret = check_iotc_file(IOTC_AUTHCODE_PATH);
             }
@@ -334,8 +334,8 @@ static void gas_control_valves_print(const char *arg)
 
 **关键点说明：**
 
-- `IOTC_AUTHCODE_PATH`: 认证文件路径，配网成功后会在文件系统保存
-- `check_iotc_file()`: 检查认证文件是否存在
+- `IOTC_AUTHCODE_PATH`: 校验文件路径，配网成功后会在文件系统保存
+- `check_iotc_file()`: 检查校验文件是否存在
 - 配网成功后会从BLE切换到SLE连接
 
 #### 3.3.6 IoTConnect 组件对接
@@ -506,7 +506,7 @@ int32_t SleRecvCustomData(const char *data, uint32_t len)
 | PutCharState      | 控制指令接收回调，APP下发控制指令时触发 |
 | GetCharState      | 状态查询回调，APP查询设备状态时触发   |
 | ReportAll         | 全量服务上报回调，设备上线时触发      |
-| GetPincode        | PIN码获取回调，配网鉴权时使用      |
+| GetPincode        | PIN码获取回调，配网校验时使用      |
 | GetAcKey          | AC KEY获取回调，端云加密时使用    |
 | NoticeReboot      | 重启回调，收到云端重启指令时触发      |
 | NetCfgCallback    | 配网信息接收回调（BLE模式）       |
@@ -598,11 +598,11 @@ BLE/SLE Combo（Hi3863平台）的编译配置修改步骤请参考示例代码�
 - **BLE/SLE双模设备端云控制**
 1. 联系OpenHarmony统一互联PMC或在laval社区提单，完成APP白名单配置;
 
-2. 编译ohos-connect-hap源码，安装编译的hap 至HarmonyOS Next 手机上；
+2. 编译ohos-connect-hap源码，安装编译的hap 至OpenHarmony系统的设备；
 
 3. 使用[Hi3863开发板烧录](https://www.bearpi.cn/core_board/bearpi/pico/h3863/software/%E4%B8%8B%E8%BD%BD%E7%83%A7%E5%BD%95.html)BLE/SLE双模Combo镜像；
 
-4. 打开通用互联APP，在我的页面点击设备库同步将设备库更新到最新版本；
+4. 打开通用互联APP，进入个人主页，点击设备库同步将设备库更新到最新版本；
 
 5. 点击通用互联APP底部设备tab，点击设备tab右上角“+”号按钮扫描，可发现对应设备；
 
