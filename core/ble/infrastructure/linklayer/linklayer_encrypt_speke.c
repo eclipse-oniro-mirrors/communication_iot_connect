@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,21 +48,31 @@ int32_t LinkLayerSpekeDecrypt(uint8_t *data, uint32_t *dataLen)
     SpekeSession *session = GetLinkLayerSpekeSession();
     CHECK_RETURN_LOGE(session != NULL, IOTC_CORE_BLE_LL_ERR_SPEKE_NULL, "ll speke session null");
 
-    uint8_t *decData = NULL;
     uint32_t decDataLen = 0;
-    int32_t ret = SpekeDecryptData(session, data, *dataLen, &decData, &decDataLen);
+    int32_t ret = SpekeDecryptDataInPlace(session, data, *dataLen, &decDataLen);
     CHECK_RETURN(ret == IOTC_OK, ret);
 
-    ret = memcpy_s(data, *dataLen, decData, decDataLen);
-    if (ret != EOK) {
-        IOTC_LOGE("speke memcpy buffLen:%u, decDataLen:%u err", *dataLen, decDataLen);
-        IotcFree(decData);
-        return IOTC_ERR_SECUREC_MEMCPY;
-    }
-    IotcFree(decData);
     if (decDataLen < *dataLen) {
         data[decDataLen] = 0;
     }
     *dataLen = decDataLen;
+    return IOTC_OK;
+}
+
+/* SPEKE 加密直写到 out->buff，省 stage 路径的 encData 中转分配 */
+int32_t LinkLayerSpekeEncryptInto(const uint8_t *data, uint32_t dataLen, const LinkLayerEncryptOut *out)
+{
+    CHECK_RETURN((data != NULL) && (dataLen > 0) && (out != NULL) && (out->buff != NULL) &&
+        (out->buffLen != NULL), IOTC_ERR_PARAM_INVALID);
+    SpekeSession *session = GetLinkLayerSpekeSession();
+    CHECK_RETURN_LOGE(session != NULL, IOTC_CORE_BLE_LL_ERR_SPEKE_NULL, "ll speke session null");
+
+    uint32_t encLen = 0;
+    SpekeDataBuf dst = { out->buff, out->buffCap, &encLen };
+    int32_t ret = SpekeEncryptDataInto(session, data, dataLen, &dst);
+    if (ret != IOTC_OK) {
+        return ret;
+    }
+    *out->buffLen = encLen;
     return IOTC_OK;
 }

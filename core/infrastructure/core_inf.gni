@@ -59,6 +59,7 @@ iotc_core_infrastructure_src = [
   "$iotc_core_path/infrastructure/security/speke/security_speke_nego_ctx.c",
   "$iotc_core_path/infrastructure/security/speke/security_speke_server.c",
   "$iotc_core_path/infrastructure/security/speke/security_speke_session.c",
+  "$iotc_core_path/infrastructure/security/speke/security_speke_flat.c",
   "$iotc_core_path/infrastructure/utils/utils_bit_map.c",
   "$iotc_core_path/infrastructure/utils/utils_buffer.c",
   "$iotc_core_path/infrastructure/utils/utils_common.c",

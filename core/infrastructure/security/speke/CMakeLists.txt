@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -19,6 +19,7 @@ set(IOTC_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/security_speke_nego_ctx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/security_speke_server.c
     ${CMAKE_CURRENT_SOURCE_DIR}/security_speke_session.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_speke_flat.c
     PARENT_SCOPE
 )
 

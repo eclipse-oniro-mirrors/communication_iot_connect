@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +21,38 @@
 #include "iotc_mem.h"
 #include "utils_common.h"
 #include "utils_json.h"
+#include "security_speke_flat.h"
 #include "iotc_errcode.h"
 
 #define JSON_DATA_MAX_LEN    512
+
+int32_t SpekeCommonWrapPrefix(uint8_t **msg, uint32_t *len, uint32_t prefixLen)
+{
+    if ((prefixLen == 0) || (msg == NULL) || (*msg == NULL)) {
+        return IOTC_OK;
+    }
+    uint32_t msgLen = *len;
+    uint8_t *buf = (uint8_t *)IotcMalloc(prefixLen + msgLen + 1);
+    if (buf == NULL) {
+        IotcFree(*msg);
+        *msg = NULL;
+        *len = 0;
+        return IOTC_ADAPTER_MEM_ERR_MALLOC;
+    }
+    (void)memset_s(buf, prefixLen, 0, prefixLen);
+    if (memcpy_s(buf + prefixLen, msgLen + 1, *msg, msgLen) != EOK) {
+        IotcFree(buf);
+        IotcFree(*msg);
+        *msg = NULL;
+        *len = 0;
+        return IOTC_ERR_SECUREC_MEMCPY;
+    }
+    buf[prefixLen + msgLen] = '\0';
+    IotcFree(*msg);
+    *msg = buf;
+    *len = prefixLen + msgLen;
+    return IOTC_OK;
+}
 
 int32_t SpekeCommonAddVerInfoToJson(IotcJson *secDataPayload)
 {
@@ -54,25 +83,25 @@ int32_t SpekeCommonAddVerInfoToJson(IotcJson *secDataPayload)
     return IOTC_OK;
 }
 
-int32_t SpekeCommonVerifyVersion(const IotcJson *secDataPayload)
+int32_t SpekeCommonVerifyVersion(const char *secDataPayload, uint32_t payloadLen)
 {
-    if (secDataPayload == NULL) {
+    if ((secDataPayload == NULL) || (payloadLen == 0)) {
         return IOTC_ERR_PARAM_INVALID;
     }
 
-    IotcJson *verObj = IotcJsonGetObj(secDataPayload, SPEKE_SEC_DATA_VER_JSON);
-    if (verObj == NULL) {
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
+    /* flat extraction -- no cJSON tree */
+    SpekeStrView verObj;
+    int32_t ret = SpekeFlatGetObj(secDataPayload, payloadLen, SPEKE_SEC_DATA_VER_JSON, &verObj);
+    if (ret != IOTC_OK) {
+        return ret;
     }
-    IotcJson *curVerObj = IotcJsonGetObj(verObj, SPEKE_SEC_DATA_CUR_VER_JSON);
-    if (curVerObj == NULL) {
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
+    SpekeStrView curVer;
+    ret = SpekeFlatGetStr(verObj.start, verObj.len, SPEKE_SEC_DATA_CUR_VER_JSON, &curVer);
+    if (ret != IOTC_OK) {
+        return ret;
     }
-    const char *curVerStr = IotcJsonGetStr(curVerObj);
-    if (curVerStr == NULL) {
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
-    }
-    if (strcmp(curVerStr, SPEKE_VERSION) != 0) {
+    uint32_t expectedLen = (uint32_t)strlen(SPEKE_VERSION);
+    if ((curVer.len != expectedLen) || (memcmp(curVer.start, SPEKE_VERSION, expectedLen) != 0)) {
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_VER_NOT_SUPP;
     }
 
@@ -187,40 +216,5 @@ int32_t SpekeCommonAddDataToJson(IotcJson *target, const char *name, const uint8
     }
 
     IotcFree(data);
-    return IOTC_OK;
-}
-
-int32_t SpekeCommonParseDataFromJson(const IotcJson *src, const char *name, uint8_t **output, uint32_t *outputLen)
-{
-    if ((src == NULL) || (name == NULL) || (output == NULL) || (outputLen == NULL)) {
-        return IOTC_ERR_PARAM_INVALID;
-    }
-
-    IotcJson *obj = IotcJsonGetObj(src, name);
-    if (obj == NULL) {
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
-    }
-    const char *srcStr = IotcJsonGetStr(obj);
-    if (srcStr == NULL) {
-        return IOTC_ADAPTER_JSON_ERR_PARSE;
-    }
-
-    uint32_t dataLen = UNHEXIFY_LEN(strlen(srcStr));
-    if (dataLen == 0 || dataLen > JSON_DATA_MAX_LEN) {
-        return IOTC_ADAPTER_MEM_ERR_MALLOC;
-    }
-    uint8_t *data = (uint8_t *)IotcMalloc(dataLen);
-    if (data == NULL) {
-        return IOTC_ADAPTER_MEM_ERR_MALLOC;
-    }
-    (void)memset_s(data, dataLen, 0, dataLen);
-
-    if (!UtilsUnhexify(srcStr, strlen(srcStr), data, dataLen)) {
-        IotcFree(data);
-        return IOTC_CORE_COMM_UTILS_ERR_UNHEXIFY;
-    }
-
-    *output = data;
-    *outputLen = dataLen;
     return IOTC_OK;
 }

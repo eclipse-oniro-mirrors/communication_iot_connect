@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 ShenZhen Kaihong Device Co., Ltd.
+ * Copyright (c) 2024-2026 ShenZhen Kaihong Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,7 @@ typedef enum {
                                                 @else   随机地址 @endif */
 } IotcSleAddrType;
 
-int32_t ClientSleSpekeStartSession(uint32_t connId);
-int32_t ClientSleSpekeProcessMsg(uint32_t connId);
+int32_t ClientSleSpekeStartSession(uint16_t connId);
 
 #ifdef __cplusplus
 }

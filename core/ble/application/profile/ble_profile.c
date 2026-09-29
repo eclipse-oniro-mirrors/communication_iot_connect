@@ -54,7 +54,7 @@ static const BtSvcInfo g_svcInfoTab[] = {
         .getFunc = NULL, .putFunc = PutBleSvcClearDevRegInfo},
 #if !defined(IOTC_CONNECT_SPEKE_NOT_SUPPORT) || !IOTC_CONNECT_SPEKE_NOT_SUPPORT
     {.svcIdx = BLE_SVC_SPEKE_IDX, .service = BLE_SVC_SPEKE, .suppEncType = ENC_SUPP_PLAIN,
-        .getFunc = NULL, .putFunc = PutBleSvcSpeke},
+        .getFunc = NULL, .putFunc = PutBleSvcSpeke, .putFuncFramed = PutBleSvcSpekeFramed},
 #endif
 #ifdef IOTC_CONNECT_BLE_NET_CONFIG_SUPPORT
     {.svcIdx = BLE_SVC_NETCFG_IDX, .service = BLE_SVC_NETCFG, .suppEncType = ENC_SUPP_SPEKE,

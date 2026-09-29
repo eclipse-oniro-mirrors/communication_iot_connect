@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -113,6 +113,6 @@ int32_t SleLinkLayerEncryptData(uint32_t connId, const SleLinkLayerEncryptParam 
             param->encData, param->encDataLen);
     }
 
-    IOTC_LOGE("Sle link layer encrypt type:%d err", encryptType);
+    IOTC_LOGE("Sle link layer encrypt type:%d err", param->encryptType);
     return IOTC_CORE_SLE_LL_ERR_ENCRYPT_TYPE;
 }

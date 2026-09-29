@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,6 +65,8 @@ int32_t CreateBleSpekeSess(void)
         return IOTC_OK;
     }
 
+    /* EventBusSubscribe dedups by (listener, event); unconditional re-subscribe is a
+     * no-op and restores the cleanup path after fwk reset/quit cycles (EventBusDeinit) */
     int32_t ret = EventBusSubscribe(BleSpekeSessClear, IOTC_CORE_BLE_EVENT_GATT_DISCONNECT);
     CHECK_RETURN_LOGE(ret == IOTC_OK, ret, "subscribe gatt disconn err:%d", ret);
     ret = EventBusSubscribe(BleSpekeSessClear, IOTC_CORE_COMM_EVENT_MAIN_RESET);
@@ -81,6 +83,7 @@ int32_t CreateBleSpekeSess(void)
         IOTC_LOGE("create speke session");
         return IOTC_CORE_COMM_SEC_ERR_SPEKE_CREATE;
     }
+    g_bleSpekeErrCode = IOTC_OK;
     return LinkLayerRegisterSpekeSessionGetCb(GetBleSpekeSess);
 }
 

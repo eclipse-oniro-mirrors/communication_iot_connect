@@ -132,6 +132,33 @@ int32_t DecodeCmdData(const uint8_t *buff, uint32_t len, BtCmdParam *cmdParam)
     return IOTC_OK;
 }
 
+int32_t LinkLayerWriteSvcHeader(uint8_t *buf, uint32_t bufCap, const BtCmdParam *cmdParam,
+    uint32_t payloadLen, uint32_t *headerLen)
+{
+    uint32_t svcLen = (cmdParam != NULL) ? (uint32_t)strlen(cmdParam->service) : 0;
+    CHECK_RETURN_LOGE((buf != NULL) && (cmdParam != NULL) && (headerLen != NULL) &&
+        (bufCap >= SVC_TYPE_LEN + SVC_LEN_LEN + svcLen + SVC_PAYLOAD_LEN_LEN),
+        IOTC_ERR_PARAM_INVALID, "svc header cap err, svcLen:%u, bufCap:%u", svcLen, bufCap);
+
+    uint32_t pos = 0;
+    /* 高4位为数据类型, 低4位为操作类型 */
+    buf[pos++] = (((uint8_t)cmdParam->dataFormat & SVC_TYPE_MASK) << SVC_TYPE_SHIFT) |
+        ((uint8_t)cmdParam->opType & SVC_TYPE_MASK);
+    /* 服务长度 */
+    buf[pos++] = svcLen;
+    /* 服务 */
+    int32_t ret = memcpy_s(buf + pos, bufCap - pos, cmdParam->service, svcLen);
+    if (ret != EOK) {
+        return IOTC_ERR_SECUREC_MEMCPY;
+    }
+    pos += svcLen;
+    /* payload长度, 2字节 */
+    buf[pos++] = payloadLen & 0xFF;
+    buf[pos++] = (payloadLen >> BITS_PER_BYTE) & 0xFF;
+    *headerLen = pos;
+    return IOTC_OK;
+}
+
 static int32_t EncodeCmdData(const BtCmdParam *cmdParam, const uint8_t *payload, uint32_t payloadLen,
     uint8_t **outBuff, uint32_t *outLen)
 {
@@ -139,26 +166,19 @@ static int32_t EncodeCmdData(const BtCmdParam *cmdParam, const uint8_t *payload,
         "encode body err, len:%u", payloadLen);
     uint32_t len = SVC_TYPE_LEN + SVC_LEN_LEN + strlen(cmdParam->service) +
         SVC_PAYLOAD_LEN_LEN + payloadLen;
-    uint8_t *out = (uint8_t *)IotcCalloc(len, sizeof(uint8_t));
+    /* 前置预留 PKG_HEAD_LEN —— 明文帧由 SendRspData 直接在 [0,PKG_HEAD_LEN) 写包头后
+       原缓冲发送，免独立 sendBuff（协商期响应全部 encType:0）。*outLen 仍为 svc 帧长度 */
+    uint8_t *out = (uint8_t *)IotcCalloc(PKG_HEAD_LEN + len, sizeof(uint8_t));
     CHECK_RETURN_LOGE(out != NULL, IOTC_ADAPTER_MEM_ERR_CALLOC, "calloc cmd data rsp:%u err", len);
 
-    uint32_t pos = 0;
-    /* 高4位为数据类型, 低4位为操作类型 */
-    out[pos++] = (((uint8_t)cmdParam->dataFormat & 0x0F) << 4) | ((uint8_t)cmdParam->opType & 0x0F);
-    /* 服务长度 */
-    out[pos++] = strlen(cmdParam->service);
-    /* 服务 */
-    int32_t ret = memcpy_s(out + pos, len - pos, cmdParam->service, strlen(cmdParam->service));
-    if (ret != EOK) {
+    uint32_t headerLen = 0;
+    int32_t ret = LinkLayerWriteSvcHeader(out + PKG_HEAD_LEN, len, cmdParam, payloadLen, &headerLen);
+    if (ret != IOTC_OK) {
         IotcFree(out);
-        return IOTC_ERR_SECUREC_MEMCPY;
+        return ret;
     }
-    pos += strlen(cmdParam->service);
-    /* payload长度, 2字节 */
-    out[pos++] = payloadLen & 0xFF;
-    out[pos++] = (payloadLen >> BITS_PER_BYTE) & 0xFF;
     /* payload */
-    ret = memcpy_s(out + pos, len - pos, payload, payloadLen);
+    ret = memcpy_s(out + PKG_HEAD_LEN + headerLen, len - headerLen, payload, payloadLen);
     if (ret != EOK) {
         IotcFree(out);
         return IOTC_ERR_SECUREC_MEMCPY;
@@ -198,6 +218,16 @@ int32_t LinkLayerProcessData(const uint8_t *buff, uint32_t len, LinkLayerEncrypt
     uint8_t *response = NULL;
     uint32_t responseLen = 0;
     if (cmdParam.opType == BT_OPTYPE_PUT) {
+        /* 帧化回调直接产出 [PKG_HEAD_LEN 预留 + svc 帧]，跳过 EncodeCmdData，
+           消响应整帧的二次分配与拷贝；*outLen 为 svc 帧长度（与 EncodeCmdData 约定一致），
+           缓冲由调用方（LinkLayerProcessBtData）统一释放 */
+        if (svcInfo->putFuncFramed != NULL) {
+            ret = svcInfo->putFuncFramed(&cmdParam, &response, &responseLen);
+            CHECK_RETURN(ret == IOTC_OK, ret);
+            *outBuff = response;
+            *outLen = responseLen;
+            return IOTC_OK;
+        }
         CHECK_RETURN_LOGE(svcInfo->putFunc != NULL, IOTC_ERR_CALLBACK_NULL,
             "svc:%s put cb NULL", cmdParam.service);
         ret = svcInfo->putFunc(&cmdParam, &response, &responseLen);
