@@ -132,24 +132,8 @@ int32_t LinkLayerEncryptDataInto(const uint8_t *data, uint32_t dataLen, LinkLaye
     }
 #ifndef IOTC_CONNECT_SPEKE_NOT_SUPPORT
     if (encryptType == ENC_TYPE_SPEKE) {
-        /* SPEKE hook keeps baseline encrypt API: stage-encrypt then copy into outBuf */
-        uint8_t *encData = NULL;
-        uint32_t encDataLen = 0;
-        int32_t ret = LinkLayerSpekeEncrypt(data, dataLen, &encData, &encDataLen);
-        if (ret != IOTC_OK) {
-            return ret;
-        }
-        if (out->buffCap < encDataLen) {
-            IotcFree(encData);
-            return IOTC_ERR_PARAM_INVALID;
-        }
-        if (memcpy_s(out->buff, out->buffCap, encData, encDataLen) != EOK) {
-            IotcFree(encData);
-            return IOTC_ERR_SECUREC_MEMCPY;
-        }
-        *out->buffLen = encDataLen;
-        IotcFree(encData);
-        return IOTC_OK;
+        /* 加密直写 out->buff，消 encData 中转（原 stage-encrypt + memcpy + free） */
+        return LinkLayerSpekeEncryptInto(data, dataLen, out);
     }
 #endif
     if (encryptType == ENC_TYPE_SESSKEY) {

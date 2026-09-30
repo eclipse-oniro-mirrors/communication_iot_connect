@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,9 +26,23 @@ extern "C" {
 typedef struct {
     SpekeSession *session;
     int32_t msgType;
-    const char *sessionId;
-    IotcJson *secDataPayload;
+    const char *sessionId;  /* NUL-terminated copy, points to SpekeProcessPacket stack buf */
+    const char *payload;    /* flat view into completeBuff */
+    uint32_t payloadLen;
+    bool payloadWritable;   /* payload 宿主缓冲可写（如 BLE mergeBuff）→ epk 就地 unhexify */
+    uint32_t prefixLen;     /* SERVER_RSP 直写帧内偏移（前缀预留字节数），0=无前缀 */
 } SpekeProcessParam;
+
+/**
+ * @brief 报文前缀化：前部预留 prefixLen 字节（置零）供调用方写帧头，
+ *        原报文拷贝至偏移之后并补 NUL，*len 更新为 prefixLen+原长
+ *
+ * @param msg [IN/OUT] 报文缓冲（会被重新分配释放）
+ * @param len [IN/OUT] 长度
+ * @param prefixLen [IN] 前缀字节数，0 或 *msg 为 NULL 时为 no-op
+ * @return 0成功，非0失败（失败时原缓冲已释放并置 NULL）
+ */
+int32_t SpekeCommonWrapPrefix(uint8_t **msg, uint32_t *len, uint32_t prefixLen);
 
 /**
  * @brief 客户端或服务端将本端版本号信息编入目标 JSON 中
@@ -44,7 +58,7 @@ int32_t SpekeCommonAddVerInfoToJson(IotcJson *secDataPayload);
  * @param secDataPayload [IN] 目标 JSON，对端报文中的 securityData 中的 payload
  * @return 0成功，非0失败
  */
-int32_t SpekeCommonVerifyVersion(const IotcJson *secDataPayload);
+int32_t SpekeCommonVerifyVersion(const char *secDataPayload, uint32_t payloadLen);
 
 /**
  * @brief 客户端或服务端用于生成发送给对端的消息
@@ -70,18 +84,6 @@ int32_t SpekeCommonCreateNegoMsg(const char *sessionId, int32_t msgType, const I
  * @return 0成功，非0失败
  */
 int32_t SpekeCommonAddDataToJson(IotcJson *target, const char *name, const uint8_t *input, uint32_t inputLen);
-
-/**
- * @brief 获取目标 JSON 中对应键中的字符串值，并转换为十六进制
- *
- * @param src [IN] 目标 JSON
- * @param name [IN] 目标 JSON 的键
- * @param output [OUT] 转换后的十六进制串
- * @param outputLen [OUT] 输出长度
- * @return 0成功，非0失败
- * @attention 调用方需要释放 output
- */
-int32_t SpekeCommonParseDataFromJson(const IotcJson *src, const char *name, uint8_t **output, uint32_t *outputLen);
 
 #ifdef __cplusplus
 }

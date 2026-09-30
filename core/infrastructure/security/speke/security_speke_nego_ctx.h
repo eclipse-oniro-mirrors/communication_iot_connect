@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -82,6 +82,18 @@ NegoContext *NegoContextInit(const uint8_t *pinCode, uint32_t pinCodeLen,
 void NegoContextFree(NegoContext *context);
 
 /**
+ * @brief 确定性重生成 pubKey（pubKey 在 CFM 入口释放后，
+ *        SLE/WiFi 重协商的 REQ 到达时按需重算）
+ *
+ * @param context [IN] speke 协商上下文句柄（random/prime 需有效，pubKey 需为 NULL）
+ * @param pinCode [IN] PIN
+ * @param pinCodeLen [IN] PIN 长度
+ * @return 0成功，非0失败
+ * @attention 输入全部确定性（pinCode/salt/random/prime），重生成值与初次生成逐字节相同
+ */
+int32_t NegoContextRegenPubKey(NegoContext *context, const uint8_t *pinCode, uint32_t pinCodeLen);
+
+/**
  * @brief 记录对端的挑战值
  *
  * @param context [IN] speke 协商上下文句柄
@@ -95,11 +107,12 @@ int32_t NegoContextSetRemoteChallenge(NegoContext *context, const uint8_t *chall
  * @brief 计算生成 sessionKey
  *
  * @param context [IN] speke 协商上下文句柄
- * @param pubKey [IN] 对端公钥
- * @param pubKeyLen [IN] 对端公钥长度
+ * @param pubKey [IN] 对端公钥（二进制）
+ * @param pubKeyLen [IN] 公钥字节长度
  * @return 0成功，非0失败
  */
-int32_t NegoContextGenSessionKey(NegoContext *context, const uint8_t *pubKey, uint32_t pubKeyLen);
+int32_t NegoContextGenSessionKey(NegoContext *context, const uint8_t *pubKey,
+    uint32_t pubKeyLen);
 
 /**
  * @brief 计算生成 hmac
